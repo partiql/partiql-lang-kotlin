@@ -13,9 +13,13 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.time.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This is a representation of a value in PartiQL's type system. The intention of this modeling is to
@@ -696,8 +700,69 @@ public interface Datum extends Iterable<Datum> {
      * @return a value of type {@link PType#STRUCT}
      */
     @NotNull
+    static Datum struct(@NotNull Field... values) {
+        return new DatumStruct(Arrays.stream(values).collect(Collectors.toList()));
+    }
+
+    /**
+     * @param values the backing values
+     * @return a value of type {@link PType#STRUCT}
+     */
+    @NotNull
     static Datum struct(@NotNull Iterable<Field> values) {
         return new DatumStruct(values);
+    }
+
+    /**
+     * Returns an empty {@link PType#ROW}
+     * @return a value of type {@link PType#ROW}
+     */
+    @NotNull
+    static Datum row() {
+        return new DatumRow(new ArrayList<>(), PType.row());
+    }
+
+    /**
+     * This creates a row.
+     * @param values the backing values
+     * @return a value of type {@link PType#ROW}
+     */
+    @NotNull
+    static Datum row(@NotNull Field... values) {
+        return new DatumRow(Arrays.stream(values).collect(Collectors.toList()));
+    }
+
+    /**
+     * This creates a row. Use this if you'd like to save on the computational cost of computing the final type.
+     * @param typeFields the backing type fields
+     * @param values the backing values
+     * @return a value of type {@link PType#ROW}
+     */
+    @NotNull
+    static Datum row(List<org.partiql.spi.types.Field> typeFields, @NotNull Field... values) {
+        return row(typeFields, Arrays.stream(values).collect(Collectors.toList()));
+    }
+
+    /**
+     * Creates a row with the given values.
+     * @param values the backing values
+     * @return a value of type {@link PType#ROW}
+     */
+    @NotNull
+    static Datum row(@NotNull List<Field> values) {
+        return new DatumRow(values);
+    }
+
+    /**
+     * Creates a row with the given values. Use this if you'd like to save on the computational cost of computing the final type.
+     * @param typeFields the backing type fields
+     * @param values the backing values
+     * @return a value of type {@link PType#ROW}
+     */
+    @NotNull
+    static Datum row(@NotNull List<org.partiql.spi.types.Field> typeFields, @NotNull List<Field> values) {
+        PType type = PType.row(typeFields);
+        return new DatumRow(values, type);
     }
 
     /**
