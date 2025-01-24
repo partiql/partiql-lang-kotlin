@@ -51,6 +51,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.util.FunctionUtils
 import org.partiql.planner.internal.util.TypeUtils.exclude
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
@@ -169,8 +170,16 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * @return an error node
          */
         fun errorRexAndReport(listener: PErrorListener, problem: PError): Rex {
+            return errorRexAndReport(listener, problem, PType.dynamic())
+        }
+
+        /**
+         * Reports the [problem]]
+         * @return an error node
+         */
+        fun errorRexAndReport(listener: PErrorListener, problem: PError, type: PType): Rex {
             listener.report(problem)
-            return rex(CompilerType(PType.dynamic(), isMissingValue = true), rexOpErr())
+            return rex(CompilerType(type, isMissingValue = true), rexOpErr())
         }
     }
 
@@ -603,7 +612,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             if (resolvedVar == null) {
                 val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
                 val problem = PErrors.varRefNotFound(null, node.identifier, inScopeVariables.toList())
-                return errorRexAndReport(_listener, problem)
+                return errorRexAndReport(_listener, problem, PType.unknown())
             }
             return visitRex(resolvedVar, null)
         }
@@ -659,7 +668,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
             // Check Root Type (STRUCT)
             if (root.type.code() != PType.STRUCT && root.type.code() != PType.ROW) {
-                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null))
+                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null), PType.unknown())
             }
 
             // Get Literal Key
@@ -671,7 +680,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
             // Find Type
             val elementType = root.type.getField(keyLiteral, false) ?: run {
-                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null))
+                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null), PType.unknown())
             }
 
             return rex(elementType, rexOpPathKey(root, key))
@@ -777,12 +786,12 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 }
             }
             val instance = node.fn
-            val returnType: PType = instance.returns
+            val returnType: PType = instance.signature.returns
 
             // Check if any arg is always missing
             val argIsAlwaysMissing = args.any { it.type.isMissingValue }
 
-            if (argIsAlwaysMissing && instance.isMissingCall) {
+            if (argIsAlwaysMissing && instance.signature.isMissingCall) {
                 _listener.report(PErrors.alwaysMissing(null))
                 return rex(CompilerType(returnType), Rex.Op.Call.Static(node.fn, args))
             }
@@ -1139,7 +1148,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             if (firstBranchCondition !is Rex.Op.Call.Static) {
                 return null
             }
-            if (!firstBranchCondition.fn.name.equals("is_struct", ignoreCase = true)) {
+            if (!firstBranchCondition.fn.signature.name.equals(FunctionUtils.OP_IS_STRUCT, ignoreCase = true)) {
                 return null
             }
             val firstBranchResultType = firstBranch.rex.type
@@ -1225,7 +1234,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             // Resolve the function
             val call = env.resolveAgg(node.name, node.setq, args) ?: return argsResolved to CompilerType(PType.dynamic())
             // TODO pass argument types to compute the return type.
-            val returnType = call.agg.signature.getReturnType(emptyArray())
+            val returnType = call.agg.signature.signature.returns
             return call to CompilerType(returnType)
         }
     }

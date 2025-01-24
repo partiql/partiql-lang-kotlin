@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorMax
 import org.partiql.spi.types.PType
 
-internal val Agg_MAX__INT8__INT8 = Aggregation.static(
+internal val Agg_MAX__INT8__INT8 = Aggregation.overload(
 
     name = "max",
     returns = PType.tinyint(),
@@ -18,7 +18,7 @@ internal val Agg_MAX__INT8__INT8 = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__INT16__INT16 = Aggregation.static(
+internal val Agg_MAX__INT16__INT16 = Aggregation.overload(
 
     name = "max",
     returns = PType.smallint(),
@@ -28,7 +28,7 @@ internal val Agg_MAX__INT16__INT16 = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__INT32__INT32 = Aggregation.static(
+internal val Agg_MAX__INT32__INT32 = Aggregation.overload(
 
     name = "max",
     returns = PType.integer(),
@@ -38,7 +38,7 @@ internal val Agg_MAX__INT32__INT32 = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__INT64__INT64 = Aggregation.static(
+internal val Agg_MAX__INT64__INT64 = Aggregation.overload(
 
     name = "max",
     returns = PType.bigint(),
@@ -48,7 +48,7 @@ internal val Agg_MAX__INT64__INT64 = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__NUMERIC__NUMERIC = Aggregation.static(
+internal val Agg_MAX__NUMERIC__NUMERIC = Aggregation.overload(
 
     name = "max",
     returns = DefaultNumeric.NUMERIC,
@@ -58,7 +58,7 @@ internal val Agg_MAX__NUMERIC__NUMERIC = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
+internal val Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.overload(
 
     name = "max",
     returns = PType.decimal(38, 19),
@@ -69,7 +69,7 @@ internal val Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__FLOAT32__FLOAT32 = Aggregation.static(
+internal val Agg_MAX__FLOAT32__FLOAT32 = Aggregation.overload(
 
     name = "max",
     returns = PType.real(),
@@ -79,7 +79,7 @@ internal val Agg_MAX__FLOAT32__FLOAT32 = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__FLOAT64__FLOAT64 = Aggregation.static(
+internal val Agg_MAX__FLOAT64__FLOAT64 = Aggregation.overload(
 
     name = "max",
     returns = PType.doublePrecision(),
@@ -89,7 +89,7 @@ internal val Agg_MAX__FLOAT64__FLOAT64 = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__ANY__ANY = Aggregation.static(
+internal val Agg_MAX__ANY__ANY = Aggregation.overload(
 
     name = "max",
     returns = PType.dynamic(),

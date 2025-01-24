@@ -43,7 +43,8 @@ import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -259,7 +260,7 @@ public interface Operators {
      * @param args
      * @return
      */
-    public fun call(function: Function.Instance, args: List<Rex>): RexCall = RexCall.create(function, args)
+    public fun call(function: Fn, args: List<Rex>): RexCall = RexCall.create(function, args)
 
     /**
      * Create a [RexCase] instance for a case-when with dynamic type (case is a reserved word in Java).
@@ -297,7 +298,7 @@ public interface Operators {
      * @param args
      * @return
      */
-    public fun dispatch(name: String, functions: List<Function>, args: List<Rex>): RexDispatch =
+    public fun dispatch(name: String, functions: List<FnOverload>, args: List<Rex>): RexDispatch =
         RexDispatch.create(name, functions, args)
 
     /**

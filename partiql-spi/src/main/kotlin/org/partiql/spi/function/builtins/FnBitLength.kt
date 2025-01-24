@@ -6,7 +6,7 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
 // SQL spec section 6.17 contains <bit length expression>
-internal val Fn_BIT_LENGTH__STRING__INT32 = Function.static(
+internal val Fn_BIT_LENGTH__STRING__INT32 = Function.overload(
 
     name = "bit_length",
     returns = PType.integer(),
@@ -20,7 +20,7 @@ internal val Fn_BIT_LENGTH__STRING__INT32 = Function.static(
     Datum.integer(length * 8)
 }
 
-internal val Fn_BIT_LENGTH__CLOB__INT32 = Function.static(
+internal val Fn_BIT_LENGTH__CLOB__INT32 = Function.overload(
 
     name = "bit_length",
     returns = PType.integer(),

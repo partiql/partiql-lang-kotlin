@@ -1,5 +1,6 @@
 package org.partiql.spi.function.utils
 
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
@@ -41,33 +42,14 @@ internal object FunctionUtils {
         isNullCall: Boolean = true,
         isMissingCall: Boolean = true,
         invoke: (Array<Datum>) -> Datum,
-    ): Function {
+    ): FnOverload {
         val hiddenName = hide(name)
-        return object : Function {
-
-            override fun getName(): String {
-                return hiddenName
-            }
-
-            override fun getParameters(): Array<Parameter> {
-                return parameters
-            }
-
-            override fun getReturnType(args: Array<PType>): PType {
-                return returns
-            }
-
-            override fun getInstance(args: Array<PType>): Function.Instance {
-                return object : Function.Instance(
-                    name,
-                    Array(parameters.size) { parameters[it].getType() },
-                    returns,
-                    isNullCall,
-                    isMissingCall,
-                ) {
-                    override fun invoke(args: Array<Datum>): Datum = invoke(args)
-                }
-            }
-        }
+        return FnOverload.Builder(hiddenName)
+            .addParameters(*parameters.map { it.getType() }.toTypedArray())
+            .returns(returns)
+            .isNullCall(isNullCall)
+            .isMissingCall(isMissingCall)
+            .body(invoke)
+            .build()
     }
 }

@@ -6,7 +6,7 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 
 internal object PErrors {
@@ -83,7 +83,7 @@ internal object PErrors {
         location: SourceLocation?,
         fnId: Identifier?,
         argTypes: List<PType?>?,
-        candidates: List<Function?>?
+        candidates: List<FnOverload?>?
     ): PError {
         return PError(
             PError.FUNCTION_TYPE_MISMATCH,

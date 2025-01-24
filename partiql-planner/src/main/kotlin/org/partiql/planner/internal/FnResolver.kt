@@ -3,7 +3,7 @@ package org.partiql.planner.internal
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 
 /**
@@ -31,9 +31,9 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    fun resolve(variants: List<Function>, args: List<CompilerType>): FnMatch? {
+    fun resolve(variants: List<FnOverload>, args: List<CompilerType>): FnMatch? {
         val candidates = variants
-            .filter { it.getParameters().size == args.size }
+            .filter { it.signature.arity == args.size }
             .ifEmpty { return null }
 
         // 1. Look for exact match
@@ -55,7 +55,7 @@ internal object FnResolver {
         return resolveBestMatch(candidates, args)
     }
 
-    private fun resolveBestMatch(candidates: List<Function>, args: List<CompilerType>): FnMatch.Static? {
+    private fun resolveBestMatch(candidates: List<FnOverload>, args: List<CompilerType>): FnMatch.Static? {
         // 3. Discard functions that cannot be matched (via implicit coercion or exact matches)
         val invocableMatches = match(candidates, args).ifEmpty { return null }
         if (invocableMatches.size == 1) {
@@ -90,7 +90,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<Function>, args: List<CompilerType>): List<MatchResult> {
+    private fun match(candidates: List<FnOverload>, args: List<CompilerType>): List<MatchResult> {
         val matches = mutableSetOf<MatchResult>()
         for (candidate in candidates) {
             val m = candidate.match(args) ?: continue
@@ -120,14 +120,14 @@ internal object FnResolver {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun Function.matchesExactly(args: List<CompilerType>): Boolean {
+    private fun FnOverload.matchesExactly(args: List<CompilerType>): Boolean {
         val instance = getInstance(args.toTypedArray()) ?: return false
-        val parameters = instance.parameters
+        val parameters = instance.signature.parameters
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
             // TODO: Don't use kind! Once all functions use the new modelling, we can just make it p != a.
-            if (p.code() != a.code()) return false
+            if (p.type.code() != a.code()) return false
         }
         return true
     }
@@ -138,9 +138,9 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun Function.match(args: List<CompilerType>): MatchResult? {
+    private fun FnOverload.match(args: List<CompilerType>): MatchResult? {
         val instance = this.getInstance(args.toTypedArray()) ?: return null
-        val parameters = instance.parameters
+        val parameters = instance.signature.parameters
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         var exactInputTypes = 0
         for (i in args.indices) {
@@ -151,8 +151,8 @@ internal object FnResolver {
             // check match
             val p = parameters[i]
             when {
-                p.code() == a.code() -> exactInputTypes++ // TODO: Don't use kind! Once all functions use the new modelling, we can just make it p == a.
-                else -> mapping[i] = coercion(a, p) ?: return null
+                p.type.code() == a.code() -> exactInputTypes++ // TODO: Don't use kind! Once all functions use the new modelling, we can just make it p == a.
+                else -> mapping[i] = coercion(a, p.type) ?: return null
             }
         }
         return MatchResult(
@@ -170,7 +170,7 @@ internal object FnResolver {
     }
 
     private class MatchResult(
-        val match: Function,
+        val match: FnOverload,
         val mapping: Array<Ref.Cast?>,
         val numberOfExactInputTypes: Int,
     )

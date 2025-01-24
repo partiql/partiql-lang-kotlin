@@ -1,7 +1,8 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
 
 /**
  * Result of matching an unresolved function.
@@ -16,7 +17,7 @@ internal sealed class FnMatch {
      * @property mapping
      */
     class Static(
-        val function: Function.Instance,
+        val function: Fn,
         val mapping: Array<Ref.Cast?>,
     ) : FnMatch() {
 
@@ -51,5 +52,5 @@ internal sealed class FnMatch {
      *
      * @property candidates     Ordered list of potentially applicable functions to dispatch dynamically.
      */
-    class Dynamic(val candidates: List<Function>) : FnMatch()
+    class Dynamic(val candidates: List<FnOverload>) : FnMatch()
 }

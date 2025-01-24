@@ -119,6 +119,15 @@ internal class PlanTyperTestsPorted {
             constructor(
                 name: String,
                 query: String,
+                catalog: String,
+                catalogPath: List<String>,
+                expected: PType,
+                problemHandler: ProblemHandler,
+            ) : this(name, null, query, catalog, catalogPath, expected = expected, problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                query: String,
                 problemHandler: ProblemHandler
             ) : this(name, key = null, query = query, problemHandler = problemHandler)
 
@@ -4422,18 +4431,8 @@ internal class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("unknown_col", ANY)
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
+                expected = PType.bag(
+                    PType.row(Field.of("unknown_col", PType.unknown()))
                 ),
                 problemHandler = assertProblemExists(
                     PErrors.varRefNotFound(null, insensitive("unknown_col"), listOf("orders"))

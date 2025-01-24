@@ -8,7 +8,8 @@ import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -31,7 +32,7 @@ import org.partiql.spi.value.Datum
  */
 internal class ExprCallDynamic(
     private val name: String,
-    private val functions: Array<Function>,
+    private val functions: Array<FnOverload>,
     private val args: Array<ExprValue>
 ) : ExprValue {
 
@@ -43,15 +44,32 @@ internal class ExprCallDynamic(
     /**
      * A memoization cache for the [match] function.
      */
-    private val candidates: MutableMap<List<PType>, Candidate> = mutableMapOf()
+    private val candidates: MutableMap<ParameterTypes, Candidate> = mutableMapOf()
+
+    /**
+     * Used as the keys of the hash map: [ExprCallDynamic.candidates].
+     */
+    private class ParameterTypes(val types: Array<PType>) {
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            other as ParameterTypes // We can immediately cast, since this is a private class only used for the cache.
+            return types.contentEquals(other.types)
+        }
+
+        override fun hashCode(): Int {
+            return types.contentHashCode()
+        }
+    }
 
     override fun eval(env: Environment): Datum {
-        val actualArgs = args.map { it.eval(env).lowerSafe() }.toTypedArray()
-        val actualTypes = actualArgs.map { it.type }
-        var candidate = candidates[actualTypes]
+        val actualArgs = Array(args.size) { args[it].eval(env).lowerSafe() }
+        val actualTypes = Array(actualArgs.size) { actualArgs[it].type }
+        val paramTypes = ParameterTypes(actualTypes)
+        var candidate = candidates[paramTypes]
         if (candidate == null) {
             candidate = match(actualTypes) ?: throw PErrors.functionTypeMismatchException(name, actualTypes, functions.toList())
-            candidates[actualTypes] = candidate
+            candidates[paramTypes] = candidate
         }
         return candidate.eval(actualArgs)
     }
@@ -63,19 +81,19 @@ internal class ExprCallDynamic(
      *
      * @return the index of the candidate to invoke; null if method cannot resolve.
      */
-    private fun match(args: List<PType>): Candidate? {
+    private fun match(args: Array<PType>): Candidate? {
         var exactMatches: Int = -1
         var currentMatch: Int? = null
         val argFamilies = args.map { family(it.code()) }
         functions.indices.forEach { candidateIndex ->
             var currentExactMatches = 0
-            val params = functions[candidateIndex].getInstance(args.toTypedArray())?.parameters ?: return@forEach
+            val params = functions[candidateIndex].getInstance(args)?.signature?.parameters ?: return@forEach
             for (paramIndex in paramIndices) {
                 val argType = args[paramIndex]
                 val paramType = params[paramIndex]
-                if (paramType.code() == argType.code()) { currentExactMatches++ } // TODO: Convert all functions to use the new modelling, or else we need to only check kinds
+                if (paramType.type.code() == argType.code()) { currentExactMatches++ } // TODO: Convert all functions to use the new modelling, or else we need to only check kinds
                 val argFamily = argFamilies[paramIndex]
-                val paramFamily = family(paramType.code())
+                val paramFamily = family(paramType.type.code())
                 if (paramFamily != argFamily && argFamily != UNKNOWN && paramFamily != DYNAMIC) { return@forEach }
             }
             if (currentExactMatches > exactMatches) {
@@ -84,7 +102,7 @@ internal class ExprCallDynamic(
             }
         }
         return if (currentMatch == null) null else {
-            val instance = functions[currentMatch!!].getInstance(args.toTypedArray()) ?: return null
+            val instance = functions[currentMatch!!].getInstance(args) ?: return null
             Candidate(instance)
         }
     }
@@ -160,10 +178,10 @@ internal class ExprCallDynamic(
      *
      * @see ExprCallDynamic
      */
-    private class Candidate(private var function: Function.Instance) {
+    private class Candidate(private var function: Fn) {
 
-        private var nil = { Datum.nullValue(function.returns) }
-        private var missing = { Datum.missing(function.returns) }
+        private var nil = { Datum.nullValue(function.signature.returns) }
+        private var missing = { Datum.missing(function.signature.returns) }
 
         /**
          * Function instance parameters (just types).
@@ -171,17 +189,17 @@ internal class ExprCallDynamic(
         fun eval(args: Array<Datum>): Datum {
             val coerced = Array(args.size) { i ->
                 val arg = args[i]
-                if (function.isNullCall && arg.isNull) {
+                if (function.signature.isNullCall && arg.isNull) {
                     return nil.invoke()
                 }
-                if (function.isMissingCall && arg.isMissing) {
+                if (function.signature.isMissingCall && arg.isMissing) {
                     return missing.invoke()
                 }
                 val argType = arg.type
-                val paramType = function.parameters[i]
-                when (paramType == argType) {
+                val paramType = function.signature.parameters[i]
+                when (paramType.type == argType) {
                     true -> arg
-                    false -> CastTable.cast(arg, paramType)
+                    false -> CastTable.cast(arg, paramType.type)
                 }
             }
             return function.invoke(coerced)

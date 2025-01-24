@@ -3,8 +3,7 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -23,42 +22,19 @@ import org.partiql.spi.value.Datum
  * TODO: The PartiQL Specification needs to clearly define the semantics of MISSING. That being said, this implementation
  *  follows the existing conformance tests and SQL:1999.
  */
-internal object FnEq : Function {
-
-    // Memoize shared variables
-    private val NAME = FunctionUtils.hide("eq")
-    private val comparator = Datum.comparator()
-    private val boolType = PType.bool()
-    private val nullValue = Datum.nullValue(boolType)
-
-    override fun getName(): String {
-        return NAME
-    }
-
-    override fun getParameters(): Array<Parameter> {
-        return arrayOf(Parameter.dynamic("lhs"), Parameter.dynamic("rhs"))
-    }
-
-    override fun getInstance(args: Array<PType>): Function.Instance {
-        return object : Function.Instance(
-            NAME,
-            args,
-            boolType,
-            isNullCall = true,
-            isMissingCall = false
-        ) {
-            override fun invoke(args: Array<Datum>): Datum {
-                val lhs = args[0]
-                val rhs = args[1]
-                if (lhs.isMissing || rhs.isMissing) {
-                    return nullValue
-                }
-                return Datum.bool(comparator.compare(lhs, rhs) == 0)
-            }
+private val name = FunctionUtils.hide("eq")
+internal val FnEq = FnOverload.Builder(name)
+    .addParameters(PType.dynamic(), PType.dynamic())
+    .returns(PType.bool())
+    .isNullCall(true)
+    .isMissingCall(false)
+    .body { args ->
+        val lhs = args[0]
+        val rhs = args[1]
+        if (lhs.isMissing || rhs.isMissing) {
+            Datum.nullValue(PType.bool())
+        } else {
+            Datum.bool(Datum.comparator().compare(lhs, rhs) == 0)
         }
     }
-
-    override fun getReturnType(args: Array<PType>): PType {
-        return getInstance(args).returns
-    }
-}
+    .build()

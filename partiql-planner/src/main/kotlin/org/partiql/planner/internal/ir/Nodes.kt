@@ -66,8 +66,8 @@ import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.function.Aggregation
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.value.Datum
 import kotlin.random.Random
 
@@ -123,7 +123,7 @@ internal sealed class Ref : PlanNode() {
     internal data class Fn(
         @JvmField internal val catalog: String,
         @JvmField internal val name: Name,
-        @JvmField internal val signature: Function,
+        @JvmField internal val signature: FnOverload,
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
@@ -138,7 +138,7 @@ internal sealed class Ref : PlanNode() {
     internal data class Agg(
         @JvmField internal val catalog: String,
         @JvmField internal val name: Name,
-        @JvmField internal val signature: Aggregation,
+        @JvmField internal val signature: org.partiql.spi.function.Agg,
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
@@ -446,7 +446,7 @@ internal data class Rex(
             }
 
             internal data class Static(
-                @JvmField internal val fn: Function.Instance,
+                @JvmField internal val fn: Fn,
                 @JvmField internal val args: List<Rex>,
             ) : Call() {
                 public override val children: List<PlanNode> by lazy {

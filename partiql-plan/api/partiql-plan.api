@@ -299,7 +299,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun aggregate (Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
 	public abstract fun array (Ljava/util/List;)Lorg/partiql/plan/rex/RexArray;
 	public abstract fun bag (Ljava/util/Collection;)Lorg/partiql/plan/rex/RexBag;
-	public abstract fun call (Lorg/partiql/spi/function/Function$Instance;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
+	public abstract fun call (Lorg/partiql/spi/function/Fn;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
 	public abstract fun caseWhen (Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
 	public abstract fun cast (Lorg/partiql/plan/rex/Rex;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexCast;
 	public abstract fun coalesce (Ljava/util/List;)Lorg/partiql/plan/rex/RexCoalesce;
@@ -344,7 +344,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun aggregate (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
 	public static fun array (Lorg/partiql/plan/Operators;Ljava/util/List;)Lorg/partiql/plan/rex/RexArray;
 	public static fun bag (Lorg/partiql/plan/Operators;Ljava/util/Collection;)Lorg/partiql/plan/rex/RexBag;
-	public static fun call (Lorg/partiql/plan/Operators;Lorg/partiql/spi/function/Function$Instance;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
+	public static fun call (Lorg/partiql/plan/Operators;Lorg/partiql/spi/function/Fn;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
 	public static fun caseWhen (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
 	public static fun cast (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexCast;
 	public static fun coalesce (Lorg/partiql/plan/Operators;Ljava/util/List;)Lorg/partiql/plan/rex/RexCoalesce;
@@ -408,14 +408,14 @@ public abstract class org/partiql/plan/rel/RelAggregate : org/partiql/plan/rel/R
 	public abstract fun getGroups ()Ljava/util/List;
 	public abstract fun getInput ()Lorg/partiql/plan/rel/Rel;
 	public abstract fun getMeasures ()Ljava/util/List;
-	public static fun measure (Lorg/partiql/spi/function/Aggregation;Ljava/util/List;Z)Lorg/partiql/plan/rel/RelAggregate$Measure;
+	public static fun measure (Lorg/partiql/spi/function/Agg;Ljava/util/List;Z)Lorg/partiql/plan/rel/RelAggregate$Measure;
 	protected final fun operands ()Ljava/util/List;
 	protected final fun type ()Lorg/partiql/plan/rel/RelType;
 }
 
 public class org/partiql/plan/rel/RelAggregate$Measure {
 	public fun copy (Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate$Measure;
-	public fun getAgg ()Lorg/partiql/spi/function/Aggregation;
+	public fun getAgg ()Lorg/partiql/spi/function/Agg;
 	public fun getArgs ()Ljava/util/List;
 	public fun isDistinct ()Z
 }
@@ -659,9 +659,9 @@ public abstract class org/partiql/plan/rex/RexBase : org/partiql/plan/rex/Rex {
 public abstract class org/partiql/plan/rex/RexCall : org/partiql/plan/rex/RexBase {
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun create (Lorg/partiql/spi/function/Function$Instance;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
+	public static fun create (Lorg/partiql/spi/function/Fn;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
 	public abstract fun getArgs ()Ljava/util/List;
-	public abstract fun getFunction ()Lorg/partiql/spi/function/Function$Instance;
+	public abstract fun getFunction ()Lorg/partiql/spi/function/Fn;
 	protected fun operands ()Ljava/util/List;
 	protected fun type ()Lorg/partiql/plan/rex/RexType;
 }

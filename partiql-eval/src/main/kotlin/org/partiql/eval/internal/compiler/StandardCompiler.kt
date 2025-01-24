@@ -366,7 +366,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             // Compile the candidates
             val candidates = Array(functions.size) {
                 val fn = functions[it]
-                val fnArity = fn.getParameters().size
+                val fnArity = fn.signature.arity
                 if (arity == -1) {
                     // set first
                     arity = fnArity
@@ -385,7 +385,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitCall(rex: RexCall, ctx: Unit): ExprValue {
             val func = rex.getFunction()
             val args = rex.getArgs()
-            val catch = func.parameters.any { it.code() == PType.DYNAMIC }
+            val catch = func.signature.parameters.any { it.type.code() == PType.DYNAMIC }
             return when (catch) {
                 true -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit).catch() })
                 else -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit) })

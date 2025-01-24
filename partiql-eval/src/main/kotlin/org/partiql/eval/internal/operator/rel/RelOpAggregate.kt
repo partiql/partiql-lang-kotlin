@@ -6,8 +6,7 @@ import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.operator.Aggregate
-import org.partiql.spi.function.Aggregation
-import org.partiql.spi.types.PType
+import org.partiql.spi.function.Accumulator
 import org.partiql.spi.value.Datum
 import java.util.TreeMap
 import java.util.TreeSet
@@ -23,12 +22,12 @@ internal class RelOpAggregate(
     private val aggregationMap = TreeMap<Array<Datum>, List<AccumulatorWrapper>>(DatumArrayComparator)
 
     /**
-     * Wraps an [Aggregation.Accumulator] to help with filtering distinct values.
+     * Wraps an [Accumulator] to help with filtering distinct values.
      *
      * @property seen maintains which values have already been seen. If null, we accumulate all values coming through.
      */
     class AccumulatorWrapper(
-        val delegate: Aggregation.Accumulator,
+        val delegate: Accumulator,
         val args: List<ExprValue>,
         val seen: TreeSet<Array<Datum>>?
     )
@@ -47,13 +46,10 @@ internal class RelOpAggregate(
                 }
             }
 
-            // TODO IT DOES NOT MATTER NOW, BUT SqlCompiler SHOULD HANDLE GET THE ARGUMENT TYPES FOR .getAccumulator
-            val args: Array<PType> = emptyArray()
-
             val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
                 aggregates.map {
                     AccumulatorWrapper(
-                        delegate = it.agg.getAccumulator(args),
+                        delegate = it.agg.accumulator,
                         args = it.args,
                         seen = if (it.distinct) TreeSet(DatumArrayComparator) else null
                     )
@@ -82,19 +78,20 @@ internal class RelOpAggregate(
 
         // No Aggregations Created
         if (groups.isEmpty() && aggregationMap.isEmpty()) {
-            val record = mutableListOf<Datum>()
-            aggregates.forEach { function ->
-                val accumulator = function.agg.getAccumulator(args = emptyArray())
-                record.add(accumulator.value())
+            val record = Array<Datum?>(aggregates.size) {
+                val function = aggregates[it]
+                val accumulator = function.agg.accumulator
+                accumulator.value()
             }
-            records = iterator { yield(Row(record.toTypedArray())) }
+            records = iterator { yield(Row(record)) }
             return
         }
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
-                val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated
-                yield(Row(recordValues.toTypedArray()))
+                val accumulatorValues = Array(accumulators.size) { i -> accumulators[i].delegate.value() }
+                val recordValues = accumulatorValues + keysEvaluated
+                yield(Row(recordValues))
             }
         }
     }

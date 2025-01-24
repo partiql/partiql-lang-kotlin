@@ -3,7 +3,7 @@ package org.partiql.plan.rex;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
-import org.partiql.spi.function.Function;
+import org.partiql.spi.function.Fn;
 
 import java.util.List;
 
@@ -19,16 +19,17 @@ public abstract class RexCall extends RexBase {
      * @return a new scalar function expression
      */
     @NotNull
-    public static RexCall create(@NotNull Function.Instance function, @NotNull List<Rex> args) {
+    public static RexCall create(@NotNull Fn function, @NotNull List<Rex> args) {
         return new Impl(function, args);
     }
 
     /**
      * Returns the function to invoke.
+     *
      * @return the function to invoke
      */
     @NotNull
-    public abstract Function.Instance getFunction();
+    public abstract Fn getFunction();
 
     /**
      * Returns the list of function arguments.
@@ -40,7 +41,7 @@ public abstract class RexCall extends RexBase {
     @NotNull
     @Override
     protected RexType type() {
-        return RexType.of(getFunction().returns);
+        return RexType.of(getFunction().getSignature().getReturns());
     }
 
     @NotNull
@@ -57,17 +58,17 @@ public abstract class RexCall extends RexBase {
 
     private static class Impl extends RexCall {
 
-        private final Function.Instance function;
+        private final Fn function;
         private final List<Rex> args;
 
-        private Impl(Function.Instance function, List<Rex> args) {
+        private Impl(Fn function, List<Rex> args) {
             this.function = function;
             this.args = args;
         }
 
         @NotNull
         @Override
-        public Function.Instance getFunction() {
+        public Fn getFunction() {
             return function;
         }
 

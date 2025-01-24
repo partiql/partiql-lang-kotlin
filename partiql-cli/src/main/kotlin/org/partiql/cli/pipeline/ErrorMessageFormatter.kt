@@ -5,7 +5,7 @@ import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.Severity
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 import java.io.PrintWriter
 import java.io.Writer
@@ -186,7 +186,7 @@ object ErrorMessageFormatter {
      */
     private fun fnTypeMismatch(error: PError): String {
         val functionName = error.getOrNull("FN_ID", Identifier::class.java)
-        val candidates = error.getListOrNull("CANDIDATES", Function::class.java)
+        val candidates = error.getListOrNull("CANDIDATES", FnOverload::class.java)
         val args = error.getListOrNull("ARG_TYPES", PType::class.java)
         val fnNameStr = prepare(functionName.toString(), " ", "")
         val fnStr = when {
@@ -196,20 +196,6 @@ object ErrorMessageFormatter {
         }
         return buildString {
             append("Undefined function$fnStr.")
-            if (!candidates.isNullOrEmpty()) {
-                appendLine(" Did you mean: ")
-                for (variant in candidates) {
-                    variant as Function
-                    append("- ")
-                    append(variant.getName())
-                    append(
-                        variant.getParameters().joinToString(", ", "(", ")") {
-                            "${it.getName()}: ${it.getType()}"
-                        }
-                    )
-                    appendLine()
-                }
-            }
         }
     }
 

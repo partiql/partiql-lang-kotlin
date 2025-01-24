@@ -5,7 +5,7 @@ import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -21,15 +21,12 @@ class FnResolverTest {
     fun sanity() {
         // 1 + 1.0 -> 2.0
         val variants = listOf(
-            Function.static(
-                name = "plus",
-                returns = PType.doublePrecision(),
-                parameters = arrayOf(
-                    Parameter("arg-0", PType.doublePrecision()),
-                    Parameter("arg-1", PType.doublePrecision()),
-                ),
-                invoke = { Datum.nullValue() }
-            )
+            FnOverload.Builder("plus")
+                .returns(PType.doublePrecision())
+                .addParameter(Parameter("arg-0", PType.doublePrecision()))
+                .addParameter(Parameter("arg-1", PType.doublePrecision()))
+                .body { Datum.nullValue() }
+                .build()
         )
         val args = listOf(PType.integer().toCType(), PType.doublePrecision().toCType())
         val expectedImplicitCasts = listOf(true, false)
@@ -40,15 +37,12 @@ class FnResolverTest {
     @Test
     fun split() {
         val variants = listOf(
-            Function.static(
-                name = "split",
-                returns = PType.array(),
-                parameters = arrayOf(
-                    Parameter("value", PType.string()),
-                    Parameter("delimiter", PType.string()),
-                ),
-                invoke = { Datum.nullValue() }
-            )
+            FnOverload.Builder("split")
+                .returns(PType.array())
+                .addParameter(Parameter("value", PType.string()))
+                .addParameter(Parameter("delimiter", PType.string()))
+                .body { Datum.nullValue() }
+                .build(),
         )
         val args = listOf(PType.string().toCType(), PType.string().toCType())
         val expectedImplicitCasts = listOf(false, false)
@@ -61,7 +55,7 @@ class FnResolverTest {
         abstract fun assert()
 
         class Success(
-            private val variants: List<Function>,
+            private val variants: List<FnOverload>,
             private val inputs: List<CompilerType>,
             private val expectedImplicitCast: List<Boolean>,
         ) : Case() {

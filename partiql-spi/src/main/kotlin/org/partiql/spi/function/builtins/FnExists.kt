@@ -5,7 +5,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_EXISTS__BAG__BOOL = Function.static(
+internal val Fn_EXISTS__BAG__BOOL = Function.overload(
 
     name = "exists",
     returns = PType.bool(),
@@ -19,7 +19,7 @@ internal val Fn_EXISTS__BAG__BOOL = Function.static(
     Datum.bool(exists)
 }
 
-internal val Fn_EXISTS__LIST__BOOL = Function.static(
+internal val Fn_EXISTS__LIST__BOOL = Function.overload(
 
     name = "exists",
     returns = PType.bool(),
@@ -37,7 +37,7 @@ internal val Fn_EXISTS__LIST__BOOL = Function.static(
 //  The `<exists predicate>` in SQL:1999 requires that the RHS be a syntactic `<table subquery>`,
 //  which is always a BAG. Similarly, Section 8.9 references the cardinality of the RHS, which is an attribute of
 //  collections. The term "degree" would be more characteristic of tuples.
-internal val Fn_EXISTS__STRUCT__BOOL = Function.static(
+internal val Fn_EXISTS__STRUCT__BOOL = Function.overload(
 
     name = "exists",
     returns = PType.bool(),

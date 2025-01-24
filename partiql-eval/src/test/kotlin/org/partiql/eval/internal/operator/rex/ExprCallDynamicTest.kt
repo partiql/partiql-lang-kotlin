@@ -7,7 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -58,32 +58,15 @@ class ExprCallDynamicTest {
                 PartiQLValueType.LIST to PartiQLValueType.ANY, // Index 11
                 PartiQLValueType.ANY to PartiQLValueType.ANY, // Index 12
             )
-
-            internal val functions: Array<Function> = params.mapIndexed { index, it ->
-                object : Function {
-
-                    override fun getName(): String {
-                        return "example"
-                    }
-
-                    override fun getParameters(): Array<Parameter> {
-                        return arrayOf(Parameter("lhs", it.first.toPType()), Parameter("rhs", it.second.toPType()))
-                    }
-
-                    override fun getReturnType(args: Array<PType>): PType {
-                        return PType.integer()
-                    }
-
-                    override fun getInstance(args: Array<PType>): Function.Instance {
-                        return object : Function.Instance(
-                            name = "example",
-                            returns = PType.integer(),
-                            parameters = arrayOf(it.first.toPType(), it.second.toPType())
-                        ) {
-                            override fun invoke(args: Array<Datum>): Datum = integer(index)
-                        }
-                    }
-                }
+            internal val functions: Array<FnOverload> = params.mapIndexed { index, it ->
+                FnOverload.Builder("example")
+                    .returns(PType.integer())
+                    .addParameters(
+                        Parameter("lhs", it.first.toPType()),
+                        Parameter("rhs", it.second.toPType())
+                    )
+                    .body { integer(index) }
+                    .build()
             }.toTypedArray()
         }
     }

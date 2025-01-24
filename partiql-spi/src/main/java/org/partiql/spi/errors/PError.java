@@ -6,7 +6,7 @@ import org.partiql.spi.Enum;
 import org.partiql.spi.SourceLocation;
 import org.partiql.spi.UnsupportedCodeException;
 import org.partiql.spi.catalog.Identifier;
-import org.partiql.spi.function.Function;
+import org.partiql.spi.function.FnOverload;
 import org.partiql.spi.types.PType;
 
 import java.util.HashMap;
@@ -407,7 +407,7 @@ public final class PError extends Enum {
      * <ul>
      * <li><b>FN_ID</b> ({@link Identifier}): Represents the user-specified identifier of the function invocation.</li>
      * <li><b>ARG_TYPES</b> ({@link List} of {@link PType}): Types of the arguments.</li>
-     * <li><b>CANDIDATES</b> ({@link List} of {@link Function}): The candidate functions</li>
+     * <li><b>CANDIDATES</b> ({@link List} of {@link FnOverload}): The candidate functions</li>
      * </ul>
      * <br>
      * Example error message: <code>[location]: Function reference ([fn_id]([arg_types])) cannot resolve to one of: [candidates].</code>

@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorEvery
 import org.partiql.spi.types.PType
 
-internal val Agg_EVERY__BOOL__BOOL = Aggregation.static(
+internal val Agg_EVERY__BOOL__BOOL = Aggregation.overload(
     name = "every",
     returns = PType.bool(),
     parameters = arrayOf(
@@ -17,7 +17,7 @@ internal val Agg_EVERY__BOOL__BOOL = Aggregation.static(
     accumulator = ::AccumulatorEvery,
 )
 
-internal val Agg_EVERY__ANY__BOOL = Aggregation.static(
+internal val Agg_EVERY__ANY__BOOL = Aggregation.overload(
     name = "every",
     returns = PType.bool(),
     parameters = arrayOf(

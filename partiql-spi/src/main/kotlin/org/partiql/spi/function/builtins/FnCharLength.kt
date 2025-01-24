@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_CHAR_LENGTH__STRING__INT = Function.static(
+internal val Fn_CHAR_LENGTH__STRING__INT = Function.overload(
 
     name = "char_length",
     returns = PType.integer(),
@@ -21,7 +21,7 @@ internal val Fn_CHAR_LENGTH__STRING__INT = Function.static(
     Datum.integer(value.codePointCount(0, value.length))
 }
 
-internal val Fn_CHAR_LENGTH__CLOB__INT = Function.static(
+internal val Fn_CHAR_LENGTH__CLOB__INT = Function.overload(
 
     name = "char_length",
     returns = PType.integer(),

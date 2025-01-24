@@ -9,7 +9,7 @@ import org.partiql.spi.value.Datum
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-internal val Fn_UTCNOW____TIMESTAMP = Function.static(
+internal val Fn_UTCNOW____TIMESTAMP = Function.overload(
     name = "utcnow",
     returns = PType.timestampz(6),
     parameters = arrayOf(),

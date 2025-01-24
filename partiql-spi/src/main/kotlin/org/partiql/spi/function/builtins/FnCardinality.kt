@@ -5,7 +5,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_CARDINALITY__BAG__INT32 = Function.static(
+internal val Fn_CARDINALITY__BAG__INT32 = Function.overload(
 
     name = "cardinality",
     returns = PType.integer(),
@@ -18,7 +18,7 @@ internal val Fn_CARDINALITY__BAG__INT32 = Function.static(
     Datum.integer(container.count())
 }
 
-internal val Fn_CARDINALITY__LIST__INT32 = Function.static(
+internal val Fn_CARDINALITY__LIST__INT32 = Function.overload(
 
     name = "cardinality",
     returns = PType.integer(),
@@ -31,7 +31,7 @@ internal val Fn_CARDINALITY__LIST__INT32 = Function.static(
     Datum.integer(container.count())
 }
 
-internal val Fn_CARDINALITY__STRUCT__INT32 = Function.static(
+internal val Fn_CARDINALITY__STRUCT__INT32 = Function.overload(
 
     name = "cardinality",
     returns = PType.integer(),

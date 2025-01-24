@@ -3,15 +3,14 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.function.utils.StringUtils.codepointSubstring
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
 /**
- * Built in function to the substring of an existing string. This function
+ * Built-in function to the substring of an existing string. This function
  * propagates null and missing values as described in docs/Functions.md
  *
  * From the SQL-92 spec, page 135:
@@ -79,76 +78,54 @@ import org.partiql.spi.value.Datum
  *              L1 = E1 - S1
  *              java's substring(C, S1, E1)
  */
-internal val Fn_SUBSTRING__STRING_INT32__STRING = Function.static(
-
-    name = "substring",
-    returns = PType.string(),
-    parameters = arrayOf(
-        Parameter("value", PType.string()),
-        Parameter("start", PType.integer()),
-    ),
-
-) { args ->
-    val value = args[0].string
-    val start = args[1].int
-    val result = value.codepointSubstring(start)
-    Datum.string(result)
-}
-
-internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = Function.static(
-
-    name = "substring",
-    returns = PType.string(),
-    parameters = arrayOf(
-        Parameter("value", PType.string()),
-        Parameter("start", PType.integer()),
-        Parameter("end", PType.integer()),
-    ),
-
-) { args ->
-    val value = args[0].string
-    val start = args[1].int
-    val end = args[2].int
-    if (end < 0) {
-        throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+internal val Fn_SUBSTRING__STRING_INT32__STRING = FnOverload.Builder("substring")
+    .returns(PType.string())
+    .addParameters(PType.string(), PType.integer())
+    .body { args ->
+        val value = args[0].string
+        val start = args[1].int
+        val result = value.codepointSubstring(start)
+        Datum.string(result)
     }
-    val result = value.codepointSubstring(start, end)
-    Datum.string(result)
-}
+    .build()
 
-internal val Fn_SUBSTRING__CLOB_INT64__CLOB = Function.static(
-
-    name = "substring",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(
-        Parameter("value", PType.clob(Int.MAX_VALUE)),
-        Parameter("start", PType.integer()),
-    ),
-
-) { args ->
-    val value = args[0].bytes.toString(Charsets.UTF_8)
-    val start = args[1].int
-    val result = value.codepointSubstring(start)
-    Datum.clob(result.toByteArray())
-}
-
-internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = Function.static(
-
-    name = "substring",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(
-        Parameter("value", PType.clob(Int.MAX_VALUE)),
-        Parameter("start", PType.integer()),
-        Parameter("end", PType.integer()),
-    ),
-
-) { args ->
-    val string = args[0].bytes.toString(Charsets.UTF_8)
-    val start = args[1].int
-    val end = args[2].int
-    if (end < 0) {
-        throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+internal val Fn_SUBSTRING__CLOB_INT64__CLOB = FnOverload.Builder("substring")
+    .returns(PType.clob())
+    .addParameters(PType.clob(), PType.integer())
+    .body { args ->
+        val value = args[0].bytes.toString(Charsets.UTF_8)
+        val start = args[1].int
+        val result = value.codepointSubstring(start)
+        Datum.clob(result.toByteArray())
     }
-    val result = string.codepointSubstring(start, end)
-    Datum.clob(result.toByteArray())
-}
+    .build()
+
+internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = FnOverload.Builder("substring")
+    .returns(PType.string())
+    .addParameters(PType.string(), PType.integer(), PType.integer())
+    .body { args ->
+        val value = args[0].string
+        val start = args[1].int
+        val end = args[2].int
+        if (end < 0) {
+            throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+        }
+        val result = value.codepointSubstring(start, end)
+        Datum.string(result)
+    }
+    .build()
+
+internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = FnOverload.Builder("substring")
+    .returns(PType.clob())
+    .addParameters(PType.clob(), PType.integer(), PType.integer())
+    .body { args ->
+        val string = args[0].bytes.toString(Charsets.UTF_8)
+        val start = args[1].int
+        val end = args[2].int
+        if (end < 0) {
+            throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+        }
+        val result = string.codepointSubstring(start, end)
+        Datum.clob(result.toByteArray())
+    }
+    .build()
