@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.helpers
 
+import org.partiql.eval.internal.operator.rex.CastTable
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigInteger
@@ -39,9 +40,25 @@ internal object ValueUtility {
             return this.lower().check(type)
         }
         if (!this.isNull) {
-            throw PErrors.unexpectedTypeException(type, listOf(this.type))
+            throw PErrors.unexpectedTypeException(this.type, listOf(type))
         }
         return Datum.nullValue(type)
+    }
+
+    /**
+     * Specifically checks for struct, or coerce rows to structs. Same functionality as [check].
+     */
+    fun Datum.checkStruct(): Datum {
+        if (this.type.code() == PType.VARIANT) {
+            return this.lower().checkStruct()
+        }
+        if (this.type.code() == PType.STRUCT) {
+            return this
+        }
+        if (this.type.code() == PType.ROW) {
+            return CastTable.cast(this, PType.struct())
+        }
+        return this.check(PType.struct())
     }
 
     /**

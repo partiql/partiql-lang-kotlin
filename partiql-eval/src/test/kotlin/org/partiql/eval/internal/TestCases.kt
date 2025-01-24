@@ -10,6 +10,7 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.ValueUtils
@@ -23,9 +24,15 @@ import kotlin.test.assertEquals
  */
 class Global(
     val name: String,
-    val value: String,
-    val type: StaticType = StaticType.ANY,
-)
+    val value: Datum,
+    val type: PType = PType.dynamic(),
+) {
+    constructor(
+        name: String,
+        value: String,
+        type: StaticType = StaticType.ANY,
+    ) : this(name, DatumReader.ion(value.byteInputStream()).next()!!, fromStaticType(type))
+}
 
 public class SuccessTestCase(
     val input: String,
@@ -56,8 +63,8 @@ public class SuccessTestCase(
                 globals.forEach {
                     val table = Table.standard(
                         name = Name.of(it.name),
-                        schema = fromStaticType(it.type),
-                        datum = DatumReader.ion(it.value.byteInputStream()).next()!!
+                        schema = it.type,
+                        datum = it.value
                     )
                     define(table)
                 }
@@ -112,8 +119,8 @@ public class FailureTestCase(
                 globals.forEach {
                     val table = Table.standard(
                         name = Name.of(it.name),
-                        schema = fromStaticType(it.type),
-                        datum = DatumReader.ion(it.value.byteInputStream()).next()!!
+                        schema = it.type,
+                        datum = it.value
                     )
                     define(table)
                 }

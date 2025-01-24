@@ -10,6 +10,7 @@ import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
 import org.partiql.value.PartiQLValue
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
@@ -1406,6 +1407,42 @@ class PartiQLEvaluatorTest {
                 )
             )
         )
+    }
+
+    @Test
+    fun proveThatRowWorksWhenDynamic() {
+        val tc =
+            SuccessTestCase(
+                input = "t.a = 3",
+                expected = Datum.bool(true),
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "t",
+                        type = PType.dynamic(),
+                        value = Datum.row(Field.of("a", Datum.integer(3)))
+                    )
+                )
+            )
+        tc.run()
+    }
+
+    @Test
+    fun proveThatRowWorks() {
+        val tc =
+            SuccessTestCase(
+                input = "t.a = 3",
+                expected = Datum.bool(true),
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "t",
+                        type = PType.row(org.partiql.spi.types.Field.of("a", PType.integer())),
+                        value = Datum.row(Field.of("a", Datum.integer(3)))
+                    ),
+                )
+            )
+        tc.run()
     }
 
     @Test
