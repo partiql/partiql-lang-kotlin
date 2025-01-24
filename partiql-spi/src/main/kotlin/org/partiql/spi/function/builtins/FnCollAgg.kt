@@ -9,13 +9,13 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.internal.Accumulator
 import org.partiql.spi.function.builtins.internal.AccumulatorAnySome
-import org.partiql.spi.function.builtins.internal.AccumulatorAvg
+import org.partiql.spi.function.builtins.internal.AccumulatorAvgDynamic
 import org.partiql.spi.function.builtins.internal.AccumulatorCount
 import org.partiql.spi.function.builtins.internal.AccumulatorDistinct
 import org.partiql.spi.function.builtins.internal.AccumulatorEvery
 import org.partiql.spi.function.builtins.internal.AccumulatorMax
 import org.partiql.spi.function.builtins.internal.AccumulatorMin
-import org.partiql.spi.function.builtins.internal.AccumulatorSum
+import org.partiql.spi.function.builtins.internal.AccumulatorSumDynamic
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 
@@ -53,13 +53,13 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
         }
         .build()
 
-    object SUM_ALL : Fn_COLL_AGG__BAG__ANY("coll_sum_all", false, ::AccumulatorSum)
+    object SUM_ALL : Fn_COLL_AGG__BAG__ANY("coll_sum_all", false, ::AccumulatorSumDynamic)
 
-    object SUM_DISTINCT : Fn_COLL_AGG__BAG__ANY("coll_sum_distinct", true, ::AccumulatorSum)
+    object SUM_DISTINCT : Fn_COLL_AGG__BAG__ANY("coll_sum_distinct", true, ::AccumulatorSumDynamic)
 
-    object AVG_ALL : Fn_COLL_AGG__BAG__ANY("coll_avg_all", false, ::AccumulatorAvg)
+    object AVG_ALL : Fn_COLL_AGG__BAG__ANY("coll_avg_all", false, ::AccumulatorAvgDynamic)
 
-    object AVG_DISTINCT : Fn_COLL_AGG__BAG__ANY("coll_avg_distinct", true, ::AccumulatorAvg)
+    object AVG_DISTINCT : Fn_COLL_AGG__BAG__ANY("coll_avg_distinct", true, ::AccumulatorAvgDynamic)
 
     object MIN_ALL : Fn_COLL_AGG__BAG__ANY("coll_min_all", false, ::AccumulatorMin)
 

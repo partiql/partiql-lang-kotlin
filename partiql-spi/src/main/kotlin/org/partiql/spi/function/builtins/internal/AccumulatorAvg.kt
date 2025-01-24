@@ -1,62 +1,88 @@
 package org.partiql.spi.function.builtins.internal
 
+import org.partiql.spi.function.builtins.DefaultDecimal
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils.checkIsNumberType
-import org.partiql.spi.utils.FunctionUtils.nullToTargetType
+import org.partiql.spi.utils.NumberUtils.AccumulatorType
 import org.partiql.spi.utils.NumberUtils.MATH_CONTEXT
 import org.partiql.spi.utils.NumberUtils.add
 import org.partiql.spi.utils.NumberUtils.bigDecimalOf
+import org.partiql.spi.utils.NumberUtils.numberValue
 import org.partiql.spi.utils.NumberUtils.toTargetType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 
-// TODO docs + further cleanup
-internal class AccumulatorAvg(
-    private val targetType: PType = PType.dynamic(),
-) : Accumulator() {
-    private var sum: Number? = null
+internal class AccumulatorAvgDecimal : Accumulator() {
+    private var sum: BigDecimal = BigDecimal.ZERO
     private var count: Long = 0L
-    private var dynamicSumType: PType? = targetType
+    private var init = false
 
     override fun nextValue(value: Datum) {
         checkIsNumberType(funcName = "AVG", value = value)
-        when (targetType.code()) {
-            PType.DECIMAL -> {
-                if (sum == null) {
-                    sum = BigDecimal.ZERO
-                }
-            }
-            PType.DOUBLE -> {
-                if (sum == null) {
-                    sum = 0.0
-                }
-            }
-            PType.DYNAMIC -> if (sum == null) {
-                dynamicSumType = when (value.type.code()) {
-                    PType.REAL, PType.DOUBLE -> {
-                        sum = BigDecimal.ZERO
-                        PType.doublePrecision()
-                    }
-                    PType.TINYINT, PType.SMALLINT, PType.INTEGER, PType.BIGINT, PType.DECIMAL, PType.NUMERIC -> {
-                        sum = BigDecimal.ZERO
-                        PType.decimal()
-                    }
-                    else -> error("Unexpected type: ${value.type}")
-                }
-            } else {
-                when (value.type.code()) {
-                    PType.REAL, PType.DOUBLE -> {
-                        dynamicSumType = PType.doublePrecision()
-                    }
-                }
-            }
+        if (!init) {
+            init = true
         }
-        sum = add(sum!!, value, dynamicSumType!!)
+        val arg1 = bigDecimalOf(value.numberValue(), MATH_CONTEXT)
+        sum = sum.add(arg1, MATH_CONTEXT)
         count += 1L
     }
 
     override fun value(): Datum = when (count) {
-        0L -> nullToTargetType(targetType)
+        0L -> Datum.nullValue(DefaultDecimal.DECIMAL)
+        else -> Datum.decimal(bigDecimalOf(sum).divide(bigDecimalOf(count), MATH_CONTEXT))
+    }
+}
+
+internal class AccumulatorAvgDouble : Accumulator() {
+    private var sum: Double = 0.0
+    private var count: Long = 0L
+    private var init = false
+
+    override fun nextValue(value: Datum) {
+        checkIsNumberType(funcName = "AVG", value = value)
+        val arg1 = value.double
+        if (!init) {
+            init = true
+        }
+        sum += arg1
+        count += 1L
+    }
+
+    override fun value(): Datum = when (count) {
+        0L -> Datum.nullValue(PType.doublePrecision())
+        else -> Datum.doublePrecision(sum / count.toDouble())
+    }
+}
+
+internal class AccumulatorAvgDynamic : Accumulator() {
+    private var sum: Number? = null
+    private var count: Long = 0L
+    private var accumulatorType: AccumulatorType? = null
+
+    override fun nextValue(value: Datum) {
+        checkIsNumberType(funcName = "AVG", value = value)
+        if (sum == null) {
+            sum = when (value.type.code()) {
+                PType.REAL, PType.DOUBLE -> {
+                    accumulatorType = AccumulatorType.APPROX
+                    0.0
+                }
+                else -> {
+                    accumulatorType = AccumulatorType.DECIMAL
+                    BigDecimal.ZERO
+                }
+            }
+        } else {
+            if (value.type.code() == PType.REAL || value.type.code() == PType.DOUBLE) {
+                accumulatorType = AccumulatorType.APPROX
+            }
+        }
+        sum = add(sum!!, value, accumulatorType!!)
+        count += 1L
+    }
+
+    override fun value(): Datum = when (count) {
+        0L -> Datum.nullValue(PType.dynamic())
         else -> {
             when (sum) {
                 is BigDecimal -> {
@@ -66,7 +92,7 @@ internal class AccumulatorAvg(
                     (sum!!.toDouble()) / count.toDouble()
                 }
                 else -> error("Sum should be BigDecimal or Double")
-            }.toTargetType(targetType)
+            }.toTargetType(PType.dynamic())
         }
     }
 }

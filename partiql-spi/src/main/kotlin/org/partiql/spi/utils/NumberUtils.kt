@@ -214,8 +214,7 @@ internal object NumberUtils {
 
     internal fun Int.shortOverflows() = this < Short.MIN_VALUE || this > Short.MAX_VALUE
 
-    // TODO further cleanup
-    private fun Datum.longValue(): Long = when (this.type.code()) {
+    internal fun Datum.longValue(): Long = when (this.type.code()) {
         PType.VARIANT -> this.lower().longValue()
         PType.TINYINT -> this.byte.toLong()
         PType.SMALLINT -> this.short.toLong()
@@ -224,7 +223,7 @@ internal object NumberUtils {
         else -> error("Cannot convert Datum ($this) to long.")
     }
 
-    private fun Datum.doubleValue(): Double = when (this.type.code()) {
+    internal fun Datum.doubleValue(): Double = when (this.type.code()) {
         PType.VARIANT -> this.lower().doubleValue()
         PType.TINYINT -> this.byte.toDouble()
         PType.SMALLINT -> this.short.toDouble()
@@ -304,29 +303,37 @@ internal object NumberUtils {
         else -> TODO("Could not convert $this to PartiQL Value")
     }
 
+    // Enum for distinguishing between the different numerical accumulators. Otherwise, could use PType, but it may be
+    // prone to error in the casing.
+    internal enum class AccumulatorType {
+        INTEGRAL,
+        DECIMAL,
+        APPROX
+    }
+
     // TODO docs
-    fun add(v1: Number, v2: Datum, type: PType): Number {
-        return when (type.code()) {
-            PType.BIGINT -> {
-                val arg0 = v1.toLong()
-                val arg1 = v2.longValue()
+    fun add(curSum: Number, value: Datum, type: AccumulatorType): Number {
+        return when (type) {
+            AccumulatorType.INTEGRAL -> {
+                val arg0 = curSum.toLong()
+                val arg1 = value.longValue()
                 try {
                     Math.addExact(arg0, arg1)
                 } catch (e: ArithmeticException) {
+                    // In case of overflow, give a data exception
                     throw PErrors.numericValueOutOfRangeException("$arg0 + $arg1", PType.bigint())
                 }
             }
-            PType.DECIMAL, PType.NUMERIC -> {
-                val arg0 = bigDecimalOf(v1)
-                val arg1 = bigDecimalOf(v2.numberValue())
+            AccumulatorType.DECIMAL -> {
+                val arg0 = bigDecimalOf(curSum)
+                val arg1 = bigDecimalOf(value.numberValue())
                 arg0.add(arg1, MATH_CONTEXT)
             }
-            PType.DOUBLE -> {
-                val arg0 = v1.toDouble()
-                val arg1 = v2.doubleValue()
+            AccumulatorType.APPROX -> {
+                val arg0 = curSum.toDouble()
+                val arg1 = value.doubleValue()
                 arg0 + arg1
             }
-            else -> error("Unexpected type: ${type.code()}")
         }
     }
 }
