@@ -4,8 +4,7 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.PErrors
-import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.types.PType
+import org.partiql.eval.internal.helpers.ValueUtility.checkStruct
 import org.partiql.spi.value.Datum
 
 /**
@@ -19,11 +18,6 @@ internal class ExprSubquery(input: ExprRelation, constructor: ExprValue) :
     // DO NOT USE FINAL
     private var _input = input
     private var _constructor = constructor
-
-    private companion object {
-        @JvmStatic
-        private val STRUCT = PType.struct()
-    }
 
     /**
      * TODO simplify
@@ -55,7 +49,7 @@ internal class ExprSubquery(input: ExprRelation, constructor: ExprValue) :
             return null
         }
         val firstRecord = _input.next()
-        val tuple = _constructor.eval(env.push(firstRecord)).check(STRUCT)
+        val tuple = _constructor.eval(env.push(firstRecord)).checkStruct()
         if (_input.hasNext()) {
             _input.close()
             throw PErrors.cardinalityViolationException()

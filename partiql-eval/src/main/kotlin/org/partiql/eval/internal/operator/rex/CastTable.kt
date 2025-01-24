@@ -19,6 +19,7 @@ import org.partiql.spi.types.PType.DYNAMIC
 import org.partiql.spi.types.PType.INTEGER
 import org.partiql.spi.types.PType.NUMERIC
 import org.partiql.spi.types.PType.REAL
+import org.partiql.spi.types.PType.ROW
 import org.partiql.spi.types.PType.SMALLINT
 import org.partiql.spi.types.PType.STRING
 import org.partiql.spi.types.PType.STRUCT
@@ -101,6 +102,7 @@ internal object CastTable {
         registerReal()
         registerDoublePrecision()
         registerStruct()
+        registerRow()
         registerString()
         registerBag()
         registerList()
@@ -415,6 +417,15 @@ internal object CastTable {
      */
     private fun registerStruct() {
         register(STRUCT, STRUCT) { x, _ -> x }
+        register(STRUCT, ROW) { x, _ -> Datum.row(x.fields.asSequence().toList()) }
+    }
+
+    /**
+     * CAST(<row> AS <target>)
+     */
+    private fun registerRow() {
+        register(ROW, STRUCT) { x, _ -> Datum.struct(x.fields.asSequence().asIterable()) }
+        register(ROW, ROW) { x, _ -> x }
     }
 
     /**

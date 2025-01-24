@@ -590,10 +590,16 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun numeric (Ljava/math/BigDecimal;II)Lorg/partiql/spi/value/Datum;
 	public fun pack (Ljava/nio/charset/Charset;)[B
 	public static fun real (F)Lorg/partiql/spi/value/Datum;
+	public static fun row ()Lorg/partiql/spi/value/Datum;
+	public static fun row (Ljava/util/List;)Lorg/partiql/spi/value/Datum;
+	public static fun row (Ljava/util/List;Ljava/util/List;)Lorg/partiql/spi/value/Datum;
+	public static fun row (Ljava/util/List;[Lorg/partiql/spi/value/Field;)Lorg/partiql/spi/value/Datum;
+	public static fun row ([Lorg/partiql/spi/value/Field;)Lorg/partiql/spi/value/Datum;
 	public static fun smallint (S)Lorg/partiql/spi/value/Datum;
 	public static fun string (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public static fun struct ()Lorg/partiql/spi/value/Datum;
 	public static fun struct (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
+	public static fun struct ([Lorg/partiql/spi/value/Field;)Lorg/partiql/spi/value/Datum;
 	public static fun time (Ljava/time/LocalTime;I)Lorg/partiql/spi/value/Datum;
 	public static fun timestamp (Ljava/time/LocalDateTime;I)Lorg/partiql/spi/value/Datum;
 	public static fun timestampz (Ljava/time/OffsetDateTime;I)Lorg/partiql/spi/value/Datum;
