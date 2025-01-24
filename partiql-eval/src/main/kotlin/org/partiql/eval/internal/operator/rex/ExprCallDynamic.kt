@@ -44,15 +44,32 @@ internal class ExprCallDynamic(
     /**
      * A memoization cache for the [match] function.
      */
-    private val candidates: MutableMap<Array<PType>, Candidate> = mutableMapOf()
+    private val candidates: MutableMap<ParameterTypes, Candidate> = mutableMapOf()
+
+    /**
+     * Used as the keys of the hash map: [ExprCallDynamic.candidates].
+     */
+    private class ParameterTypes(val types: Array<PType>) {
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            other as ParameterTypes // We can immediately cast, since this is a private class only used for the cache.
+            return types.contentEquals(other.types)
+        }
+
+        override fun hashCode(): Int {
+            return types.contentHashCode()
+        }
+    }
 
     override fun eval(env: Environment): Datum {
         val actualArgs = Array(args.size) { args[it].eval(env).lowerSafe() }
         val actualTypes = Array(actualArgs.size) { actualArgs[it].type }
-        var candidate = candidates[actualTypes]
+        val paramTypes = ParameterTypes(actualTypes)
+        var candidate = candidates[paramTypes]
         if (candidate == null) {
             candidate = match(actualTypes) ?: throw PErrors.functionTypeMismatchException(name, actualTypes, functions.toList())
-            candidates[actualTypes] = candidate
+            candidates[paramTypes] = candidate
         }
         return candidate.eval(actualArgs)
     }
