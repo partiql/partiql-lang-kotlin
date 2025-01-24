@@ -313,9 +313,13 @@ internal class Env(private val session: Session) {
             val a = args[i]
             val p = parameters[i]
             when {
+                // Exact match!
                 p.type.code() == a.code() -> continue
+                // If the argument is dynamic, we still need to cast the argument at runtime to the aggregate function's expected type
                 a.code() == PType.DYNAMIC -> mapping[i] = Ref.Cast(a.toCType(), p.type.toCType(), Ref.Cast.Safety.COERCION, true)
+                // If the parameter allows all types, continue.
                 p.type.code() == PType.DYNAMIC -> continue
+                // Check the Type Families (of argument and param) and coerce argument if possible; if not, this fails.
                 else -> mapping[i] = coercion(a, p.type) ?: return null
             }
         }
