@@ -19,11 +19,11 @@ internal class CompilerType(
     internal val isMissingValue: Boolean = false
 ) : PType(_delegate.code()) {
     fun getDelegate(): PType = _delegate
-    override fun getFields(): MutableCollection<Field> {
+    override fun getFields(): MutableCollection<PTypeField> {
         return _delegate.fields.map { field ->
             when (field) {
-                is Field -> field
-                else -> Field(field.name, CompilerType(field.type))
+                is PTypeField -> field
+                else -> PTypeField(field.name, CompilerType(field.type))
             }
         }.toMutableList()
     }
@@ -53,16 +53,16 @@ internal class CompilerType(
         return _delegate.toString()
     }
 
-    internal class Field(
+    internal class PTypeField(
         private val _name: String,
         private val _type: CompilerType
-    ) : org.partiql.spi.types.Field {
+    ) : org.partiql.spi.types.PTypeField {
         override fun getName(): String = _name
         override fun getType(): CompilerType = _type
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (other !is org.partiql.spi.types.Field) return false
+            if (other !is org.partiql.spi.types.PTypeField) return false
             val nameMatches = _name == other.name
             val typeMatches = _type == other.type
             return nameMatches && typeMatches

@@ -14,8 +14,8 @@ import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.types.Field
 import org.partiql.spi.types.PType
+import org.partiql.spi.types.PTypeField
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -34,8 +34,8 @@ internal class PlannerPErrorReportingTests {
         .define(Table.empty("atomic", PType.smallint()))
         .define(Table.empty("collection_no_missing_atomic", PType.bag(PType.smallint())))
         .define(Table.empty("collection_contain_missing_atomic", PType.bag(PType.smallint())))
-        .define(Table.empty("struct_no_missing", PType.row(listOf(Field.of("f1", PType.smallint())))))
-        .define(Table.empty("struct_with_missing", PType.row(listOf(Field.of("f1", PType.smallint())))))
+        .define(Table.empty("struct_no_missing", PType.row(listOf(PTypeField.of("f1", PType.smallint())))))
+        .define(Table.empty("struct_with_missing", PType.row(listOf(PTypeField.of("f1", PType.smallint())))))
         .build()
 
     private val session = Session.builder()

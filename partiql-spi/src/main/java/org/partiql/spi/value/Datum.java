@@ -8,6 +8,8 @@ import org.jetbrains.annotations.Nullable;
 import org.partiql.spi.errors.PRuntimeException;
 import org.partiql.spi.internal.value.ion.IonVariant;
 import org.partiql.spi.types.PType;
+import org.partiql.spi.types.PTypeField;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -739,7 +741,7 @@ public interface Datum extends Iterable<Datum> {
      * @return a value of type {@link PType#ROW}
      */
     @NotNull
-    static Datum row(List<org.partiql.spi.types.Field> typeFields, @NotNull Field... values) {
+    static Datum row(List<PTypeField> typeFields, @NotNull Field... values) {
         return row(typeFields, Arrays.stream(values).collect(Collectors.toList()));
     }
 
@@ -760,7 +762,7 @@ public interface Datum extends Iterable<Datum> {
      * @return a value of type {@link PType#ROW}
      */
     @NotNull
-    static Datum row(@NotNull List<org.partiql.spi.types.Field> typeFields, @NotNull List<Field> values) {
+    static Datum row(@NotNull List<PTypeField> typeFields, @NotNull List<Field> values) {
         PType type = PType.row(typeFields);
         return new DatumRow(values, type);
     }

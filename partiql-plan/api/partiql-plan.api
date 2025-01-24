@@ -590,12 +590,12 @@ public abstract class org/partiql/plan/rel/RelSort : org/partiql/plan/rel/RelBas
 public final class org/partiql/plan/rel/RelType {
 	public static final field ORDERED I
 	public fun getDegree ()I
-	public fun getField (I)Lorg/partiql/spi/types/Field;
-	public fun getField (Ljava/lang/String;)Lorg/partiql/spi/types/Field;
-	public fun getFields ()[Lorg/partiql/spi/types/Field;
+	public fun getField (I)Lorg/partiql/spi/types/PTypeField;
+	public fun getField (Ljava/lang/String;)Lorg/partiql/spi/types/PTypeField;
+	public fun getFields ()[Lorg/partiql/spi/types/PTypeField;
 	public fun isOrdered ()Z
-	public static fun of ([Lorg/partiql/spi/types/Field;)Lorg/partiql/plan/rel/RelType;
-	public static fun of ([Lorg/partiql/spi/types/Field;I)Lorg/partiql/plan/rel/RelType;
+	public static fun of ([Lorg/partiql/spi/types/PTypeField;)Lorg/partiql/plan/rel/RelType;
+	public static fun of ([Lorg/partiql/spi/types/PTypeField;I)Lorg/partiql/plan/rel/RelType;
 }
 
 public abstract class org/partiql/plan/rel/RelUnion : org/partiql/plan/rel/RelBase {

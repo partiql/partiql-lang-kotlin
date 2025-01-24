@@ -44,14 +44,14 @@ internal object TypeUtils {
         val output = fields.mapNotNull { field ->
             val newField = if (substeps.isEmpty()) {
                 if (lastStepOptional) {
-                    CompilerType.Field(field.name, field.type)
+                    CompilerType.PTypeField(field.name, field.type)
                 } else {
                     null
                 }
             } else {
                 val k = field.name
                 val v = field.type.exclude(substeps, lastStepOptional)
-                CompilerType.Field(k, v)
+                CompilerType.PTypeField(k, v)
             }
             when (type) {
                 is Rel.Op.Exclude.Type.StructSymbol -> {

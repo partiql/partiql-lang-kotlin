@@ -1,7 +1,7 @@
 package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.spi.types.Field;
+import org.partiql.spi.types.PTypeField;
 
 /**
  * Analogous to a ROW type, consider cardinality estimates or other hint mechanisms.
@@ -10,21 +10,21 @@ public final class RelType {
 
     public static final int ORDERED = 0x01;
 
-    private final Field[] fields;
+    private final PTypeField[] fields;
     private final boolean ordered;
 
-    private RelType(Field[] fields, boolean ordered) {
+    private RelType(PTypeField[] fields, boolean ordered) {
         this.fields = fields;
         this.ordered = ordered;
     }
 
     @NotNull
-    public static RelType of(Field... fields) {
+    public static RelType of(PTypeField... fields) {
         return of(fields, 0);
     }
 
     @NotNull
-    public static RelType of(Field[] fields, int properties) {
+    public static RelType of(PTypeField[] fields, int properties) {
         boolean ordered = (properties & ORDERED) != 0;
         return new RelType(fields, ordered);
     }
@@ -38,12 +38,12 @@ public final class RelType {
     }
 
     @NotNull
-    public Field[] getFields() {
+    public PTypeField[] getFields() {
         return fields;
     }
 
     @NotNull
-    public Field getField(int index) {
+    public PTypeField getField(int index) {
         if (index < 0 || index >= fields.length) {
             throw new IllegalArgumentException("field index out of bounds: " + index);
         }
@@ -51,8 +51,8 @@ public final class RelType {
     }
 
     @NotNull
-    public Field getField(String name) {
-        for (Field field : fields) {
+    public PTypeField getField(String name) {
+        for (PTypeField field : fields) {
             if (field.getName().equals(name)) {
                 return field;
             }

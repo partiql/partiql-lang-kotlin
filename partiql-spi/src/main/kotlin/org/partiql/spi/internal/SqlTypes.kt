@@ -1,7 +1,7 @@
 package org.partiql.spi.internal
 
-import org.partiql.spi.types.Field
 import org.partiql.spi.types.PType
+import org.partiql.spi.types.PTypeField
 
 /**
  * Important SQL Definitions:
@@ -73,7 +73,7 @@ internal object SqlTypes {
         }
     }
 
-    private fun fieldsAreAssignable(input: List<Field>, target: List<Field>): Boolean {
+    private fun fieldsAreAssignable(input: List<PTypeField>, target: List<PTypeField>): Boolean {
         if (input.size != target.size) { return false }
         val iIter = input.iterator()
         val tIter = target.iterator()
@@ -91,7 +91,7 @@ internal object SqlTypes {
      * This is a PartiQL extension. We assume that structs/rows with the same field names may be assignable
      * if all names match AND types are assignable.
      */
-    private fun namedFieldsAreAssignableUnordered(input: List<Field>, target: List<Field>): Boolean {
+    private fun namedFieldsAreAssignableUnordered(input: List<PTypeField>, target: List<PTypeField>): Boolean {
         if (input.size != target.size) { return false }
         val inputSorted = input.sortedBy { it.name }
         val targetSorted = target.sortedBy { it.name }
