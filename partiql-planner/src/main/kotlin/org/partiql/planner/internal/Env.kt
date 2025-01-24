@@ -312,9 +312,11 @@ internal class Env(private val session: Session) {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            when (p.type.code() == a.code()) {
-                false -> mapping[i] = coercion(a, p.type) ?: return null
-                true -> continue
+            when {
+                p.type.code() == a.code() -> continue
+                a.code() == PType.DYNAMIC -> mapping[i] = Ref.Cast(a.toCType(), p.type.toCType(), Ref.Cast.Safety.COERCION, true)
+                p.type.code() == PType.DYNAMIC -> continue
+                else -> mapping[i] = coercion(a, p.type) ?: return null
             }
         }
         return instance to mapping
