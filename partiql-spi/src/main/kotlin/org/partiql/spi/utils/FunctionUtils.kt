@@ -83,6 +83,7 @@ internal object FunctionUtils {
             }
         }
 
+    // TODO: this should likely return the value of the datum so that if it is a variant, we don't need to lower again
     internal fun checkIsNumberType(funcName: String, value: Datum) {
         if (value.type.code() == PType.VARIANT) {
             return checkIsNumberType(funcName, value.lower())

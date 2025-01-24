@@ -311,7 +311,7 @@ internal object NumberUtils {
         APPROX
     }
 
-    // TODO docs
+    // If types of the current sum and value are dynamic, use this function with the given `AccumulatorType`.
     fun add(curSum: Number, value: Datum, type: AccumulatorType): Number {
         return when (type) {
             AccumulatorType.INTEGRAL -> {

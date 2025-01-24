@@ -59,6 +59,7 @@ internal class AccumulatorAvgDynamic : Accumulator() {
     private var count: Long = 0L
     private var accumulatorType: AccumulatorType? = null
 
+    // TODO: need to take another look at variant lowering and casing here
     override fun nextValue(value: Datum) {
         checkIsNumberType(funcName = "AVG", value = value)
         if (sum == null) {

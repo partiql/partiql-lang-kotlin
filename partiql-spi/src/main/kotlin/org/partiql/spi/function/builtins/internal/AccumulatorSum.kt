@@ -73,6 +73,8 @@ internal class AccumulatorSumDouble : Accumulator() {
 internal class AccumulatorSumDynamic : Accumulator() {
     var sum: Number? = null
     private var accumulatorType: AccumulatorType? = null
+
+    // TODO: need to take another look at variant lowering and casing here
     override fun nextValue(value: Datum) {
         checkIsNumberType(funcName = "SUM", value = value)
         // Initialize `sum` and `accumulatorType`
