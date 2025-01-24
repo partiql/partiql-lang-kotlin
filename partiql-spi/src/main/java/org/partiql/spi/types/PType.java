@@ -42,7 +42,7 @@ public abstract class PType extends org.partiql.spi.Enum {
      *                                       {@link PType#ROW}
      */
     @NotNull
-    public Collection<Field> getFields() throws UnsupportedOperationException {
+    public Collection<PTypeField> getFields() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
 
@@ -769,7 +769,7 @@ public abstract class PType extends org.partiql.spi.Enum {
      * @return a PartiQL row type
      */
     @NotNull
-    public static PType row(@NotNull Collection<Field> fields) {
+    public static PType row(@NotNull Collection<PTypeField> fields) {
         return new PTypeRow(fields);
     }
 
@@ -778,7 +778,7 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     @NotNull
     @SuppressWarnings("unused")
-    public static PType row(@NotNull Field... fields) {
+    public static PType row(@NotNull PTypeField... fields) {
         return new PTypeRow(Arrays.asList(fields));
     }
 

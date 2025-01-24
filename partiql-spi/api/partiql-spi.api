@@ -457,12 +457,6 @@ public final class org/partiql/spi/function/RoutineSignature {
 	public fun isNullCall ()Z
 }
 
-public abstract interface class org/partiql/spi/types/Field {
-	public abstract fun getName ()Ljava/lang/String;
-	public abstract fun getType ()Lorg/partiql/spi/types/PType;
-	public static fun of (Ljava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/Field;
-}
-
 public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static final field ARRAY I
 	public static final field BAG I
@@ -521,7 +515,7 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static fun of (I)Lorg/partiql/spi/types/PType;
 	public static fun real ()Lorg/partiql/spi/types/PType;
 	public static fun row (Ljava/util/Collection;)Lorg/partiql/spi/types/PType;
-	public static fun row ([Lorg/partiql/spi/types/Field;)Lorg/partiql/spi/types/PType;
+	public static fun row ([Lorg/partiql/spi/types/PTypeField;)Lorg/partiql/spi/types/PType;
 	public static fun smallint ()Lorg/partiql/spi/types/PType;
 	public static fun string ()Lorg/partiql/spi/types/PType;
 	public static fun struct ()Lorg/partiql/spi/types/PType;
@@ -538,6 +532,12 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static fun varchar ()Lorg/partiql/spi/types/PType;
 	public static fun varchar (I)Lorg/partiql/spi/types/PType;
 	public static fun variant (Ljava/lang/String;)Lorg/partiql/spi/types/PType;
+}
+
+public abstract interface class org/partiql/spi/types/PTypeField {
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getType ()Lorg/partiql/spi/types/PType;
+	public static fun of (Ljava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PTypeField;
 }
 
 public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable {

@@ -57,7 +57,7 @@ internal class ScopeTest {
         private fun struct(vararg fields: Pair<String, CompilerType>, open: Boolean = false): CompilerType {
             return when (open) {
                 true -> PType.struct().toCType()
-                false -> PType.row(fields.map { CompilerType.Field(it.first, it.second) }).toCType()
+                false -> PType.row(fields.map { CompilerType.PTypeField(it.first, it.second) }).toCType()
             }
         }
 

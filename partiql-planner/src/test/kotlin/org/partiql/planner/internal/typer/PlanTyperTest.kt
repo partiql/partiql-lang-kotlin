@@ -62,13 +62,13 @@ class PlanTyperTest {
         )
 
         private val LITERAL_STRUCT_1_FIRST_KEY_TYPE = PType.row(
-            listOf(CompilerType.Field("sEcoNd_KEY", INT4)),
+            listOf(CompilerType.PTypeField("sEcoNd_KEY", INT4)),
         ).toCType()
 
         private val LITERAL_STRUCT_1_TYPED: Rex
             get() {
                 val topLevelStruct = PType.row(
-                    listOf(CompilerType.Field("FiRsT_KeY", LITERAL_STRUCT_1_FIRST_KEY_TYPE)),
+                    listOf(CompilerType.PTypeField("FiRsT_KeY", LITERAL_STRUCT_1_FIRST_KEY_TYPE)),
                 ).toCType()
                 return rex(
                     type = topLevelStruct,
@@ -95,17 +95,17 @@ class PlanTyperTest {
 
         private val ORDERED_DUPLICATES_STRUCT = PType.row(
             listOf(
-                CompilerType.Field("definition", STRING),
-                CompilerType.Field("definition", DOUBLE_PRECISION),
-                CompilerType.Field("DEFINITION", DECIMAL),
+                CompilerType.PTypeField("definition", STRING),
+                CompilerType.PTypeField("definition", DOUBLE_PRECISION),
+                CompilerType.PTypeField("DEFINITION", DECIMAL),
             ),
         ).toCType()
 
         private val DUPLICATES_STRUCT = PType.row(
             listOf(
-                CompilerType.Field("definition", STRING),
-                CompilerType.Field("definition", DOUBLE_PRECISION),
-                CompilerType.Field("DEFINITION", DECIMAL),
+                CompilerType.PTypeField("definition", STRING),
+                CompilerType.PTypeField("definition", DOUBLE_PRECISION),
+                CompilerType.PTypeField("DEFINITION", DECIMAL),
             ),
         ).toCType()
 

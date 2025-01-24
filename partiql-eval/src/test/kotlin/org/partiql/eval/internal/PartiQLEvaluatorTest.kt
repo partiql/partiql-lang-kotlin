@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.spi.types.PType
+import org.partiql.spi.types.PTypeField
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.value.PartiQLValue
@@ -1437,7 +1438,7 @@ class PartiQLEvaluatorTest {
                 globals = listOf(
                     Global(
                         name = "t",
-                        type = PType.row(org.partiql.spi.types.Field.of("a", PType.integer())),
+                        type = PType.row(PTypeField.of("a", PType.integer())),
                         value = Datum.row(Field.of("a", Datum.integer(3)))
                     ),
                 )

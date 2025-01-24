@@ -12,16 +12,16 @@ import java.util.stream.Collectors;
  */
 class PTypeRow extends PType {
 
-    final Collection<Field> _fields;
+    final Collection<PTypeField> _fields;
 
-    PTypeRow(@NotNull Collection<Field> fields) {
+    PTypeRow(@NotNull Collection<PTypeField> fields) {
         super(PType.ROW);
         _fields = fields;
     }
 
     @NotNull
     @Override
-    public Collection<Field> getFields() {
+    public Collection<PTypeField> getFields() {
         return _fields;
     }
 
@@ -32,16 +32,16 @@ class PTypeRow extends PType {
         if (PType.ROW != ((PType) o).code()) {
             return false;
         }
-        Collection<Field> otherFields = ((PType) o).getFields();
+        Collection<PTypeField> otherFields = ((PType) o).getFields();
         int size = _fields.size();
         if (size != otherFields.size()) {
             return false;
         }
-        Iterator<Field> thisIter = _fields.iterator();
-        Iterator<Field> otherIter = otherFields.iterator();
+        Iterator<PTypeField> thisIter = _fields.iterator();
+        Iterator<PTypeField> otherIter = otherFields.iterator();
         for (int i = 0; i < size; i++) {
-            Field thisField = thisIter.next();
-            Field otherField = otherIter.next();
+            PTypeField thisField = thisIter.next();
+            PTypeField otherField = otherIter.next();
             if (!thisField.equals(otherField)) {
                 return false;
             }

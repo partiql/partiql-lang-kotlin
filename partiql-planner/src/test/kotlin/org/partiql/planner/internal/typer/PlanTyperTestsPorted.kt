@@ -33,8 +33,8 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.spi.types.Field
 import org.partiql.spi.types.PType
+import org.partiql.spi.types.PTypeField
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
 import org.partiql.types.ListType
@@ -964,8 +964,8 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1, <<{ 'b': 2.0 }>> AS t2",
                 expected = PType.bag(
                     PType.row(
-                        Field.of("a", PType.integer()),
-                        Field.of("b", PType.decimal(2, 1)),
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("b", PType.decimal(2, 1)),
                     )
                 ),
             ),
@@ -974,8 +974,8 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
                 expected = PType.bag(
                     PType.row(
-                        Field.of("a", PType.integer()),
-                        Field.of("b", PType.decimal(2, 1))
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("b", PType.decimal(2, 1))
                     )
                 ),
             ),
@@ -984,8 +984,8 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT b, a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
                 expected = PType.bag(
                     PType.row(
-                        Field.of("b", PType.decimal(2, 1)),
-                        Field.of("a", PType.integer()),
+                        PTypeField.of("b", PType.decimal(2, 1)),
+                        PTypeField.of("a", PType.integer()),
                     )
                 ),
             ),
@@ -994,8 +994,8 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
                 expected = PType.bag(
                     PType.row(
-                        Field.of("a", PType.integer()),
-                        Field.of("a", PType.decimal(2, 1)),
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("a", PType.decimal(2, 1)),
                     )
                 ),
             ),
@@ -1004,8 +1004,8 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
                 expected = PType.bag(
                     PType.row(
-                        Field.of("a", PType.integer()),
-                        Field.of("a", PType.decimal(2, 1)),
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("a", PType.decimal(2, 1)),
                     )
                 ),
             ),
@@ -1024,9 +1024,9 @@ internal class PlanTyperTestsPorted {
                 """,
                 expected = PType.bag(
                     PType.row(
-                        Field.of("a", PType.integer()),
-                        Field.of("a", PType.decimal(2, 1)),
-                        Field.of("a", PType.string()),
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("a", PType.decimal(2, 1)),
+                        PTypeField.of("a", PType.string()),
                     )
                 ),
             ),
@@ -1035,8 +1035,8 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON a = 3",
                 expected = PType.bag(
                     PType.row(
-                        Field.of("a", PType.integer()),
-                        Field.of("a", PType.decimal(2, 1)),
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("a", PType.decimal(2, 1)),
                     )
                 ),
                 problemHandler = assertProblemExists(
@@ -2133,11 +2133,11 @@ internal class PlanTyperTestsPorted {
                 key = key("exclude-34"),
                 expected = PType.bag(
                     PType.row(
-                        Field.of(
+                        PTypeField.of(
                             "a",
                             PType.bag(
                                 PType.row(
-                                    Field.of("b", PType.integer())
+                                    PTypeField.of("b", PType.integer())
                                 )
                             )
                         ),
@@ -2652,7 +2652,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = listOf("main"),
                 expected = PType.bag(
                     PType.row(
-                        Field.of("breed_descriptor", PType.dynamic()),
+                        PTypeField.of("breed_descriptor", PType.dynamic()),
                     )
                 ),
             ),
@@ -3380,10 +3380,10 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
                 expected = PType.bag(
                     PType.row(
-                        Field.of("a", PType.decimal(2, 1)),
-                        Field.of("c", PType.bigint()),
-                        Field.of("s", PType.decimal(38, 19)), // TODO: Check this
-                        Field.of("m", PType.decimal(38, 19)),
+                        PTypeField.of("a", PType.decimal(2, 1)),
+                        PTypeField.of("c", PType.bigint()),
+                        PTypeField.of("s", PType.decimal(38, 19)), // TODO: Check this
+                        PTypeField.of("m", PType.decimal(38, 19)),
                     )
                 ),
             ),
@@ -3721,18 +3721,18 @@ internal class PlanTyperTestsPorted {
             """.trimIndent(),
             expected = PType.bag(
                 PType.row(
-                    Field.of("a", PType.decimal(38, 0)),
-                    Field.of("count_star", PType.bigint()),
-                    Field.of("count_a", PType.bigint()),
-                    Field.of("count_b", PType.bigint()),
-                    Field.of("sum_a", PType.decimal(38, 0)),
-                    Field.of("sum_b", PType.decimal(38, 0)),
-                    Field.of("min_a", PType.decimal(38, 0)),
-                    Field.of("min_b", PType.decimal(38, 0)),
-                    Field.of("max_a", PType.decimal(38, 0)),
-                    Field.of("max_b", PType.decimal(38, 0)),
-                    Field.of("avg_a", PType.decimal(38, 0)),
-                    Field.of("avg_b", PType.decimal(38, 0)),
+                    PTypeField.of("a", PType.decimal(38, 0)),
+                    PTypeField.of("count_star", PType.bigint()),
+                    PTypeField.of("count_a", PType.bigint()),
+                    PTypeField.of("count_b", PType.bigint()),
+                    PTypeField.of("sum_a", PType.decimal(38, 0)),
+                    PTypeField.of("sum_b", PType.decimal(38, 0)),
+                    PTypeField.of("min_a", PType.decimal(38, 0)),
+                    PTypeField.of("min_b", PType.decimal(38, 0)),
+                    PTypeField.of("max_a", PType.decimal(38, 0)),
+                    PTypeField.of("max_b", PType.decimal(38, 0)),
+                    PTypeField.of("avg_a", PType.decimal(38, 0)),
+                    PTypeField.of("avg_b", PType.decimal(38, 0)),
                 )
             ),
         )
@@ -4432,7 +4432,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
                 expected = PType.bag(
-                    PType.row(Field.of("unknown_col", PType.unknown()))
+                    PType.row(PTypeField.of("unknown_col", PType.unknown()))
                 ),
                 problemHandler = assertProblemExists(
                     PErrors.varRefNotFound(null, insensitive("unknown_col"), listOf("orders"))
@@ -4511,7 +4511,7 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
                 expected = PType.bag(
                     PType.row(
-                        Field.of("a", PType.array()),
+                        PTypeField.of("a", PType.array()),
                     )
                 ),
             ),

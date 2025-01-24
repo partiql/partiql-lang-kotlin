@@ -1,7 +1,7 @@
 package org.partiql.types
 
-import org.partiql.spi.types.Field
 import org.partiql.spi.types.PType
+import org.partiql.spi.types.PTypeField
 import java.util.stream.Collectors
 
 /**
@@ -71,7 +71,7 @@ fun fromStaticType(type: StaticType): PType {
         val isOrdered = type.constraints.contains(TupleConstraint.Ordered)
         val isClosed = type.contentClosed
         val fields = type.fields.stream().map { field: StructType.Field ->
-            Field.of(
+            PTypeField.of(
                 field.key,
                 fromStaticType(field.value)
             )

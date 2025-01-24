@@ -2,6 +2,7 @@ package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
+import org.partiql.spi.types.PTypeField;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,10 +41,10 @@ class DatumRow implements Datum {
     }
 
     private static PType getTypeFromFields(@NotNull Iterable<Field> fields) {
-        List<org.partiql.spi.types.Field> fieldTypes = new ArrayList<>();
+        List<PTypeField> fieldTypes = new ArrayList<>();
         fields.forEach((f) -> {
             PType fType = f.getValue().getType();
-            org.partiql.spi.types.Field typeField = org.partiql.spi.types.Field.of(f.getName(), fType);
+            PTypeField typeField = PTypeField.of(f.getName(), fType);
             fieldTypes.add(typeField);
         });
         return PType.row(fieldTypes);

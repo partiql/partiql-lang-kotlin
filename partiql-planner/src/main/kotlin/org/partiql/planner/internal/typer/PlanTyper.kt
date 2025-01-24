@@ -57,8 +57,8 @@ import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.spi.types.Field
 import org.partiql.spi.types.PType
+import org.partiql.spi.types.PTypeField
 import org.partiql.spi.value.Datum
 import kotlin.math.max
 
@@ -149,7 +149,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 }
                 fields.forEachIndexed { index, field -> fieldTypes[index].add(field.type.toCType()) }
             }
-            val newFields = fieldTypes.mapIndexed { i, types -> Field.of(fieldNames[i], anyOfLiterals(types)!!) }
+            val newFields = fieldTypes.mapIndexed { i, types -> PTypeField.of(fieldNames[i], anyOfLiterals(types)!!) }
             return PType.row(newFields)
         }
 
@@ -986,7 +986,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 rexOpStructField(k, v)
             }
             var structIsClosed = true
-            val structTypeFields = mutableListOf<CompilerType.Field>()
+            val structTypeFields = mutableListOf<CompilerType.PTypeField>()
             for (field in fields) {
                 val keyOp = field.k.op
                 // TODO: Check key type
@@ -994,10 +994,10 @@ internal class PlanTyper(private val env: Env, config: Context) {
                     structIsClosed = false
                     continue
                 }
-                structTypeFields.add(CompilerType.Field(keyOp.value.string, field.v.type))
+                structTypeFields.add(CompilerType.PTypeField(keyOp.value.string, field.v.type))
             }
             val type = when (structIsClosed) {
-                true -> CompilerType(PType.row(structTypeFields as Collection<Field>))
+                true -> CompilerType(PType.row(structTypeFields as Collection<PTypeField>))
                 false -> CompilerType(PType.struct())
             }
             return rex(type, rexOpStruct(fields))
@@ -1185,7 +1185,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          *  unique attributes.
          */
         private fun calculateTupleUnionOutputType(args: List<CompilerType>): CompilerType? {
-            val fields = mutableListOf<CompilerType.Field>()
+            val fields = mutableListOf<CompilerType.PTypeField>()
             var structIsOpen = false
             var containsDynamic = false
             var containsNonStruct = false
@@ -1205,7 +1205,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 containsNonStruct -> null
                 containsDynamic -> CompilerType(PType.dynamic())
                 structIsOpen -> CompilerType(PType.struct())
-                else -> CompilerType(PType.row(fields as Collection<Field>))
+                else -> CompilerType(PType.row(fields as Collection<PTypeField>))
             }
         }
 
