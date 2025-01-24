@@ -8,6 +8,7 @@
 [partiql-website]: https://www.partiql.org
 [partiql-website-plk]: https://www.partiql.org/plk/latest/
 [partiql-tests]: https://github.com/partiql/partiql-tests
+[plk-releases]: https://github.com/partiql/partiql-lang-kotlin/releases
 [maven-partiql-namespace]: https://central.sonatype.com/namespace/org.partiql
 [git-submodule]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 
@@ -29,9 +30,17 @@ systems and AWS products for multiple years. The behavior of the language itself
 
 ## Using In Your Project
 
-All subprojects are published to [Maven Central][maven-partiql-namespace]. To integrate this
-library into your project, please follow the guidelines on the
-[partiql-lang-kotlin documentation site][partiql-website-plk] under the [PartiQL website][partiql-website].
+All [releases][plk-releases] are published to [Maven Central][maven-partiql-namespace]. For the most up-to-date version
+of our library, please add the following to your `build.gradle.kts`.
+
+```kotlin
+dependencies {
+    implementation("org.partiql:partiql-lang:1.+")
+}
+```
+
+For more information on how to integrate this library (or a specific subproject) into your project, please follow the
+guidelines on the [partiql-lang-kotlin documentation site][partiql-website-plk] under the [PartiQL website][partiql-website].
 
 ## Building
 
