@@ -98,7 +98,7 @@ class DatumRow implements Datum {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("struct::{ ");
+        sb.append("row::{ ");
         for (Map.Entry<String, List<Datum>> entry : _delegate.entrySet()) {
             sb.append(entry.getKey());
             sb.append(": ");
