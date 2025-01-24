@@ -10,38 +10,38 @@ import org.partiql.spi.types.PType
 
 internal val Agg_SUM__INT8__INT8 = Aggregation.overload(
     name = "sum",
-    returns = PType.tinyint(),
+    returns = PType.bigint(),
     parameters = arrayOf(
         Parameter("value", PType.tinyint()),
     ),
-    accumulator = { AccumulatorSum(PType.tinyint()) },
+    accumulator = { AccumulatorSum(PType.bigint()) },
 )
 
 internal val Agg_SUM__INT16__INT16 = Aggregation.overload(
     name = "sum",
-    returns = PType.smallint(),
+    returns = PType.bigint(),
     parameters = arrayOf(
         Parameter("value", PType.smallint()),
     ),
-    accumulator = { AccumulatorSum(PType.smallint()) },
+    accumulator = { AccumulatorSum(PType.bigint()) },
 )
 
 internal val Agg_SUM__INT32__INT32 = Aggregation.overload(
     name = "sum",
-    returns = PType.integer(),
+    returns = PType.bigint(),
     parameters = arrayOf(
         Parameter("value", PType.integer()),
     ),
-    accumulator = { AccumulatorSum(PType.integer()) },
+    accumulator = { AccumulatorSum(PType.bigint()) },
 )
 
 internal val Agg_SUM__INT64__INT64 = Aggregation.overload(
     name = "sum",
-    returns = PType.bigint(),
+    returns = DefaultDecimal.DECIMAL,
     parameters = arrayOf(
         Parameter("value", PType.bigint())
     ),
-    accumulator = { AccumulatorSum(PType.bigint()) },
+    accumulator = { AccumulatorSum(DefaultDecimal.DECIMAL) },
 )
 
 internal val Agg_SUM__NUMERIC__NUMERIC = Aggregation.overload(
@@ -55,11 +55,11 @@ internal val Agg_SUM__NUMERIC__NUMERIC = Aggregation.overload(
 
 internal val Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.overload(
     name = "sum",
-    returns = PType.decimal(38, 19),
+    returns = DefaultDecimal.DECIMAL,
     parameters = arrayOf(
         Parameter("value", PType.decimal(38, 19)), // TODO: Rewrite aggregations using new function modeling.
     ),
-    accumulator = { AccumulatorSum(PType.decimal(38, 19)) },
+    accumulator = { AccumulatorSum(DefaultDecimal.DECIMAL) },
 )
 
 internal val Agg_SUM__FLOAT32__FLOAT32 = Aggregation.overload(

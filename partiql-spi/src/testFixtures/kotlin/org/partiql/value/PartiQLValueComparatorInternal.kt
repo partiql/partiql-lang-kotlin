@@ -1,10 +1,7 @@
 package org.partiql.value
 
-import org.partiql.spi.utils.NumberExtensions.compareTo
-import org.partiql.spi.utils.NumberExtensions.isNaN
-import org.partiql.spi.utils.NumberExtensions.isNegInf
-import org.partiql.spi.utils.NumberExtensions.isPosInf
-import org.partiql.spi.utils.NumberExtensions.isZero
+import org.partiql.spi.utils.NumberUtils.compareTo
+import org.partiql.spi.utils.NumberUtils.isZero
 
 internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) : Comparator<PartiQLValue> {
     companion object {
@@ -15,6 +12,27 @@ internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) :
 
     private fun PartiQLValue.isNullOrMissing(): Boolean = this is NullValue || this is MissingValue || this.isNull
     private fun PartiQLValue.isLob(): Boolean = this is BlobValue || this is ClobValue
+
+    private val Number.isNaN
+        get() = when (this) {
+            is Float -> isNaN()
+            is Double -> isNaN()
+            else -> false
+        }
+
+    private val Number.isNegInf
+        get() = when (this) {
+            is Float -> isInfinite() && this < 0
+            is Double -> isInfinite() && this < 0
+            else -> false
+        }
+
+    private val Number.isPosInf
+        get() = when (this) {
+            is Float -> isInfinite() && this > 0
+            is Double -> isInfinite() && this > 0
+            else -> false
+        }
 
     private val structFieldComparator = object : Comparator<Pair<String, PartiQLValue>> {
         override fun compare(left: Pair<String, PartiQLValue>, right: Pair<String, PartiQLValue>): Int {

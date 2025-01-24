@@ -5,7 +5,7 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
 import org.partiql.spi.types.PType
-import org.partiql.spi.utils.NumberExtensions.compareTo
+import org.partiql.spi.utils.NumberUtils.compareTo
 import org.partiql.spi.value.Datum
 
 internal object FnGt : DiadicComparisonOperator("gt") {

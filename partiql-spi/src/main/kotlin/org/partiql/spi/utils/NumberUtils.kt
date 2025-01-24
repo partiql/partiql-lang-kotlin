@@ -15,14 +15,17 @@ package org.partiql.spi.utils
  */
 
 import com.amazon.ion.Decimal
+import org.partiql.spi.function.builtins.internal.PErrors
+import org.partiql.spi.types.PType
+import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 
-internal object NumberExtensions {
+internal object NumberUtils {
     // TODO should this be configurable?
-    private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN)
+    internal val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN)
 
     /**
      * Factory function to create a [BigDecimal] using correct precision, use it in favor of native BigDecimal constructors
@@ -40,6 +43,7 @@ internal object NumberExtensions {
     }
 
     /**
+     * TODO figure out if this is actually correct? Especially when dealing with floating point numbers
      * This should handle Byte, Short, Int, Long, BigInteger, Float, Double, BigDecimal
      */
     private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
@@ -167,7 +171,7 @@ internal object NumberExtensions {
 
     @Suppress("UNCHECKED_CAST")
     /** Provides a narrowing or widening operator on supported numbers. */
-    internal fun <T> Number.coerce(type: Class<T>): T where T : Number {
+    private fun <T> Number.coerce(type: Class<T>): T where T : Number {
         val conv = CONVERTERS[type] ?: throw IllegalArgumentException("No converter for $type")
         return conv(this) as T
     }
@@ -178,7 +182,7 @@ internal object NumberExtensions {
      *
      * This is only supported on limited types needed by the expression system.
      */
-    internal fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
+    private fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
         fun typeFor(n: Number): Class<*> = if (n is Decimal) {
             BigDecimal::class.javaObjectType
         } else {
@@ -206,28 +210,123 @@ internal object NumberExtensions {
         }
     }
 
-    internal val Number.isNaN
-        get() = when (this) {
-            is Float -> isNaN()
-            is Double -> isNaN()
-            else -> false
-        }
-
-    internal val Number.isNegInf
-        get() = when (this) {
-            is Float -> isInfinite() && this < 0
-            is Double -> isInfinite() && this < 0
-            else -> false
-        }
-
-    internal val Number.isPosInf
-        get() = when (this) {
-            is Float -> isInfinite() && this > 0
-            is Double -> isInfinite() && this > 0
-            else -> false
-        }
-
     internal fun Int.byteOverflows() = this < Byte.MIN_VALUE || this > Byte.MAX_VALUE
 
     internal fun Int.shortOverflows() = this < Short.MIN_VALUE || this > Short.MAX_VALUE
+
+    // TODO further cleanup
+    private fun Datum.longValue(): Long = when (this.type.code()) {
+        PType.VARIANT -> this.lower().longValue()
+        PType.TINYINT -> this.byte.toLong()
+        PType.SMALLINT -> this.short.toLong()
+        PType.INTEGER -> this.int.toLong()
+        PType.BIGINT -> this.long
+        else -> error("Cannot convert Datum ($this) to long.")
+    }
+
+    private fun Datum.doubleValue(): Double = when (this.type.code()) {
+        PType.VARIANT -> this.lower().doubleValue()
+        PType.TINYINT -> this.byte.toDouble()
+        PType.SMALLINT -> this.short.toDouble()
+        PType.INTEGER -> this.int.toDouble()
+        PType.BIGINT -> this.long.toDouble()
+        PType.NUMERIC -> this.bigDecimal.toDouble()
+        PType.REAL -> this.float.toDouble()
+        PType.DOUBLE -> this.double
+        PType.DECIMAL -> this.bigDecimal.toDouble()
+        else -> error("Cannot convert Datum ($this) to double.")
+    }
+
+    internal fun Datum.numberValue(): Number = when (this.type.code()) {
+        PType.VARIANT -> this.lower().numberValue()
+        PType.TINYINT -> this.byte
+        PType.SMALLINT -> this.short
+        PType.INTEGER -> this.int
+        PType.BIGINT -> this.long
+        PType.NUMERIC -> this.bigDecimal
+        PType.REAL -> this.float
+        PType.DOUBLE -> this.double
+        PType.DECIMAL -> this.bigDecimal
+        else -> error("Cannot convert Datum ($this) to number.")
+    }
+
+    internal fun PType.isNumber(): Boolean = when (this.code()) {
+        PType.INTEGER,
+        PType.TINYINT,
+        PType.SMALLINT,
+        PType.BIGINT,
+        PType.NUMERIC,
+        PType.REAL,
+        PType.DOUBLE,
+        PType.DECIMAL,
+        -> true
+        else -> false
+    }
+
+    /**
+     * This is specifically for SUM/AVG
+     */
+    internal fun Number.toTargetType(type: PType): Datum = when (type.code()) {
+        PType.DYNAMIC -> this.toDatum()
+        PType.REAL -> Datum.real(this.toFloat())
+        PType.DOUBLE -> Datum.doublePrecision(this.toDouble())
+        PType.DECIMAL -> {
+            when (this) {
+                is BigDecimal -> Datum.decimal(this, this.precision(), this.scale())
+                is BigInteger -> {
+                    val d = this.toBigDecimal()
+                    Datum.decimal(d, d.precision(), d.scale())
+                }
+                else -> {
+                    val d = BigDecimal.valueOf(this.toDouble())
+                    Datum.decimal(d, d.precision(), d.scale())
+                }
+            }
+        }
+        PType.TINYINT -> Datum.tinyint(this.toByte())
+        PType.SMALLINT -> Datum.smallint(this.toShort())
+        PType.INTEGER -> Datum.integer(this.toInt())
+        PType.BIGINT -> Datum.bigint(this.toLong())
+        PType.NUMERIC -> when (this) {
+            is BigInteger -> Datum.numeric(this.toBigDecimal())
+            is BigDecimal -> Datum.numeric(this)
+            else -> Datum.numeric(BigDecimal.valueOf(this.toLong()))
+        }
+        else -> TODO("Unsupported target type $type")
+    }
+
+    private fun Number.toDatum(): Datum = when (this) {
+        is Int -> Datum.integer(this)
+        is Long -> Datum.bigint(this)
+        is Double -> Datum.doublePrecision(this)
+        is BigDecimal -> Datum.decimal(this, this.precision(), this.scale())
+        is BigInteger -> Datum.numeric(this.toBigDecimal())
+        else -> TODO("Could not convert $this to PartiQL Value")
+    }
+
+    // TODO docs
+    fun add(v1: Number, v2: Datum, type: PType): Number {
+        return when (type.code()) {
+            PType.BIGINT -> {
+                val arg0 = v1.toLong()
+                val arg1 = v2.longValue()
+                try {
+                    Math.addExact(arg0, arg1)
+                } catch (e: ArithmeticException) {
+                    throw PErrors.numericValueOutOfRangeException("$arg0 + $arg1", PType.bigint())
+                }
+            }
+            PType.DECIMAL, PType.NUMERIC -> {
+                val arg0 = bigDecimalOf(v1)
+                val arg1 = bigDecimalOf(v2.numberValue())
+                arg0.add(arg1, MATH_CONTEXT)
+            }
+            PType.DOUBLE -> {
+                val arg0 = v1.toDouble()
+                val arg1 = v2.doubleValue()
+                arg0 + arg1
+            }
+            else -> error("Unexpected type: ${type.code()}")
+        }
+    }
 }

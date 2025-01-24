@@ -8,8 +8,8 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
-import org.partiql.spi.utils.NumberExtensions.byteOverflows
-import org.partiql.spi.utils.NumberExtensions.shortOverflows
+import org.partiql.spi.utils.NumberUtils.byteOverflows
+import org.partiql.spi.utils.NumberUtils.shortOverflows
 import org.partiql.spi.value.Datum
 
 internal object FnMinus : DiadicArithmeticOperator("minus") {
