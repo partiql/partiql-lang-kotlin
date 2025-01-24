@@ -1,13 +1,15 @@
-package org.partiql.spi.function.utils
+package org.partiql.spi.utils
 
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.NumberUtils.isNumber
 import org.partiql.spi.value.Datum
 
 /**
- * Utility methods for [Function]s.
+ * Utility methods for [Function]s and aggregations.
  */
 internal object FunctionUtils {
 
@@ -51,5 +53,43 @@ internal object FunctionUtils {
             .isMissingCall(isMissingCall)
             .body(invoke)
             .build()
+    }
+
+    internal fun checkIsBooleanType(funcName: String, value: Datum) {
+        if (value.type.code() == PType.VARIANT) {
+            return checkIsBooleanType(funcName, value.lower())
+        }
+        if (value.type.code() != PType.BOOL) {
+            throw PErrors.unexpectedTypeException(value.type, listOf(PType.bool()))
+        }
+    }
+
+    internal fun Datum.booleanValue(): Boolean = when (this.type.code()) {
+        PType.VARIANT -> this.lower().booleanValue()
+        PType.BOOL -> this.boolean
+        else -> error("Cannot convert PartiQLValue ($this) to boolean.")
+    }
+
+    /**
+     * This is specifically for SUM/AVG
+     */
+    internal fun nullToTargetType(type: PType): Datum = Datum.nullValue(type)
+
+    internal fun comparisonAccumulator(comparator: Comparator<Datum>): (Datum?, Datum) -> Datum =
+        { left, right ->
+            when {
+                left == null || comparator.compare(left, right) > 0 -> right
+                else -> left
+            }
+        }
+
+    // TODO: this should likely return the value of the datum so that if it is a variant, we don't need to lower again
+    internal fun checkIsNumberType(funcName: String, value: Datum) {
+        if (value.type.code() == PType.VARIANT) {
+            return checkIsNumberType(funcName, value.lower())
+        }
+        if (!value.type.isNumber()) {
+            throw PErrors.unexpectedTypeException(value.type, listOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint(), PType.decimal(), PType.numeric(), PType.real(), PType.doublePrecision()))
+        }
     }
 }

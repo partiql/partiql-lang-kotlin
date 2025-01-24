@@ -1,5 +1,6 @@
 package org.partiql.spi.function.builtins.internal
 
+import org.partiql.spi.utils.FunctionUtils.comparisonAccumulator
 import org.partiql.spi.value.Datum
 
 internal class AccumulatorMax : Accumulator() {

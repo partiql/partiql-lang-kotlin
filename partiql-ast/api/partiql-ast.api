@@ -3115,6 +3115,15 @@ public class org/partiql/ast/graph/GraphSelector$ShortestKGroup$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/partiql/ast/sql/Sql {
+	public static final fun sql (Lorg/partiql/ast/AstNode;)Ljava/lang/String;
+	public static final fun sql (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;)Ljava/lang/String;
+	public static final fun sql (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;Lorg/partiql/ast/sql/SqlDialect;)Ljava/lang/String;
+	public static final fun sql (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlLayout;)Ljava/lang/String;
+	public static synthetic fun sql$default (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;Lorg/partiql/ast/sql/SqlDialect;ILjava/lang/Object;)Ljava/lang/String;
+	public static synthetic fun sql$default (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlLayout;ILjava/lang/Object;)Ljava/lang/String;
+}
+
 public abstract class org/partiql/ast/sql/SqlBlock {
 	public static final field Companion Lorg/partiql/ast/sql/SqlBlock$Companion;
 	public field next Lorg/partiql/ast/sql/SqlBlock;
@@ -3305,15 +3314,6 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 
 public final class org/partiql/ast/sql/SqlDialect$Companion {
 	public final fun getSTANDARD ()Lorg/partiql/ast/sql/SqlDialect;
-}
-
-public final class org/partiql/ast/sql/SqlKt {
-	public static final fun sql (Lorg/partiql/ast/AstNode;)Ljava/lang/String;
-	public static final fun sql (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;)Ljava/lang/String;
-	public static final fun sql (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;Lorg/partiql/ast/sql/SqlDialect;)Ljava/lang/String;
-	public static final fun sql (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlLayout;)Ljava/lang/String;
-	public static synthetic fun sql$default (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;Lorg/partiql/ast/sql/SqlDialect;ILjava/lang/Object;)Ljava/lang/String;
-	public static synthetic fun sql$default (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlLayout;ILjava/lang/Object;)Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/ast/sql/SqlLayout {

@@ -1,3 +1,4 @@
+@file:JvmName("Sql")
 package org.partiql.ast.sql
 
 import org.partiql.ast.AstNode

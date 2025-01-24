@@ -5,9 +5,9 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.builtins.internal.PErrors
-import org.partiql.spi.internal.byteOverflows
-import org.partiql.spi.internal.shortOverflows
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.NumberUtils.byteOverflows
+import org.partiql.spi.utils.NumberUtils.shortOverflows
 import org.partiql.spi.value.Datum
 
 internal object FnTimes : DiadicArithmeticOperator("times") {

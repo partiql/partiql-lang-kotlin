@@ -5,11 +5,11 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
-import org.partiql.spi.function.utils.FunctionUtils
-import org.partiql.spi.function.utils.PatternUtils
-import org.partiql.spi.function.utils.PatternUtils.checkPattern
-import org.partiql.spi.function.utils.PatternUtils.parsePattern
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.FunctionUtils
+import org.partiql.spi.utils.PatternUtils
+import org.partiql.spi.utils.PatternUtils.checkPattern
+import org.partiql.spi.utils.PatternUtils.parsePattern
 import org.partiql.spi.value.Datum
 import java.util.regex.Pattern
 

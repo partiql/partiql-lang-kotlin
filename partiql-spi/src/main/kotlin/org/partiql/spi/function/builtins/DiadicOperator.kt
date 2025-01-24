@@ -6,9 +6,9 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.TypePrecedence.TYPE_PRECEDENCE
-import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 
 /**

@@ -4,8 +4,8 @@
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.FnOverload
-import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 
 private val NAME = FunctionUtils.hide("in_collection")

@@ -1,6 +1,7 @@
 package org.partiql.spi.function.builtins.internal
 
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.FunctionUtils.checkIsBooleanType
 import org.partiql.spi.value.Datum
 
 internal class AccumulatorEvery : Accumulator() {

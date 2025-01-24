@@ -1,6 +1,6 @@
-package org.partiql.spi.function.utils
+package org.partiql.spi.utils
 
-import org.partiql.spi.function.utils.StringUtils.codePointSequence
+import org.partiql.spi.utils.StringUtils.codePointSequence
 import java.util.regex.Pattern
 
 internal object PatternUtils {

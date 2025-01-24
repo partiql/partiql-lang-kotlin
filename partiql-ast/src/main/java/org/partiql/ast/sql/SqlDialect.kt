@@ -93,7 +93,6 @@ import org.partiql.ast.expr.TruthValue
 /**
  * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
  */
-@Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
 public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     public companion object {
@@ -305,7 +304,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprVarRef(node: ExprVarRef, tail: SqlBlock): SqlBlock {
         var t = tail
         // Prepend @
-        if (node.isQualified()) {
+        if (node.isQualified) {
             t = t concat "@"
         }
         t = visitIdentifier(node.identifier, t)
