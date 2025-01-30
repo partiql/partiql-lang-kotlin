@@ -1,5 +1,7 @@
 # PartiQL Code Examples
 
+# **WARNING**: these examples are out of date. They are using an older partiql-lang-kotlin version. Tracking issue to update
+
 Code examples on how to use the PartiQL reference implementation library can be found in both Java and Kotlin. To 
 run an example execute the command from the project root folder: 
 
