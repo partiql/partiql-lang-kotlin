@@ -43,10 +43,26 @@ public final class JoinType extends AstEnum {
      * Cross join variant.
      */
     public static final int CROSS = 7;
+
     /**
      * Left cross join variant.
      */
     public static final int LEFT_CROSS = 8;
+
+    /**
+     * Right cross join variant.
+     */
+    public static final int RIGHT_CROSS = 9;
+
+    /**
+     * Outer cross join variant.
+     */
+    public static final int INNER_CROSS = 10;
+
+    /**
+     * Full cross join variant.
+     */
+    public static final int FULL_CROSS = 11;
 
     public static JoinType INNER() {
         return new JoinType(INNER);
@@ -84,6 +100,18 @@ public final class JoinType extends AstEnum {
         return new JoinType(LEFT_CROSS);
     }
 
+    public static JoinType RIGHT_CROSS() {
+        return new JoinType(RIGHT_CROSS);
+    }
+
+    public static JoinType INNER_CROSS() {
+        return new JoinType(INNER_CROSS);
+    }
+
+    public static JoinType FULL_CROSS() {
+        return new JoinType(FULL_CROSS);
+    }
+
     private final int code;
 
     private JoinType(int code) {
@@ -108,6 +136,9 @@ public final class JoinType extends AstEnum {
             case FULL_OUTER: return "FULL_OUTER";
             case CROSS: return "CROSS";
             case LEFT_CROSS: return "LEFT_CROSS";
+            case RIGHT_CROSS: return "RIGHT_CROSS";
+            case INNER_CROSS: return "INNER_CROSS";
+            case FULL_CROSS: return "FULL_CROSS";
             default: throw new IllegalStateException("Invalid JoinType code: " + code);
         }
     }

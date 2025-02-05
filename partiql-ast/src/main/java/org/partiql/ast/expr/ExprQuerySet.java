@@ -8,6 +8,7 @@ import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.OrderBy;
 import org.partiql.ast.QueryBody;
+import org.partiql.ast.With;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +34,23 @@ public final class ExprQuerySet extends Expr {
     @Nullable
     private final Expr offset;
 
+    @Nullable
+    private final With with;
+
     public ExprQuerySet(@NotNull QueryBody body, @Nullable OrderBy orderBy, @Nullable Expr limit, @Nullable Expr offset) {
         this.body = body;
         this.orderBy = orderBy;
         this.limit = limit;
         this.offset = offset;
+        this.with = null;
+    }
+
+    public ExprQuerySet(@NotNull QueryBody body, @Nullable OrderBy orderBy, @Nullable Expr limit, @Nullable Expr offset, @Nullable With with) {
+        this.body = body;
+        this.orderBy = orderBy;
+        this.limit = limit;
+        this.offset = offset;
+        this.with = with;
     }
 
     @Override
@@ -60,6 +73,11 @@ public final class ExprQuerySet extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprQuerySet(this, ctx);
+    }
+
+    @Nullable
+    public With getWith() {
+        return this.with;
     }
 
     @NotNull

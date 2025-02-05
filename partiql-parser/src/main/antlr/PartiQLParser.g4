@@ -72,8 +72,137 @@ columnConstraintName : symbolPrimitive;
  */
 
 dql
-    : expr;
-    
+    : expr                # DqlExpr
+    | selectStatement     # DqlSelect
+    ;
+
+/**
+ * EBNF 2023:
+ * <direct select statement: multiple rows> ::= <cursor specification>
+ * <cursor specification> ::= <query expression> [ <updatability clause> ]
+ */
+selectStatement
+    : queryExpression
+    ;
+
+/**
+ * Returns an ExprQuerySet
+ * Should check that the queryExpressionBody will be a QueryBody, not an Expr.
+ *
+ * EBNF 2023:
+ * <query expression> ::=
+ *  [ <with clause> ] <query expression body>
+ *  [ <order by clause> ] [ <result offset clause> ] [ <fetch first clause> ]
+ */
+queryExpression
+    : with=withClause? queryExpressionBody orderByClause? limitClause? offsetByClause?
+    ;
+
+/**
+ * Returns a QueryBody or an Expr
+ *
+ * EBNF 1999:
+ * <query expression body> ::= <non-join query expression> | <joined table>
+ * <non-join query expression>    ::=
+ *          <non-join query term>
+ *      |     <query expression body> UNION [ ALL | DISTINCT ] [ <corresponding spec> ] <query term>
+ *      |     <query expression body> EXCEPT [ ALL | DISTINCT ] [ <corresponding spec> ] <query term>
+ */
+queryExpressionBody
+    : nonJoinQueryTerm                                              # NonJoinQueryExpressionTerm
+    | queryExpressionBody OUTER? UNION setQuantifierStrategy? queryTerm    # NonJoinQueryExpressionUnion
+    | queryExpressionBody OUTER? EXCEPT setQuantifierStrategy? queryTerm   # NonJoinQueryExpressionExcept
+    | joinedTable                                                   # QueryExpressionBodyJoinedTable
+    ;
+
+/**
+ * Returns either a QueryBody or an Expr
+ *
+ * EBNF 1999:
+ * <query term> ::= <non-join query term> | <joined table>
+ * <non-join query term>    ::=
+ *          <non-join query primary>
+ *      |     <query term> INTERSECT [ ALL | DISTINCT ] [ <corresponding spec> ] <query primary>
+ */
+queryTerm
+    : nonJoinQueryPrimary                                                 # QueryTermPrimary
+    | queryTerm OUTER? INTERSECT setQuantifierStrategy? queryPrimary      # QueryTermIntersect
+    | joinedTable                                                         # QueryTermTable
+    ;
+
+/**
+ * Returns either an Expr or a QueryBody
+ *
+ * EBNF 1999:
+ * <query primary> ::= <non-join query primary> | <joined table>
+ */
+queryPrimary
+    : nonJoinQueryPrimary
+    | joinedTable
+    ;
+
+/**
+ * Returns either a QueryBody or an Expr.
+ *
+ * EBNF 1999:
+ * <non-join query primary>    ::=
+ *          <simple table>
+ *      |     <left paren> <non-join query expression> <right paren>
+ * <non-join query expression>    ::=
+ *          <non-join query term>
+ *      |     <query expression body> UNION [ ALL | DISTINCT ] [ <corresponding spec> ] <query term>
+ *      |     <query expression body> EXCEPT [ ALL | DISTINCT ] [ <corresponding spec> ] <query term>
+ */
+nonJoinQueryPrimary
+    : simpleTable                                                                          # NonJoinQueryPrimaryTable
+    | PAREN_LEFT nonJoinQueryTerm PAREN_RIGHT                                              # NonJoinQueryPrimaryTerm
+    | PAREN_LEFT queryExpressionBody OUTER? UNION setQuantifierStrategy? queryTerm PAREN_RIGHT    # NonJoinQueryPrimaryUnion
+    | PAREN_LEFT queryExpressionBody OUTER? EXCEPT setQuantifierStrategy? queryTerm PAREN_RIGHT   # NonJoinQueryPrimaryExcept
+    ;
+
+/**
+ * Returns either an Expr or a QueryBody
+ * EBNF 1999:
+ * <non-join query term>    ::=
+ *          <non-join query primary>
+ *      |     <query term> INTERSECT [ ALL | DISTINCT ] [ <corresponding spec> ] <query primary>
+ */
+nonJoinQueryTerm
+    : nonJoinQueryPrimary                                          # NonJoinQueryTermPrimary
+    | queryTerm OUTER? INTERSECT setQuantifierStrategy? queryPrimary      # NonJoinQueryTermIntersect
+    ;
+
+/**
+ * Returns either a QueryBody or an Expr (Table Value Constructor)
+ *
+ * NOTE: This differs slightly from the EBNF in that we allow for the generic use of Expr to allow for the UNION
+ * (and other bag ops) of arbitrary expressions.
+ *
+ * EBNF 1999:
+ * <simple table> ::= <query specification> | <table value constructor> | <explicit table>
+ */
+simpleTable
+    : querySpecification
+    | tableValueConstructor
+    | expr // This is the rule that deviates from SQL's EBNF.
+    ;
+
+/**
+ * Returns a QueryBody.SFW.
+ * EBNF 1999:
+ * <query specification> ::= SELECT [ <set quantifier> ] <select list> <table expression>
+ * <table expression> ::= <from clause> [ <where clause> ] [ <group by clause> ] [ <having clause> ] 
+ */
+querySpecification
+    : select=selectClause
+        exclude=excludeClause?
+        from=fromClause
+        let=letClause?
+        where=whereClauseSelect?
+        group=groupClause?
+        having=havingClause?
+    ;
+
 //
 //
 // EXPLAIN
@@ -331,6 +460,12 @@ projectionItems
 projectionItem
     : expr ( AS? symbolPrimitive )? ;
 
+/**
+ * This returns a SetQuantifier.
+ *
+ * NOTE: This isn't directly represented in SQL's EBNF, however, the fragment is used across several rules. By extracting
+ * the fragment, it is easier to share logic to convert these tokens into a SetQuantifier.
+ */
 setQuantifierStrategy
     : DISTINCT
     | ALL
@@ -345,6 +480,38 @@ letClause
 
 letBinding
     : expr AS symbolPrimitive;
+
+/**
+ * WITH CLAUSE
+ *
+ * EBNF 1999:
+ * <with clause>    ::=   WITH [ RECURSIVE ] <with list>
+ * <with list>    ::=   <with list element> [ { <comma> <with list element> }... ] 
+ */
+withClause
+    : WITH elements+=withListElement ( COMMA elements+=withListElement)*
+    ;
+
+/**
+ * EBNF 1999:
+ * <with list element>    ::=
+ *         <query name>
+ *         [ <left paren> <with column list> <right paren> ]
+ *         AS <left paren> <query expression> <right paren>
+ *         [ <search or cycle clause> ]
+ * <with column list>    ::=   <column name list>
+ * <column name list>    ::=   <column name> [ { <comma> <column name> }... ]
+ * <column name>    ::=   <identifier>
+ */
+withListElement
+    : queryName=symbolPrimitive
+        ( PAREN_LEFT withColumnList PAREN_RIGHT )?
+        AS PAREN_LEFT queryExpression PAREN_RIGHT // This isn't exactly correct, since exprSelect in the G4 defers to arbitrary expressions. This will need to be checked at the conversion between ANTLR to AST.
+    ;
+
+withColumnList
+    : columnNames+=symbolPrimitive (COMMA columnNames+=symbolPrimitive)*
+    ;
 
 /**
  *
@@ -371,7 +538,7 @@ groupAlias
     : GROUP AS symbolPrimitive;
 
 groupKey
-    : key=exprSelect (AS symbolPrimitive)?;
+    : key=expr (AS symbolPrimitive)?;
 
 /**
  *
@@ -399,7 +566,7 @@ windowSortSpecList
  */
 
 havingClause
-    : HAVING arg=exprSelect;
+    : HAVING arg=expr;
 
 excludeClause
     : EXCLUDE excludeExpr (COMMA excludeExpr)*;
@@ -422,13 +589,13 @@ fromClause
     : FROM ( tableReference ( COMMA tableReference)* );
 
 whereClauseSelect
-    : WHERE arg=exprSelect;
+    : WHERE arg=expr;
 
 offsetByClause
-    : OFFSET arg=exprSelect;
+    : OFFSET arg=expr;
 
 limitClause
-    : LIMIT arg=exprSelect;
+    : LIMIT arg=expr;
 
 /**
  *
@@ -528,22 +695,64 @@ edgeAbbrev
  *
  */
 
+/**
+ * Returns a FromTableRef (FromJoin or FromExpr)
+ *
+ * NOTE: Some rules needed to be duplicated due to ANTLR's lack of support for indirect left recursion. See joinedTable.
+ */
 tableReference
-    : tablePrimary # TableRefPrimary
-    | lhs=tableReference LEFT CROSS JOIN rhs=tablePrimary # TableLeftCrossJoin // PartiQL spec defines LEFT CROSS JOIN; other variants are not defined yet
-    | lhs=tableReference CROSS JOIN rhs=tablePrimary # TableCrossJoin // SQL99 defines just CROSS JOIN
-    | lhs=tableReference joinType? JOIN rhs=tableReference joinSpec  # TableQualifiedJoin
+    : tablePrimary                                                    # TableReferencePrimary
+    | tableReference joinType? CROSS JOIN tablePrimary                # TableReferenceCrossJoin
+    | lhs=tableReference joinType? JOIN rhs=tableReference joinSpec   # TableReferenceQualifiedJoin
     ;
 
+/**
+ * Returns a FromJoin
+ *
+ * EBNF:
+ * <joined table> ::=   <cross join> | <qualified join> | <natural join> | <union join>
+ */
+joinedTable
+    : crossJoin
+    | qualifiedJoin
+    ;
+
+/**
+ * Returns a (FromJoin).
+ * 
+ * NOTE: The EBNF is different here, since the PartiQL Specification allows for the use of a joinType
+ * before the CROSS token.
+ *
+ * EBNF 1999:
+ * <cross join> ::= <table reference> CROSS JOIN <table primary>
+ */
+crossJoin
+    : tableReference joinType? CROSS JOIN tablePrimary
+    ;
+
+/**
+ * Returns a (FromJoin)
+ *
+ * EBNF:
+ * <qualified join> ::= <table reference> [ <join type> ] JOIN <table reference> <join specification>
+ */
+qualifiedJoin
+    : lhs=tableReference joinType? JOIN rhs=tableReference joinSpec
+    ;
+
+/**
+ * Returns a FromTableRef (FromJoin or FromExpr)
+ */
 tablePrimary
     : tableBaseReference
     | tableUnpivot
     | tableWrapped
     ;
 
+// TODO: We may want to limit this to be more similar to <table primary> in SQL:1999
 tableBaseReference
-    : source=exprSelect symbolPrimitive              # TableBaseRefSymbol
-    | source=exprSelect asIdent? atIdent? byIdent?   # TableBaseRefClauses
+    : source=expr symbolPrimitive              # TableBaseRefSymbol
+    | source=expr asIdent? atIdent? byIdent?   # TableBaseRefClauses
     | source=exprGraphMatchOne asIdent? atIdent? byIdent?   # TableBaseRefMatch
     ;
 
@@ -584,29 +793,7 @@ joinSpec
  */
 
 expr
-    : exprBagOp
-    ;
-
-exprBagOp
-    : lhs=exprBagOp OUTER? op=(UNION | EXCEPT | INTERSECT) (DISTINCT|ALL)? rhs=exprSelect
-      order=orderByClause?
-      limit=limitClause?
-      offset=offsetByClause?  # BagOp
-    | exprSelect                                                                                    # QueryBase
-    ;
-
-exprSelect
-    : select=selectClause
-        exclude=excludeClause?
-        from=fromClause
-        let=letClause?
-        where=whereClauseSelect?
-        group=groupClause?
-        having=havingClause?
-        order=orderByClause??
-        limit=limitClause??
-        offset=offsetByClause?? # SfwQuery
-    | exprOr            # SfwBase
+    : exprOr
     ;
 
 exprOr
@@ -749,7 +936,8 @@ rowValueConstructor
     ;
 
 exprTerm
-    : PAREN_LEFT expr PAREN_RIGHT    # ExprTermWrappedQuery
+    : PAREN_LEFT expr PAREN_RIGHT               # ExprTermWrappedQuery
+    | PAREN_LEFT queryExpression PAREN_RIGHT    # Subquery
     | CURRENT_USER                   # ExprTermCurrentUser
     | CURRENT_DATE                   # ExprTermCurrentDate
     | parameter                      # ExprTermBase
@@ -828,8 +1016,10 @@ dateFunction
 
 // SQL-99 10.4 — <routine invocation> ::= <routine name> <SQL argument list>
 functionCall
-    : qualifiedName PAREN_LEFT ASTERISK PAREN_RIGHT
-    | qualifiedName PAREN_LEFT ( setQuantifierStrategy? expr ( COMMA expr )* )? PAREN_RIGHT
+    : qualifiedName PAREN_LEFT ASTERISK PAREN_RIGHT                                          # FunctionCallAsterisk
+    | qualifiedName PAREN_LEFT ( setQuantifierStrategy? expr ( COMMA expr )* )? PAREN_RIGHT  # FunctionCallExprArgs
+    // This handles COLL_AGG(SELECT ...), where SELECT is not typically allowed. It normally needs to be wrapped in parentheses.
+    | qualifiedName PAREN_LEFT ( setQuantifierStrategy? queryExpression)? PAREN_RIGHT        # FunctionCallQueryExpression
     ;
 
 pathStep

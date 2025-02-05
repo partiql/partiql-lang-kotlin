@@ -47,4 +47,13 @@ public class SourceLocation {
     public int hashCode() {
         return Objects.hash(line, offset, length);
     }
+
+    @Override
+    public String toString() {
+        return "SourceLocation{" +
+                "line=" + line +
+                ", offset=" + offset +
+                ", length=" + length +
+                '}';
+    }
 }

@@ -165,12 +165,15 @@ import org.partiql.ast.Literal.string
 import org.partiql.ast.Literal.typedString
 import org.partiql.ast.Nulls
 import org.partiql.ast.Order
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Select
 import org.partiql.ast.SelectItem
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
+import org.partiql.ast.With
+import org.partiql.ast.WithListElement
 import org.partiql.ast.ddl.AttributeConstraint
 import org.partiql.ast.ddl.ColumnDefinition
 import org.partiql.ast.ddl.PartitionBy
@@ -183,7 +186,6 @@ import org.partiql.ast.dml.UpdateTargetStep
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag
-import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprLit
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
@@ -203,6 +205,7 @@ import org.partiql.ast.graph.GraphSelector
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
+import org.partiql.parser.internal.antlr.PartiQLParser.QualifiedNameContext
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.spi.Context
 import org.partiql.spi.SourceLocation
@@ -846,14 +849,129 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
-        override fun visitDql(ctx: GeneratedParser.DqlContext) = translate(ctx) {
+        override fun visitDqlExpr(ctx: GeneratedParser.DqlExprContext) = translate(ctx) {
             val expr = visitAs<Expr>(ctx.expr())
             query(expr)
         }
 
-        override fun visitQueryBase(ctx: GeneratedParser.QueryBaseContext): AstNode = visit(ctx.exprSelect())
+        override fun visitDqlSelect(ctx: GeneratedParser.DqlSelectContext) = translate(ctx) {
+            val expr = visitAs<Expr>(ctx.selectStatement())
+            query(expr)
+        }
 
-        override fun visitSfwQuery(ctx: GeneratedParser.SfwQueryContext) = translate(ctx) {
+        override fun visitQueryExpression(ctx: GeneratedParser.QueryExpressionContext) = translate(ctx) {
+            val body = visitAs<QueryBody>(ctx.queryExpressionBody())
+            val with = visitOrNull<With>(ctx.withClause())
+            val orderBy = ctx.orderByClause()?.let { visitOrderByClause(it) }
+            val limit = ctx.limitClause()?.let { visitLimitClause(it) }
+            val offset = ctx.offsetByClause()?.let { visitOffsetByClause(it) }
+            exprQuerySet(body, with = with, orderBy = orderBy, limit = limit, offset = offset)
+        }
+
+        override fun visitSubquery(ctx: GeneratedParser.SubqueryContext) = translate(ctx) {
+            visitQueryExpression(ctx.queryExpression())
+        }
+
+        override fun visitCrossJoin(ctx: GeneratedParser.CrossJoinContext) = translate(ctx) {
+            val lhs = visitAs<FromTableRef>(ctx.tableReference())
+            val rhs = visitAs<FromTableRef>(ctx.tablePrimary())
+            val joinType = convertCrossJoinType(ctx.joinType())
+            fromJoin(lhs, rhs, joinType, null)
+        }
+
+        override fun visitQueryExpressionBodyJoinedTable(ctx: GeneratedParser.QueryExpressionBodyJoinedTableContext) = translate(ctx) {
+            val fromTableRef = visitAs<FromTableRef>(ctx.joinedTable())
+            val from = from(listOf(fromTableRef))
+            queryBodySFW(selectStar(), from)
+        }
+
+        override fun visitNonJoinQueryPrimaryTerm(ctx: GeneratedParser.NonJoinQueryPrimaryTermContext): AstNode = translate(ctx) {
+            visit(ctx.nonJoinQueryTerm())
+        }
+
+        override fun visitNonJoinQueryPrimaryExcept(ctx: GeneratedParser.NonJoinQueryPrimaryExceptContext) = translate(ctx) {
+            val lhs = visitAndCoerceQueryBodyAsExpr(ctx.queryExpressionBody())
+            val rhs = visitAndCoerceQueryBodyAsExpr(ctx.queryTerm())
+            val setQuantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
+            val isOuter = ctx.OUTER() != null
+            queryBodySetOp(setOp(SetOpType.EXCEPT(), setQuantifier), isOuter, lhs, rhs)
+        }
+
+        override fun visitNonJoinQueryPrimaryUnion(ctx: GeneratedParser.NonJoinQueryPrimaryUnionContext) = translate(ctx) {
+            val lhs = visitAndCoerceQueryBodyAsExpr(ctx.queryExpressionBody())
+            val rhs = visitAndCoerceQueryBodyAsExpr(ctx.queryTerm())
+            val setQuantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
+            val isOuter = ctx.OUTER() != null
+            queryBodySetOp(setOp(SetOpType.UNION(), setQuantifier), isOuter, lhs, rhs)
+        }
+
+        override fun visitNonJoinQueryExpressionUnion(ctx: GeneratedParser.NonJoinQueryExpressionUnionContext) = translate(ctx) {
+            val lhsExpr = visitAndCoerceQueryBodyAsExpr(ctx.queryExpressionBody())
+            val rhsExpr = visitAndCoerceQueryBodyAsExpr(ctx.queryTerm())
+            val setQuantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
+            queryBodySetOp(setOp(SetOpType.UNION(), setQuantifier), ctx.OUTER() != null, lhsExpr, rhsExpr)
+        }
+
+        override fun visitNonJoinQueryExpressionExcept(ctx: GeneratedParser.NonJoinQueryExpressionExceptContext) = translate(ctx) {
+            val lhsExpr = visitAndCoerceQueryBodyAsExpr(ctx.queryExpressionBody())
+            val rhsExpr = visitAndCoerceQueryBodyAsExpr(ctx.queryTerm())
+            val setQuantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
+            queryBodySetOp(setOp(SetOpType.EXCEPT(), setQuantifier), ctx.OUTER() != null, lhsExpr, rhsExpr)
+        }
+
+        override fun visitQueryTermIntersect(ctx: GeneratedParser.QueryTermIntersectContext) = translate(ctx) {
+            val lhs = visitAndCoerceQueryBodyAsExpr(ctx.queryTerm())
+            val rhs = visitAndCoerceQueryBodyAsExpr(ctx.queryPrimary())
+            val setQuantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
+            val isOuter = ctx.OUTER() != null
+            queryBodySetOp(setOp(SetOpType.INTERSECT(), setQuantifier), isOuter, lhs, rhs)
+        }
+
+        override fun visitNonJoinQueryTermIntersect(ctx: GeneratedParser.NonJoinQueryTermIntersectContext) = translate(ctx) {
+            val lhs = visitAndCoerceQueryBodyAsExpr(ctx.queryTerm())
+            val rhs = visitAndCoerceQueryBodyAsExpr(ctx.queryPrimary())
+            val setQuantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
+            val isOuter = ctx.OUTER() != null
+            queryBodySetOp(setOp(SetOpType.INTERSECT(), setQuantifier), isOuter, lhs, rhs)
+        }
+
+        override fun visitQueryTermTable(ctx: GeneratedParser.QueryTermTableContext) = translate(ctx) {
+            val t = visitAs<FromTableRef>(ctx.joinedTable())
+            queryBodySFW(selectStar(), from(listOf(t)))
+        }
+
+        override fun visitTableReferenceCrossJoin(ctx: GeneratedParser.TableReferenceCrossJoinContext) = translate(ctx) {
+            val lhs = visitAs<FromTableRef>(ctx.tableReference())
+            val rhs = visitAs<FromTableRef>(ctx.tablePrimary())
+            val joinType = convertCrossJoinType(ctx.joinType())
+            fromJoin(lhs, rhs, joinType, null)
+        }
+
+        override fun visitQualifiedJoin(ctx: GeneratedParser.QualifiedJoinContext) = translate(ctx) {
+            val lhs = visitAs<FromTableRef>(ctx.lhs)
+            val rhs = visitAs<FromTableRef>(ctx.rhs)
+            val joinType = convertJoinType(ctx.joinType())
+            val condition = ctx.joinSpec()?.let { visitExpr(it.expr()) }
+            fromJoin(lhs, rhs, joinType, condition)
+        }
+
+        override fun visitTableReferenceQualifiedJoin(ctx: GeneratedParser.TableReferenceQualifiedJoinContext) = translate(ctx) {
+            val lhs = visitAs<FromTableRef>(ctx.lhs)
+            val rhs = visitAs<FromTableRef>(ctx.rhs)
+            val joinType = convertJoinType(ctx.joinType())
+            val condition = ctx.joinSpec()?.let { visitExpr(it.expr()) }
+            fromJoin(lhs, rhs, joinType, condition)
+        }
+
+        private fun visitAndCoerceQueryBodyAsExpr(body: ParserRuleContext): Expr {
+            return when (val visitedBody = visit(body)) {
+                is QueryBody -> exprQuerySet(visitedBody)
+                is Expr -> visitedBody
+                else -> error("Expected either Expr or QueryBody.")
+            }
+        }
+
+        override fun visitQuerySpecification(ctx: GeneratedParser.QuerySpecificationContext) = translate(ctx) {
             val select = visit(ctx.select) as Select
             val from = visitFromClause(ctx.from)
             val exclude = visitOrNull<Exclude>(ctx.exclude)
@@ -861,17 +979,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val where = visitOrNull<Expr>(ctx.where)
             val groupBy = ctx.group?.let { visitGroupClause(it) }
             val having = visitOrNull<Expr>(ctx.having?.arg)
-            val orderBy = ctx.order?.let { visitOrderByClause(it) }
-            val limit = visitOrNull<Expr>(ctx.limit?.arg)
-            val offset = visitOrNull<Expr>(ctx.offset?.arg)
-            exprQuerySet(
-                body = queryBodySFW(
-                    select, exclude, from, let, where, groupBy, having
-                ),
-                orderBy = orderBy,
-                limit = limit,
-                offset = offset
-            )
+            queryBodySFW(select, exclude, from, let, where, groupBy, having)
         }
 
         /**
@@ -925,7 +1033,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             if (Thread.interrupted()) {
                 throw InterruptedException()
             }
-            return visitAs<Expr>(ctx.exprBagOp())
+            return visitAs<Expr>(ctx.exprOr())
         }
 
         override fun visitOffsetByClause(ctx: GeneratedParser.OffsetByClauseContext) = visitAs<Expr>(ctx.arg)
@@ -951,6 +1059,34 @@ internal class PartiQLParserDefault : PartiQLParser {
             val expr = visitAs<Expr>(ctx.expr())
             val alias = visitSymbolPrimitive(ctx.symbolPrimitive())
             letBinding(expr, alias)
+        }
+
+        /**
+         *
+         * WITH CLAUSE
+         *
+         */
+
+        override fun visitWithClause(ctx: GeneratedParser.WithClauseContext) = translate(ctx) {
+            val elements = ctx.elements.map { elt -> visitWithListElement(elt) }
+            With(elements)
+        }
+
+        override fun visitWithListElement(ctx: GeneratedParser.WithListElementContext) = translate(ctx) {
+            val identifier = visitSymbolPrimitive(ctx.queryName)
+            // Get the target query expression. Due to the structure of the ANTLR grammar, we need to check for
+            // query expressions specifically.
+            val asQuery = visitAs<Expr>(ctx.queryExpression())
+            if (asQuery !is ExprQuerySet) {
+                throw error(ctx, "The targets of <with list element> may only be query expressions.")
+            }
+            // Get (optional) column names
+            val columnNames = ctx.withColumnList()?.let {
+                it.columnNames.map { name ->
+                    visitSymbolPrimitive(name)
+                }
+            }
+            WithListElement(identifier, asQuery, columnNames)
         }
 
         /**
@@ -1044,42 +1180,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             translate(ctx) {
                 excludeStepStructWildcard()
             }
-
-        /**
-         *
-         * BAG OPERATIONS
-         *
-         */
-        override fun visitBagOp(ctx: GeneratedParser.BagOpContext) = translate(ctx) {
-            val setq = when {
-                ctx.ALL() != null -> SetQuantifier.ALL()
-                ctx.DISTINCT() != null -> SetQuantifier.DISTINCT()
-                else -> null
-            }
-            val op = when (ctx.op.type) {
-                GeneratedParser.UNION -> setOp(SetOpType.UNION(), setq)
-                GeneratedParser.INTERSECT -> setOp(SetOpType.INTERSECT(), setq)
-                GeneratedParser.EXCEPT -> setOp(SetOpType.EXCEPT(), setq)
-                else -> error("Unsupported bag op token ${ctx.op}")
-            }
-            val lhs = visitAs<Expr>(ctx.lhs)
-            val rhs = visitAs<Expr>(ctx.rhs)
-            val outer = ctx.OUTER() != null
-            val orderBy = ctx.order?.let { visitOrderByClause(it) }
-            val limit = ctx.limit?.let { visitAs<Expr>(it) }
-            val offset = ctx.offset?.let { visitAs<Expr>(it) }
-            exprQuerySet(
-                queryBodySetOp(
-                    op,
-                    outer,
-                    lhs,
-                    rhs
-                ),
-                orderBy,
-                limit,
-                offset,
-            )
-        }
 
         /**
          *
@@ -1332,29 +1432,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             visitAs<FromTableRef>(ctx.tableReference())
         }
 
-        override fun visitTableLeftCrossJoin(ctx: GeneratedParser.TableLeftCrossJoinContext): FromTableRef = translate(ctx) {
-            val lhs = visitAs<FromTableRef>(ctx.lhs)
-            val rhs = visitAs<FromTableRef>(ctx.rhs)
-            // PartiQL spec defines equivalence of
-            // l LEFT CROSS JOIN r <=> l LEFT JOIN r ON TRUE
-            // The other join types combined w/ CROSS JOIN are unspecified -- https://github.com/partiql/partiql-lang-kotlin/issues/1013
-            fromJoin(lhs, rhs, JoinType.LEFT_CROSS(), null)
-        }
-
-        override fun visitTableCrossJoin(ctx: GeneratedParser.TableCrossJoinContext): FromTableRef = translate(ctx) {
-            val lhs = visitAs<FromTableRef>(ctx.lhs)
-            val rhs = visitAs<FromTableRef>(ctx.rhs)
-            fromJoin(lhs, rhs, JoinType.CROSS(), null)
-        }
-
-        override fun visitTableQualifiedJoin(ctx: GeneratedParser.TableQualifiedJoinContext): FromTableRef = translate(ctx) {
-            val lhs = visitAs<FromTableRef>(ctx.lhs)
-            val rhs = visitAs<FromTableRef>(ctx.rhs)
-            val type = convertJoinType(ctx.joinType())
-            val condition = ctx.joinSpec()?.let { visitExpr(it.expr()) }
-            fromJoin(lhs, rhs, type, condition)
-        }
-
         private fun convertJoinType(ctx: GeneratedParser.JoinTypeContext?): JoinType? {
             if (ctx == null) return null
             return when (ctx.mod.type) {
@@ -1377,6 +1454,19 @@ internal class PartiQLParserDefault : PartiQLParser {
                     JoinType.FULL_OUTER()
                 }
                 else -> null
+            }
+        }
+
+        private fun convertCrossJoinType(ctx: GeneratedParser.JoinTypeContext?): JoinType {
+            if (ctx == null) return JoinType.CROSS()
+            return when (ctx.mod.type) {
+                GeneratedParser.INNER -> JoinType.INNER_CROSS()
+                GeneratedParser.LEFT -> JoinType.LEFT_CROSS()
+                GeneratedParser.RIGHT -> JoinType.RIGHT_CROSS()
+                // TODO https://github.com/partiql/partiql-spec/issues/41
+                // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1013
+                GeneratedParser.FULL, GeneratedParser.OUTER -> JoinType.FULL_CROSS()
+                else -> JoinType.CROSS()
             }
         }
 
@@ -1720,30 +1810,40 @@ internal class PartiQLParserDefault : PartiQLParser {
             throw error(ctx, "CAN_LOSSLESS_CAST is no longer supported in the default PartiQLParser")
         }
 
-        override fun visitFunctionCall(ctx: GeneratedParser.FunctionCallContext) = translate(ctx) {
+        override fun visitFunctionCallAsterisk(ctx: GeneratedParser.FunctionCallAsteriskContext) = translate(ctx) {
+            val function = visitQualifiedName(ctx.qualifiedName())
+            exprCall(function, emptyList())
+        }
+
+        override fun visitFunctionCallExprArgs(ctx: GeneratedParser.FunctionCallExprArgsContext) = translate(ctx) {
             val args = visitOrEmpty<Expr>(ctx.expr())
-            when (val funcName = ctx.qualifiedName()) {
-                is GeneratedParser.QualifiedNameContext -> {
-                    when (funcName.name.start.type) {
-                        GeneratedParser.MOD -> exprOperator("%", args[0], args[1])
-                        GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH -> {
-                            val path = ctx.qualifiedName().qualifier.map { visitSymbolPrimitive(it) }
-                            val name = Simple.regular("char_length")
-                            if (path.isEmpty()) {
-                                exprCall(Identifier.of(name), args, null) // setq = null for scalar fn
-                            } else {
-                                exprCall(identifier(qualifier = path, identifier = name), args, setq = null)
-                            }
-                        }
-                        else -> visitNonReservedFunctionCall(ctx, args)
+            val funcName = ctx.qualifiedName()
+            exprCallHandleReserved(funcName, args, convertSetQuantifier(ctx.setQuantifierStrategy()))
+        }
+
+        override fun visitFunctionCallQueryExpression(ctx: GeneratedParser.FunctionCallQueryExpressionContext) = translate(ctx) {
+            val arg = visitQueryExpression(ctx.queryExpression())
+            val funcName = ctx.qualifiedName()
+            exprCallHandleReserved(funcName, listOf(arg), convertSetQuantifier(ctx.setQuantifierStrategy()))
+        }
+
+        /**
+         * Handles the reserved scalar function names (MOD, CHAR_LENGTH)
+         */
+        private fun exprCallHandleReserved(funcName: QualifiedNameContext, args: List<Expr>, setq: SetQuantifier?): Expr {
+            return when (funcName.name.start.type) {
+                GeneratedParser.MOD -> exprOperator("%", args[0], args[1])
+                GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH -> {
+                    val path = funcName.qualifier.map { visitSymbolPrimitive(it) }
+                    val name = Simple.regular("char_length")
+                    if (path.isEmpty()) {
+                        exprCall(Identifier.of(name), args, null) // setq = null for scalar fn
+                    } else {
+                        exprCall(identifier(qualifier = path, identifier = name), args, setq = null)
                     }
                 }
-                else -> visitNonReservedFunctionCall(ctx, args)
+                else -> exprCall(visitQualifiedName(funcName), args, setq)
             }
-        }
-        private fun visitNonReservedFunctionCall(ctx: GeneratedParser.FunctionCallContext, args: List<Expr>): ExprCall {
-            val function = visitQualifiedName(ctx.qualifiedName())
-            return exprCall(function, args, convertSetQuantifier(ctx.setQuantifierStrategy()))
         }
 
         /**

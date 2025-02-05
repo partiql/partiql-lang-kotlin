@@ -225,6 +225,11 @@ public object Ast {
     }
 
     @JvmStatic
+    public fun exprQuerySet(body: QueryBody, orderBy: OrderBy? = null, limit: Expr? = null, offset: Expr? = null, with: With? = null): ExprQuerySet {
+        return ExprQuerySet(body, orderBy, limit, offset, with)
+    }
+
+    @JvmStatic
     public fun exprSessionAttribute(sessionAttribute: SessionAttribute): ExprSessionAttribute {
         return ExprSessionAttribute(sessionAttribute)
     }

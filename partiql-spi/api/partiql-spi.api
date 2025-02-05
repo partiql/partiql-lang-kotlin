@@ -29,6 +29,7 @@ public class org/partiql/spi/SourceLocation {
 	public fun <init> (JJJ)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/spi/SourceLocations : java/util/Map {
