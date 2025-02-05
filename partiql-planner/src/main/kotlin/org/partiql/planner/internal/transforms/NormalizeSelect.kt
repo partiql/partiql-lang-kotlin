@@ -42,6 +42,8 @@ import org.partiql.ast.SelectItem
 import org.partiql.ast.SelectList
 import org.partiql.ast.SelectStar
 import org.partiql.ast.SelectValue
+import org.partiql.ast.With
+import org.partiql.ast.WithListElement
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprQuerySet
@@ -110,6 +112,11 @@ import org.partiql.planner.internal.util.BinderUtils.toBinder
 internal object NormalizeSelect {
 
     internal fun normalize(node: ExprQuerySet): ExprQuerySet {
+        val with = node.with?.elements?.map { element ->
+            val elementQuery = normalize(element.asQuery)
+            WithListElement(element.queryName, elementQuery, element.columnList)
+        }?.let { With(it) }
+
         return when (val body = node.body) {
             is QueryBody.SFW -> {
                 val sfw = Visitor.visitSFW(body, newCtx())
@@ -117,7 +124,8 @@ internal object NormalizeSelect {
                     body = sfw,
                     orderBy = node.orderBy,
                     limit = node.limit,
-                    offset = node.offset
+                    offset = node.offset,
+                    with = with
                 )
             }
             is QueryBody.SetOp -> {
@@ -132,7 +140,8 @@ internal object NormalizeSelect {
                     ),
                     orderBy = node.orderBy,
                     limit = node.limit,
-                    offset = node.offset
+                    offset = node.offset,
+                    with = with
                 )
             }
             else -> error("Unexpected QueryBody type: $body")

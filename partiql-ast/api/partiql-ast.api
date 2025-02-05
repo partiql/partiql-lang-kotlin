@@ -433,6 +433,10 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitUpdateTargetStepField (Lorg/partiql/ast/dml/UpdateTargetStep$Field;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWith (Lorg/partiql/ast/With;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWith (Lorg/partiql/ast/With;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWithListElement (Lorg/partiql/ast/WithListElement;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWithListElement (Lorg/partiql/ast/WithListElement;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 }
 
 public abstract class org/partiql/ast/AstVisitor {

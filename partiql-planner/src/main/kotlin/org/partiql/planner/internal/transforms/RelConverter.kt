@@ -47,6 +47,7 @@ import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rel
@@ -171,6 +172,9 @@ internal object RelConverter {
             val orderBy = node.orderBy
             val limit = node.limit
             val offset = node.offset
+            if (node.with != null) {
+                env.listener.report(PErrors.featureNotSupported("WITH clause"))
+            }
             when (body) {
                 is QueryBody.SFW -> {
                     var sel = body

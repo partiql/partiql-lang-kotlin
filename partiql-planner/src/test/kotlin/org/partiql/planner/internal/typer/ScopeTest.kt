@@ -11,6 +11,7 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -39,7 +40,8 @@ internal class ScopeTest {
                 Session.builder()
                     .catalog("currentCatalog")
                     .catalogs(catalog)
-                    .build()
+                    .build(),
+                PErrorListener.abortOnError()
             ),
             Scope(
                 listOf(
