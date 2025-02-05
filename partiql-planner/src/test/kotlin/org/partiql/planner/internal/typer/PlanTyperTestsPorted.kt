@@ -3740,16 +3740,13 @@ internal class PlanTyperTestsPorted {
     }
 
     @Test
-    // @Disabled
+    @Disabled
     fun developmentTest() {
-        val tc =
-            ErrorTestCase(
-                name = "WITH not supported yet",
-                query = "WITH x AS (SELECT * FROM <<1, 2, 3>>) SELECT * FROM x",
-                problemHandler = assertProblemExists(
-                    PErrors.featureNotSupported("WITH clause")
-                )
-            )
+        val tc = SuccessTestCase(
+            name = "DEV TEST",
+            query = "CAST('' AS STRING) < CAST('' AS SYMBOL);",
+            expected = PType.bool().toCType()
+        )
         runTest(tc)
     }
 
