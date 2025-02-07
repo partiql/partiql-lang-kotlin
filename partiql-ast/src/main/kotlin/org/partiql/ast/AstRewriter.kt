@@ -346,10 +346,31 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val orderBy = node.orderBy?.let { visitOrderBy(it, ctx) as OrderBy? }
         val limit = node.limit?.let { visitExpr(it, ctx) as Expr? }
         val offset = node.offset?.let { visitExpr(it, ctx) as Expr? }
+        val with = node.with?.let { visitWith(it, ctx) as With? }
         return if (body !== node.body || orderBy !== node.orderBy || limit !== node.limit || offset !==
-            node.offset
+            node.offset || with !== node.with
         ) {
-            exprQuerySet(body, orderBy, limit, offset)
+            exprQuerySet(body, orderBy, limit, offset, with)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWith(node: With, ctx: C): AstNode {
+        val elements = _visitList(node.elements, ctx, ::visitWithListElement)
+        return if (elements !== node.elements) {
+            With(elements, node.isRecursive)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWithListElement(node: WithListElement, ctx: C): AstNode {
+        val columns = node.columnList?.let { _visitList(it, ctx, ::visitIdentifierSimple) }
+        val queryName = visitIdentifierSimple(node.queryName, ctx) as Identifier.Simple
+        val query = visitExprQuerySet(node.asQuery, ctx) as ExprQuerySet
+        return if (columns !== node.columnList || queryName !== node.queryName || query !== node.asQuery) {
+            WithListElement(queryName, query, columns)
         } else {
             node
         }

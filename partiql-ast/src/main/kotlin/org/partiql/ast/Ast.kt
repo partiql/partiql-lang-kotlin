@@ -225,6 +225,11 @@ public object Ast {
     }
 
     @JvmStatic
+    public fun exprQuerySet(body: QueryBody, orderBy: OrderBy? = null, limit: Expr? = null, offset: Expr? = null, with: With? = null): ExprQuerySet {
+        return ExprQuerySet(body, orderBy, limit, offset, with)
+    }
+
+    @JvmStatic
     public fun exprSessionAttribute(sessionAttribute: SessionAttribute): ExprSessionAttribute {
         return ExprSessionAttribute(sessionAttribute)
     }
@@ -490,6 +495,16 @@ public object Ast {
     @JvmStatic
     public fun identifier(qualifier: List<Identifier.Simple>, identifier: Identifier.Simple): Identifier {
         return Identifier(qualifier, identifier)
+    }
+
+    @JvmStatic
+    public fun with(elements: List<WithListElement>, isRecursive: Boolean): With {
+        return With(elements, isRecursive)
+    }
+
+    @JvmStatic
+    public fun withListElement(queryName: Identifier.Simple, asQuery: ExprQuerySet, columnList: List<Identifier.Simple>?): WithListElement {
+        return WithListElement(queryName, asQuery, columnList)
     }
 
     @JvmStatic

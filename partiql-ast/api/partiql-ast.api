@@ -79,7 +79,9 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprPosition (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprPosition;
 	public static final fun exprQuerySet (Lorg/partiql/ast/QueryBody;)Lorg/partiql/ast/expr/ExprQuerySet;
 	public static final fun exprQuerySet (Lorg/partiql/ast/QueryBody;Lorg/partiql/ast/OrderBy;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprQuerySet;
+	public static final fun exprQuerySet (Lorg/partiql/ast/QueryBody;Lorg/partiql/ast/OrderBy;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/With;)Lorg/partiql/ast/expr/ExprQuerySet;
 	public static synthetic fun exprQuerySet$default (Lorg/partiql/ast/QueryBody;Lorg/partiql/ast/OrderBy;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprQuerySet;
+	public static synthetic fun exprQuerySet$default (Lorg/partiql/ast/QueryBody;Lorg/partiql/ast/OrderBy;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/With;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprQuerySet;
 	public static final fun exprRowValue (Ljava/util/List;)Lorg/partiql/ast/expr/ExprRowValue;
 	public static final fun exprRowValue (Ljava/util/List;Z)Lorg/partiql/ast/expr/ExprRowValue;
 	public static final fun exprSessionAttribute (Lorg/partiql/ast/expr/SessionAttribute;)Lorg/partiql/ast/expr/ExprSessionAttribute;
@@ -213,6 +215,8 @@ public final class org/partiql/ast/Ast {
 	public static final fun upsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Upsert;
 	public static final fun upsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Upsert;
 	public static synthetic fun upsert$default (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/dml/InsertSource;ILjava/lang/Object;)Lorg/partiql/ast/dml/Upsert;
+	public static final fun with (Ljava/util/List;Z)Lorg/partiql/ast/With;
+	public static final fun withListElement (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/expr/ExprQuerySet;Ljava/util/List;)Lorg/partiql/ast/WithListElement;
 }
 
 public abstract class org/partiql/ast/AstEnum : org/partiql/ast/AstNode {
@@ -431,6 +435,10 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitUpdateTargetStepField (Lorg/partiql/ast/dml/UpdateTargetStep$Field;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWith (Lorg/partiql/ast/With;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWith (Lorg/partiql/ast/With;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWithListElement (Lorg/partiql/ast/WithListElement;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWithListElement (Lorg/partiql/ast/WithListElement;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 }
 
 public abstract class org/partiql/ast/AstVisitor {
@@ -572,6 +580,8 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitUpdateTargetStepElement (Lorg/partiql/ast/dml/UpdateTargetStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdateTargetStepField (Lorg/partiql/ast/dml/UpdateTargetStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWith (Lorg/partiql/ast/With;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWithListElement (Lorg/partiql/ast/WithListElement;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
@@ -1054,21 +1064,27 @@ public class org/partiql/ast/Identifier$Simple$Builder {
 public final class org/partiql/ast/JoinType : org/partiql/ast/AstEnum {
 	public static final field CROSS I
 	public static final field FULL I
+	public static final field FULL_CROSS I
 	public static final field FULL_OUTER I
 	public static final field INNER I
+	public static final field INNER_CROSS I
 	public static final field LEFT I
 	public static final field LEFT_CROSS I
 	public static final field LEFT_OUTER I
 	public static final field RIGHT I
+	public static final field RIGHT_CROSS I
 	public static final field RIGHT_OUTER I
 	public static fun CROSS ()Lorg/partiql/ast/JoinType;
 	public static fun FULL ()Lorg/partiql/ast/JoinType;
+	public static fun FULL_CROSS ()Lorg/partiql/ast/JoinType;
 	public static fun FULL_OUTER ()Lorg/partiql/ast/JoinType;
 	public static fun INNER ()Lorg/partiql/ast/JoinType;
+	public static fun INNER_CROSS ()Lorg/partiql/ast/JoinType;
 	public static fun LEFT ()Lorg/partiql/ast/JoinType;
 	public static fun LEFT_CROSS ()Lorg/partiql/ast/JoinType;
 	public static fun LEFT_OUTER ()Lorg/partiql/ast/JoinType;
 	public static fun RIGHT ()Lorg/partiql/ast/JoinType;
+	public static fun RIGHT_CROSS ()Lorg/partiql/ast/JoinType;
 	public static fun RIGHT_OUTER ()Lorg/partiql/ast/JoinType;
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun code ()I
@@ -1453,6 +1469,46 @@ public class org/partiql/ast/Sort$Builder {
 
 public abstract class org/partiql/ast/Statement : org/partiql/ast/AstNode {
 	public fun <init> ()V
+}
+
+public final class org/partiql/ast/With : org/partiql/ast/AstNode {
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Z)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/With$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getElements ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun isRecursive ()Z
+}
+
+public class org/partiql/ast/With$Builder {
+	public fun build ()Lorg/partiql/ast/With;
+	public fun elements (Ljava/util/List;)Lorg/partiql/ast/With$Builder;
+	public fun isRecursive (Z)Lorg/partiql/ast/With$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/WithListElement : org/partiql/ast/AstNode {
+	public fun <init> (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/expr/ExprQuerySet;)V
+	public fun <init> (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/expr/ExprQuerySet;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/WithListElement$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAsQuery ()Lorg/partiql/ast/expr/ExprQuerySet;
+	public fun getChildren ()Ljava/util/List;
+	public fun getColumnList ()Ljava/util/List;
+	public fun getQueryName ()Lorg/partiql/ast/Identifier$Simple;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/WithListElement$Builder {
+	public fun asQuery (Lorg/partiql/ast/expr/ExprQuerySet;)Lorg/partiql/ast/WithListElement$Builder;
+	public fun build ()Lorg/partiql/ast/WithListElement;
+	public fun queryName (Lorg/partiql/ast/Identifier$Simple;)Lorg/partiql/ast/WithListElement$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun withColumnList (Ljava/util/List;)Lorg/partiql/ast/WithListElement$Builder;
 }
 
 public abstract class org/partiql/ast/ddl/AttributeConstraint : org/partiql/ast/AstNode {
@@ -2422,6 +2478,7 @@ public class org/partiql/ast/expr/ExprPosition$Builder {
 
 public final class org/partiql/ast/expr/ExprQuerySet : org/partiql/ast/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/QueryBody;Lorg/partiql/ast/OrderBy;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)V
+	public fun <init> (Lorg/partiql/ast/QueryBody;Lorg/partiql/ast/OrderBy;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/With;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/expr/ExprQuerySet$Builder;
 	public fun equals (Ljava/lang/Object;)Z
@@ -2430,6 +2487,7 @@ public final class org/partiql/ast/expr/ExprQuerySet : org/partiql/ast/expr/Expr
 	public fun getLimit ()Lorg/partiql/ast/expr/Expr;
 	public fun getOffset ()Lorg/partiql/ast/expr/Expr;
 	public fun getOrderBy ()Lorg/partiql/ast/OrderBy;
+	public fun getWith ()Lorg/partiql/ast/With;
 	public fun hashCode ()I
 }
 
@@ -2440,6 +2498,7 @@ public class org/partiql/ast/expr/ExprQuerySet$Builder {
 	public fun offset (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprQuerySet$Builder;
 	public fun orderBy (Lorg/partiql/ast/OrderBy;)Lorg/partiql/ast/expr/ExprQuerySet$Builder;
 	public fun toString ()Ljava/lang/String;
+	public fun with (Lorg/partiql/ast/With;)Lorg/partiql/ast/expr/ExprQuerySet$Builder;
 }
 
 public final class org/partiql/ast/expr/ExprRowValue : org/partiql/ast/expr/Expr {

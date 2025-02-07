@@ -206,6 +206,16 @@ internal object PErrors {
         return PRuntimeException(internalError(cause))
     }
 
+    internal fun featureNotSupported(feature: String, location: SourceLocation? = null): PError {
+        return PError(
+            PError.FEATURE_NOT_SUPPORTED,
+            Severity.ERROR(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("FEATURE_NAME" to feature),
+        )
+    }
+
     private fun internalError(cause: Throwable): PError = PError(
         PError.INTERNAL_ERROR,
         Severity.ERROR(),

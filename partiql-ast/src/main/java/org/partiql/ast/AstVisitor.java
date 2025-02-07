@@ -515,6 +515,14 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
+    public R visitWith(With node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitWithListElement(WithListElement node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
     public R visitLetBinding(Let.Binding node, C ctx) {
         return defaultVisit(node, ctx);
     }

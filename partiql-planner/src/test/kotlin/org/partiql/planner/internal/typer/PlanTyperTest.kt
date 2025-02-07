@@ -125,7 +125,8 @@ class PlanTyperTest {
                             .root(root)
                             .build()
                     )
-                    .build()
+                    .build(),
+                config.errorListener
             )
             return PlanTyperWrapper(PlanTyper(env, config))
         }

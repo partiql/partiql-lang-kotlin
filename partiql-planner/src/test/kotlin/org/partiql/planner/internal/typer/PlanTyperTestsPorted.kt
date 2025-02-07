@@ -4058,6 +4058,13 @@ internal class PlanTyperTestsPorted {
 
         private val parameters = listOf(
             ErrorTestCase(
+                name = "WITH not supported yet",
+                query = "WITH x AS (SELECT * FROM <<1, 2, 3>>) SELECT * FROM x",
+                problemHandler = assertProblemExists(
+                    PErrors.featureNotSupported("WITH clause")
+                )
+            ),
+            ErrorTestCase(
                 name = "Pets should not be accessible #1",
                 query = "SELECT * FROM pets",
                 expected = BagType(

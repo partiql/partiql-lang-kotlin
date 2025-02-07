@@ -33,7 +33,7 @@ internal class SqlPlanner(
     override fun plan(statement: Statement, session: Session, ctx: Context): Result {
         try {
             // 0. Initialize the planning environment
-            val env = Env(session)
+            val env = Env(session, ctx.errorListener)
 
             // 1. Normalize
             val ast = statement.normalize()

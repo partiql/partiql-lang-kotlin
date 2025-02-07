@@ -20,6 +20,7 @@ import org.partiql.spi.catalog.Catalogs
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.function.Agg
 import org.partiql.spi.function.AggOverload
 import org.partiql.spi.function.FnOverload
@@ -35,7 +36,7 @@ import org.partiql.spi.types.PType
  *
  * @property session
  */
-internal class Env(private val session: Session) {
+internal class Env(private val session: Session, internal val listener: PErrorListener) {
 
     /**
      * Catalogs provider.
