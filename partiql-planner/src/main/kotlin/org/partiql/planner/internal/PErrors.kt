@@ -216,6 +216,16 @@ internal object PErrors {
         )
     }
 
+    internal fun degreeViolationScalarSubquery(actual: Int, location: SourceLocation? = null): PError {
+        return PError(
+            PError.DEGREE_VIOLATION_SCALAR_SUBQUERY,
+            Severity.ERROR(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("ACTUAL" to actual),
+        )
+    }
+
     private fun internalError(cause: Throwable): PError = PError(
         PError.INTERNAL_ERROR,
         Severity.ERROR(),

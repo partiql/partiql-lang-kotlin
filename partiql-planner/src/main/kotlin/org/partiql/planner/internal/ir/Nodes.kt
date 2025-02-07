@@ -33,6 +33,8 @@ import org.partiql.planner.internal.ir.builder.RelOpSortBuilder
 import org.partiql.planner.internal.ir.builder.RelOpSortSpecBuilder
 import org.partiql.planner.internal.ir.builder.RelOpUnionBuilder
 import org.partiql.planner.internal.ir.builder.RelOpUnpivotBuilder
+import org.partiql.planner.internal.ir.builder.RelOpWithBuilder
+import org.partiql.planner.internal.ir.builder.RelOpWithWithListElementBuilder
 import org.partiql.planner.internal.ir.builder.RelTypeBuilder
 import org.partiql.planner.internal.ir.builder.RexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallDynamicBuilder
@@ -785,6 +787,7 @@ internal data class Rel(
             is Intersect -> visitor.visitRelOpIntersect(this, ctx)
             is Except -> visitor.visitRelOpExcept(this, ctx)
             is Limit -> visitor.visitRelOpLimit(this, ctx)
+            is With -> visitor.visitRelOpWith(this, ctx)
             is Offset -> visitor.visitRelOpOffset(this, ctx)
             is Project -> visitor.visitRelOpProject(this, ctx)
             is Join -> visitor.visitRelOpJoin(this, ctx)
@@ -1001,6 +1004,43 @@ internal data class Rel(
             internal companion object {
                 @JvmStatic
                 internal fun builder(): RelOpLimitBuilder = RelOpLimitBuilder()
+            }
+        }
+
+        internal data class With(
+            @JvmField internal val input: Rel,
+            @JvmField internal val elements: List<WithListElement>,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(input)
+                kids.addAll(elements)
+                kids.filterNotNull()
+            }
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpWith(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RelOpWithBuilder = RelOpWithBuilder()
+            }
+
+            internal data class WithListElement(
+                @JvmField internal val name: String,
+                @JvmField internal val representation: Rex,
+            ) : PlanNode() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(representation)
+                    kids.filterNotNull()
+                }
+
+                override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpWithWithListElement(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RelOpWithWithListElementBuilder = RelOpWithWithListElementBuilder()
+                }
             }
         }
 

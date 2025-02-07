@@ -34,6 +34,7 @@ object ErrorMessageFormatter {
             ErrorCodeString.INVALID_CHAR_VALUE_FOR_CAST -> invalidCharValueForCast(error)
             ErrorCodeString.DIVISION_BY_ZERO -> divisionByZero(error)
             ErrorCodeString.TYPE_UNEXPECTED -> typeUnexpected(error)
+            ErrorCodeString.DEGREE_VIOLATION_SCALAR_SUBQUERY -> degreeViolationScalarSubquery(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -130,6 +131,15 @@ object ErrorMessageFormatter {
     }
 
     /**
+     * @see PError.DEGREE_VIOLATION_SCALAR_SUBQUERY
+     */
+    private fun degreeViolationScalarSubquery(error: PError): String {
+        val actualType = error.getOrNull("ACTUAL", java.lang.Integer::class.java)
+        val actualTypeStr = prepare(actualType.toString(), " Actual degree: ", ".")
+        return "Degree of scalar subquery must be 1 (one).$actualTypeStr"
+    }
+
+    /**
      * @see PError.TYPE_UNEXPECTED
      */
     private fun typeUnexpected(error: PError): String {
@@ -166,7 +176,7 @@ object ErrorMessageFormatter {
         val cause = error.getOrNull("CAUSE", Throwable::class.java)
         val writer = StringPrintWriter()
         writer.appendLine("Unexpected failure encountered. Caused by: $cause.")
-        cause.printStackTrace(writer)
+        cause?.printStackTrace(writer)
         return writer.w.sb.toString()
     }
 
