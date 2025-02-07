@@ -489,7 +489,7 @@ letBinding
  * <with list>    ::=   <with list element> [ { <comma> <with list element> }... ] 
  */
 withClause
-    : WITH elements+=withListElement ( COMMA elements+=withListElement)*
+    : WITH RECURSIVE? elements+=withListElement ( COMMA elements+=withListElement)*
     ;
 
 /**

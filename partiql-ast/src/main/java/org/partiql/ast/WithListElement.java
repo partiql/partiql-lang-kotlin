@@ -19,7 +19,7 @@ import java.util.List;
  *          <query name>
  *          [ <left paren> <with column list> <right paren> ]
  *          AS <left paren> <query expression> <right paren>
- *          [ <search or cycle clause> ] 
+ *          [ <search or cycle clause> ]
  * }
  * </p>
  * <p>{@code <with column list>    ::=   <column name list>}</p>
@@ -31,6 +31,7 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class WithListElement extends AstNode {
+    // TODO: Add support for the search/cycle clause.
 
     @NotNull
     private final Identifier.Simple queryName;
@@ -42,15 +43,24 @@ public final class WithListElement extends AstNode {
     private final List<Identifier.Simple> withColumnList;
 
     /**
-     * TODO
-     * @param queryName TODO
-     * @param asQuery TODO
-     * @param columnList TODO
+     * Creates a new instance of {@link WithListElement}.
+     * @param queryName the name to bind
+     * @param asQuery the query that defines the with list element
+     * @param columnList the list of column names to be output from the query
      */
     public WithListElement(@NotNull Identifier.Simple queryName, @NotNull ExprQuerySet asQuery, @Nullable List<Identifier.Simple> columnList) {
         this.queryName = queryName;
         this.asQuery = asQuery;
         this.withColumnList = columnList;
+    }
+
+    /**
+     * Creates a new instance of {@link WithListElement}.
+     * @param queryName the name to bind
+     * @param asQuery the query that defines the with list element
+     */
+    public WithListElement(@NotNull Identifier.Simple queryName, @NotNull ExprQuerySet asQuery) {
+        this(queryName, asQuery, null);
     }
 
     @NotNull
@@ -71,8 +81,8 @@ public final class WithListElement extends AstNode {
     }
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the query name.
+     * @return the query name
      */
     @NotNull
     public Identifier.Simple getQueryName() {
@@ -80,8 +90,8 @@ public final class WithListElement extends AstNode {
     }
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the list of column names to be output from the query.
+     * @return the list of column names to be output from the query. This may return null.
      */
     @Nullable
     public List<Identifier.Simple> getColumnList() {
@@ -89,8 +99,8 @@ public final class WithListElement extends AstNode {
     }
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the query that defines the with list element.
+     * @return the query that defines the with list element
      */
     @NotNull
     public ExprQuerySet getAsQuery() {

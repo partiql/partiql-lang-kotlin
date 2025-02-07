@@ -498,6 +498,16 @@ public object Ast {
     }
 
     @JvmStatic
+    public fun with(elements: List<WithListElement>, isRecursive: Boolean): With {
+        return With(elements, isRecursive)
+    }
+
+    @JvmStatic
+    public fun withListElement(queryName: Identifier.Simple, asQuery: ExprQuerySet, columnList: List<Identifier.Simple>?): WithListElement {
+        return WithListElement(queryName, asQuery, columnList)
+    }
+
+    @JvmStatic
     public fun let(bindings: List<Let.Binding>): Let {
         return Let(bindings)
     }

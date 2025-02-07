@@ -1069,7 +1069,8 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitWithClause(ctx: GeneratedParser.WithClauseContext) = translate(ctx) {
             val elements = ctx.elements.map { elt -> visitWithListElement(elt) }
-            With(elements)
+            val isRecursive = ctx.RECURSIVE() != null
+            With(elements, isRecursive)
         }
 
         override fun visitWithListElement(ctx: GeneratedParser.WithListElementContext) = translate(ctx) {

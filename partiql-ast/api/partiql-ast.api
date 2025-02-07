@@ -215,6 +215,8 @@ public final class org/partiql/ast/Ast {
 	public static final fun upsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Upsert;
 	public static final fun upsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Upsert;
 	public static synthetic fun upsert$default (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/dml/InsertSource;ILjava/lang/Object;)Lorg/partiql/ast/dml/Upsert;
+	public static final fun with (Ljava/util/List;Z)Lorg/partiql/ast/With;
+	public static final fun withListElement (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/expr/ExprQuerySet;Ljava/util/List;)Lorg/partiql/ast/WithListElement;
 }
 
 public abstract class org/partiql/ast/AstEnum : org/partiql/ast/AstNode {
@@ -1471,21 +1473,25 @@ public abstract class org/partiql/ast/Statement : org/partiql/ast/AstNode {
 
 public final class org/partiql/ast/With : org/partiql/ast/AstNode {
 	public fun <init> (Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Z)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/With$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun getElements ()Ljava/util/List;
 	public fun hashCode ()I
+	public fun isRecursive ()Z
 }
 
 public class org/partiql/ast/With$Builder {
 	public fun build ()Lorg/partiql/ast/With;
 	public fun elements (Ljava/util/List;)Lorg/partiql/ast/With$Builder;
+	public fun isRecursive (Z)Lorg/partiql/ast/With$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/ast/WithListElement : org/partiql/ast/AstNode {
+	public fun <init> (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/expr/ExprQuerySet;)V
 	public fun <init> (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/expr/ExprQuerySet;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/WithListElement$Builder;

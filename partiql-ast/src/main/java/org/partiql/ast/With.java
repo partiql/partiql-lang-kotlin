@@ -23,12 +23,24 @@ public final class With extends AstNode {
     @NotNull
     private final List<WithListElement> elements;
 
+    private final boolean isRecursive;
+
     /**
-     * TODO
-     * @param elements TODO
+     * Creates a new WITH clause with the specified elements and RECURSIVE set to the specified value.
+     * @param elements the list of WITH list elements
+     * @param isRecursive true if this WITH clause specified RECURSIVE;
+     */
+    public With(@NotNull List<WithListElement> elements, boolean isRecursive) {
+        this.elements = elements;
+        this.isRecursive = isRecursive;
+    }
+
+    /**
+     * Creates a new WITH clause with the specified elements and RECURSIVE set to false.
+     * @param elements the list of WITH list elements
      */
     public With(@NotNull List<WithListElement> elements) {
-        this.elements = elements;
+        this(elements, false);
     }
 
     @NotNull
@@ -43,11 +55,19 @@ public final class With extends AstNode {
     }
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the list of WITH list elements.
+     * @return the list of WITH list elements
      */
     @NotNull
     public List<WithListElement> getElements() {
         return this.elements;
+    }
+
+    /**
+     * Returns whether this WITH clause specified RECURSIVE.
+     * @return whether this WITH clause specified RECURSIVE.
+     */
+    public boolean isRecursive() {
+        return this.isRecursive;
     }
 }
