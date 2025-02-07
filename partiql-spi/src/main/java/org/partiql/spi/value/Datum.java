@@ -680,6 +680,17 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @param values the backing values
+     * @return a value of type {@link PType#BAG}
+     */
+    @NotNull
+    static Datum bagVararg(@NotNull Datum... values) {
+        // Developer note: This needs to be named this way to disambiguate from the above method. Datum is an Iterable<Datum>
+        List<Datum> elements = Arrays.stream(values).collect(Collectors.toList());
+        return new DatumCollection(elements, PType.bag());
+    }
+
+    /**
+     * @param values the backing values
      * @return a value of type {@link PType#ARRAY}
      */
     @NotNull

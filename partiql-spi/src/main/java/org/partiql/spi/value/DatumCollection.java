@@ -36,4 +36,12 @@ class DatumCollection implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        return "DatumCollection{" +
+                "_type=" + _type +
+                ", _value=" + _value +
+                '}';
+    }
 }

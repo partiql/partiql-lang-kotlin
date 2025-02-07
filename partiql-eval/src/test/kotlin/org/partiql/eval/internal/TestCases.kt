@@ -35,12 +35,21 @@ class Global(
 }
 
 public class SuccessTestCase(
+    val name: String,
     val input: String,
     val expected: Datum,
     val mode: Mode = Mode.PERMISSIVE(),
     val globals: List<Global> = emptyList(),
     val jvmEquality: Boolean = false
 ) : PTestCase {
+
+    constructor(
+        input: String,
+        expected: Datum,
+        mode: Mode = Mode.PERMISSIVE(),
+        globals: List<Global> = emptyList(),
+        jvmEquality: Boolean = false
+    ) : this("no_name", input, expected, mode, globals, jvmEquality)
 
     constructor(
         input: String,
@@ -96,15 +105,23 @@ public class SuccessTestCase(
     }
 
     override fun toString(): String {
-        return input
+        return "$name ($mode): $input"
     }
 }
 
 public class FailureTestCase(
+    val name: String,
     val input: String,
     val mode: Mode = Mode.STRICT(), // default to run in STRICT mode
     val globals: List<Global> = emptyList(),
 ) : PTestCase {
+
+    constructor(
+        input: String,
+        mode: Mode = Mode.STRICT(),
+        globals: List<Global> = emptyList()
+    ) : this("no_name", input, mode, globals)
+
     private val compiler = PartiQLCompiler.standard()
     private val parser = PartiQLParser.standard()
     private val planner = PartiQLPlanner.standard()
@@ -145,5 +162,9 @@ public class FailureTestCase(
             }
             error(message)
         }
+    }
+
+    override fun toString(): String {
+        return "$name ($mode): $input"
     }
 }

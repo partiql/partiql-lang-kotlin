@@ -297,6 +297,18 @@ rel::{
       limit:  rex,
     },
 
+    with::{
+      input:  rel,
+      elements: list::[with_list_element],
+      _: [
+        with_list_element::{
+          name: string,
+          representation: rex,
+          // TODO: columns list
+        }
+      ]
+    },
+
     offset::{
       input:  rel,
       offset: rex,

@@ -3917,6 +3917,27 @@ internal class PlanTyperTestsPorted {
     @Execution(ExecutionMode.CONCURRENT)
     fun testCasts(tc: TestCase) = runTest(tc)
 
+    /**
+     * While all existing CTE tests exist in the evaluator, this one exists in the planner, since it causes a compilation
+     * error. In the future, it might be a good idea to consolidate our tests as end-to-end tests.
+     */
+    @Test
+    fun testCteWithDegreeGtOne() {
+        val tc = ErrorTestCase(
+            name = "CTE with degree greater than 1 used in subquery",
+            query = """
+                WITH x AS (
+                    SELECT * FROM << { 'a': 1, 'b': 2 } >> AS t
+                )
+                SELECT VALUE y + (SELECT * FROM x) FROM <<100>> AS y;
+            """.trimIndent(),
+            problemHandler = assertProblemExists(
+                PErrors.degreeViolationScalarSubquery(2)
+            )
+        )
+        runTest(tc)
+    }
+
     // --------- Finish Parameterized Tests ------
 
     //
@@ -4058,10 +4079,10 @@ internal class PlanTyperTestsPorted {
 
         private val parameters = listOf(
             ErrorTestCase(
-                name = "WITH not supported yet",
-                query = "WITH x AS (SELECT * FROM <<1, 2, 3>>) SELECT * FROM x",
+                name = "WITH RECURSIVE not supported yet",
+                query = "WITH RECURSIVE x AS (SELECT * FROM <<1, 2, 3>>) SELECT * FROM x",
                 problemHandler = assertProblemExists(
-                    PErrors.featureNotSupported("WITH clause")
+                    PErrors.featureNotSupported("WITH RECURSIVE")
                 )
             ),
             ErrorTestCase(

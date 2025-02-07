@@ -242,6 +242,14 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             return operators.aggregate(input, calls, groups)
         }
 
+        override fun visitRelOpWith(node: Rel.Op.With, ctx: PType): Any {
+            return visitRel(node.input, ctx)
+        }
+
+        override fun visitRelOpWithWithListElement(node: Rel.Op.With.WithListElement, ctx: PType): Any? {
+            error("WITH clause element was not transformed yet.")
+        }
+
         override fun visitRelOpAggregateCallUnresolved(node: IRel.Op.Aggregate.Call.Unresolved, ctx: PType): Any {
             error("Unresolved aggregate call $node")
         }

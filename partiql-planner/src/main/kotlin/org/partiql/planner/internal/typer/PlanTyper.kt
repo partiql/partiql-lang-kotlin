@@ -288,6 +288,17 @@ internal class PlanTyper(private val env: Env, config: Context) {
             return rel(type, op)
         }
 
+        override fun visitRelOpWith(node: Rel.Op.With, ctx: Rel.Type?): Rel {
+            val elements = node.elements.map { element ->
+                val representation = element.representation.type(emptyList(), outer)
+                element.copy(representation = representation)
+            }
+            val newStack = outer + Scope(listOf(), outer, elements)
+            val input = RelTyper(newStack, Strategy.LOCAL).visitRel(node.input, node.input.type)
+            val type = input.type
+            return Rel(type, node.copy(elements = elements, input = input))
+        }
+
         override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
@@ -1058,10 +1069,10 @@ internal class PlanTyper(private val env: Env, config: Context) {
             }
             val n = cons.fields.size
             if (n != 1) {
-                error("SELECT constructor with $n attributes cannot be coerced to a scalar. Found constructor type: $cons")
+                env.listener.report(PErrors.degreeViolationScalarSubquery(n))
             }
             // If we made it this far, then we can coerce this subquery to a scalar
-            val type = cons.fields.first().type
+            val type = cons.fields.firstOrNull()?.type ?: PType.dynamic().toCType()
             return Rex(type, subquery)
         }
 
