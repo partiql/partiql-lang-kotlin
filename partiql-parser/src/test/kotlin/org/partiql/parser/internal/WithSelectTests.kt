@@ -21,6 +21,7 @@ class WithSelectTests {
         override fun getParameters(): List<ParserTestCaseSimple> {
             val m = mapOf(
                 "Simplest test" to "WITH a AS (SELECT * FROM t) SELECT * FROM a, a",
+                "Simplest test with recursive" to "WITH RECURSIVE a AS (SELECT * FROM t) SELECT * FROM a, a",
                 "Simplest test delimited" to "WITH \"a\" AS (SELECT * FROM t) SELECT * FROM a, a",
                 "Multiple withs" to "WITH a AS (SELECT * FROM t), b AS (SELECT * FROM r) SELECT * FROM a, b",
                 "Simplest with column name" to "WITH a (b) AS (SELECT * FROM t) SELECT * FROM a, a",
@@ -38,6 +39,7 @@ class WithSelectTests {
         override fun getParameters(): List<ParserTestCaseSimple> {
             val m = mapOf(
                 "No query body" to "WITH a AS (SELECT * FROM t)",
+                "Recursive spelled incorrectly" to "WITH RECURSE a AS (SELECT * FROM t) SELECT * FROM a",
                 "No columns with parenthesis" to "WITH a () AS (SELECT * FROM t) SELECT * FROM a",
                 "No parenthesis on with target" to "WITH a AS SELECT * FROM t SELECT * FROM a",
                 "Unsupported path index" to "WITH a.b[0] AS (SELECT * FROM t) SELECT * FROM a, a",

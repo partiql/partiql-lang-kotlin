@@ -115,7 +115,7 @@ internal object NormalizeSelect {
         val with = node.with?.elements?.map { element ->
             val elementQuery = normalize(element.asQuery)
             WithListElement(element.queryName, elementQuery, element.columnList)
-        }?.let { With(it) }
+        }?.let { With(it, node.with!!.isRecursive) }
 
         return when (val body = node.body) {
             is QueryBody.SFW -> {

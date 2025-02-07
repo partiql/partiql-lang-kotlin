@@ -359,7 +359,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     override fun visitWith(node: With, ctx: C): AstNode {
         val elements = _visitList(node.elements, ctx, ::visitWithListElement)
         return if (elements !== node.elements) {
-            With(elements)
+            With(elements, node.isRecursive)
         } else {
             node
         }
