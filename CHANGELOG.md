@@ -28,6 +28,7 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
+- Properly returns properties from `Session`
 
 ### Deprecated
 
@@ -38,7 +39,7 @@ Thank you to all who have contributed!
 ### Security
 
 ### Contributors
-Thank you to all who have contributed!
+- @jpschorr
 
 ## [1.0.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.0.0) - 2025-01-23
 

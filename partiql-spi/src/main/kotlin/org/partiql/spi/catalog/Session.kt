@@ -136,6 +136,10 @@ public interface Session {
                 val currentNamespace = Namespace.of(getCatalog(), *getNamespace().getLevels())
                 return Path.of(currentNamespace, systemCatalogNamespace)
             }
+
+            override fun getProperties(): Map<String, String> {
+                return properties
+            }
         }
     }
 }
