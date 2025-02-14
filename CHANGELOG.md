@@ -23,23 +23,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [Unreleased]
+## [1.1.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.1.0) - 2025-02-14
 
 ### Added
-
-### Changed
-- Properly returns properties from `Session`
-
-### Deprecated
+- Added parsing, planning, and execution of basic Common Table Expressions (CTEs). These CTEs do not
+  allow for the planning/execution of RECURSIVE nor the planning/execution of the column list. This addition
+  also does not support the ability to reference CTEs from other CTEs. These may be added in a subsequent release.
 
 ### Fixed
-
-### Removed
-
-### Security
+- Fixed the parsing of select statements and bag operations as they pertain to the expression tree.
+- Properly returns properties from `Session`
 
 ### Contributors
+
+Thank you to all who have contributed!
+- @johnedquinn
 - @jpschorr
+
+**Full Changelog**: [v1.0.0...v1.1.0](https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0...v1.1.0)
 
 ## [1.0.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.0.0) - 2025-01-23
 
