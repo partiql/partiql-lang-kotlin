@@ -242,7 +242,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             return operators.aggregate(input, calls, groups)
         }
 
-        override fun visitRelOpWith(node: Rel.Op.With, ctx: PType): Any {
+        override fun visitRelOpWith(node: Rel.Op.With, ctx: PType): org.partiql.plan.rel.Rel {
             return visitRel(node.input, ctx)
         }
 

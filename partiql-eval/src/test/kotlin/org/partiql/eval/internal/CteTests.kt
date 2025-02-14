@@ -189,8 +189,8 @@ class CteTests {
                 input = """
                     WITH
                         x AS (SELECT VALUE t FROM << 1, 2, 3 >> t),
-                        y AS (SELECT VALUE x FROM x)
-                    SELECT * FROM y; -- y should not be able to be referenced.
+                        y AS (SELECT VALUE x FROM x) -- x should not be able to be referenced.
+                    SELECT * FROM y;
                 """.trimIndent(),
             ),
             FailureTestCase(
