@@ -169,6 +169,7 @@ public final class PError extends Enum {
      * @return a property that may provide additional information about the error; {@code null} if the property does
      * not exist, or if the property cannot be cast to {@code clazz}.
      */
+    @Nullable
     public <T> T getOrNull(@NotNull String key, @NotNull Class<T> clazz) {
         try {
             return get(key, clazz);
@@ -220,6 +221,8 @@ public final class PError extends Enum {
                 return "INVALID_CHAR_VALUE_FOR_CAST";
             case DIVISION_BY_ZERO:
                 return "DIVISION_BY_ZERO";
+            case DEGREE_VIOLATION_SCALAR_SUBQUERY:
+                return "DEGREE_VIOLATION_SCALAR_SUBQUERY";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -544,4 +547,20 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int DIVISION_BY_ZERO = 19;
+
+    /**
+     * <p>
+     * This is a runtime/compilation/planning error emitted when the degree of a scalar subquery is not 1 (one).
+     * </p>
+     * <p>
+     * Potentially  available properties:
+     * <ul>
+     * <li><b>ACTUAL</b> ({@link Integer}): The actual degree of the scalar subquery.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Degree of scalar subquery must be 1 (one). Actual degree: [actual].</code>
+     * </p>
+     */
+    public static final int DEGREE_VIOLATION_SCALAR_SUBQUERY = 20;
 }

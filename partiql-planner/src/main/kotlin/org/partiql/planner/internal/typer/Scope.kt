@@ -19,7 +19,8 @@ import org.partiql.spi.value.Datum
  */
 internal data class Scope(
     val schema: List<Rel.Binding>,
-    val outer: List<Scope>
+    val outer: List<Scope>,
+    val withElements: List<Rel.Op.With.WithListElement> = emptyList()
 ) {
 
     internal fun getScope(depth: Int): Scope {
@@ -69,6 +70,12 @@ internal data class Scope(
      */
     private fun matchRoot(name: Identifier.Simple, depth: Int = 0): Rex? {
         var r: Rex? = null
+        for (i in withElements.indices) {
+            val withElement = withElements[i]
+            if (name.matches(withElement.name)) {
+                return withElement.representation
+            }
+        }
         for (i in schema.indices) {
             val local = schema[i]
             val type = local.type

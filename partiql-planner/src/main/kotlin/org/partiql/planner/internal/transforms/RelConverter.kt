@@ -43,6 +43,7 @@ import org.partiql.ast.SelectStar
 import org.partiql.ast.SelectValue
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
+import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
@@ -74,6 +75,8 @@ import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpSortSpec
 import org.partiql.planner.internal.ir.relOpUnpivot
+import org.partiql.planner.internal.ir.relOpWith
+import org.partiql.planner.internal.ir.relOpWithWithListElement
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
@@ -172,9 +175,7 @@ internal object RelConverter {
             val orderBy = node.orderBy
             val limit = node.limit
             val offset = node.offset
-            if (node.with != null) {
-                env.listener.report(PErrors.featureNotSupported("WITH clause"))
-            }
+            val with = node.with
             when (body) {
                 is QueryBody.SFW -> {
                     var sel = body
@@ -203,6 +204,7 @@ internal object RelConverter {
                         is SelectPivot -> rel // Skip PIVOT
                         else -> error("Unexpected Select type: $projection")
                     }
+                    rel = convertWith(rel, with)
                     return rel
                 }
                 is QueryBody.SetOp -> {
@@ -211,6 +213,7 @@ internal object RelConverter {
                     // offset should precede limit
                     rel = convertOffset(rel, offset)
                     rel = convertLimit(rel, limit)
+                    rel = convertWith(rel, node.with)
                     return rel
                 }
                 else -> error("Unexpected QueryBody type: $body")
@@ -589,6 +592,28 @@ internal object RelConverter {
             val type = input.type
             val rex = RexConverter.apply(offset, env)
             val op = relOpOffset(input, rex)
+            return rel(type, op)
+        }
+
+        /**
+         * Append [Rel.Op.With] if there is a WITH clause
+         */
+        private fun convertWith(input: Rel, with: With?): Rel {
+            if (with == null) {
+                return input
+            }
+            if (with.isRecursive) {
+                env.listener.report(PErrors.featureNotSupported("WITH RECURSIVE"))
+            }
+            val type = input.type
+            val elements = with.elements.map { element ->
+                if (element.columnList != null) {
+                    env.listener.report(PErrors.featureNotSupported("WITH clause column list"))
+                }
+                val query = RexConverter.apply(element.asQuery, env)
+                relOpWithWithListElement(element.queryName.text, query)
+            }
+            val op = relOpWith(input, elements)
             return rel(type, op)
         }
 

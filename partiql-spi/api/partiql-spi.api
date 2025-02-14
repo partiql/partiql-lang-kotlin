@@ -301,6 +301,7 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field ALWAYS_MISSING I
 	public static final field CARDINALITY_VIOLATION I
+	public static final field DEGREE_VIOLATION_SCALAR_SUBQUERY I
 	public static final field DIVISION_BY_ZERO I
 	public static final field FEATURE_NOT_SUPPORTED I
 	public static final field FUNCTION_NOT_FOUND I
@@ -544,6 +545,7 @@ public abstract interface class org/partiql/spi/types/PTypeField {
 public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable {
 	public static fun array (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun bag (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
+	public static fun bagVararg ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
 	public static fun bigint (J)Lorg/partiql/spi/value/Datum;
 	public static fun blob ([B)Lorg/partiql/spi/value/Datum;
 	public static fun blob ([BI)Lorg/partiql/spi/value/Datum;
