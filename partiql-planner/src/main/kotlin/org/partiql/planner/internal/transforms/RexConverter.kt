@@ -19,6 +19,8 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstVisitor
 import org.partiql.ast.DataType
+import org.partiql.ast.DatetimeField
+import org.partiql.ast.IntervalQualifier
 import org.partiql.ast.Literal
 import org.partiql.ast.QueryBody
 import org.partiql.ast.SelectList
@@ -91,6 +93,7 @@ import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.DateTimeUtils
 import org.partiql.planner.internal.util.FunctionUtils
+import org.partiql.planner.internal.util.IntervalUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -104,6 +107,9 @@ import org.partiql.ast.SetQuantifier as AstSetQuantifier
  * Converts an AST expression node to a Plan Rex node; ignoring any typing.
  */
 internal object RexConverter {
+
+    private const val INTERVAL_DEFAULT_PRECISON = 2
+    private const val INTERVAL_DEFAULT_FRACTIONAL_PRECISION = 6
 
     internal fun apply(expr: Expr, context: Env): Rex = ToRex.visitExprCoerce(expr, context)
 
@@ -211,6 +217,10 @@ internal object RexConverter {
                             val timestamp = DateTimeUtils.parseTimestampz(typedString)
                             val precision = type.precision ?: 6
                             return Datum.timestampz(timestamp, precision)
+                        }
+                        DataType.INTERVAL -> {
+                            val qualifier = type.intervalQualifier ?: error("This interval should have a qualifier.")
+                            return IntervalUtils.parseInterval(typedString, qualifier)
                         }
                         else -> error("Unsupported typed literal string: $this")
                     }
@@ -1116,8 +1126,6 @@ internal object RexConverter {
                     type.precision ?: 6,
                     PType::timestampz
                 )
-                // <interval type>
-                DataType.INTERVAL -> error("INTERVAL is not supported yet.")
                 // <container type>
                 DataType.STRUCT -> PType.struct()
                 DataType.TUPLE -> PType.struct()
@@ -1126,6 +1134,41 @@ internal object RexConverter {
                 DataType.BAG -> PType.bag()
                 // <user defined type>
                 DataType.USER_DEFINED -> TODO("Custom type not supported ")
+                // <interval type>
+                DataType.INTERVAL -> {
+                    when (val q = type.intervalQualifier) {
+                        is IntervalQualifier.Single -> {
+                            val precision = q.precision ?: INTERVAL_DEFAULT_PRECISON
+                            val fractionalPrecision = q.fractionalPrecision ?: INTERVAL_DEFAULT_FRACTIONAL_PRECISION
+                            when (q.field.code()) {
+                                DatetimeField.YEAR -> PType.intervalYear(precision)
+                                DatetimeField.MONTH -> PType.intervalMonth(precision)
+                                DatetimeField.DAY -> PType.intervalDay(precision)
+                                DatetimeField.HOUR -> PType.intervalHour(precision)
+                                DatetimeField.MINUTE -> PType.intervalMinute(precision)
+                                DatetimeField.SECOND -> PType.intervalSecond(precision, fractionalPrecision)
+                                else -> error("Unsupported DatetimeField: ${q.field}")
+                            }
+                        }
+                        is IntervalQualifier.Range -> {
+                            val precision = q.startFieldPrecision ?: INTERVAL_DEFAULT_PRECISON
+                            val scale = q.endFieldFractionalPrecision ?: INTERVAL_DEFAULT_FRACTIONAL_PRECISION
+                            val lhsField = q.startField.code()
+                            val rhsField = q.endField.code()
+                            when (lhsField to rhsField) {
+                                DatetimeField.YEAR to DatetimeField.MONTH -> PType.intervalYearMonth(precision)
+                                DatetimeField.DAY to DatetimeField.HOUR -> PType.intervalDayHour(precision)
+                                DatetimeField.DAY to DatetimeField.MINUTE -> PType.intervalDayMinute(precision)
+                                DatetimeField.DAY to DatetimeField.SECOND -> PType.intervalDaySecond(precision, scale)
+                                DatetimeField.HOUR to DatetimeField.MINUTE -> PType.intervalHourMinute(precision)
+                                DatetimeField.HOUR to DatetimeField.SECOND -> PType.intervalHourSecond(precision, scale)
+                                DatetimeField.MINUTE to DatetimeField.SECOND -> PType.intervalMinuteSecond(precision, scale)
+                                else -> error("Unsupported DatetimeField: $lhsField to $rhsField")
+                            }
+                        }
+                        else -> error("Unsupported IntervalQualifier: $q")
+                    }
+                }
                 else -> error("Unsupported DataType type: $type")
             }.toCType()
         }

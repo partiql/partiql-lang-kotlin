@@ -40,4 +40,9 @@ final class DatumTime implements Datum {
     public OffsetTime getOffsetTime() {
         return value.atOffset(ZoneOffset.UTC);
     }
+
+    @Override
+    public String toString() {
+        return this.value.toString();
+    }
 }

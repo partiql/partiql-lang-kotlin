@@ -459,6 +459,22 @@ public final class org/partiql/spi/function/RoutineSignature {
 	public fun isNullCall ()Z
 }
 
+public final class org/partiql/spi/types/IntervalCode {
+	public static final field DAY I
+	public static final field DAY_HOUR I
+	public static final field DAY_MINUTE I
+	public static final field DAY_SECOND I
+	public static final field HOUR I
+	public static final field HOUR_MINUTE I
+	public static final field HOUR_SECOND I
+	public static final field MINUTE I
+	public static final field MINUTE_SECOND I
+	public static final field MONTH I
+	public static final field SECOND I
+	public static final field YEAR I
+	public static final field YEAR_MONTH I
+}
+
 public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static final field ARRAY I
 	public static final field BAG I
@@ -472,6 +488,8 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static final field DOUBLE I
 	public static final field DYNAMIC I
 	public static final field INTEGER I
+	public static final field INTERVAL_DT I
+	public static final field INTERVAL_YM I
 	public static final field NUMERIC I
 	public static final field REAL I
 	public static final field ROW I
@@ -506,11 +524,26 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static fun doublePrecision ()Lorg/partiql/spi/types/PType;
 	public static fun dynamic ()Lorg/partiql/spi/types/PType;
 	public fun getFields ()Ljava/util/Collection;
+	public fun getFractionalPrecision ()I
+	public fun getIntervalCode ()I
 	public fun getLength ()I
 	public fun getPrecision ()I
 	public fun getScale ()I
 	public fun getTypeParameter ()Lorg/partiql/spi/types/PType;
 	public static fun integer ()Lorg/partiql/spi/types/PType;
+	public static fun intervalDay (I)Lorg/partiql/spi/types/PType;
+	public static fun intervalDayHour (I)Lorg/partiql/spi/types/PType;
+	public static fun intervalDayMinute (I)Lorg/partiql/spi/types/PType;
+	public static fun intervalDaySecond (II)Lorg/partiql/spi/types/PType;
+	public static fun intervalHour (I)Lorg/partiql/spi/types/PType;
+	public static fun intervalHourMinute (I)Lorg/partiql/spi/types/PType;
+	public static fun intervalHourSecond (II)Lorg/partiql/spi/types/PType;
+	public static fun intervalMinute (I)Lorg/partiql/spi/types/PType;
+	public static fun intervalMinuteSecond (II)Lorg/partiql/spi/types/PType;
+	public static fun intervalMonth (I)Lorg/partiql/spi/types/PType;
+	public static fun intervalSecond (II)Lorg/partiql/spi/types/PType;
+	public static fun intervalYear (I)Lorg/partiql/spi/types/PType;
+	public static fun intervalYearMonth (I)Lorg/partiql/spi/types/PType;
 	public fun name ()Ljava/lang/String;
 	public static fun numeric ()Lorg/partiql/spi/types/PType;
 	public static fun numeric (II)Lorg/partiql/spi/types/PType;
@@ -565,21 +598,41 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun getBoolean ()Z
 	public fun getByte ()B
 	public fun getBytes ()[B
+	public fun getDays ()I
 	public fun getDouble ()D
 	public fun getFields ()Ljava/util/Iterator;
 	public fun getFloat ()F
+	public fun getHours ()I
 	public fun getInsensitive (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public fun getInt ()I
 	public fun getLocalDate ()Ljava/time/LocalDate;
 	public fun getLocalDateTime ()Ljava/time/LocalDateTime;
 	public fun getLocalTime ()Ljava/time/LocalTime;
 	public fun getLong ()J
+	public fun getMinutes ()I
+	public fun getMonths ()I
+	public fun getNanos ()I
 	public fun getOffsetDateTime ()Ljava/time/OffsetDateTime;
 	public fun getOffsetTime ()Ljava/time/OffsetTime;
+	public fun getSeconds ()I
 	public fun getShort ()S
 	public fun getString ()Ljava/lang/String;
 	public abstract fun getType ()Lorg/partiql/spi/types/PType;
+	public fun getYears ()I
 	public static fun integer (I)Lorg/partiql/spi/value/Datum;
+	public static fun intervalDay (II)Lorg/partiql/spi/value/Datum;
+	public static fun intervalDayHour (III)Lorg/partiql/spi/value/Datum;
+	public static fun intervalDayMinute (IIII)Lorg/partiql/spi/value/Datum;
+	public static fun intervalDaySecond (IIIIIII)Lorg/partiql/spi/value/Datum;
+	public static fun intervalHour (II)Lorg/partiql/spi/value/Datum;
+	public static fun intervalHourMinute (III)Lorg/partiql/spi/value/Datum;
+	public static fun intervalHourSecond (IIIIII)Lorg/partiql/spi/value/Datum;
+	public static fun intervalMinute (II)Lorg/partiql/spi/value/Datum;
+	public static fun intervalMinuteSecond (IIIII)Lorg/partiql/spi/value/Datum;
+	public static fun intervalMonth (II)Lorg/partiql/spi/value/Datum;
+	public static fun intervalSecond (IIII)Lorg/partiql/spi/value/Datum;
+	public static fun intervalYear (II)Lorg/partiql/spi/value/Datum;
+	public static fun intervalYearMonth (III)Lorg/partiql/spi/value/Datum;
 	public static fun ion (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public fun isMissing ()Z
 	public fun isNull ()Z

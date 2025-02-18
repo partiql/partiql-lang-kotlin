@@ -868,7 +868,7 @@ mathOp03
     ;
 
 valueExpr
-    : sign=(PLUS|MINUS) rhs=valueExpr
+    : sign rhs=valueExpr
     | parent=exprPrimary
     ;
 
@@ -1005,14 +1005,41 @@ canLosslessCast
 canCast
     : CAN_CAST PAREN_LEFT expr AS type PAREN_RIGHT;
 
+/**
+ * <extract expression> ::= EXTRACT <left paren> <extract field> FROM <extract source> <right paren>
+ */
 extract
-    : EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=expr PAREN_RIGHT;
+    : EXTRACT PAREN_LEFT extractField FROM rhs=expr PAREN_RIGHT;
 
 trimFunction
     : func=TRIM PAREN_LEFT ( mod=IDENTIFIER? sub=expr? FROM )? target=expr PAREN_RIGHT;
 
 dateFunction
-    : func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA expr COMMA expr PAREN_RIGHT;
+    : func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=extractField COMMA expr COMMA expr PAREN_RIGHT;
+
+/**
+ * <extract field> ::= <primary datetime field> | <time zone field>
+ */
+extractField
+    : primaryDatetimeField
+    | timeZoneField
+    ;
+
+/**
+ * <primary datetime field> ::= <non-second primary datetime field> | SECOND 
+ */
+primaryDatetimeField
+    : nonSecondPrimaryDatetimeField
+    | SECOND
+    ;
+
+/**
+ * <time zone field> ::= TIMEZONE_HOUR | TIMEZONE_MINUTE 
+ */
+timeZoneField
+    : TIMEZONE_HOUR
+    | TIMEZONE_MINUTE
+    ;
 
 // SQL-99 10.4 — <routine invocation> ::= <routine name> <SQL argument list>
 functionCall
@@ -1127,6 +1154,23 @@ literal
     | DATE LITERAL_STRING                                                                 # LiteralDate
     | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING   # LiteralTime
     | TIMESTAMP ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING   # LiteralTimestamp
+    | intervalLiteral                                                                     # LiteralInterval
+    ;
+
+/**
+ * EBNF 1999:
+ * <interval literal> ::= INTERVAL [ <sign> ] <interval string> <interval qualifier>
+ */
+intervalLiteral
+    : INTERVAL sign? LITERAL_STRING intervalQualifier
+    ;
+
+/**
+ * EBNF 2023:
+ * <sign> ::= <plus sign> | <minus sign>
+ */
+sign
+    : PLUS | MINUS
     ;
 
 type
@@ -1144,7 +1188,71 @@ type
     | datatype=(STRUCT|TUPLE) (ANGLE_LEFT structField ( COMMA structField )* ANGLE_RIGHT)                              # TypeStruct
     | datatype=(LIST|ARRAY) ANGLE_LEFT type ANGLE_RIGHT                                                                # TypeList
     | symbolPrimitive                                                                                                  # TypeCustom
+    | intervalType                                                                                                     # TypeInterval
     ;
+
+/**
+ * EBNF 2023:
+ * <interval type> ::= INTERVAL <interval qualifier>
+ */
+intervalType: INTERVAL intervalQualifier;
+
+/**
+ * EBNF 2023:
+ * <interval qualifier> ::=
+ *   <start field> TO <end field>
+ *   | <single datetime field>
+ */
+intervalQualifier
+    : startField TO endField      # IntervalQualifierBoth
+    | singleDatetimeField         # IntervalQualifierSingle
+    ;
+
+/**
+ * EBNF 2023:
+ * <start field> ::= <non-second primary datetime field> [ <left paren> <interval leading field precision> <right paren> ]
+ */
+startField
+    : nonSecondPrimaryDatetimeField (PAREN_LEFT intervalLeadingFieldPrecision PAREN_RIGHT)?
+    ;
+
+/**
+ * EBNF 2023:
+ * <end field> ::= <non-second primary datetime field> | SECOND [ <left paren> <interval fractional seconds precision> <right paren> ]
+ */
+endField
+    : nonSecondPrimaryDatetimeField                                   # EndFieldNonSecond
+    | SECOND (PAREN_LEFT intervalLeadingFieldPrecision PAREN_RIGHT)?  # EndFieldSecond
+    ;
+
+/**
+ * EBNF 1999:
+ * <single datetime field> ::=
+ *     <non-second primary datetime field> [ <left paren> <interval leading field precision> <right paren> ]
+ *     | SECOND [ <left paren> <interval leading field precision> [ <comma> <interval fractional seconds precision> ] <right paren> ]
+ */
+singleDatetimeField
+    : nonSecondPrimaryDatetimeField (PAREN_LEFT intervalLeadingFieldPrecision PAREN_RIGHT)?
+    | SECOND (PAREN_LEFT intervalLeadingFieldPrecision (COMMA intervalFractionalSecondsPrecision)? PAREN_RIGHT)?
+    ;
+
+/**
+ * EBNF 2023:
+ * <non-second primary datetime field> ::= YEAR | MONTH | DAY | HOUR | MINUTE
+ */
+nonSecondPrimaryDatetimeField: YEAR | MONTH | DAY | HOUR | MINUTE;
+
+/**
+ * EBNF 2023:
+ * <interval leading field precision> ::= <unsigned integer>
+ */
+intervalLeadingFieldPrecision: LITERAL_INTEGER;
+
+/**
+ * EBNF 2023:
+ * <interval fractional seconds precision> ::= <unsigned integer>
+ */
+intervalFractionalSecondsPrecision: LITERAL_INTEGER;
 
 structField
     : columnName OPTIONAL? COLON type columnConstraintDef* comment?
