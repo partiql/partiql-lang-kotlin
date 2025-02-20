@@ -32,8 +32,15 @@ internal class CompilerType(
         return _delegate.length
     }
 
+    override fun getIntervalCode(): Int {
+        return _delegate.getIntervalCode()
+    }
+
     override fun getPrecision(): Int = _delegate.precision
     override fun getScale(): Int = _delegate.scale
+    override fun getFractionalPrecision(): Int {
+        return _delegate.getFractionalPrecision()
+    }
     override fun getTypeParameter(): CompilerType {
         return when (val p = _delegate.typeParameter) {
             is CompilerType -> p

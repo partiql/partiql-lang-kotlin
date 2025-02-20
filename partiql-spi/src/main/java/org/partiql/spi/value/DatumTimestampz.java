@@ -22,7 +22,7 @@ final class DatumTimestampz implements Datum {
     private final OffsetDateTime value;
 
     DatumTimestampz(@NotNull OffsetDateTime value, int precision) {
-        this.type = PType.timestamp(precision);
+        this.type = PType.timestampz(precision);
         this.value = value;
     }
 

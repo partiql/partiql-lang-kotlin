@@ -29,12 +29,11 @@ import org.jline.utils.AttributedStyle
 import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
+import org.partiql.cli.io.DatumWriterTextPretty
 import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PRuntimeException
-import org.partiql.spi.value.ValueUtils
-import org.partiql.spi.value.io.PartiQLValueTextWriter
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
@@ -277,9 +276,8 @@ internal class Shell(
                         out.appendLine()
                         out.info("=== RESULT ===")
                         try {
-                            val writer = PartiQLValueTextWriter(out)
-                            val p = ValueUtils.newPartiQLValue(result)
-                            writer.append(p) // TODO: Create a Datum writer
+                            val writer = DatumWriterTextPretty(out)
+                            writer.write(result)
                         } catch (e: PRuntimeException) {
                             val message = ErrorMessageFormatter.message(e.error)
                             out.error(message)

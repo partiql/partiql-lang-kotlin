@@ -37,6 +37,16 @@ internal class SqlTypeFamily private constructor(
 
     companion object {
 
+        fun of(type: PType): SqlTypeFamily = when (type.code()) {
+            PType.INTEGER, PType.TINYINT, PType.SMALLINT, PType.BIGINT, PType.REAL, PType.DOUBLE, PType.DECIMAL, PType.NUMERIC -> NUMBER
+            PType.CHAR, PType.VARCHAR, PType.STRING, PType.CLOB -> TEXT
+            PType.BAG, PType.ARRAY -> COLLECTION
+            else -> SqlTypeFamily(type)
+        }
+
+        @JvmStatic
+        val BOOLEAN = SqlTypeFamily(PType.bool(), setOf(PType.BOOL))
+
         @JvmStatic
         val TEXT = SqlTypeFamily(
             preferred = PType.string(),
