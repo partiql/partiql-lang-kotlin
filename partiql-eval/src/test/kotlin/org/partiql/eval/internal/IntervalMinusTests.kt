@@ -46,13 +46,11 @@ class IntervalMinusTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun timestampZMinusInterval(tc: SuccessTestCase) = tc.run()
 
-    @Disabled("We haven't yet implemented INTERVAL - INTERVAL yet.")
     @ParameterizedTest
     @MethodSource("intervalMinusIntervalYMCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun intervalMinusIntervalYM(tc: SuccessTestCase) = tc.run()
 
-    @Disabled("We haven't yet implemented INTERVAL - INTERVAL yet.")
     @ParameterizedTest
     @MethodSource("intervalMinusIntervalDTCases")
     @Execution(ExecutionMode.CONCURRENT)
@@ -220,103 +218,98 @@ class IntervalMinusTests {
             SuccessTestCase("${case.arg0} - ${case.arg1}", case.expected)
         }
 
-        // These tests aren't correct. They're disabled anyway and are just a placeholder.
         @JvmStatic
         fun intervalMinusIntervalYMCases() = listOf(
             // INTERVAL YEAR + Others
-            Input(INTERVAL_Y, INTERVAL_Y, Datum.intervalYearMonth(2, 0, 2)),
-            Input(INTERVAL_Y, INTERVAL_M, Datum.intervalYearMonth(1, 1, 2)),
-            Input(INTERVAL_Y, INTERVAL_YM, Datum.intervalYearMonth(2, 1, 2)),
+            Input(INTERVAL_Y, INTERVAL_Y, Datum.intervalYearMonth(0, 0, 2)),
+            Input(INTERVAL_Y, INTERVAL_M, Datum.intervalYearMonth(0, 11, 2)),
+            Input(INTERVAL_Y, INTERVAL_YM, Datum.intervalYearMonth(0, -1, 2)),
 
             // INTERVAL MONTH + Others
-            Input(INTERVAL_M, INTERVAL_M, Datum.intervalYearMonth(0, 2, 2)),
-            Input(INTERVAL_M, INTERVAL_YM, Datum.intervalYearMonth(1, 2, 2)),
+            Input(INTERVAL_M, INTERVAL_M, Datum.intervalYearMonth(0, 0, 2)),
+            Input(INTERVAL_M, INTERVAL_YM, Datum.intervalYearMonth(-1, 0, 2)),
 
             // INTERVAL YEAR TO MONTH + Others
-            Input(INTERVAL_YM, INTERVAL_YM, Datum.intervalYearMonth(2, 2, 2)),
+            Input(INTERVAL_YM, INTERVAL_YM, Datum.intervalYearMonth(0, 0, 2)),
         ).map { case ->
             SuccessTestCase("${case.arg0} - ${case.arg1}", case.expected)
         }
 
-        // These tests aren't correct. They're disabled anyway and are just a placeholder.
         @JvmStatic
         fun intervalMinusIntervalDTCases() = listOf(
             // INTERVAL DAY + Others
-            Input(INTERVAL_D, INTERVAL_D, Datum.intervalDaySecond(2, 0, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_H, Datum.intervalDaySecond(1, 1, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_MIN, Datum.intervalDaySecond(1, 0, 1, 0, 0, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_S, Datum.intervalDaySecond(1, 0, 0, 1, NANO, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_DTH, Datum.intervalDaySecond(2, 1, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_DTM, Datum.intervalDaySecond(2, 1, 1, 0, 0, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_DTS, Datum.intervalDaySecond(2, 1, 1, 1, NANO, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_HM, Datum.intervalDaySecond(1, 1, 1, 0, 0, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_HTS, Datum.intervalDaySecond(1, 1, 1, 1, NANO, 2, 6)),
-            Input(INTERVAL_D, INTERVAL_MTS, Datum.intervalDaySecond(1, 0, 1, 1, NANO, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_D, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_H, Datum.intervalDaySecond(1, -1, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_MIN, Datum.intervalDaySecond(1, 0, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_S, Datum.intervalDaySecond(1, 0, 0, -1, -NANO, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_DTH, Datum.intervalDaySecond(0, -1, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_DTM, Datum.intervalDaySecond(0, -1, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_DTS, Datum.intervalDaySecond(0, -1, -1, -1, -NANO, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_HM, Datum.intervalDaySecond(1, -1, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_HTS, Datum.intervalDaySecond(1, -1, -1, -1, -NANO, 2, 6)),
+            Input(INTERVAL_D, INTERVAL_MTS, Datum.intervalDaySecond(1, 0, -1, -1, -NANO, 2, 6)),
 
             // INTERVAL HOUR + Others
-            Input(INTERVAL_H, INTERVAL_H, Datum.intervalDaySecond(0, 2, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_H, INTERVAL_MIN, Datum.intervalDaySecond(0, 1, 1, 0, 0, 2, 6)),
-            Input(INTERVAL_H, INTERVAL_S, Datum.intervalDaySecond(0, 1, 0, 1, NANO, 2, 6)),
-            Input(INTERVAL_H, INTERVAL_HM, Datum.intervalDaySecond(0, 2, 1, 0, 0, 2, 6)),
-            Input(INTERVAL_H, INTERVAL_HTS, Datum.intervalDaySecond(0, 2, 1, 1, NANO, 2, 6)),
-            Input(INTERVAL_H, INTERVAL_MTS, Datum.intervalDaySecond(0, 1, 1, 1, NANO, 2, 6)),
+            Input(INTERVAL_H, INTERVAL_H, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_H, INTERVAL_MIN, Datum.intervalDaySecond(0, 1, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_H, INTERVAL_S, Datum.intervalDaySecond(0, 1, 0, -1, -NANO, 2, 6)),
+            Input(INTERVAL_H, INTERVAL_HM, Datum.intervalDaySecond(0, 0, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_H, INTERVAL_HTS, Datum.intervalDaySecond(0, 0, -1, -1, -NANO, 2, 6)),
+            Input(INTERVAL_H, INTERVAL_MTS, Datum.intervalDaySecond(0, 1, -1, -1, -NANO, 2, 6)),
 
             // INTERVAL MINUTE + Others
-            Input(INTERVAL_MIN, INTERVAL_MIN, Datum.intervalDaySecond(0, 0, 2, 0, 0, 2, 6)),
-            Input(INTERVAL_MIN, INTERVAL_S, Datum.intervalDaySecond(0, 0, 1, 1, NANO, 2, 6)),
-            Input(INTERVAL_MIN, INTERVAL_DTH, Datum.intervalDaySecond(1, 1, 1, 0, 0, 2, 6)),
-            Input(INTERVAL_MIN, INTERVAL_DTM, Datum.intervalDaySecond(1, 1, 2, 0, 0, 2, 6)),
-            Input(INTERVAL_MIN, INTERVAL_DTS, Datum.intervalDaySecond(1, 1, 2, 1, NANO, 2, 6)),
-            Input(INTERVAL_MIN, INTERVAL_HM, Datum.intervalDaySecond(0, 1, 2, 0, 0, 2, 6)),
-            Input(INTERVAL_MIN, INTERVAL_HTS, Datum.intervalDaySecond(0, 1, 2, 1, NANO, 2, 6)),
-            Input(INTERVAL_MIN, INTERVAL_MTS, Datum.intervalDaySecond(0, 0, 2, 1, NANO, 2, 6)),
+            Input(INTERVAL_MIN, INTERVAL_MIN, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_MIN, INTERVAL_S, Datum.intervalDaySecond(0, 0, 1, -1, -NANO, 2, 6)),
+            Input(INTERVAL_MIN, INTERVAL_DTH, Datum.intervalDaySecond(-1, -1, 1, 0, 0, 2, 6)),
+            Input(INTERVAL_MIN, INTERVAL_DTM, Datum.intervalDaySecond(-1, -1, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_MIN, INTERVAL_DTS, Datum.intervalDaySecond(-1, -1, 0, -1, -NANO, 2, 6)),
+            Input(INTERVAL_MIN, INTERVAL_HM, Datum.intervalDaySecond(0, -1, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_MIN, INTERVAL_HTS, Datum.intervalDaySecond(0, -1, 0, -1, -NANO, 2, 6)),
+            Input(INTERVAL_MIN, INTERVAL_MTS, Datum.intervalDaySecond(0, 0, 0, -1, -NANO, 2, 6)),
 
             // INTERVAL SECOND + Others
-            Input(INTERVAL_S, INTERVAL_S, Datum.intervalDaySecond(0, 0, 0, 2, NANOS, 2, 6)),
-            Input(INTERVAL_S, INTERVAL_DTH, Datum.intervalDaySecond(1, 1, 0, 1, NANO, 2, 6)),
-            Input(INTERVAL_S, INTERVAL_DTM, Datum.intervalDaySecond(1, 1, 1, 1, NANO, 2, 6)),
-            Input(INTERVAL_S, INTERVAL_DTS, Datum.intervalDaySecond(1, 1, 1, 2, NANOS, 2, 6)),
-            Input(INTERVAL_S, INTERVAL_HM, Datum.intervalDaySecond(0, 1, 1, 1, NANO, 2, 6)),
-            Input(INTERVAL_S, INTERVAL_HTS, Datum.intervalDaySecond(0, 1, 1, 2, NANOS, 2, 6)),
-            Input(INTERVAL_S, INTERVAL_MTS, Datum.intervalDaySecond(0, 0, 1, 2, NANOS, 2, 6)),
+            Input(INTERVAL_S, INTERVAL_S, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_S, INTERVAL_DTH, Datum.intervalDaySecond(-1, -1, 0, 1, NANO, 2, 6)),
+            Input(INTERVAL_S, INTERVAL_DTM, Datum.intervalDaySecond(-1, -1, -1, 1, NANO, 2, 6)),
+            Input(INTERVAL_S, INTERVAL_DTS, Datum.intervalDaySecond(-1, -1, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_S, INTERVAL_HM, Datum.intervalDaySecond(0, -1, -1, 1, NANO, 2, 6)),
+            Input(INTERVAL_S, INTERVAL_HTS, Datum.intervalDaySecond(0, -1, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_S, INTERVAL_MTS, Datum.intervalDaySecond(0, 0, -1, 0, 0, 2, 6)),
 
             // INTERVAL DAY TO HOUR + Others
-            Input(INTERVAL_DTH, INTERVAL_DTH, Datum.intervalDaySecond(2, 2, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_DTH, INTERVAL_DTM, Datum.intervalDaySecond(2, 2, 1, 0, 0, 2, 6)),
-            Input(INTERVAL_DTH, INTERVAL_DTS, Datum.intervalDaySecond(2, 2, 1, 1, NANO, 2, 6)),
-            Input(INTERVAL_DTH, INTERVAL_HM, Datum.intervalDaySecond(1, 2, 1, 0, 0, 2, 6)),
-            Input(INTERVAL_DTH, INTERVAL_HTS, Datum.intervalDaySecond(1, 2, 1, 1, NANO, 2, 6)),
-            Input(INTERVAL_DTH, INTERVAL_MTS, Datum.intervalDaySecond(1, 1, 1, 1, NANO, 2, 6)),
+            Input(INTERVAL_DTH, INTERVAL_DTH, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_DTH, INTERVAL_DTM, Datum.intervalDaySecond(0, 0, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_DTH, INTERVAL_DTS, Datum.intervalDaySecond(0, 0, -1, -1, -NANO, 2, 6)),
+            Input(INTERVAL_DTH, INTERVAL_HM, Datum.intervalDaySecond(1, 0, -1, 0, 0, 2, 6)),
+            Input(INTERVAL_DTH, INTERVAL_HTS, Datum.intervalDaySecond(1, 0, -1, -1, -NANO, 2, 6)),
+            Input(INTERVAL_DTH, INTERVAL_MTS, Datum.intervalDaySecond(1, 1, -1, -1, -NANO, 2, 6)),
 
             // INTERVAL DAY TO MINUTE + Others
-            Input(INTERVAL_DTM, INTERVAL_DTM, Datum.intervalDaySecond(2, 2, 2, 0, 0, 2, 6)),
-            Input(INTERVAL_DTM, INTERVAL_DTS, Datum.intervalDaySecond(2, 2, 2, 1, NANO, 2, 6)),
-            Input(INTERVAL_DTM, INTERVAL_HM, Datum.intervalDaySecond(1, 2, 2, 0, 0, 2, 6)),
-            Input(INTERVAL_DTM, INTERVAL_HTS, Datum.intervalDaySecond(1, 2, 2, 1, NANO, 2, 6)),
-            Input(INTERVAL_DTM, INTERVAL_MTS, Datum.intervalDaySecond(1, 1, 2, 1, NANO, 2, 6)),
+            Input(INTERVAL_DTM, INTERVAL_DTM, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_DTM, INTERVAL_DTS, Datum.intervalDaySecond(0, 0, 0, -1, -NANO, 2, 6)),
+            Input(INTERVAL_DTM, INTERVAL_HM, Datum.intervalDaySecond(1, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_DTM, INTERVAL_HTS, Datum.intervalDaySecond(1, 0, 0, -1, -NANO, 2, 6)),
+            Input(INTERVAL_DTM, INTERVAL_MTS, Datum.intervalDaySecond(1, 1, 0, -1, -NANO, 2, 6)),
 
             // INTERVAL DAY TO SECOND + Others
-            Input(INTERVAL_DTS, INTERVAL_DTS, Datum.intervalDaySecond(2, 2, 2, 2, NANOS, 2, 6)),
-            Input(INTERVAL_DTS, INTERVAL_HM, Datum.intervalDaySecond(1, 2, 2, 1, NANO, 2, 6)),
-            Input(INTERVAL_DTS, INTERVAL_HTS, Datum.intervalDaySecond(1, 2, 2, 2, NANOS, 2, 6)),
-            Input(INTERVAL_DTS, INTERVAL_MTS, Datum.intervalDaySecond(1, 1, 2, 2, NANOS, 2, 6)),
+            Input(INTERVAL_DTS, INTERVAL_DTS, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_DTS, INTERVAL_HM, Datum.intervalDaySecond(1, 0, 0, 1, NANO, 2, 6)),
+            Input(INTERVAL_DTS, INTERVAL_HTS, Datum.intervalDaySecond(1, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_DTS, INTERVAL_MTS, Datum.intervalDaySecond(1, 1, 0, 0, 0, 2, 6)),
 
             // INTERVAL HOUR TO MINUTE + Others
-            Input(INTERVAL_HM, INTERVAL_HM, Datum.intervalDaySecond(0, 2, 2, 0, 0, 2, 6)),
-            Input(INTERVAL_HM, INTERVAL_HTS, Datum.intervalDaySecond(0, 2, 2, 1, NANO, 2, 6)),
-            Input(INTERVAL_HM, INTERVAL_MTS, Datum.intervalDaySecond(0, 1, 2, 1, NANO, 2, 6)),
+            Input(INTERVAL_HM, INTERVAL_HM, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_HM, INTERVAL_HTS, Datum.intervalDaySecond(0, 0, 0, -1, -NANO, 2, 6)),
+            Input(INTERVAL_HM, INTERVAL_MTS, Datum.intervalDaySecond(0, 1, 0, -1, -NANO, 2, 6)),
 
             // INTERVAL HOUR TO SECOND + Others
-            Input(INTERVAL_HTS, INTERVAL_HTS, Datum.intervalDaySecond(0, 2, 2, 2, NANOS, 2, 6)),
-            Input(INTERVAL_HTS, INTERVAL_MTS, Datum.intervalDaySecond(0, 1, 2, 2, NANOS, 2, 6)),
+            Input(INTERVAL_HTS, INTERVAL_HTS, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_HTS, INTERVAL_MTS, Datum.intervalDaySecond(0, 1, 0, 0, 0, 2, 6)),
 
             // INTERVAL MINUTE TO SECOND + Others
-            Input(INTERVAL_MTS, INTERVAL_MTS, Datum.intervalDaySecond(0, 0, 2, 2, NANOS, 2, 6))
-        ).flatMap { case ->
-            listOf(
-                SuccessTestCase("${case.arg0} - ${case.arg1}", case.expected),
-                SuccessTestCase("${case.arg1} - ${case.arg0}", case.expected),
-            )
+            Input(INTERVAL_MTS, INTERVAL_MTS, Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6))
+        ).map { case ->
+            SuccessTestCase("${case.arg0} - ${case.arg1}", case.expected)
         }
     }
 }

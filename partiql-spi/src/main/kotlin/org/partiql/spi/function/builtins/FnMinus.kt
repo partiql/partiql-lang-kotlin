@@ -65,6 +65,50 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
     }
 
+    override fun getIntervalInstance(lhs: PType, rhs: PType): Fn? {
+        return when {
+            lhs.code() == PType.INTERVAL_DT && rhs.code() == PType.INTERVAL_DT -> {
+                val p: Int = lhs.precision // TODO: Do we need to calculate a new precision?
+                val s: Int = 6 // TODO: Do we need to calculate a new fractional precision?
+                basic(PType.intervalDaySecond(p, s)) { args ->
+                    val interval0 = args[0]
+                    val interval1 = args[1]
+                    subtractIntervalDayTimes(interval0, interval1, p, s)
+                }
+            }
+            lhs.code() == PType.INTERVAL_YM && rhs.code() == PType.INTERVAL_YM -> {
+                val p: Int = lhs.precision // TODO: Do we need to calculate a new precision?
+                basic(PType.intervalYearMonth(p)) { args ->
+                    val interval0 = args[0]
+                    val interval1 = args[1]
+                    subtractIntervalYearMonths(interval0, interval1, p)
+                }
+            }
+            else -> null
+        }
+    }
+
+    private fun subtractIntervalYearMonths(lhs: Datum, rhs: Datum, precision: Int): Datum {
+        val (months, yearsRemainder) = getRemainder(lhs.months - rhs.months, 12)
+        val years = lhs.years - rhs.years - yearsRemainder
+        return Datum.intervalYearMonth(years, months, precision)
+    }
+
+    private fun subtractIntervalDayTimes(lhs: Datum, rhs: Datum, precision: Int, scale: Int): Datum {
+        val (nanos, secondsRemainder) = getRemainder(lhs.nanos - rhs.nanos, 1_000_000_000)
+        val (seconds, minutesRemainder) = getRemainder(lhs.seconds - rhs.seconds - secondsRemainder, 60)
+        val (minutes, hoursRemainder) = getRemainder(lhs.minutes - rhs.minutes - minutesRemainder, 60)
+        val (hours, daysRemainder) = getRemainder(lhs.hours - rhs.hours - hoursRemainder, 12)
+        val days = lhs.days - rhs.days - daysRemainder
+        return Datum.intervalDaySecond(days, hours, minutes, seconds, nanos, precision, scale)
+    }
+
+    private fun getRemainder(value: Int, divisor: Int): Pair<Int, Int> {
+        val remainder = value % divisor
+        val quotient = value / divisor
+        return remainder to quotient
+    }
+
     override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Fn {
         return basic(PType.bigint()) { args ->
             val arg0 = args[0].long

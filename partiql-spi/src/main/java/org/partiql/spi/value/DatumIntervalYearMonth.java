@@ -57,4 +57,15 @@ class DatumIntervalYearMonth implements Datum {
     public int getMonths() throws InvalidOperationException, NullPointerException {
         return _months;
     }
+
+    @Override
+    public String toString() {
+        return "DatumIntervalYearMonth{" +
+                "_years=" + _years +
+                ", _months=" + _months +
+                ", precision=" + precision +
+                ", intervalCode=" + intervalCode +
+                ", _type=" + _type +
+                '}';
+    }
 }

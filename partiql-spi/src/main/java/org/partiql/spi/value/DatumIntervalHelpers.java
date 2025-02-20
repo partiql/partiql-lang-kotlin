@@ -18,31 +18,36 @@ class DatumIntervalHelpers {
     }
 
     static void checkUsingPrecision(int value, int precision) {
-        if (value < -Math.pow(10, precision) || value > Math.pow(10, precision) - 1) {
+        long newValue = Math.abs((long) value);
+        if (newValue < -Math.pow(10, precision) || newValue > Math.pow(10, precision) - 1) {
             throw new IllegalArgumentException("Value " + value + " is out of range for precision " + precision);
         }
     }
 
     static void checkHours(int hours) {
-        if (hours < 0 || hours > 23) {
+        long newHours = Math.abs((long) hours);
+        if (newHours > 23) {
             throw new IllegalArgumentException("Hours must be between 0 and 23 inclusive");
         }
     }
 
     static void checkMinutes(int minutes) {
-        if (minutes < 0 || minutes > 59) {
+        long newMinutes = Math.abs((long) minutes);
+        if (newMinutes > 59) {
             throw new IllegalArgumentException("Minutes must be between 0 and 59 inclusive");
         }
     }
 
     static void checkSeconds(int seconds) {
-        if (seconds < 0 || seconds > 59) {
+        long newSeconds = Math.abs((long) seconds);
+        if (newSeconds > 59) {
             throw new IllegalArgumentException("Seconds must be between 0 and 59 inclusive");
         }
     }
 
     static void checkMonths(int months) {
-        if (months < 0 || months > 11) {
+        long newMonths = Math.abs((long) months);
+        if (newMonths > 11) {
             throw new IllegalArgumentException("Months must be between 0 and 11 inclusive");
         }
     }

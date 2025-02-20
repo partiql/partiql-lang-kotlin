@@ -108,7 +108,7 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
 
         val argsMap: Map<TestResult, Set<List<PType>>> = buildMap {
-            val successArgs = allNumberPType.let { cartesianProduct(it, it) } + allDatePType.let { cartesianProduct(it, it) } + allTimePType.let { cartesianProduct(it, it) } + allTimeStampPType.let { cartesianProduct(it, it) } + cartesianProduct(allDatePType, allIntervalType) + cartesianProduct(allTimePType, allIntervalDTType) + cartesianProduct(allTimeStampPType, allIntervalType)
+            val successArgs = allNumberPType.let { cartesianProduct(it, it) } + allDatePType.let { cartesianProduct(it, it) } + allTimePType.let { cartesianProduct(it, it) } + allTimeStampPType.let { cartesianProduct(it, it) } + cartesianProduct(allDatePType, allIntervalType) + cartesianProduct(allTimePType, allIntervalDTType) + cartesianProduct(allTimeStampPType, allIntervalType) + cartesianProduct(allIntervalYMType, allIntervalYMType) + cartesianProduct(allIntervalDTType, allIntervalDTType)
             val failureArgs = cartesianProduct(
                 allSupportedPType,
                 allSupportedPType
@@ -126,6 +126,8 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
                     arg0 in allTimePType && arg1 in allIntervalType -> arg0
                     arg0 in allTimeStampPType && arg1 in allTimeStampPType -> PType.intervalDaySecond(9, 0)
                     arg0 in allTimeStampPType && arg1 in allIntervalType -> arg0
+                    arg0 in allIntervalYMType && arg1 in allIntervalYMType -> PType.intervalYearMonth(9)
+                    arg0 in allIntervalDTType && arg1 in allIntervalDTType -> PType.intervalDaySecond(9, 0)
                     arg0 == arg1 -> arg1
                     // TODO arg0 == StaticType.DECIMAL && arg1 == StaticType.FLOAT -> arg1 // TODO: The cast table is wrong. Honestly, it should be deleted.
                     // TODO arg1 == StaticType.DECIMAL && arg0 == StaticType.FLOAT -> arg0 // TODO: The cast table is wrong
