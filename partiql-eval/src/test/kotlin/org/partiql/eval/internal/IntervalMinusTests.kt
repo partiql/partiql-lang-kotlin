@@ -27,6 +27,11 @@ class IntervalMinusTests {
     fun timeMinusInterval(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
+    @MethodSource("timeMinusIntervalFailureCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun timeMinusIntervalFailure(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
     @MethodSource("intervalMinusTimeZCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun timeZMinusInterval(tc: SuccessTestCase) = tc.run()
@@ -142,6 +147,26 @@ class IntervalMinusTests {
             SuccessTestCase("${case.arg0} - ${case.arg1}", case.expected)
         }
 
+        /**
+         * These _may_ actually be okay, but for now, we will mark these as unsupported. These fail (for now)!
+         * I'm not entirely sure if it makes sense to subtract a year/month from a time.
+         */
+        @JvmStatic
+        fun timeMinusIntervalFailureCases() = listOf(
+            FailureTestCase("$TIME - $INTERVAL_Y"),
+            FailureTestCase("$TIME - $INTERVAL_M"),
+            FailureTestCase("$TIME - $INTERVAL_YM"),
+            FailureTestCase("$TIME_Z - $INTERVAL_Y"),
+            FailureTestCase("$TIME_Z - $INTERVAL_M"),
+            FailureTestCase("$TIME_Z - $INTERVAL_YM"),
+            FailureTestCase("$INTERVAL_Y - $TIME"),
+            FailureTestCase("$INTERVAL_Y - $TIME_Z"),
+            FailureTestCase("$INTERVAL_M - $TIME"),
+            FailureTestCase("$INTERVAL_M - $TIME_Z"),
+            FailureTestCase("$INTERVAL_YM - $TIME"),
+            FailureTestCase("$INTERVAL_YM - $TIME_Z"),
+        )
+
         @JvmStatic
         fun intervalMinusTimeZCases() = listOf(
             Input(TIME_Z, INTERVAL_D, OffsetTime.of(1, 1, 1, NANO, OFFSET)), // Should this work?
@@ -160,6 +185,9 @@ class IntervalMinusTests {
 
         @JvmStatic
         fun intervalMinusTimestampCases() = listOf(
+            Input(TIMESTAMP, INTERVAL_Y, LocalDateTime.of(2024, 1, 1, 1, 1, 1, NANO)),
+            Input(TIMESTAMP, INTERVAL_M, LocalDateTime.of(2024, 12, 1, 1, 1, 1, NANO)),
+            Input(TIMESTAMP, INTERVAL_YM, LocalDateTime.of(2023, 12, 1, 1, 1, 1, NANO)),
             Input(TIMESTAMP, INTERVAL_D, LocalDateTime.of(2024, 12, 31, 1, 1, 1, NANO)),
             Input(TIMESTAMP, INTERVAL_H, LocalDateTime.of(2025, 1, 1, 0, 1, 1, NANO)),
             Input(TIMESTAMP, INTERVAL_MIN, LocalDateTime.of(2025, 1, 1, 1, 0, 1, NANO)),

@@ -25,6 +25,11 @@ class IntervalPlusTests {
     fun intervalPlusTime(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
+    @MethodSource("timePlusIntervalFailureCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun intervalPlusTimeFailure(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
     @MethodSource("intervalPlusTimeZCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun intervalPlusTimeZ(tc: SuccessTestCase) = tc.run()
@@ -131,6 +136,26 @@ class IntervalPlusTests {
             )
         }
 
+        /**
+         * These _may_ actually be okay, but for now, we will mark these as unsupported. These fail (for now)!
+         * I'm not entirely sure if it makes sense to add a year/month from a time.
+         */
+        @JvmStatic
+        fun timePlusIntervalFailureCases() = listOf(
+            FailureTestCase("$TIME + $INTERVAL_Y"),
+            FailureTestCase("$TIME + $INTERVAL_M"),
+            FailureTestCase("$TIME + $INTERVAL_YM"),
+            FailureTestCase("$TIME_Z + $INTERVAL_Y"),
+            FailureTestCase("$TIME_Z + $INTERVAL_M"),
+            FailureTestCase("$TIME_Z + $INTERVAL_YM"),
+            FailureTestCase("$INTERVAL_Y + $TIME"),
+            FailureTestCase("$INTERVAL_Y + $TIME_Z"),
+            FailureTestCase("$INTERVAL_M + $TIME"),
+            FailureTestCase("$INTERVAL_M + $TIME_Z"),
+            FailureTestCase("$INTERVAL_YM + $TIME"),
+            FailureTestCase("$INTERVAL_YM + $TIME_Z"),
+        )
+
         @JvmStatic
         fun intervalPlusTimeZCases() = listOf(
             Input(INTERVAL_D, TIME_Z, OffsetTime.of(1, 1, 1, NANO, OFFSET)), // Should this work?
@@ -152,6 +177,9 @@ class IntervalPlusTests {
 
         @JvmStatic
         fun intervalPlusTimestampCases() = listOf(
+            Input(INTERVAL_Y, TIMESTAMP, LocalDateTime.of(2026, 1, 1, 1, 1, 1, NANO)),
+            Input(INTERVAL_M, TIMESTAMP, LocalDateTime.of(2025, 2, 1, 1, 1, 1, NANO)),
+            Input(INTERVAL_YM, TIMESTAMP, LocalDateTime.of(2026, 2, 1, 1, 1, 1, NANO)),
             Input(INTERVAL_D, TIMESTAMP, LocalDateTime.of(2025, 1, 2, 1, 1, 1, NANO)),
             Input(INTERVAL_H, TIMESTAMP, LocalDateTime.of(2025, 1, 1, 2, 1, 1, NANO)),
             Input(INTERVAL_MIN, TIMESTAMP, LocalDateTime.of(2025, 1, 1, 1, 2, 1, NANO)),
