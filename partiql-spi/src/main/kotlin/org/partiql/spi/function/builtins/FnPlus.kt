@@ -257,7 +257,7 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
         return when {
             isDayTimeInterval(lhsCode) && isDayTimeInterval(rhsCode) -> {
                 val p: Int = lhs.precision // TODO: Do we need to calculate a new precision?
-                val s: Int = lhs.fractionalPrecision // TODO: Do we need to calculate a new scale?
+                val s: Int = 6 // TODO: Do we need to calculate a new fractional precision?
                 basic(PType.intervalDaySecond(p, s)) { args ->
                     val interval0 = args[0]
                     val interval1 = args[1]
