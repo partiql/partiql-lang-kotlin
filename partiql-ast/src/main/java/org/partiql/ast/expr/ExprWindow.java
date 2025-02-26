@@ -13,9 +13,11 @@ import java.util.List;
 
 /**
  * Represents a window function expression. E.g. {@code LAG (sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp.date}.
+ * @deprecated This is replaced by {@link ExprWindowFunction}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
+@Deprecated
 public final class ExprWindow extends Expr {
     @NotNull
     private final WindowFunction windowFunction;
@@ -87,9 +89,11 @@ public final class ExprWindow extends Expr {
 
     /**
      * Represents the OVER clause of a window function. E.g. {@code OVER (PARTITION BY <expr> ORDER BY <expr>)}.
+     * @deprecated This is replaced by {@link org.partiql.ast.WindowReference}.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
+    @Deprecated
     public static class Over extends AstNode {
         @NotNull
         private final List<Expr> partitions;

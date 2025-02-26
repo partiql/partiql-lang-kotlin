@@ -284,6 +284,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
+    @Deprecated("This is replaced by ExprWindowFunction.")
     public fun exprWindow(
         windowFunction: WindowFunction,
         expression: Expr,
@@ -295,6 +296,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @Deprecated("This is replaced by WindowReference.")
     public fun exprWindowOver(partitions: List<Expr>, sorts: List<Sort>): ExprWindow.Over {
         return ExprWindow.Over(partitions, sorts)
     }
