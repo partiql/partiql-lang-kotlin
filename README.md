@@ -6,7 +6,7 @@
 
 [partiql-specification]: https://partiql.org/assets/PartiQL-Specification.pdf
 [partiql-website]: https://www.partiql.org
-[partiql-website-plk]: https://www.partiql.org/plk/latest/
+[partiql-website-plk]: https://partiql.org/plk/1.0/
 [partiql-tests]: https://github.com/partiql/partiql-tests
 [plk-releases]: https://github.com/partiql/partiql-lang-kotlin/releases
 [maven-partiql-namespace]: https://central.sonatype.com/namespace/org.partiql
