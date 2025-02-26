@@ -284,6 +284,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
+    @Deprecated("This is replaced by ExprWindowFunction.")
     public fun exprWindow(
         windowFunction: WindowFunction,
         expression: Expr,
@@ -295,6 +296,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @Deprecated("This is replaced by WindowReference.")
     public fun exprWindowOver(partitions: List<Expr>, sorts: List<Sort>): ExprWindow.Over {
         return ExprWindow.Over(partitions, sorts)
     }
@@ -657,9 +659,10 @@ public object Ast {
         let: Let? = null,
         where: Expr? = null,
         groupBy: GroupBy? = null,
-        having: Expr? = null
+        having: Expr? = null,
+        window: WindowClause? = null
     ): QueryBody.SFW {
-        return QueryBody.SFW(select, exclude, from, let, where, groupBy, having)
+        return QueryBody.SFW(select, exclude, from, let, where, groupBy, having, window)
     }
 
     @JvmStatic
