@@ -62,4 +62,9 @@ final class DatumTimestamp implements Datum {
     public OffsetDateTime getOffsetDateTime() {
         return value.atOffset(ZoneOffset.UTC);
     }
+
+    @Override
+    public String toString() {
+        return this.value.toString();
+    }
 }

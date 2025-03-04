@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.spi.errors.PRuntimeException;
 import org.partiql.spi.internal.value.ion.IonVariant;
+import org.partiql.spi.types.IntervalCode;
 import org.partiql.spi.types.PType;
 import org.partiql.spi.types.PTypeField;
 
@@ -246,6 +247,112 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     default OffsetDateTime getOffsetDateTime() throws InvalidOperationException, NullPointerException {
         throw new InvalidOperationException(getType(), "getOffsetDateTime");
+    }
+
+    /**
+     * <p>
+     * Returns the years field of the interval type.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_YM}.
+     * </p>
+     * @return the years field of the interval type.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_YM}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default int getYears() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getYears");
+    }
+
+    /**
+     * <p>
+     * Returns the months field of the interval type.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_YM}.
+     * </p>
+     * @return the months field of the interval type.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_YM}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default int getMonths() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getMonths");
+    }
+
+    /**
+     * <p>
+     * Returns the days field of the interval type.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_DT}.
+     * </p>
+     * @return the days field of the interval type.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default int getDays() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getDays");
+    }
+
+    /**
+     * <p>
+     * Returns the hours field of the interval type.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_DT}.
+     * </p>
+     * @return the hours field of the interval type.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default int getHours() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getHours");
+    }
+
+    /**
+     * <p>
+     * Returns the minutes field of the interval type.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_DT}.
+     * </p>
+     * @return the minutes field of the interval type.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default int getMinutes() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getMinutes");
+    }
+
+    /**
+     * <p>
+     * Returns the seconds field of the interval type.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_DT}.
+     * </p>
+     * @return the seconds field of the interval type.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default int getSeconds() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getSeconds");
+    }
+
+    /**
+     * <p>
+     * Returns the nanos field of the interval type. Note that this must be used in combination with
+     * {@link PType#getFractionalPrecision()}.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_DT}.
+     * </p>
+     * @return the nanos field of the interval type.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default int getNanos() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getNanos");
     }
 
     /**
@@ -792,6 +899,226 @@ public interface Datum extends Iterable<Datum> {
         } catch (Throwable t) {
             throw PErrors.wrappedException(t);
         }
+    }
+
+    /**
+     * Creates a value of type INTERVAL YEAR (precision)
+     * @param years the number of years in this interval
+     * @param precision the number of decimal digits allowed to represent YEAR
+     * @return a value of type INTERVAL YEAR (precision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalYear(int years, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(years, precision);
+        return new DatumIntervalYearMonth(years, 0, precision, IntervalCode.YEAR);
+    }
+
+    /**
+     * Creates a value of type INTERVAL MONTH (precision)
+     * @param months the number of months in this interval
+     * @param precision the number of decimal digits allowed to represent MONTH
+     * @return a value of type INTERVAL MONTH (precision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalMonth(int months, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(months, precision);
+        return new DatumIntervalYearMonth(0, months, precision, IntervalCode.MONTH);
+    }
+
+    /**
+     * Creates a value of type INTERVAL DAY (precision)
+     * @param days the number of days in this interval
+     * @param precision the number of decimal digits allowed to represent DAY
+     * @return a value of type INTERVAL DAY (precision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalDay(int days, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(days, precision);
+        return new DatumIntervalDayTime(days, 0, 0, 0, 0, precision, 0, IntervalCode.DAY);
+    }
+
+    /**
+     * Creates a value of type INTERVAL HOUR (precision)
+     * @param hours the number of hours in this interval
+     * @param precision the number of decimal digits allowed to represent HOUR
+     * @return a value of type INTERVAL HOUR (precision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalHour(int hours, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(hours, precision);
+        return new DatumIntervalDayTime(0, hours, 0, 0, 0, precision, 0, IntervalCode.HOUR);
+    }
+
+    /**
+     * Creates a value of type INTERVAL MINUTE (precision)
+     * @param minutes the number of minutes in this interval
+     * @param precision the number of decimal digits allowed to represent MINUTE
+     * @return a value of type INTERVAL MINUTE (precision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalMinute(int minutes, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(minutes, precision);
+        return new DatumIntervalDayTime(0, 0, minutes, 0, 0, precision, 0, IntervalCode.MINUTE);
+    }
+
+    /**
+     * Creates a value of type INTERVAL SECOND (precision, fractionalPrecision)
+     * @param seconds the number of seconds in this interval
+     * @param nanos the number of nanoseconds in this interval
+     * @param precision the number of decimal digits allowed to represent SECOND
+     * @param fractionalPrecision the number of decimal digits on the right side of the decimal point, for nanoseconds
+     * @return a value of type INTERVAL SECOND (precision, fractionalPrecision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalSecond(int seconds, int nanos, int precision, int fractionalPrecision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkScale(fractionalPrecision);
+        DatumIntervalHelpers.checkUsingPrecision(seconds, precision);
+        int newNanos = DatumIntervalHelpers.coerceNanos(nanos, fractionalPrecision);
+        return new DatumIntervalDayTime(0, 0, 0, seconds, newNanos, precision, fractionalPrecision, IntervalCode.SECOND);
+    }
+
+    /**
+     * Creates a value of type INTERVAL YEAR (precision) TO MONTH
+     * @param years the number of years in this interval
+     * @param months the number of months in this interval
+     * @param precision the number of decimal digits allowed to represent YEAR
+     * @return a value of type INTERVAL YEAR (precision) TO MONTH
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalYearMonth(int years, int months, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(years, precision);
+        DatumIntervalHelpers.checkMonths(months);
+        return new DatumIntervalYearMonth(years, months, precision, IntervalCode.YEAR_MONTH);
+    }
+
+    /**
+     * Creates a value of type INTERVAL DAY (precision) TO HOUR
+     * @param days the number of days in this interval
+     * @param hours the number of hours in this interval
+     * @param precision the number of decimal digits allowed to represent DAY
+     * @return a value of type INTERVAL DAY (precision) TO HOUR
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalDayHour(int days, int hours, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(days, precision);
+        DatumIntervalHelpers.checkHours(hours);
+        return new DatumIntervalDayTime(days, hours, 0, 0, 0, precision, 0, IntervalCode.DAY_HOUR);
+    }
+
+    /**
+     * Creates a value of type INTERVAL DAY (precision) TO MINUTE
+     * @param days the number of days in this interval
+     * @param hours the number of hours in this interval
+     * @param minutes the number of minutes in this interval
+     * @param precision the number of decimal digits allowed to represent DAY
+     * @return a value of type INTERVAL DAY (precision) TO MINUTE
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalDayMinute(int days, int hours, int minutes, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(days, precision);
+        DatumIntervalHelpers.checkHours(hours);
+        DatumIntervalHelpers.checkMinutes(minutes);
+        return new DatumIntervalDayTime(days, hours, minutes, 0, 0, precision, 0, IntervalCode.DAY_MINUTE);
+    }
+
+    /**
+     * Creates a value of type INTERVAL DAY (precision) TO SECOND (fractionalPrecision)
+     * @param days the number of days in this interval
+     * @param hours the number of hours in this interval
+     * @param minutes the number of minutes in this interval
+     * @param seconds the number of seconds in this interval
+     * @param nanos the number of nanoseconds in this interval
+     * @param precision the number of decimal digits allowed to represent DAY
+     * @param fractionalPrecision the number of decimal digits on the right side of the decimal point, for SECONDS
+     * @return a value of type INTERVAL DAY (precision) TO SECOND (fractionalPrecision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalDaySecond(int days, int hours, int minutes, int seconds, int nanos, int precision, int fractionalPrecision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkScale(fractionalPrecision);
+        DatumIntervalHelpers.checkUsingPrecision(days, precision);
+        DatumIntervalHelpers.checkHours(hours);
+        DatumIntervalHelpers.checkMinutes(minutes);
+        DatumIntervalHelpers.checkSeconds(seconds);
+        int newNanos = DatumIntervalHelpers.coerceNanos(nanos, fractionalPrecision);
+        return new DatumIntervalDayTime(days, hours, minutes, seconds, newNanos, precision, fractionalPrecision, IntervalCode.DAY_SECOND);
+    }
+
+    /**
+     * Creates a value of type INTERVAL HOUR (precision) TO MINUTE
+     * @param hours the number of hours in this interval
+     * @param minutes the number of minutes in this interval
+     * @param precision the number of decimal digits allowed to represent HOUR
+     * @return a value of type INTERVAL HOUR (precision) TO MINUTE
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalHourMinute(int hours, int minutes, int precision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkUsingPrecision(hours, precision);
+        DatumIntervalHelpers.checkMinutes(minutes);
+        return new DatumIntervalDayTime(0, hours, minutes, 0, 0, precision, 0, IntervalCode.HOUR_MINUTE);
+    }
+
+    /**
+     * Creates a value of type INTERVAL HOUR (precision) TO SECOND (fractionalPrecision)
+     * @param hours the number of hours in this interval
+     * @param minutes the number of minutes in this interval
+     * @param seconds the number of seconds in this interval
+     * @param nanos the number of nanoseconds in this interval
+     * @param precision the number of decimal digits allowed to represent HOUR
+     * @param fractionalPrecision the number of decimal digits on the right side of the decimal point, for SECONDS
+     * @return a value of type INTERVAL HOUR (precision) TO SECOND (fractionalPrecision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalHourSecond(int hours, int minutes, int seconds, int nanos, int precision, int fractionalPrecision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkScale(fractionalPrecision);
+        DatumIntervalHelpers.checkUsingPrecision(hours, precision);
+        DatumIntervalHelpers.checkMinutes(minutes);
+        DatumIntervalHelpers.checkSeconds(seconds);
+        int newNanos = DatumIntervalHelpers.coerceNanos(nanos, fractionalPrecision);
+        return new DatumIntervalDayTime(0, hours, minutes, seconds, newNanos, precision, fractionalPrecision, IntervalCode.HOUR_SECOND);
+    }
+
+    /**
+     * Creates a value of type INTERVAL MINUTE (precision) TO SECOND (fractionalPrecision)
+     * @param minutes the number of minutes in this interval
+     * @param seconds the number of seconds in this interval
+     * @param nanos the number of nanoseconds in this interval
+     * @param precision the number of decimal digits allowed to represent MINUTE
+     * @param fractionalPrecision the number of decimal digits on the right side of the decimal point, for SECONDS
+     * @return a value of type INTERVAL MINUTE (precision) TO SECOND (fractionalPrecision)
+     * @throws RuntimeException if an error occurs.
+     */
+    @NotNull
+    static Datum intervalMinuteSecond(int minutes, int seconds, int nanos, int precision, int fractionalPrecision) throws RuntimeException {
+        DatumIntervalHelpers.checkPrecision(precision);
+        DatumIntervalHelpers.checkScale(fractionalPrecision);
+        DatumIntervalHelpers.checkUsingPrecision(minutes, precision);
+        DatumIntervalHelpers.checkSeconds(seconds);
+        int newNanos = DatumIntervalHelpers.coerceNanos(nanos, fractionalPrecision);
+        return new DatumIntervalDayTime(0, 0, minutes, seconds, newNanos, precision, fractionalPrecision, IntervalCode.HOUR_SECOND);
     }
 
     /**

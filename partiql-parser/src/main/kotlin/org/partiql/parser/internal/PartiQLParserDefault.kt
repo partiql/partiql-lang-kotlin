@@ -152,6 +152,7 @@ import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Identifier.Simple
 import org.partiql.ast.Identifier.regular
+import org.partiql.ast.IntervalQualifier
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Literal
@@ -205,6 +206,8 @@ import org.partiql.ast.graph.GraphSelector
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
+import org.partiql.parser.internal.antlr.PartiQLParser.EndFieldNonSecondContext
+import org.partiql.parser.internal.antlr.PartiQLParser.EndFieldSecondContext
 import org.partiql.parser.internal.antlr.PartiQLParser.QualifiedNameContext
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.spi.Context
@@ -1578,15 +1581,16 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitValueExpr(ctx: GeneratedParser.ValueExprContext): AstNode = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
             val v = visit(ctx.rhs) as Expr
-            if (ctx.sign.text == "-" && v is ExprLit) {
+            val sign = ctx.sign()
+            if (sign.text == "-" && v is ExprLit) {
                 val negatedLit = negate(v.lit)
                 if (negatedLit != null) {
                     return exprLit(negatedLit)
                 } else {
-                    exprOperator(ctx.sign.text, null, v)
+                    exprOperator(sign.text, null, v)
                 }
             } else {
-                return exprOperator(ctx.sign.text, null, v)
+                return exprOperator(sign.text, null, v)
             }
         }
 
@@ -1933,11 +1937,11 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExtract(ctx: GeneratedParser.ExtractContext) = translate(ctx) {
             val field = try {
-                DatetimeField.parse(ctx.IDENTIFIER().text.uppercase())
+                DatetimeField.parse(ctx.extractField().text.uppercase())
             } catch (ex: IllegalArgumentException) {
                 // TODO decide if we want int codes here or actual text. If we want text here, then there should be a
                 //  method to convert the code into text.
-                throw error(ctx.IDENTIFIER().symbol, "Expected one of: ${DatetimeField.codes().joinToString()}", ex)
+                throw error(ctx.extractField(), "Expected one of: ${DatetimeField.codes().joinToString()}", ex)
             }
             val source = visitExpr(ctx.expr())
             exprExtract(field, source)
@@ -2111,6 +2115,56 @@ internal class PartiQLParserDefault : PartiQLParser {
                 }
             }
             exprLit(typedString(type, timestampString))
+        }
+
+        override fun visitIntervalLiteral(ctx: GeneratedParser.IntervalLiteralContext) = translate(ctx) {
+            val intervalQualifier = visitAs<IntervalQualifier>(ctx.intervalQualifier())
+            val interval = DataType.INTERVAL(intervalQualifier)
+            val stringValue = ctx.LITERAL_STRING().getStringValue()
+            exprLit(typedString(interval, stringValue))
+        }
+
+        override fun visitIntervalType(ctx: GeneratedParser.IntervalTypeContext): DataType = translate(ctx) {
+            val qualifier = visitAs<IntervalQualifier>(ctx.intervalQualifier())
+            DataType.INTERVAL(qualifier)
+        }
+
+        override fun visitIntervalQualifierBoth(ctx: GeneratedParser.IntervalQualifierBothContext): IntervalQualifier.Range = translate(ctx) {
+            val end = ctx.endField()
+            val (startField, precision) = _visitStartField(ctx.startField())
+            val (endField, endFractionalPrecision) = _visitEndField(end)
+            IntervalQualifier.Range(startField, precision, endField, endFractionalPrecision)
+        }
+
+        override fun visitIntervalQualifierSingle(ctx: GeneratedParser.IntervalQualifierSingleContext): IntervalQualifier.Single = translate(ctx) {
+            visitSingleDatetimeField(ctx.singleDatetimeField())
+        }
+
+        override fun visitSingleDatetimeField(ctx: GeneratedParser.SingleDatetimeFieldContext): IntervalQualifier.Single = translate(ctx) {
+            val field = ctx.nonSecondPrimaryDatetimeField()?.text?.uppercase()?.let { DatetimeField.parse(it) } ?: DatetimeField.SECOND()
+            val precision = ctx.intervalLeadingFieldPrecision()?.LITERAL_INTEGER()?.text?.toInt()
+            val scale = ctx.intervalFractionalSecondsPrecision()?.LITERAL_INTEGER()?.text?.toInt()
+            IntervalQualifier.Single(field, precision, scale)
+        }
+
+        private fun _visitStartField(ctx: GeneratedParser.StartFieldContext): Pair<DatetimeField, Int?> {
+            val field = DatetimeField.parse(ctx.nonSecondPrimaryDatetimeField().text.uppercase())
+            val precision = ctx.intervalLeadingFieldPrecision()?.LITERAL_INTEGER()?.text?.toInt()
+            return field to precision
+        }
+
+        private fun _visitEndField(ctx: GeneratedParser.EndFieldContext): Pair<DatetimeField, Int?> {
+            return when (ctx) {
+                is EndFieldNonSecondContext -> {
+                    val field = DatetimeField.parse(ctx.nonSecondPrimaryDatetimeField().text.uppercase())
+                    field to null
+                }
+                is EndFieldSecondContext -> {
+                    val precision = ctx.intervalLeadingFieldPrecision()?.LITERAL_INTEGER()?.text?.toInt()
+                    DatetimeField.SECOND() to precision
+                }
+                else -> error("Internal error: unexpected end field: ${ctx.javaClass.simpleName}")
+            }
         }
 
         override fun visitTuple(ctx: GeneratedParser.TupleContext) = translate(ctx) {

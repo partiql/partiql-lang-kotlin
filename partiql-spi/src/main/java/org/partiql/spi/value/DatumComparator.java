@@ -24,6 +24,8 @@ import static org.partiql.spi.types.PType.DECIMAL;
 import static org.partiql.spi.types.PType.DOUBLE;
 import static org.partiql.spi.types.PType.DYNAMIC;
 import static org.partiql.spi.types.PType.INTEGER;
+import static org.partiql.spi.types.PType.INTERVAL_DT;
+import static org.partiql.spi.types.PType.INTERVAL_YM;
 import static org.partiql.spi.types.PType.NUMERIC;
 import static org.partiql.spi.types.PType.REAL;
 import static org.partiql.spi.types.PType.SMALLINT;
@@ -207,15 +209,19 @@ abstract class DatumComparator implements Comparator<Datum> {
         // Timestamp Types
         precedence.put(TIMESTAMPZ, 4);
         precedence.put(TIMESTAMP, 4);
+        // Interval Type
+        // TODO: Is this the right place to put it? This should be formalized.
+        precedence.put(INTERVAL_YM, 5);
+        precedence.put(INTERVAL_DT, 5);
         // Text Types
-        precedence.put(CHAR, 5);
-        precedence.put(PType.VARCHAR, 5);
-        precedence.put(STRING, 5);
+        precedence.put(CHAR, 6);
+        precedence.put(PType.VARCHAR, 6);
+        precedence.put(STRING, 6);
         // LOB Types
-        precedence.put(CLOB, 6);
-        precedence.put(BLOB, 6);
+        precedence.put(CLOB, 7);
+        precedence.put(BLOB, 7);
         // Array Type
-        precedence.put(ARRAY, 7);
+        precedence.put(ARRAY, 8);
         // Tuple Type
         precedence.put(PType.ROW, 9);
         precedence.put(STRUCT, 9);
@@ -307,6 +313,9 @@ abstract class DatumComparator implements Comparator<Datum> {
                 case STRUCT:
                     fillStructComparator(row);
                     break;
+                case INTERVAL_YM:
+                case INTERVAL_DT:
+                    fillIntervalComparator(row);
                 default:
                     break;
             }
@@ -524,6 +533,31 @@ abstract class DatumComparator implements Comparator<Datum> {
     private static DatumComparison[] fillTimeComparator(DatumComparison[] comps) {
         comps[TIME] = (self, time, comp) -> self.getLocalTime().compareTo(time.getLocalTime());
         comps[TIMEZ] = (self, time, comp) -> self.getOffsetTime().compareTo(time.getOffsetTime());
+        return comps;
+    }
+    
+    private static final long SECONDS_PER_MINUTE = 60;
+    private static final long MINUTES_PER_HOUR = 60;
+    private static final long HOURS_PER_DAY = 24;
+    private static final long SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+    private static final long SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY;
+
+    @SuppressWarnings({"UnusedReturnValue"})
+    private static DatumComparison[] fillIntervalComparator(DatumComparison[] comps) {
+        comps[INTERVAL_YM] = (self, other, comp) -> {
+            long totalMonths = self.getYears() *  (long) 12 + self.getMonths();
+            long otherTotalMonths = other.getYears() * (long) 12 + other.getMonths();
+            return Long.compare(totalMonths, otherTotalMonths);
+        };
+        comps[INTERVAL_DT] = (self, other, comp) -> {
+            long totalSeconds = self.getDays() * SECONDS_PER_DAY + self.getHours() * SECONDS_PER_HOUR + self.getMinutes() * SECONDS_PER_MINUTE + self.getSeconds();
+            long otherTotalSeconds = other.getDays() * SECONDS_PER_DAY + other.getHours() * SECONDS_PER_HOUR + other.getMinutes() * SECONDS_PER_MINUTE + other.getSeconds();
+            int comparison = Long.compare(totalSeconds, otherTotalSeconds);
+            if (comparison != 0) {
+                return comparison;
+            }
+            return Integer.compare(self.getNanos(), other.getNanos());
+        };
         return comps;
     }
 

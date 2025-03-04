@@ -423,6 +423,18 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
+    public R visitIntervalQualifier(IntervalQualifier node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    public R visitIntervalQualifierRange(IntervalQualifier.Range node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitIntervalQualifierSingle(IntervalQualifier.Single node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
     public R visitQueryBody(QueryBody node, C ctx) {
         return node.accept(this, ctx);
     }

@@ -32,4 +32,9 @@ final class DatumDate implements Datum {
     public LocalDate getLocalDate() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return this.value.toString();
+    }
 }

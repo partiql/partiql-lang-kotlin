@@ -47,8 +47,19 @@ public abstract class PType extends org.partiql.spi.Enum {
     }
 
     /**
-     * The decimal precision of the type
-     *
+     * <p>
+     * Gets the number of decimal digits allowed by the type. Depending on the type, this may refer to <i>all</i>
+     * digits, or just the digits to the left of the decimal point.
+     * </p>
+     * <p>
+     * Allowable types:
+     * <ul>
+     * <li>{@link PType#DECIMAL}: the total number of decimal digits allowed (on both sides of the decimal point).</li>
+     * <li>{@link PType#INTERVAL_YM}: the total number of decimal digits allowed. There is no decimal point in this case.</li>
+     * <li>{@link PType#INTERVAL_DT}: the total number of decimal digits allowed on the left of the decimal point.</li>
+     * </ul>
+     * </p>
+     * @see #getFractionalPrecision()
      * @return decimal precision
      * @throws UnsupportedOperationException if this is called on a type whose {@link PType#code()} is not:
      *                                       {@link PType#DECIMAL}, {@link PType#TIMESTAMPZ}, {@link PType#TIMESTAMP}, {@link PType#TIMEZ},
@@ -92,6 +103,57 @@ public abstract class PType extends org.partiql.spi.Enum {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * <p>
+     * Gets the interval's code. Each code corresponds with the public static final integers within
+     * {@link IntervalCode} (e.g. {@link IntervalCode#YEAR}).
+     * </p>
+     * <p>
+     * This method is only applicable to {@link PType#INTERVAL_YM} and {@link PType#INTERVAL_DT}. See their documentation
+     * for details about which codes are applicable to each.
+     * </p>
+     * @return the interval's code. This corresponds with the public static final integers within {@link IntervalCode}.
+     * @throws UnsupportedOperationException when this is called on a type that does not apply.
+     * @see PType#INTERVAL_YM
+     * @see PType#INTERVAL_DT
+     * @see IntervalCode
+     */
+    public int getIntervalCode() throws UnsupportedOperationException {
+        String name;
+        try {
+            name = name();
+        } catch (UnsupportedCodeException e) {
+            name = Integer.toString(code());
+        }
+        throw new UnsupportedOperationException("Code " + this.getClass().getName() + "." + name + " does not support getIntervalCode().");
+    }
+
+    /**
+     * <p>
+     * Gets the interval's fractional field precision. This indicates the number of decimal digits maintained following
+     * the decimal point in the seconds value of the interval.
+     * </p>
+     * <p>
+     * This method is only applicable to {@link PType#INTERVAL_DT}. If {@link PType#getIntervalCode()} returns a code
+     * signifying the existence of the SECONDS field (i.e. {@link IntervalCode#SECOND},
+     * {@link IntervalCode#DAY_SECOND}, etc.), this may return a non-negative integer value. In all other
+     * cases, this shall return 0.
+     * </p>
+     * @return the interval's fractional field precision.
+     * @throws UnsupportedOperationException when this is called on a type that does not apply.
+     * @see PType#INTERVAL_YM
+     * @see PType#INTERVAL_DT
+     */
+    public int getFractionalPrecision() throws UnsupportedOperationException {
+        String name;
+        try {
+            name = name();
+        } catch (UnsupportedCodeException e) {
+            name = Integer.toString(code());
+        }
+        throw new UnsupportedOperationException("Code " + this.getClass().getName() + "." + name + " does not support getLeadingPrecision().");
+    }
+
     public static int[] codes() {
         return new int[] {
                 PType.DYNAMIC,
@@ -120,6 +182,8 @@ public abstract class PType extends org.partiql.spi.Enum {
                 PType.STRUCT,
                 PType.UNKNOWN,
                 PType.VARIANT,
+                PType.INTERVAL_YM,
+                PType.INTERVAL_DT
         };
     }
 
@@ -179,6 +243,10 @@ public abstract class PType extends org.partiql.spi.Enum {
                 return "UNKNOWN";
             case PType.VARIANT:
                 return "VARIANT";
+            case PType.INTERVAL_YM:
+                return "INTERVAL_YM";
+            case PType.INTERVAL_DT:
+                return "INTERVAL_DT";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -478,6 +546,216 @@ public abstract class PType extends org.partiql.spi.Enum {
      * <br>
      */
     public static final int VARIANT = 25;
+
+    /**
+     * <p>
+     * The year-month interval types.
+     * </p>
+     * <p>
+     * <b>Applicable Methods:</b>
+     * <ul>
+     * <li>{@link PType#getIntervalCode()}</li>
+     * <li>{@link PType#getPrecision()}</li>
+     * <li>{@link PType#getFractionalPrecision()}</li>
+     * </ul>
+     * </p>
+     * <p>
+     * <b>Allowable Interval Codes:</b>
+     * <ul>
+     * <li>{@link IntervalCode#YEAR}</li>
+     * <li>{@link IntervalCode#MONTH}</li>
+     * <li>{@link IntervalCode#YEAR_MONTH}</li>
+     * </ul>
+     * </p>
+     * <p>
+     * <b>Type Syntax:</b>
+     * <ul>
+     * <li>INTERVAL YEAR (precision)</li>
+     * <li>INTERVAL MONTH (precision)</li>
+     * <li>INTERVAL YEAR (precision) TO MONTH</li>
+     * </ul>
+     * </p>
+     */
+    public static final int INTERVAL_YM = 26;
+
+    /**
+     * <p>
+     * The date-time interval types.
+     * </p>
+     * <p>
+     * <b>Applicable Methods:</b>
+     * <ul>
+     * <li>{@link PType#getIntervalCode()}</li>
+     * <li>{@link PType#getPrecision()}</li>
+     * <li>{@link PType#getFractionalPrecision()}</li>
+     * </ul>
+     * </p>
+     * <p>
+     * <b>Allowable Interval Codes:</b>
+     * <ul>
+     * <li>{@link IntervalCode#DAY}</li>
+     * <li>{@link IntervalCode#HOUR}</li>
+     * <li>{@link IntervalCode#MINUTE}</li>
+     * <li>{@link IntervalCode#SECOND}</li>
+     * <li>{@link IntervalCode#DAY_HOUR}</li>
+     * <li>{@link IntervalCode#DAY_MINUTE}</li>
+     * <li>{@link IntervalCode#DAY_SECOND}</li>
+     * <li>{@link IntervalCode#HOUR_MINUTE}</li>
+     * <li>{@link IntervalCode#HOUR_SECOND}</li>
+     * <li>{@link IntervalCode#MINUTE_SECOND}</li>
+     * </ul>
+     * </p>
+     * <p>
+     * <b>Type Syntax:</b>
+     * <ul>
+     * <li>INTERVAL DAY (precision)</li>
+     * <li>INTERVAL HOUR (precision)</li>
+     * <li>INTERVAL MINUTE (precision)</li>
+     * <li>INTERVAL SECOND (precision, fractionalPrecision)</li>
+     * <li>INTERVAL DAY (precision) TO HOUR</li>
+     * <li>INTERVAL DAY (precision) TO MINUTE</li>
+     * <li>INTERVAL DAY (precision) TO SECOND (fractionalPrecision)</li>
+     * <li>INTERVAL HOUR (precision) TO MINUTE</li>
+     * <li>INTERVAL HOUR (precision) TO SECOND (fractionalPrecision)</li>
+     * <li>INTERVAL MINUTE (precision) TO SECOND (fractionalPrecision)</li>
+     * </ul>
+     * </p>
+     */
+    public static final int INTERVAL_DT = 27;
+
+    /**
+     * Creates a type representing INTERVAL YEAR (precision)
+     * @param precision the interval's leading field precision
+     * @return a type representing INTERVAL YEAR (precision)
+     */
+    @NotNull
+    public static PType intervalYear(int precision) {
+        return new PTypeIntervalYearMonth(IntervalCode.YEAR, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL MONTH (precision)
+     * @param precision the interval's leading field precision
+     * @return a type representing INTERVAL MONTH (precision)
+     */
+    @NotNull
+    public static PType intervalMonth(int precision) {
+        return new PTypeIntervalYearMonth(IntervalCode.MONTH, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL DAY (precision)
+     * @param precision the interval's leading field precision
+     * @return a type representing INTERVAL DAY (precision)
+     */
+    @NotNull
+    public static PType intervalDay(int precision) {
+        return new PTypeIntervalDateTime(IntervalCode.DAY, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL HOUR (precision)
+     * @param precision the interval's leading field precision
+     * @return a type representing INTERVAL HOUR (precision)
+     */
+    @NotNull
+    public static PType intervalHour(int precision) {
+        return new PTypeIntervalDateTime(IntervalCode.HOUR, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL MINUTE (precision)
+     * @param precision the interval's leading field precision
+     * @return a type representing INTERVAL MINUTE (precision)
+     */
+    @NotNull
+    public static PType intervalMinute(int precision) {
+        return new PTypeIntervalDateTime(IntervalCode.MINUTE, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL SECOND (precision, fractionalPrecision)
+     * @param precision the number of decimal digits allowed on the left side of the decimal point
+     * @param fractionalPrecision the number of decimal digits allowed on the right side of the decimal point
+     * @return a type representing INTERVAL SECOND (precision, fractionalPrecision)
+     */
+    @NotNull
+    public static PType intervalSecond(int precision, int fractionalPrecision) {
+        return new PTypeIntervalDateTime(IntervalCode.SECOND, precision, fractionalPrecision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL YEAR (precision) TO MONTH
+     * @param precision the precision as it pertains to YEAR
+     * @return a type representing INTERVAL YEAR (precision) TO MONTH
+     */
+    @NotNull
+    public static PType intervalYearMonth(int precision) {
+        return new PTypeIntervalYearMonth(IntervalCode.YEAR_MONTH, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL DAY (precision) TO HOUR
+     * @param precision the precision as it pertains to DAY
+     * @return a type representing INTERVAL DAY (precision) TO HOUR
+     */
+    @NotNull
+    public static PType intervalDayHour(int precision) {
+        return new PTypeIntervalDateTime(IntervalCode.DAY_HOUR, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL DAY (precision) TO MINUTE
+     * @param precision the number of decimal digits allowed for DAY.
+     * @return a type representing INTERVAL DAY (precision) TO MINUTE
+     */
+    @NotNull
+    public static PType intervalDayMinute(int precision) {
+        return new PTypeIntervalDateTime(IntervalCode.DAY_MINUTE, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL DAY (precision) TO SECOND (fractionalPrecision)
+     * @param precision the number of decimal digits allowed for DAY.
+     * @param fractionalPrecision the number of decimal digits on the right side of the decimal point, for SECONDS.
+     * @return a type representing INTERVAL DAY (precision) TO SECOND (fractionalPrecision)
+     */
+    @NotNull
+    public static PType intervalDaySecond(int precision, int fractionalPrecision) {
+        return new PTypeIntervalDateTime(IntervalCode.DAY_SECOND, precision, fractionalPrecision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL HOUR (precision) TO MINUTE
+     * @param precision the number of decimal digits allowed for HOUR
+     * @return a type representing INTERVAL HOUR (precision) TO MINUTE
+     */
+    @NotNull
+    public static PType intervalHourMinute(int precision) {
+        return new PTypeIntervalDateTime(IntervalCode.HOUR_MINUTE, precision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL HOUR (precision) TO SECOND (fractionalPrecision)
+     * @param precision the number of decimal digits allowed for HOUR.
+     * @param fractionalPrecision the number of decimal digits on the right side of the decimal point, for SECONDS.
+     * @return a type representing INTERVAL HOUR (precision) TO SECOND (fractionalPrecision)
+     */
+    @NotNull
+    public static PType intervalHourSecond(int precision, int fractionalPrecision) {
+        return new PTypeIntervalDateTime(IntervalCode.HOUR_SECOND, precision, fractionalPrecision);
+    }
+
+    /**
+     * Creates a type representing INTERVAL MINUTE (precision) TO SECOND (fractionalPrecision)
+     * @param precision the number of decimal digits allowed for MINUTE.
+     * @param fractionalPrecision the number of decimal digits on the right side of the decimal point, for SECONDS.
+     * @return a type representing INTERVAL MINUTE (precision) TO SECOND (fractionalPrecision)
+     */
+    @NotNull
+    public static PType intervalMinuteSecond(int precision, int fractionalPrecision) {
+        return new PTypeIntervalDateTime(IntervalCode.MINUTE_SECOND, precision, fractionalPrecision);
+    }
 
     /**
      * @return a PartiQL dynamic type

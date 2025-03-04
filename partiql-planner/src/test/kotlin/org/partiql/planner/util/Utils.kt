@@ -40,6 +40,27 @@ val allTimePType = setOf(
     PType.timez(6), // TODO: Precision
 )
 
+val allIntervalYMType = setOf(
+    PType.intervalYear(2),
+    PType.intervalMonth(2),
+    PType.intervalYearMonth(2),
+)
+
+val allIntervalDTType = setOf(
+    PType.intervalDay(2),
+    PType.intervalHour(2),
+    PType.intervalMinute(2),
+    PType.intervalSecond(2, 6),
+    PType.intervalDayHour(2),
+    PType.intervalDayMinute(2),
+    PType.intervalDaySecond(2, 6),
+    PType.intervalHourMinute(2),
+    PType.intervalHourSecond(2, 6),
+    PType.intervalMinuteSecond(2, 6)
+)
+
+val allIntervalType = allIntervalYMType + allIntervalDTType
+
 val allTimeStampPType = setOf(
     PType.timestamp(6), // TODO: Precision
     PType.timestampz(6), // TODO: Precision
@@ -81,7 +102,7 @@ val allNumberPType = allIntPType + setOf(
     PType.doublePrecision(),
 )
 
-val allSupportedPType = allNumberPType + allBooleanPType + allCharStringPType + allCollectionPType + allStructPType + allBinaryPType + allDateTimePType
+val allSupportedPType = allNumberPType + allBooleanPType + allCharStringPType + allCollectionPType + allStructPType + allBinaryPType + allDateTimePType + allIntervalType
 
 val allSupportedTypeNotUnknown = allSupportedType.filterNot { it == StaticType.MISSING || it == StaticType.NULL }
 
@@ -384,6 +405,14 @@ val castTablePType: ((PType, PType) -> CastType) = { from, to ->
         }
         PType.UNKNOWN -> CastType.UNSAFE
         PType.VARIANT -> TODO()
+        PType.INTERVAL_YM -> when (to.code()) {
+            PType.INTERVAL_YM -> CastType.COERCION
+            else -> CastType.UNSAFE
+        }
+        PType.INTERVAL_DT -> when (to.code()) {
+            PType.INTERVAL_DT -> CastType.COERCION
+            else -> CastType.UNSAFE
+        }
         else -> {
             error("Unknown type: $fromKind")
         }
