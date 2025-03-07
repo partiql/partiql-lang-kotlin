@@ -31,6 +31,8 @@ import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.Identifier
 import org.partiql.ast.JoinType
+import org.partiql.ast.Let
+import org.partiql.ast.Let.Binding
 import org.partiql.ast.Literal.intNum
 import org.partiql.ast.Nulls
 import org.partiql.ast.Order
@@ -192,6 +194,7 @@ internal object RelConverter {
                     rel = convertOffset(rel, offset)
                     rel = convertLimit(rel, limit)
                     rel = convertExclude(rel, sel.exclude)
+                    rel = convertLet(rel, sel.let)
                     // append SQL projection if present
                     rel = when (val projection = sel.select) {
                         is SelectValue -> {
@@ -381,6 +384,13 @@ internal object RelConverter {
             val rex = RexConverter.apply(item.expr, env)
             val binding = relBinding(name, rex.type)
             return binding to rex
+        }
+
+        private fun convertLetBinding(binding: Binding): Pair<Rel.Binding, Rex> {
+            val name = binding.asAlias.text
+            val rex = RexConverter.apply(binding.expr, env)
+            val newBinding = relBinding(name, rex.type)
+            return newBinding to rex
         }
 
         /**
@@ -579,6 +589,29 @@ internal object RelConverter {
             val type = input.type
             val rex = RexConverter.apply(limit, env)
             val op = relOpLimit(input, rex)
+            return rel(type, op)
+        }
+
+        /**
+         * Concatenate bindings in LET clause with existing env bindings from input
+         */
+        private fun convertLet(input: Rel, let: Let?): Rel {
+            if (let == null) {
+                return input
+            }
+            val schema = input.type.schema.toMutableList()
+            val props = input.type.props
+            val projections = mutableListOf<Rex>()
+            repeat(input.type.schema.size) { index ->
+                projections.add(rex(ANY, rexOpVarLocal(0, index)))
+            }
+            let.bindings.forEach {
+                val (newBinding, projection) = convertLetBinding(it)
+                schema.add(newBinding)
+                projections.add(projection)
+            }
+            val type = relType(schema, props)
+            val op = relOpProject(input, projections)
             return rel(type, op)
         }
 
