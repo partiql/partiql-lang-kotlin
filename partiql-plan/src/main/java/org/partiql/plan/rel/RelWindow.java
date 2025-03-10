@@ -54,22 +54,22 @@ public abstract class RelWindow extends RelBase {
     public abstract Rel getInput();
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the collations to sort by.
+     * @return the collations to sort by
      */
     @NotNull
     public abstract List<Collation> getCollations();
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the window functions to apply.
+     * @return the window functions to apply
      */
     @NotNull
     public abstract List<WindowFunctionNode> getWindowFunctions();
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the partitions to partition by.
+     * @return the partitions to partition by
      */
     @NotNull
     public abstract List<Rex> getPartitions();
