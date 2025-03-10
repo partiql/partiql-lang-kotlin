@@ -6,34 +6,67 @@ import org.partiql.spi.types.PType;
 import java.util.List;
 
 /**
- * TODO: Make this a class.
+ * Represents the signature of a window function.
+ * @see WindowFunctionNode
  */
-public interface WindowFunctionSignature {
+public final class WindowFunctionSignature {
+
+    private final String name;
+    private final List<PType> parameterTypes;
+    private final PType returnType;
+    private final boolean ignoreNulls;
 
     /**
-     * TODO
-     * @return TODO
+     * Constructs a new {@link WindowFunctionSignature}.
+     * @param name the name of the function
+     * @param parameterTypes the types of the parameters
+     * @param returnType the type of the return value
+     * @param ignoreNulls whether the function should ignore nulls
+     */
+    public WindowFunctionSignature(
+            @NotNull String name,
+            @NotNull List<PType> parameterTypes,
+            @NotNull PType returnType,
+            boolean ignoreNulls
+    ) {
+        this.name = name;
+        this.parameterTypes = parameterTypes;
+        this.returnType = returnType;
+        this.ignoreNulls = ignoreNulls;
+    }
+
+    /**
+     * Returns the name of the function.
+     * @return the name of the function
      */
     @NotNull
-    public String getName();
+    public String getName() {
+        return this.name;
+    }
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the types of the parameters.
+     * @return the types of the parameters
      */
     @NotNull
-    public List<PType> getParameterTypes();
+    public List<PType> getParameterTypes() {
+        return this.parameterTypes;
+    }
 
     /**
-     * TODO
-     * @return TODO
+     * Returns the type of the return value.
+     * @return the type of the return value
      */
     @NotNull
-    public PType getReturnType();
+    public PType getReturnType() {
+        return this.returnType;
+    }
 
     /**
-     * TODO
-     * @return TODO
+     * Returns whether the function should ignore nulls.
+     * @return whether the function should ignore nulls
      */
-    public boolean isIgnoreNulls();
+    public boolean isIgnoreNulls() {
+        return this.ignoreNulls;
+    }
 }

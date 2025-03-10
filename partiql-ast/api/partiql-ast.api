@@ -2906,21 +2906,21 @@ public class org/partiql/ast/expr/ExprWindow$Over$Builder {
 }
 
 public final class org/partiql/ast/expr/ExprWindowFunction : org/partiql/ast/expr/Expr {
-	public fun <init> (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/AstNode;)V
+	public fun <init> (Lorg/partiql/ast/WindowFunctionType;Lorg/partiql/ast/WindowReference;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/expr/ExprWindowFunction$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getFunctionType ()Lorg/partiql/ast/AstNode;
-	public fun getWindowReference ()Lorg/partiql/ast/AstNode;
+	public fun getFunctionType ()Lorg/partiql/ast/WindowFunctionType;
+	public fun getWindowReference ()Lorg/partiql/ast/WindowReference;
 	public fun hashCode ()I
 }
 
 public class org/partiql/ast/expr/ExprWindowFunction$Builder {
 	public fun build ()Lorg/partiql/ast/expr/ExprWindowFunction;
-	public fun reference (Lorg/partiql/ast/AstNode;)Lorg/partiql/ast/expr/ExprWindowFunction$Builder;
+	public fun reference (Lorg/partiql/ast/WindowReference;)Lorg/partiql/ast/expr/ExprWindowFunction$Builder;
 	public fun toString ()Ljava/lang/String;
-	public fun type (Lorg/partiql/ast/AstNode;)Lorg/partiql/ast/expr/ExprWindowFunction$Builder;
+	public fun type (Lorg/partiql/ast/WindowFunctionType;)Lorg/partiql/ast/expr/ExprWindowFunction$Builder;
 }
 
 public abstract class org/partiql/ast/expr/PathStep : org/partiql/ast/AstNode {

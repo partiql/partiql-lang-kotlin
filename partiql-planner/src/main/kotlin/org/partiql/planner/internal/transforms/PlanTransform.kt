@@ -246,12 +246,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         override fun visitRelOpWindow(node: Rel.Op.Window, ctx: PType): org.partiql.plan.rel.RelWindow {
             val input = visitRel(node.input, ctx)
-            val functionBinding = node.input.type.schema.last() // TODO: When we support multiple functions, this needs to be updated
+            val functionsSize = node.functions.size
+            val functionBindingNames = node.input.type.schema.takeLast(functionsSize).map { it.name }
             val partitions = node.partitions.map { visitRex(it, it.type) }
             val collations = node.sorts.map { collation(it) }
             return org.partiql.plan.rel.RelWindow.create(
                 input,
-                listOf(functionBinding.name),
+                functionBindingNames,
                 node.functions.map { visitRelOpWindowWindowFunction(it, ctx) },
                 collations,
                 partitions,
@@ -259,33 +260,9 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRelOpWindowWindowFunction(node: Rel.Op.Window.WindowFunction, ctx: PType): WindowFunctionNode {
-            val signature = object : WindowFunctionSignature {
-                override fun getName(): String {
-                    return node.name
-                }
-
-                override fun getParameterTypes(): MutableList<PType> {
-                    return node.parameterTypes!!.toMutableList()
-                }
-
-                override fun getReturnType(): PType {
-                    return node.returnType!!
-                }
-
-                override fun isIgnoreNulls(): Boolean {
-                    return node.isIgnoreNulls
-                }
-            }
+            val signature = WindowFunctionSignature(node.name, node.parameterTypes!!, node.returnType!!, node.isIgnoreNulls)
             val args = node.args.map { visitRex(it, it.type) }
-            return object : WindowFunctionNode {
-                override fun getSignature(): WindowFunctionSignature {
-                    return signature
-                }
-
-                override fun getArguments(): MutableList<Rex> {
-                    return args.toMutableList()
-                }
-            }
+            return WindowFunctionNode(signature, args)
         }
 
         override fun visitRelOpWith(node: Rel.Op.With, ctx: PType): org.partiql.plan.rel.Rel {

@@ -291,6 +291,7 @@ public abstract interface class org/partiql/plan/OperatorVisitor {
 	public fun visitUnion (Lorg/partiql/plan/rel/RelUnion;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUnpivot (Lorg/partiql/plan/rel/RelUnpivot;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindow (Lorg/partiql/plan/rel/RelWindow;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract interface class org/partiql/plan/Operators {
@@ -392,6 +393,20 @@ public class org/partiql/plan/Version : org/partiql/spi/Enum {
 	public static fun V1 ()Lorg/partiql/plan/Version;
 	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/WindowFunctionNode {
+	public fun <init> (Lorg/partiql/plan/WindowFunctionSignature;Ljava/util/List;)V
+	public fun getArguments ()Ljava/util/List;
+	public fun getSignature ()Lorg/partiql/plan/WindowFunctionSignature;
+}
+
+public final class org/partiql/plan/WindowFunctionSignature {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/spi/types/PType;Z)V
+	public fun getName ()Ljava/lang/String;
+	public fun getParameterTypes ()Ljava/util/List;
+	public fun getReturnType ()Lorg/partiql/spi/types/PType;
+	public fun isIgnoreNulls ()Z
 }
 
 public abstract interface class org/partiql/plan/rel/Rel : org/partiql/plan/Operator {
@@ -619,6 +634,17 @@ public abstract class org/partiql/plan/rel/RelUnpivot : org/partiql/plan/rel/Rel
 	public abstract fun getRex ()Lorg/partiql/plan/rex/Rex;
 	protected final fun operands ()Ljava/util/List;
 	protected final fun type ()Lorg/partiql/plan/rel/RelType;
+}
+
+public abstract class org/partiql/plan/rel/RelWindow : org/partiql/plan/rel/RelBase {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun create (Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
+	public abstract fun getCollations ()Ljava/util/List;
+	public abstract fun getInput ()Lorg/partiql/plan/rel/Rel;
+	public abstract fun getPartitions ()Ljava/util/List;
+	public abstract fun getWindowFunctions ()Ljava/util/List;
+	protected final fun operands ()Ljava/util/List;
 }
 
 public abstract interface class org/partiql/plan/rex/Rex : org/partiql/plan/Operator {
