@@ -52,39 +52,53 @@ public class SuccessTestCase(
     ) : this("no_name", input, expected, mode, globals, jvmEquality)
 
     constructor(
+        name: String,
+        input: String,
+        expected: String,
+        mode: Mode = Mode.PERMISSIVE(),
+        globals: List<Global> = emptyList(),
+        jvmEquality: Boolean = false
+    ) : this(name, input, eval(expected).first, mode, globals, jvmEquality)
+
+    constructor(
         input: String,
         expected: PartiQLValue,
         mode: Mode = Mode.PERMISSIVE(),
         globals: List<Global> = emptyList(),
     ) : this(input, ValueUtils.newDatum(expected), mode, globals)
 
-    private val compiler = PartiQLCompiler.standard()
-    private val parser = PartiQLParser.standard()
-    private val planner = PartiQLPlanner.standard()
+    companion object {
+
+        private val compiler = PartiQLCompiler.standard()
+        private val parser = PartiQLParser.standard()
+        private val planner = PartiQLPlanner.standard()
+
+        private fun eval(text: String, tables: List<Table> = emptyList(), mode: Mode = Mode.STRICT()): Pair<Datum, Plan> {
+            val parseResult = parser.parse(text)
+            assertEquals(1, parseResult.statements.size)
+            val statement = parseResult.statements[0]
+            val catalog = Catalog.builder()
+                .name("memory")
+                .apply { tables.forEach { define(it) } }
+                .build()
+            val session = Session.builder()
+                .catalog("memory")
+                .catalogs(catalog)
+                .build()
+            val plan = planner.plan(statement, session).plan
+            return DatumMaterialize.materialize(compiler.prepare(plan, mode).execute()) to plan
+        }
+    }
 
     override fun run() {
-        val parseResult = parser.parse(input)
-        assertEquals(1, parseResult.statements.size)
-        val statement = parseResult.statements[0]
-        val catalog = Catalog.builder()
-            .name("memory")
-            .apply {
-                globals.forEach {
-                    val table = Table.standard(
-                        name = Name.of(it.name),
-                        schema = it.type,
-                        datum = it.value
-                    )
-                    define(table)
-                }
-            }
-            .build()
-        val session = Session.builder()
-            .catalog("memory")
-            .catalogs(catalog)
-            .build()
-        val plan = planner.plan(statement, session).plan
-        val result = DatumMaterialize.materialize(compiler.prepare(plan, mode).execute())
+        val tables = globals.map {
+            Table.standard(
+                name = Name.of(it.name),
+                schema = it.type,
+                datum = it.value
+            )
+        }
+        val (result, plan) = eval(input, tables, mode)
         val comparison = when (jvmEquality) {
             true -> expected == result
             false -> Datum.comparator().compare(expected, result) == 0

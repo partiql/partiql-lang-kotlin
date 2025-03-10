@@ -43,10 +43,17 @@ import org.partiql.ast.SelectStar
 import org.partiql.ast.SelectValue
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
+import org.partiql.ast.Sort
+import org.partiql.ast.WindowFunctionNullTreatment
+import org.partiql.ast.WindowFunctionSimpleName
+import org.partiql.ast.WindowFunctionType
+import org.partiql.ast.WindowPartition
+import org.partiql.ast.WindowReference
 import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
+import org.partiql.ast.expr.ExprWindowFunction
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.ir.Rel
@@ -75,6 +82,8 @@ import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpSortSpec
 import org.partiql.planner.internal.ir.relOpUnpivot
+import org.partiql.planner.internal.ir.relOpWindow
+import org.partiql.planner.internal.ir.relOpWindowWindowFunction
 import org.partiql.planner.internal.ir.relOpWith
 import org.partiql.planner.internal.ir.relOpWithWithListElement
 import org.partiql.planner.internal.ir.relType
@@ -85,7 +94,10 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.planner.internal.ir.rexOpVarUnresolved
+import org.partiql.planner.internal.transforms.RelConverter.toRex
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.BinderUtils.toBinder
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -187,6 +199,9 @@ internal object RelConverter {
                     rel = _rel
                     // Plan.create (possibly rewritten) sel node
                     rel = convertHaving(rel, sel.having)
+                    val (windowSel, windowRel) = convertWindow(rel, sel)
+                    rel = windowRel
+                    sel = windowSel
                     rel = convertOrderBy(rel, orderBy)
                     // offset should precede limit
                     rel = convertOffset(rel, offset)
@@ -489,6 +504,93 @@ internal object RelConverter {
             val op = relOpAggregate(input, strategy, calls, groups)
             val rel = rel(type, op)
             return Pair(sel, rel)
+        }
+
+        /**
+         * Append [Rel.Op.Window] only if SELECT contains window functions.
+         * TODO: Handle the window clause itself.
+         */
+        private fun convertWindow(input: Rel, select: QueryBody.SFW): Pair<QueryBody.SFW, Rel> {
+            // Rewrite and extract all window functions in the SELECT clause
+            val (sel, windowFunctions) = WindowTransform.apply(select)
+            if (windowFunctions.isEmpty()) {
+                return Pair(select, input)
+            }
+
+            // Convert nodes to plan nodes, fold to each be their own windows (currently), and return!
+            // Schema = (input bindings... functions...)
+            val props = emptySet<Rel.Prop>()
+            val rel = windowFunctions.foldRight(input) { (bindingName, function), current ->
+                val window = when (val ref = function.windowReference) {
+                    is WindowReference.InLineSpecification -> ref
+                    is WindowReference.Name -> error("Referencing window specifications by name is currently not supported") // TODO
+                    else -> error("Window Reference ${ref.javaClass.simpleName} not supported.") // TODO
+                }
+                val orderBy = window.specification.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
+                val partitions = window.specification.partitionClause?.partitions?.map {
+                    if (it !is WindowPartition.Name) {
+                        error("Window Partition ${it.javaClass.simpleName} not supported.")
+                    }
+                    val op = rexOpVarUnresolved(AstToPlan.convert(it.name), Rex.Op.Var.Scope.LOCAL)
+                    rex(PType.dynamic().toCType(), op)
+                } ?: emptyList()
+                val functionNode = convertWindowFunction(function)
+                val newSchema = current.type.schema + listOf(relBinding(bindingName, PType.dynamic().toCType())) // TODO: Dynamic?
+                val type = relType(newSchema, props)
+                val op = relOpWindow(current, listOf(functionNode), partitions, orderBy)
+                rel(type, op)
+            }
+            return Pair(sel, rel)
+        }
+
+        private fun convertSort(it: Sort): Rel.Op.Sort.Spec {
+            val rex = it.expr.toRex(env)
+            val order = when (it.order?.code()) {
+                Order.DESC -> when (it.nulls?.code()) {
+                    Nulls.LAST -> Rel.Op.Sort.Order.DESC_NULLS_LAST
+                    Nulls.FIRST, null -> Rel.Op.Sort.Order.DESC_NULLS_FIRST
+                    else -> error("Unexpected Nulls type: ${it.nulls}")
+                }
+                else -> when (it.nulls?.code()) {
+                    Nulls.FIRST -> Rel.Op.Sort.Order.ASC_NULLS_FIRST
+                    Nulls.LAST, null -> Rel.Op.Sort.Order.ASC_NULLS_LAST
+                    else -> error("Unexpected Nulls type: ${it.nulls}")
+                }
+            }
+            return relOpSortSpec(rex, order)
+        }
+
+        private fun convertWindowFunction(node: ExprWindowFunction): Rel.Op.Window.WindowFunction {
+            return when (val windowType = node.functionType) {
+                is WindowFunctionType.NoArg -> {
+                    val name = when (windowType.name.code()) {
+                        WindowFunctionSimpleName.RANK -> "rank"
+                        WindowFunctionSimpleName.ROW_NUMBER -> "row_number"
+                        WindowFunctionSimpleName.DENSE_RANK -> "dense_rank"
+                        else -> error("Unexpected WindowFunctionSimpleName type: ${windowType.name}")
+                    }
+                    // TODO: Check what the output type should be
+                    // TODO: Check if isIgnoreNulls is true/false by default
+                    relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.bigint()))
+                }
+                is WindowFunctionType.LeadOrLag -> {
+                    val name = when (windowType.isLag) {
+                        true -> "lag"
+                        false -> "lead"
+                    }
+                    val isIgnoreNulls = when (windowType.nullTreatment?.code()) {
+                        WindowFunctionNullTreatment.RESPECT_NULLS, null -> false
+                        WindowFunctionNullTreatment.IGNORE_NULLS -> true
+                        else -> error("Unexpected WindowFunctionNullTreatment type: ${windowType.nullTreatment}")
+                    }
+                    val extent = windowType.extent.toRex(env)
+                    val offset = windowType.offset?.let { rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(it))) }
+                    val default = windowType.defaultValue?.toRex(env)
+                    val args = listOfNotNull(extent, offset, default) // TODO: Check if there are good defaults for these null values
+                    relOpWindowWindowFunction(name, args, isIgnoreNulls, null, null)
+                }
+                else -> error("Unexpected WindowFunctionType type: $windowType")
+            }
         }
 
         /**

@@ -56,6 +56,7 @@ import org.partiql.ast.expr.ExprValues;
 import org.partiql.ast.expr.ExprVarRef;
 import org.partiql.ast.expr.ExprVariant;
 import org.partiql.ast.expr.ExprWindow;
+import org.partiql.ast.expr.ExprWindowFunction;
 import org.partiql.ast.expr.PathStep;
 import org.partiql.ast.graph.GraphLabel;
 import org.partiql.ast.graph.GraphMatch;
@@ -320,6 +321,126 @@ public abstract class AstVisitor<R, C> {
     }
 
     public R visitExprArray(ExprArray node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitExprWindowFunction(ExprWindowFunction node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowFunctionType(WindowFunctionType node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowFunctionTypeNoArg(WindowFunctionType.NoArg node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowReference(WindowReference node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowPartitionClause(WindowPartitionClause node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowOrderClause(WindowOrderClause node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowPartition(WindowPartition node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowPartitionName(WindowPartition.Name node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowReferenceName(WindowReference.Name node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowReferenceInLineSpecification(WindowReference.InLineSpecification node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowFunctionTypeLagOrLead(WindowFunctionType.LeadOrLag node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowSpecification(WindowSpecification node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

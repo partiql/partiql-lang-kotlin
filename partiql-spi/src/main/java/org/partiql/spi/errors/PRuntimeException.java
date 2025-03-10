@@ -55,9 +55,27 @@ public class PRuntimeException extends RuntimeException {
         return Objects.hashCode(error);
     }
 
+    /**
+     * You may TEMPORARILY uncomment this. Do not commit this overridden function.
+     * @return the cause of this exception
+     */
+    @Override
+    public synchronized Throwable getCause() {
+        Throwable t = error.getOrNull("CAUSE", Throwable.class);
+        if (t != null) {
+            return t;
+        }
+        return super.getCause();
+    }
+
+    /**
+     * This DOES NOT fill in the stack trace. This is intentional, as it incurs a hefty computational cost.
+     * @return the same, untouched exception.
+     */
     @Override
     public synchronized Throwable fillInStackTrace() {
         // This method is normally extremely expensive, especially in permissive mode.
-        return this;
+        // TODO!
+        return super.fillInStackTrace();
     }
 }
