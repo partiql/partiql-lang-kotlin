@@ -10,7 +10,7 @@ class DatumWriterTextPretty(
     private val indent: String = INDENT
 ) : DatumWriter {
 
-    private val out = IndentStream(stream, indent)
+    private val out = IndentStream(stream)
 
     companion object {
         private const val INDENT = "  "
@@ -192,7 +192,9 @@ class DatumWriterTextPretty(
         while (iterator.hasNext()) {
             val field = iterator.next()
             format(fieldFormat) {
+                this.out.print("'")
                 this.out.print(field.name)
+                this.out.print("'")
                 this.out.print(": ")
                 val valueFormat = format?.nest(true)
                 write(field.value, valueFormat)
@@ -356,7 +358,7 @@ class DatumWriterTextPretty(
         }
     }
 
-    private class IndentStream(private val out: Appendable, private val indent: String) {
+    private class IndentStream(private val out: Appendable) {
         fun print(value: Any?) {
             this.out.append(value.toString())
         }

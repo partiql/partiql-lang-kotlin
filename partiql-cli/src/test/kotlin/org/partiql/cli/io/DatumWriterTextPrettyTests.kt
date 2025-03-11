@@ -3,6 +3,7 @@ package org.partiql.cli.io
 import org.junit.jupiter.api.Test
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -63,7 +64,21 @@ class DatumWriterTextPrettyTests {
           INTERVAL '1 2:3:4.50' DAY (2) TO SECOND (2),
           INTERVAL '1:2' HOUR (2) TO MINUTE,
           INTERVAL '1:2:3.40' HOUR (2) TO SECOND (2),
-          INTERVAL '0:1:2.30' HOUR (2) TO SECOND (2)
+          INTERVAL '0:1:2.30' HOUR (2) TO SECOND (2),
+          {
+            'bar': [
+              1,
+              2
+            ],
+            'foo': 3.14,
+            'baz': <<
+              [
+                {
+                  'a': 'deeply nested'
+                }
+              ]
+            >>
+          }
         >>
         """.trimIndent()
 
@@ -110,7 +125,25 @@ class DatumWriterTextPrettyTests {
             Datum.intervalDaySecond(1, 2, 3, 4, 500000000, 2, 2),
             Datum.intervalHourMinute(1, 2, 2),
             Datum.intervalHourSecond(1, 2, 3, 400000000, 2, 2),
-            Datum.intervalMinuteSecond(1, 2, 300000000, 2, 2)
+            Datum.intervalMinuteSecond(1, 2, 300000000, 2, 2),
+            // TODO: Technically, structs and bags are unordered. This may or may not lead to issues in the future
+            //  when testing. We should potentially instead rewrite these tests to re-parse the output and do a full-on
+            //  comparison between the values instead. This approach, however, would not take into account the indents.
+            //  For now, leaving this in for this reason.
+            Datum.struct(
+                Field.of("foo", Datum.doublePrecision(3.14)),
+                Field.of("bar", Datum.array(listOf(Datum.integer(1), Datum.integer(2)))),
+                Field.of(
+                    "baz",
+                    Datum.bagVararg(
+                        Datum.array(
+                            listOf(
+                                Datum.struct(Field.of("a", Datum.string("deeply nested")))
+                            )
+                        )
+                    )
+                ),
+            ),
         )
     }
 

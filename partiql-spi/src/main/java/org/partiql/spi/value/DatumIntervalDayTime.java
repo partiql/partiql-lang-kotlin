@@ -123,6 +123,6 @@ class DatumIntervalDayTime implements Datum {
 
     @Override
     public String toString() {
-        return "INTERVAL " + days + " " + hours + ":" + minutes + ":" + seconds + "." + nanos + " " + getType();
+        return "INTERVAL '" + days + " " + hours + ":" + minutes + ":" + seconds + "." + nanos + "' " + getType();
     }
 }

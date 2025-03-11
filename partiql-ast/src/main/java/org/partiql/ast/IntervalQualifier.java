@@ -16,6 +16,9 @@ import java.util.Set;
  */
 public abstract class IntervalQualifier extends AstNode {
 
+    // TODO: Determine what the maximum precision is for PartiQL
+    private static final int MAX_PRECISION = 6;
+
     /**
      * <p>
      * Represents an interval qualifier that contains a range of fields. Syntactically,
@@ -109,7 +112,7 @@ public abstract class IntervalQualifier extends AstNode {
             if (!ALLOWABLE_START_FIELDS.contains(startCode)) {
                 throw new IllegalArgumentException("Invalid interval start field: " + startField.name());
             }
-            if (startFieldPrecision != null && startFieldPrecision <= 0) {
+            if (startFieldPrecision != null && (startFieldPrecision <= 0 || startFieldPrecision > MAX_PRECISION)) {
                 throw new IllegalArgumentException("Invalid leading field precision" + startFieldPrecision);
             }
         }
@@ -131,7 +134,7 @@ public abstract class IntervalQualifier extends AstNode {
             if (endFieldPrecision != null && code != DatetimeField.SECOND) {
                 throw new IllegalArgumentException("Cannot specify fractional seconds precision for interval end field: " + endField.name());
             }
-            if (endFieldPrecision != null && endFieldPrecision < 0) {
+            if (endFieldPrecision != null && (endFieldPrecision < 0 || endFieldPrecision > MAX_PRECISION)) {
                 throw new IllegalArgumentException("Invalid end field precision" + endFieldPrecision);
             }
         }

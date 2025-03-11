@@ -66,8 +66,9 @@ internal object IntervalUtils {
             IntervalCode.HOUR_SECOND -> {
                 val secondsLeftOver = (totalSeconds % SECONDS_PER_MINUTE).toInt()
                 val minutes = totalSeconds / SECONDS_PER_MINUTE
+                val minutesLeftOver = (minutes % MINUTES_PER_HOUR).toInt()
                 val hours = minutes / MINUTES_PER_HOUR
-                Datum.intervalHourSecond(hours.toInt(), minutes.toInt(), secondsLeftOver, nanos, precision, scale)
+                Datum.intervalHourSecond(hours.toInt(), minutesLeftOver, secondsLeftOver, nanos, precision, scale)
             }
             IntervalCode.MINUTE_SECOND -> {
                 val secondsLeftOver = (totalSeconds % SECONDS_PER_MINUTE).toInt()
