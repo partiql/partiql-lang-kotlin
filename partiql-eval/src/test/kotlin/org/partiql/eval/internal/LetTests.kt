@@ -155,7 +155,7 @@ class LetTests {
                 )
             ),
             SuccessTestCase(
-                name = "LET with multiple LET clauses",
+                name = "LET with multiple LET clauses 1",
                 input = """
                     SELECT t.a, b, c 
                     FROM << { 'a': 1 }>> AS t 
@@ -166,6 +166,23 @@ class LetTests {
                         Field.of("a", Datum.integer(1)),
                         Field.of("b", Datum.integer(3)),
                         Field.of("c", Datum.integer(3))
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LET with multiple LET clauses 2",
+                input = """
+                    SELECT a, b, c, d, e
+                    FROM << { 'a': 1 , 'b':2}>> AS t
+                    LET t.a + 5 AS c, t.b+ 10 AS d, t.a + 15 AS e
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1)),
+                        Field.of("b", Datum.integer(2)),
+                        Field.of("c", Datum.integer(6)),
+                        Field.of("d", Datum.integer(12)),
+                        Field.of("e", Datum.integer(16))
                     )
                 )
             )
