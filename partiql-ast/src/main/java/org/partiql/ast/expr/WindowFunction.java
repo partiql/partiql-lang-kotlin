@@ -11,8 +11,10 @@ import java.util.List;
 
 /**
  * Represents a SQL window function enum. E.g. {@code LAG}.
+ * @deprecated This is replaced by {@link org.partiql.ast.expr.ExprWindowFunction}.
  */
 @EqualsAndHashCode(callSuper = false)
+@Deprecated
 public final class WindowFunction extends AstEnum {
     /**
      * LAG window function.

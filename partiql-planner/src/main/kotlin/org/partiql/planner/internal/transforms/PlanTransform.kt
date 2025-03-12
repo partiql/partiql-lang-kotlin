@@ -6,6 +6,8 @@ import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operators
 import org.partiql.plan.Plan
+import org.partiql.plan.WindowFunctionNode
+import org.partiql.plan.WindowFunctionSignature
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelType
 import org.partiql.plan.rex.Rex
@@ -240,6 +242,27 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             val calls = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.Measure }
             val groups = node.groups.map { visitRex(it, ctx) }
             return operators.aggregate(input, calls, groups)
+        }
+
+        override fun visitRelOpWindow(node: Rel.Op.Window, ctx: PType): org.partiql.plan.rel.RelWindow {
+            val input = visitRel(node.input, ctx)
+            val functionsSize = node.functions.size
+            val functionBindingNames = node.input.type.schema.takeLast(functionsSize).map { it.name }
+            val partitions = node.partitions.map { visitRex(it, it.type) }
+            val collations = node.sorts.map { collation(it) }
+            return org.partiql.plan.rel.RelWindow.create(
+                input,
+                functionBindingNames,
+                node.functions.map { visitRelOpWindowWindowFunction(it, ctx) },
+                collations,
+                partitions,
+            )
+        }
+
+        override fun visitRelOpWindowWindowFunction(node: Rel.Op.Window.WindowFunction, ctx: PType): WindowFunctionNode {
+            val signature = WindowFunctionSignature(node.name, node.parameterTypes!!, node.returnType!!, node.isIgnoreNulls)
+            val args = node.args.map { visitRex(it, it.type) }
+            return WindowFunctionNode(signature, args)
         }
 
         override fun visitRelOpWith(node: Rel.Op.With, ctx: PType): org.partiql.plan.rel.Rel {

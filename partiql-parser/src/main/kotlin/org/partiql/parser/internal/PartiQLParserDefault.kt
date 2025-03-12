@@ -88,8 +88,6 @@ import org.partiql.ast.Ast.exprTrim
 import org.partiql.ast.Ast.exprValues
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.exprVariant
-import org.partiql.ast.Ast.exprWindow
-import org.partiql.ast.Ast.exprWindowOver
 import org.partiql.ast.Ast.from
 import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.fromJoin
@@ -173,6 +171,15 @@ import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
+import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionNullTreatment
+import org.partiql.ast.WindowFunctionSimpleName
+import org.partiql.ast.WindowFunctionType
+import org.partiql.ast.WindowOrderClause
+import org.partiql.ast.WindowPartition
+import org.partiql.ast.WindowPartitionClause
+import org.partiql.ast.WindowReference
+import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
 import org.partiql.ast.WithListElement
 import org.partiql.ast.ddl.AttributeConstraint
@@ -191,11 +198,11 @@ import org.partiql.ast.expr.ExprLit
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprRowValue
+import org.partiql.ast.expr.ExprWindowFunction
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.SessionAttribute
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
-import org.partiql.ast.expr.WindowFunction
 import org.partiql.ast.graph.GraphDirection
 import org.partiql.ast.graph.GraphLabel
 import org.partiql.ast.graph.GraphPart
@@ -982,7 +989,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             val where = visitOrNull<Expr>(ctx.where)
             val groupBy = ctx.group?.let { visitGroupClause(it) }
             val having = visitOrNull<Expr>(ctx.having?.arg)
-            queryBodySFW(select, exclude, from, let, where, groupBy, having)
+            val window = visitOrNull<WindowClause>(ctx.window)
+            queryBodySFW(select, exclude, from, let, where, groupBy, having, window)
         }
 
         /**
@@ -1062,6 +1070,23 @@ internal class PartiQLParserDefault : PartiQLParser {
             val expr = visitAs<Expr>(ctx.expr())
             val alias = visitSymbolPrimitive(ctx.symbolPrimitive())
             letBinding(expr, alias)
+        }
+
+        /**
+         *
+         * WINDOW CLAUSE
+         *
+         */
+
+        override fun visitWindowClause(ctx: GeneratedParser.WindowClauseContext) = translate(ctx) {
+            val definitions = visitOrEmpty<WindowClause.WindowDefinition>(ctx.windowDefinition())
+            WindowClause(definitions)
+        }
+
+        override fun visitWindowDefinition(ctx: GeneratedParser.WindowDefinitionContext) = translate(ctx) {
+            val name = visitSymbolPrimitive(ctx.name)
+            val spec = visitWindowSpecification(ctx.windowSpecification())
+            WindowClause.WindowDefinition(name, spec)
         }
 
         /**
@@ -1966,24 +1991,74 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Window Functions
          */
-
-        override fun visitLagLeadFunction(ctx: GeneratedParser.LagLeadFunctionContext) = translate(ctx) {
-            val function = when {
-                ctx.LAG() != null -> WindowFunction.LAG()
-                ctx.LEAD() != null -> WindowFunction.LEAD()
-                else -> throw error(ctx, "Expected LAG or LEAD")
-            }
-            val expression = visitExpr(ctx.expr(0))
-            val offset = visitOrNull<Expr>(ctx.expr(1))
-            val default = visitOrNull<Expr>(ctx.expr(2))
-            val over = visitOver(ctx.over())
-            exprWindow(function, expression, offset, default, over)
+        override fun visitWindowFunction(ctx: GeneratedParser.WindowFunctionContext) = translate(ctx) {
+            val type = visitAs<WindowFunctionType>(ctx.windowFunctionType())
+            val ref = visitAs<WindowReference>(ctx.windowNameOrSpecification())
+            ExprWindowFunction(type, ref)
         }
 
-        override fun visitOver(ctx: GeneratedParser.OverContext) = translate(ctx) {
-            val partitions = visitOrEmpty<Expr>(ctx.windowPartitionList().expr())
-            val sorts = visitOrEmpty<Sort>(ctx.windowSortSpecList().orderSortSpec())
-            exprWindowOver(partitions, sorts)
+        override fun visitWindowFunctionTypeRank(ctx: GeneratedParser.WindowFunctionTypeRankContext) = translate(ctx) {
+            val func = ctx.rankFunctionType()
+            val name = when {
+                func.RANK() != null -> WindowFunctionSimpleName.RANK()
+                func.DENSE_RANK() != null -> WindowFunctionSimpleName.DENSE_RANK()
+                func.PERCENT_RANK() != null -> WindowFunctionSimpleName.PERCENT_RANK()
+                func.CUME_DIST() != null -> WindowFunctionSimpleName.CUME_DIST()
+                else -> throw error(ctx, "Expected one of: RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST")
+            }
+            WindowFunctionType.NoArg(name)
+        }
+
+        override fun visitWindowFunctionTypeRowNumber(ctx: GeneratedParser.WindowFunctionTypeRowNumberContext) = translate(ctx) {
+            WindowFunctionType.NoArg(WindowFunctionSimpleName.ROW_NUMBER())
+        }
+
+        override fun visitWindowFunctionNullTreatment(ctx: GeneratedParser.WindowFunctionNullTreatmentContext) = translate(ctx) {
+            when {
+                ctx.RESPECT() != null -> WindowFunctionNullTreatment.RESPECT_NULLS()
+                ctx.IGNORE() != null -> WindowFunctionNullTreatment.IGNORE_NULLS()
+                else -> throw error(ctx, "Expected one of: RESPECT NULLS, IGNORE NULLS")
+            }
+        }
+
+        override fun visitLeadOrLagFunction(ctx: GeneratedParser.LeadOrLagFunctionContext) = translate(ctx) {
+            val isLead = when (ctx.name.type) {
+                GeneratedLexer.LEAD -> true
+                GeneratedLexer.LAG -> false
+                else -> throw error(ctx, "Expected LEAD or LAG")
+            }
+            val extent = visitExpr(ctx.extent)
+            val offset = ctx.offset.text.toLong()
+            val default = ctx.default_.let { visitExpr(it) }
+            val nullTreatment = ctx.windowFunctionNullTreatment()?.let { visitWindowFunctionNullTreatment(it) }
+            WindowFunctionType.LeadOrLag(isLead, extent, offset, default, nullTreatment)
+        }
+
+        override fun visitWindowPartitionClause(ctx: GeneratedParser.WindowPartitionClauseContext) = translate(ctx) {
+            val partitions = ctx.col.map { visitWindowPartitionColumnReference(it) }
+            WindowPartitionClause(partitions)
+        }
+
+        override fun visitWindowPartitionColumnReference(ctx: GeneratedParser.WindowPartitionColumnReferenceContext) = translate(ctx) {
+            val id = visitQualifiedName(ctx.qualifiedName())
+            WindowPartition.Name(id)
+        }
+
+        override fun visitWindowSpecification(ctx: GeneratedParser.WindowSpecificationContext) = translate(ctx) {
+            val existingName = ctx.existingWindowName?.let { visitSymbolPrimitive(it) }
+            val partitionClause = ctx.partition?.let { visitWindowPartitionClause(it) }
+            val orderClause = ctx.order?.let { visitOrderByClause(it) }?.let { WindowOrderClause(it.sorts) }
+            WindowSpecification(existingName, partitionClause, orderClause)
+        }
+
+        override fun visitWindowNameOrSpec1(ctx: GeneratedParser.WindowNameOrSpec1Context) = translate(ctx) {
+            val name = visitSymbolPrimitive(ctx.symbolPrimitive())
+            WindowReference.Name(name)
+        }
+
+        override fun visitWindowNameOrSpec2(ctx: GeneratedParser.WindowNameOrSpec2Context) = translate(ctx) {
+            val spec = visitWindowSpecification(ctx.windowSpecification())
+            WindowReference.InLineSpecification(spec)
         }
 
         /**

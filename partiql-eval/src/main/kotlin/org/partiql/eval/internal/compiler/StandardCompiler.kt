@@ -34,6 +34,7 @@ import org.partiql.eval.internal.operator.rel.RelOpSort
 import org.partiql.eval.internal.operator.rel.RelOpUnionAll
 import org.partiql.eval.internal.operator.rel.RelOpUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelOpUnpivot
+import org.partiql.eval.internal.operator.rel.RelOpWindow
 import org.partiql.eval.internal.operator.rex.ExprArray
 import org.partiql.eval.internal.operator.rex.ExprBag
 import org.partiql.eval.internal.operator.rex.ExprCall
@@ -61,6 +62,7 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.eval.internal.window.WindowBuiltIns
 import org.partiql.plan.Action
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
@@ -84,6 +86,7 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnpivot
+import org.partiql.plan.rel.RelWindow
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
@@ -221,6 +224,28 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             return RelOpDistinct(input)
         }
 
+        override fun visitWindow(rel: RelWindow, ctx: Unit): Expr {
+            val input = compile(rel.getInput(), ctx)
+            val functions = rel.windowFunctions.map {
+                val args = it.arguments.map { arg -> compile(arg, Unit).catch() }
+                WindowBuiltIns.get(it.signature, args)
+            }
+            val partitionBy = rel.partitions.map { compile(it, Unit) }
+            val sortBy = rel.collations.map { planCollationToEval(it) }
+            val realSortBy = partitionBy.map {
+                org.partiql.eval.internal.operator.rel.Collation(it, false, false)
+            } + sortBy
+            val sorted = RelOpSort(input, realSortBy)
+            return RelOpWindow(sorted, functions, partitionBy, sortBy)
+        }
+
+        private fun planCollationToEval(it: Collation): org.partiql.eval.internal.operator.rel.Collation {
+            val expr = compile(it.column, Unit)
+            val desc = it.order.code() == Collation.Order.DESC
+            val last = it.nulls.code() == Collation.Nulls.LAST
+            return org.partiql.eval.internal.operator.rel.Collation(expr, desc, last)
+        }
+
         override fun visitExcept(rel: RelExcept, ctx: Unit): ExprRelation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
@@ -307,12 +332,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitSort(rel: RelSort, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
-            val collations = rel.getCollations().map {
-                val expr = compile(it.column, ctx)
-                val desc = it.order.code() == Collation.Order.DESC
-                val last = it.nulls.code() == Collation.Nulls.LAST
-                RelOpSort.Collation(expr, desc, last)
-            }
+            val collations = rel.getCollations().map { planCollationToEval(it) }
             return RelOpSort(input, collations)
         }
 
