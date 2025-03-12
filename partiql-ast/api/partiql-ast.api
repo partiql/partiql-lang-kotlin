@@ -544,6 +544,9 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitInsertSource (Lorg/partiql/ast/dml/InsertSource;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsertSourceFromDefault (Lorg/partiql/ast/dml/InsertSource$FromDefault;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsertSourceFromExpr (Lorg/partiql/ast/dml/InsertSource$FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIntervalQualifier (Lorg/partiql/ast/IntervalQualifier;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIntervalQualifierRange (Lorg/partiql/ast/IntervalQualifier$Range;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIntervalQualifierSingle (Lorg/partiql/ast/IntervalQualifier$Single;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitKeyValue (Lorg/partiql/ast/ddl/KeyValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
@@ -678,6 +681,7 @@ public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public static fun INTEGER4 ()Lorg/partiql/ast/DataType;
 	public static fun INTEGER8 ()Lorg/partiql/ast/DataType;
 	public static fun INTERVAL ()Lorg/partiql/ast/DataType;
+	public static fun INTERVAL (Lorg/partiql/ast/IntervalQualifier;)Lorg/partiql/ast/DataType;
 	public static fun LIST ()Lorg/partiql/ast/DataType;
 	public static fun NUMERIC ()Lorg/partiql/ast/DataType;
 	public static fun NUMERIC (I)Lorg/partiql/ast/DataType;
@@ -711,6 +715,7 @@ public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public fun getChildren ()Ljava/util/List;
 	public fun getElementType ()Lorg/partiql/ast/DataType;
 	public fun getFields ()Ljava/util/List;
+	public fun getIntervalQualifier ()Lorg/partiql/ast/IntervalQualifier;
 	public fun getLength ()Ljava/lang/Integer;
 	public fun getName ()Lorg/partiql/ast/Identifier;
 	public fun getPrecision ()Ljava/lang/Integer;
@@ -1058,6 +1063,52 @@ public class org/partiql/ast/Identifier$Simple$Builder {
 	public fun build ()Lorg/partiql/ast/Identifier$Simple;
 	public fun regular (Z)Lorg/partiql/ast/Identifier$Simple$Builder;
 	public fun text (Ljava/lang/String;)Lorg/partiql/ast/Identifier$Simple$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/ast/IntervalQualifier : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public final class org/partiql/ast/IntervalQualifier$Range : org/partiql/ast/IntervalQualifier {
+	public fun <init> (Lorg/partiql/ast/DatetimeField;Ljava/lang/Integer;Lorg/partiql/ast/DatetimeField;Ljava/lang/Integer;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/IntervalQualifier$Range$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getEndField ()Lorg/partiql/ast/DatetimeField;
+	public fun getEndFieldFractionalPrecision ()Ljava/lang/Integer;
+	public fun getStartField ()Lorg/partiql/ast/DatetimeField;
+	public fun getStartFieldPrecision ()Ljava/lang/Integer;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/IntervalQualifier$Range$Builder {
+	public fun build ()Lorg/partiql/ast/IntervalQualifier$Range;
+	public fun endField (Lorg/partiql/ast/DatetimeField;)Lorg/partiql/ast/IntervalQualifier$Range$Builder;
+	public fun endFieldFractionalPrecision (Ljava/lang/Integer;)Lorg/partiql/ast/IntervalQualifier$Range$Builder;
+	public fun leadingFieldPrecision (Ljava/lang/Integer;)Lorg/partiql/ast/IntervalQualifier$Range$Builder;
+	public fun startField (Lorg/partiql/ast/DatetimeField;)Lorg/partiql/ast/IntervalQualifier$Range$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/IntervalQualifier$Single : org/partiql/ast/IntervalQualifier {
+	public fun <init> (Lorg/partiql/ast/DatetimeField;Ljava/lang/Integer;Ljava/lang/Integer;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/IntervalQualifier$Single$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getField ()Lorg/partiql/ast/DatetimeField;
+	public fun getFractionalPrecision ()Ljava/lang/Integer;
+	public fun getPrecision ()Ljava/lang/Integer;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/IntervalQualifier$Single$Builder {
+	public fun build ()Lorg/partiql/ast/IntervalQualifier$Single;
+	public fun field (Lorg/partiql/ast/DatetimeField;)Lorg/partiql/ast/IntervalQualifier$Single$Builder;
+	public fun fractionalPrecision (Ljava/lang/Integer;)Lorg/partiql/ast/IntervalQualifier$Single$Builder;
+	public fun precision (Ljava/lang/Integer;)Lorg/partiql/ast/IntervalQualifier$Single$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 

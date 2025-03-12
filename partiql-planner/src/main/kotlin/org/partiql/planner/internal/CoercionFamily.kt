@@ -20,7 +20,9 @@ internal enum class CoercionFamily {
     TIMESTAMP,
     COLLECTION,
     UNKNOWN,
-    DYNAMIC;
+    DYNAMIC,
+    INTERVAL_YM,
+    INTERVAL_DT;
 
     companion object {
 
@@ -60,6 +62,8 @@ internal enum class CoercionFamily {
                 PType.CLOB -> STRING
                 PType.UNKNOWN -> UNKNOWN // TODO: REMOVE
                 PType.VARIANT -> UNKNOWN // TODO: HANDLE VARIANT
+                PType.INTERVAL_YM -> INTERVAL_YM
+                PType.INTERVAL_DT -> INTERVAL_DT
                 else -> error("Unknown type: $type")
             }
         }

@@ -427,8 +427,23 @@ public final class DataType extends AstEnum {
         return new DataType(TIMESTAMP_WITH_TIME_ZONE, precision, null, null);
     }
 
+    /**
+     * Returns a data type with code {@link #INTERVAL}, however, the interval qualifier is null.
+     * @deprecated Use {@link #INTERVAL(IntervalQualifier)} instead.
+     * @return a data type with code {@link #INTERVAL}, however, the interval qualifier is null.
+     */
+    @Deprecated
     public static DataType INTERVAL() {
         return new DataType(INTERVAL);
+    }
+
+    /**
+     * Returns a data type with code {@link #INTERVAL} and the specified interval qualifier.
+     * @param qualifier The interval qualifier.
+     * @return a data type with code {@link #INTERVAL} and the specified interval qualifier.
+     */
+    public static DataType INTERVAL(@NotNull IntervalQualifier qualifier) {
+        return new DataType(qualifier);
     }
 
     public static DataType USER_DEFINED() {
@@ -455,6 +470,7 @@ public final class DataType extends AstEnum {
     private final DataType elementType;
     private final List<StructField> fields;
     private final Identifier name;
+    private final IntervalQualifier intervalQualifier;
 
     // Private constructor for no parameter DataTypes
     private DataType(int code) {
@@ -465,6 +481,46 @@ public final class DataType extends AstEnum {
         this.elementType = null;
         this.fields = null;
         this.name = null;
+        this.intervalQualifier = null;
+    }
+
+    /**
+     * Creates a data type with code {@link #INTERVAL} and the specified interval qualifier.
+     * @param intervalQualifier the interval qualifier.
+     */
+    private DataType(IntervalQualifier intervalQualifier) {
+        this(INTERVAL, null, null, null, null, null, null, intervalQualifier);
+    }
+
+    /**
+     * The constructor for DataTypes with all parameters.
+     * @param code the code of the data type
+     * @param precision the precision of the data type
+     * @param scale the scale of the data type
+     * @param length the length of the data type
+     * @param elementType the element type of the data type
+     * @param fields the fields of the data type
+     * @param name the name of the data type
+     * @param intervalQualifier the interval qualifier of the data type
+     */
+    private DataType(
+            int code,
+            Integer precision,
+            Integer scale,
+            Integer length,
+            DataType elementType,
+            List<StructField> fields,
+            Identifier name,
+            IntervalQualifier intervalQualifier
+    ) {
+        this.code = code;
+        this.precision = precision;
+        this.scale = scale;
+        this.length = length;
+        this.elementType = elementType;
+        this.fields = fields;
+        this.name = name;
+        this.intervalQualifier = intervalQualifier;
     }
 
     // Private constructor for DataTypes with Integer parameters; set `name` to null
@@ -476,6 +532,7 @@ public final class DataType extends AstEnum {
         this.elementType = null;
         this.fields = null;
         this.name = null;
+        this.intervalQualifier = null;
     }
 
     // Private constructor for DataTypes with elementType parameter; set `name` to null
@@ -487,6 +544,7 @@ public final class DataType extends AstEnum {
         this.elementType = elementType;
         this.fields = null;
         this.name = null;
+        this.intervalQualifier = null;
     }
 
     private DataType(int code, List<StructField> fields) {
@@ -497,6 +555,7 @@ public final class DataType extends AstEnum {
         this.elementType = null;
         this.fields = fields;
         this.name = null;
+        this.intervalQualifier = null;
     }
 
     // Private constructor for user-defined type w/ an `IdentifierChain` `name`; other parameters set to null
@@ -508,6 +567,7 @@ public final class DataType extends AstEnum {
         this.length = null;
         this.elementType = null;
         this.fields = null;
+        this.intervalQualifier = null;
     }
 
     @Override
@@ -716,6 +776,15 @@ public final class DataType extends AstEnum {
      */
     public List<StructField> getFields() {
         return fields;
+    }
+
+    /**
+     * Returns the interval qualifier of this data type. If there is no interval qualifier, null is returned.
+     * @return the interval qualifier of this data type. If there is no interval qualifier, null is returned.
+     */
+    @Nullable
+    public IntervalQualifier getIntervalQualifier() {
+        return intervalQualifier;
     }
 
     @NotNull

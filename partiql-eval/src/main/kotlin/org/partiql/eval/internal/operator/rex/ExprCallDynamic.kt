@@ -125,7 +125,10 @@ internal class ExprCallDynamic(
         TIMESTAMP,
         COLLECTION,
         UNKNOWN,
-        DYNAMIC
+        DYNAMIC,
+        INTERVAL_YM,
+        INTERVAL_DT,
+        ;
     }
 
     private companion object {
@@ -163,6 +166,8 @@ internal class ExprCallDynamic(
                 PType.DYNAMIC -> DYNAMIC // TODO: REMOVE
                 PType.BLOB -> CoercionFamily.BINARY
                 PType.CLOB -> CoercionFamily.STRING
+                PType.INTERVAL_YM -> CoercionFamily.INTERVAL_YM
+                PType.INTERVAL_DT -> CoercionFamily.INTERVAL_DT
                 PType.UNKNOWN -> UNKNOWN // TODO: REMOVE
                 PType.VARIANT -> UNKNOWN // TODO: HANDLE VARIANT
                 else -> error("Unknown type: $type")

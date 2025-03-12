@@ -17,6 +17,8 @@ import org.partiql.spi.types.PType.DECIMAL
 import org.partiql.spi.types.PType.DOUBLE
 import org.partiql.spi.types.PType.DYNAMIC
 import org.partiql.spi.types.PType.INTEGER
+import org.partiql.spi.types.PType.INTERVAL_DT
+import org.partiql.spi.types.PType.INTERVAL_YM
 import org.partiql.spi.types.PType.NUMERIC
 import org.partiql.spi.types.PType.REAL
 import org.partiql.spi.types.PType.ROW
@@ -110,6 +112,7 @@ internal object CastTable {
         registerTime()
         registerTimestamp()
         registerVariant()
+        registerInterval()
     }
 
     private fun String.pad(): String {
@@ -499,6 +502,11 @@ internal object CastTable {
         register(TIMESTAMPZ, TIMESTAMPZ) { x, t -> Datum.timestampz(x.offsetDateTime, t.precision) }
         register(TIMESTAMPZ, TIME) { x, t -> Datum.time(x.localTime, t.precision) }
         register(TIMESTAMPZ, DATE) { x, _ -> Datum.date(x.localDate) }
+    }
+
+    private fun registerInterval() {
+        register(INTERVAL_YM, INTERVAL_YM) { v, t -> IntervalUtils.getIntervalYearMonth(v.years, v.months, t.precision, t.intervalCode) }
+        register(INTERVAL_DT, INTERVAL_DT) { v, t -> IntervalUtils.getIntervalDateTime(v.days, v.hours, v.minutes, v.seconds, v.nanos, t.precision, t.fractionalPrecision, t.intervalCode) }
     }
 
     private fun registerVariant() {
