@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- Template: after a release, copy and paste out below
-## [Unreleased] - YYYY-MM-DD
+## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
 
@@ -26,8 +26,26 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.2.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.0) - 2025-03-12
+
+### Added
 - Added parsing, planning, and execution of the interval type and interval values.
 - Added multiple operations involving datetime and interval values.
+- Added planning and evaluation of the LET clause
 
 ### Changed
 
@@ -43,6 +61,8 @@ Thank you to all who have contributed!
 
 Thank you to all who have contributed!
 - @johnedquinn
+- @lucaxchen
+- @mrugeshgharat
 
 ## [1.1.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.1.0) - 2025-02-14
 
