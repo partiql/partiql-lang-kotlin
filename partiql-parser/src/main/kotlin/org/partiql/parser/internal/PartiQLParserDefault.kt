@@ -2040,8 +2040,8 @@ internal class PartiQLParserDefault : PartiQLParser {
                 else -> throw error(ctx, "Expected LEAD or LAG")
             }
             val extent = visitExpr(ctx.extent)
-            val offset = ctx.offset.text.toLong()
-            val default = ctx.default_.let { visitExpr(it) }
+            val offset = ctx.offset?.text?.toLong()
+            val default = ctx.default_?.let { visitExpr(it) }
             val nullTreatment = ctx.windowFunctionNullTreatment()?.let { visitWindowFunctionNullTreatment(it) }
             WindowFunctionType.LeadOrLag(isLead, extent, offset, default, nullTreatment)
         }
