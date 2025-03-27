@@ -15,7 +15,7 @@ internal class LeadFunction(
         val index = offsetLong + currentPosition
 
         // Return if out-of-bounds
-        if (index >= partition.size()) {
+        if (index < 0 || index >= partition.size()) {
             return default.eval(env)
         }
 

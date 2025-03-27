@@ -12,14 +12,15 @@ internal class LagFunction(
 
     override fun eval(env: Environment): Datum {
         val offsetLong = offset.eval(env).long
+        val index = currentPosition - offsetLong
 
         // Return if out-of-bounds
-        if (offsetLong > currentPosition) {
+        if (index < 0 || index >= partition.size()) {
             return default.eval(env)
         }
 
         // Get lagged expression
-        val row = partition.get(currentPosition - offsetLong)
+        val row = partition.get(index)
         val newEnv = env.push(row)
         return expr.eval(newEnv)
     }
