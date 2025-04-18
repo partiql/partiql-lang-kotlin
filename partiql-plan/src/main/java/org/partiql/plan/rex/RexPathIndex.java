@@ -33,6 +33,7 @@ public abstract class RexPathIndex extends RexBase {
      * Gets the index.
      * @return index rex
      */
+    @NotNull
     public abstract Rex getIndex();
 
     @Override
