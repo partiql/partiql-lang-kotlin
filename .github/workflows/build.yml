@@ -15,7 +15,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         java: [11, 17]
@@ -65,7 +65,7 @@ jobs:
           flags: EXAMPLES
 
   randomized-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         java: [ 11, 17 ]
