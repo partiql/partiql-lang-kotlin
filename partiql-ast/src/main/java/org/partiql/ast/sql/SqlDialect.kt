@@ -535,14 +535,22 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         t = t concat "TRIM("
         // [LEADING|TRAILING|BOTH]
         val trimSpec = node.trimSpec
-        if (trimSpec != null) {
-            t = t concat "${trimSpec.name()} "
-        }
-        // [<chars> FROM]
         val chars = node.chars
-        if (chars != null) {
-            t = visitExprWrapped(chars, t)
-            t = t concat " FROM "
+        when {
+            trimSpec != null && chars != null -> {
+                t = t concat trimSpec.name()
+                t = t concat " "
+                t = visitExprWrapped(chars, t)
+                t = t concat " FROM "
+            }
+            trimSpec != null -> {
+                t = t concat trimSpec.name()
+                t = t concat " FROM "
+            }
+            chars != null -> {
+                t = visitExprWrapped(chars, t)
+                t = t concat " FROM "
+            }
         }
         t = visitExprWrapped(node.value, t)
         t = t concat ")"

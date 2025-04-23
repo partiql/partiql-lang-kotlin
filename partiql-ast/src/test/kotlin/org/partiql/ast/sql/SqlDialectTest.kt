@@ -1114,7 +1114,7 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "TRIM(BOTH x)",
+                "TRIM(BOTH FROM x)",
                 exprTrim(
                     value = v("x"),
                     chars = null,
