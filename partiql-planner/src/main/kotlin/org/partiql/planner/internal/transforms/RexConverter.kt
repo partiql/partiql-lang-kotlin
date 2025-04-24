@@ -477,12 +477,12 @@ internal object RexConverter {
                     is PathStep.Field -> {
                         when (step.field.isRegular) {
                             true -> {
-                                // case-sensitive path step becomes a key lookup
-                                rexOpPathKey(current, rexString(step.field.text))
-                            }
-                            false -> {
                                 // case-insensitive path step becomes a symbol lookup
                                 rexOpPathSymbol(current, step.field.text)
+                            }
+                            false -> {
+                                // case-sensitive path step becomes a key lookup
+                                rexOpPathKey(current, rexString(step.field.text))
                             }
                         }
                     }
