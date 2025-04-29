@@ -851,7 +851,12 @@ internal object RexConverter {
                 DataType.CHARACTER, DataType.CHAR -> call(FunctionUtils.OP_IS_CHAR, targetType.length.toRex(), arg0)
                 DataType.CHARACTER_VARYING, DataType.VARCHAR -> call(FunctionUtils.OP_IS_VARCHAR, targetType.length.toRex(), arg0)
                 DataType.CLOB -> call(FunctionUtils.OP_IS_CLOB, arg0)
-                DataType.STRING -> call(FunctionUtils.OP_IS_STRING, targetType.length.toRex(), arg0)
+                DataType.STRING -> {
+                    when (targetType.length) {
+                        null -> call(FunctionUtils.OP_IS_STRING, arg0)
+                        else -> call(FunctionUtils.OP_IS_STRING, targetType.length.toRex(), arg0)
+                    }
+                }
                 DataType.SYMBOL -> call(FunctionUtils.OP_IS_SYMBOL, arg0)
                 // <binary large object string type>
                 // TODO BINARY_LARGE_OBJECT
@@ -860,13 +865,20 @@ internal object RexConverter {
                 DataType.BIT -> call(FunctionUtils.OP_IS_BIT, arg0) // TODO define in parser
                 DataType.BIT_VARYING -> call(FunctionUtils.OP_IS_BIT_VARYING, arg0) // TODO define in parser
                 // <numeric types> - <exact numeric types>
-                DataType.NUMERIC -> call(FunctionUtils.OP_IS_NUMERIC, targetType.precision.toRex(), targetType.scale.toRex(), arg0)
-                DataType.DEC, DataType.DECIMAL -> call(
-                    FunctionUtils.OP_IS_DECIMAL,
-                    targetType.precision.toRex(),
-                    targetType.scale.toRex(),
-                    arg0
-                )
+                DataType.NUMERIC, DataType.DEC, DataType.DECIMAL -> {
+                    when {
+                        targetType.precision == null && targetType.scale == null -> call(
+                            FunctionUtils.OP_IS_DECIMAL,
+                            arg0
+                        )
+                        else -> call(
+                            FunctionUtils.OP_IS_DECIMAL,
+                            targetType.precision.toRex(),
+                            targetType.scale.toRex(),
+                            arg0
+                        )
+                    }
+                }
                 DataType.BIGINT, DataType.INT8, DataType.INTEGER8 -> call(FunctionUtils.OP_IS_INT64, arg0)
                 DataType.INT4, DataType.INTEGER4, DataType.INTEGER -> call(FunctionUtils.OP_IS_INT32, arg0)
                 DataType.INT -> call(FunctionUtils.OP_IS_INT, arg0)
