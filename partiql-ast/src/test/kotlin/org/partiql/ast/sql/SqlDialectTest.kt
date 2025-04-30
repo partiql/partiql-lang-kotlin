@@ -297,11 +297,11 @@ class SqlDialectTest {
                 exprNot(value = NULL)
             ),
             expect(
-                "+(NULL)",
+                "+NULL",
                 exprOperator(symbol = "+", lhs = null, rhs = NULL)
             ),
             expect(
-                "-(NULL)",
+                "-NULL",
                 exprOperator(symbol = "-", lhs = null, rhs = NULL)
             ),
             expect(
@@ -309,11 +309,11 @@ class SqlDialectTest {
                 exprNot(value = exprNot(value = NULL))
             ),
             expect(
-                "+(+(NULL))",
+                "+(+NULL)",
                 exprOperator(symbol = "+", lhs = null, rhs = exprOperator(symbol = "+", lhs = null, rhs = NULL))
             ),
             expect(
-                "-(-(NULL))",
+                "-(-NULL)",
                 exprOperator(
                     symbol = "-",
                     lhs = null,
@@ -321,7 +321,7 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "+(-(+(NULL)))",
+                "+(-(+NULL))",
                 exprOperator(
                     symbol = "+",
                     lhs = null,

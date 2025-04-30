@@ -3361,7 +3361,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitExprVarRef (Lorg/partiql/ast/expr/ExprVarRef;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprVariant (Lorg/partiql/ast/expr/ExprVariant;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprVariant (Lorg/partiql/ast/expr/ExprVariant;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public fun visitExprWrapped (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public fun visitExprWrapped (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/sql/SqlBlock;Z)Lorg/partiql/ast/sql/SqlBlock;
+	public static synthetic fun visitExprWrapped$default (Lorg/partiql/ast/sql/SqlDialect;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/sql/SqlBlock;ZILjava/lang/Object;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitFrom (Lorg/partiql/ast/From;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitFrom (Lorg/partiql/ast/From;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitFromExpr (Lorg/partiql/ast/FromExpr;Ljava/lang/Object;)Ljava/lang/Object;

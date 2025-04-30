@@ -128,8 +128,15 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
      * @param node
      * @param tail
      */
-    public open fun visitExprWrapped(node: Expr, tail: SqlBlock): SqlBlock = when (node) {
-        is ExprQuerySet -> {
+    public open fun visitExprWrapped(node: Expr, tail: SqlBlock, operator: Boolean = false): SqlBlock = when {
+        node is ExprQuerySet -> {
+            var t = tail
+            t = t concat "("
+            t = visit(node, t)
+            t = t concat ")"
+            t
+        }
+        node is ExprOperator && operator -> {
             var t = tail
             t = t concat "("
             t = visit(node, t)
@@ -264,15 +271,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         val lhs = node.lhs
         return if (lhs != null) {
             var t = tail
-            t = visitExprWrapped(lhs, t)
+            t = visitExprWrapped(lhs, t, operator = true)
             t = t concat " ${node.symbol} "
-            t = visitExprWrapped(node.rhs, t)
+            t = visitExprWrapped(node.rhs, t, operator = true)
             t
         } else {
             var t = tail
-            t = t concat node.symbol + "("
-            t = visitExprWrapped(node.rhs, t)
-            t = t concat ")"
+            t = t concat node.symbol
+            t = visitExprWrapped(node.rhs, t, operator = true)
             return t
         }
     }
