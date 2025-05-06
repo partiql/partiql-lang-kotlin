@@ -871,6 +871,12 @@ internal object RexConverter {
                             FunctionUtils.OP_IS_DECIMAL,
                             arg0
                         )
+                        targetType.scale == null -> call(
+                            FunctionUtils.OP_IS_DECIMAL,
+                            targetType.precision.toRex(),
+                            0.toRex(),
+                            arg0
+                        )
                         else -> call(
                             FunctionUtils.OP_IS_DECIMAL,
                             targetType.precision.toRex(),
