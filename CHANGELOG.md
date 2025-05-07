@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.2.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.1) - 2025-05-07
+
+### Added
 - added missing `NotNull` annotation for `RexPathIndex`'s `getIndex` function
 
 ### Changed
@@ -45,6 +62,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @alancai98
 
 ## [1.2.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.0) - 2025-03-12
 
