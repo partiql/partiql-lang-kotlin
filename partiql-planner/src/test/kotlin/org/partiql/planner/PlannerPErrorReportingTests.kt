@@ -163,13 +163,11 @@ internal class PlannerPErrorReportingTests {
                 "MISSING.a",
                 false,
                 assertOnProblemCount(1, 0),
-                expectedType = PType.unknown().toCType()
             ),
             TestCase(
                 "MISSING.a",
                 true,
                 assertOnProblemCount(0, 1),
-                expectedType = PType.unknown().toCType()
             ),
             // Attempting to do path navigation(index) on missing(which is not list)
             //  returns missing in quite mode, and error out in signal mode
@@ -205,7 +203,6 @@ internal class PlannerPErrorReportingTests {
                 "MISSING['a'].a",
                 false,
                 assertOnProblemCount(2, 0),
-                expectedType = PType.unknown().toCType()
             ),
             // TODO: We currently don't have a good way to retain missing value information. The following test
             //  could have 2 errors. One for executing a path operation on a literal missing. And one for
@@ -214,7 +211,6 @@ internal class PlannerPErrorReportingTests {
                 "MISSING['a'].a",
                 true,
                 assertOnProblemCount(0, 2),
-                expectedType = PType.unknown().toCType()
             ),
             TestCase(
                 """

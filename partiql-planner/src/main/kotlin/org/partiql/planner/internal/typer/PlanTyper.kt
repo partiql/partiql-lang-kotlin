@@ -884,8 +884,12 @@ internal class PlanTyper(private val env: Env, config: Context) {
         private fun replaceCaseBranch(originalRex: Rex, outputType: CompilerType, function: DynamicTyper.Mapping): Rex {
             return when (function) {
                 is DynamicTyper.Mapping.Coercion -> {
-                    val cast = env.resolveCast(originalRex, function.target)!!
-                    Rex(outputType, cast)
+                    if (originalRex.type == function.target) {
+                        originalRex
+                    } else {
+                        val cast = env.resolveCast(originalRex, function.target)!!
+                        Rex(outputType, cast)
+                    }
                 }
                 is DynamicTyper.Mapping.Replacement -> {
                     function.replacement

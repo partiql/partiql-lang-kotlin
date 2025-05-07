@@ -168,7 +168,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
             val fn = node.fn
-            val args = node.args.map { visitRex(it, ctx) }
+            val args = node.args.map { visitRex(it, it.type) }
             return operators.call(fn, args)
         }
 

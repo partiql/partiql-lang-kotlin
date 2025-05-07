@@ -26,14 +26,20 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- added missing `NotNull` annotation for `RexPathIndex`'s `getIndex` function
 
 ### Changed
 
 ### Deprecated
 
 ### Fixed
+- fixed plan typing of function arguments which were previously typed the same as the function's return type
+- fixed pretty-printing of `TRIM` and binary operator parens
+- fixed the AST to plan conversion of `PathStep.Field` case-sensitivity
+- fixed the AST to plan resolving of `IS <type>` functions for `<type>`s with parameters
 
 ### Removed
+- redundant `CAST`s added for `CASE WHEN` branches
 
 ### Security
 

@@ -128,8 +128,15 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
      * @param node
      * @param tail
      */
-    public open fun visitExprWrapped(node: Expr, tail: SqlBlock): SqlBlock = when (node) {
-        is ExprQuerySet -> {
+    public open fun visitExprWrapped(node: Expr, tail: SqlBlock, operator: Boolean = false): SqlBlock = when {
+        node is ExprQuerySet -> {
+            var t = tail
+            t = t concat "("
+            t = visit(node, t)
+            t = t concat ")"
+            t
+        }
+        node is ExprOperator && operator -> {
             var t = tail
             t = t concat "("
             t = visit(node, t)
@@ -264,15 +271,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         val lhs = node.lhs
         return if (lhs != null) {
             var t = tail
-            t = visitExprWrapped(lhs, t)
+            t = visitExprWrapped(lhs, t, operator = true)
             t = t concat " ${node.symbol} "
-            t = visitExprWrapped(node.rhs, t)
+            t = visitExprWrapped(node.rhs, t, operator = true)
             t
         } else {
             var t = tail
-            t = t concat node.symbol + "("
-            t = visitExprWrapped(node.rhs, t)
-            t = t concat ")"
+            t = t concat node.symbol
+            t = visitExprWrapped(node.rhs, t, operator = true)
             return t
         }
     }
@@ -535,14 +541,22 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         t = t concat "TRIM("
         // [LEADING|TRAILING|BOTH]
         val trimSpec = node.trimSpec
-        if (trimSpec != null) {
-            t = t concat "${trimSpec.name()} "
-        }
-        // [<chars> FROM]
         val chars = node.chars
-        if (chars != null) {
-            t = visitExprWrapped(chars, t)
-            t = t concat " FROM "
+        when {
+            trimSpec != null && chars != null -> {
+                t = t concat trimSpec.name()
+                t = t concat " "
+                t = visitExprWrapped(chars, t)
+                t = t concat " FROM "
+            }
+            trimSpec != null -> {
+                t = t concat trimSpec.name()
+                t = t concat " FROM "
+            }
+            chars != null -> {
+                t = visitExprWrapped(chars, t)
+                t = t concat " FROM "
+            }
         }
         t = visitExprWrapped(node.value, t)
         t = t concat ")"
