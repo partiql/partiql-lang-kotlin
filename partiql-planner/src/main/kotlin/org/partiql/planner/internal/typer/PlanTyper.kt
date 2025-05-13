@@ -37,6 +37,7 @@ import org.partiql.planner.internal.ir.relOpScan
 import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpUnpivot
+import org.partiql.planner.internal.ir.relOpWindow
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCoalesce
@@ -223,6 +224,38 @@ internal class PlanTyper(private val env: Env, config: Context) {
             // rewrite
             val op = relOpScanIndexed(rex)
             return rel(type, op)
+        }
+
+        override fun visitRelOpWindow(node: Rel.Op.Window, ctx: Rel.Type?): Rel {
+            val input = visitRel(node.input, ctx)
+            val functions = node.functions.map { visitRelOpWindowWindowFunction(it, input.type) }
+            val partitions = node.partitions.map { it.type(input.type.schema, outer) }
+            val sorts = node.sorts.map {
+                val rex = it.rex.type(input.type.schema, outer)
+                it.copy(rex = rex)
+            }
+            val schema = ctx!!.copyWithSchema(input.type.schema.map { it.type } + functions.map { it.returnType!! })
+            val window = relOpWindow(input, functions, partitions, sorts)
+            return rel(schema, window)
+        }
+
+        /**
+         * TODO: _Maybe_ we want to eventually create a dedicated PError for WINDOW_FUNCTION_NOT_FOUND, however, until this
+         *  is a request, we will reuse the [PError.FUNCTION_NOT_FOUND] error code.
+         */
+        override fun visitRelOpWindowWindowFunction(node: Rel.Op.Window.WindowFunction, ctx: Rel.Type?): Rel.Op.Window.WindowFunction {
+            val args = node.args.map { it.type(ctx!!.schema, outer) }
+            if (node.isIgnoreNulls) {
+                _listener.report(PErrors.featureNotSupported("IGNORE NULLS"))
+            }
+            val windowFunction = env.resolveWindowFn(node.name, args, node.isIgnoreNulls)
+            if (windowFunction == null) {
+                val fnId = Identifier.regular(node.name)
+                val argTypes = args.map { it.type }
+                _listener.report(PErrors.functionNotFound(null, fnId, argTypes))
+                return node.copy(args = args)
+            }
+            return windowFunction
         }
 
         /**

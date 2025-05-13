@@ -201,6 +201,26 @@ querySpecification
         where=whereClauseSelect?
         group=groupClause?
         having=havingClause?
+        window=windowClause?
+    ;
+
+/**
+ * EBNF 2023:
+ * <window clause> ::= WINDOW <window definition list>
+ * <window definition list> ::= <window definition> [ { <comma> <window definition> }... ]
+ */
+windowClause
+    : WINDOW windowDefinition (COMMA windowDefinition)*
+    ;
+
+/**
+ * EBNF 2023:
+ * <window definition> ::= <new window name> AS <window specification>
+ * <new window name> ::= <window name>
+ * <window name> ::= <identifier>
+ */
+windowDefinition
+    : name=symbolPrimitive AS windowSpecification
     ;
 
 //
@@ -519,6 +539,9 @@ withColumnList
  *
  */
 
+/**
+ * <sort specification> ::= <sort key> [ <ordering specification> ] [ <null ordering> ]
+ */
 orderByClause
     : ORDER BY orderSortSpec ( COMMA orderSortSpec )*;
 
@@ -539,25 +562,6 @@ groupAlias
 
 groupKey
     : key=expr (AS symbolPrimitive)?;
-
-/**
- *
- * Window Function
- * TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
- *
- */
-
-over
-   : OVER PAREN_LEFT windowPartitionList? windowSortSpecList? PAREN_RIGHT
-   ;
-
-windowPartitionList
-   : PARTITION BY expr (COMMA expr)*
-   ;
-
-windowSortSpecList
-   : ORDER BY orderSortSpec (COMMA orderSortSpec)*
-   ;
 
 /**
  *
@@ -982,17 +986,98 @@ overlay
     | OVERLAY PAREN_LEFT expr PLACING expr FROM expr (FOR expr)? PAREN_RIGHT
     ;
 
-// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 /**
-*
-* Supported Window Functions:
-* 1. LAG(expr, [offset [, default]]) OVER([window_partition] window_ordering)
-* 2. LEAD(expr, [offset [, default]]) OVER([window_partition] window_ordering)
-*
-*/
-windowFunction
-    : func=(LAG|LEAD) PAREN_LEFT expr ( COMMA expr (COMMA expr)?)? PAREN_RIGHT over #LagLeadFunction
+ * RFC: https://github.com/partiql/partiql-docs/issues/31.
+ * EBNF 2023:
+ * <window function> ::= <window function type> OVER <window name or specification>
+ */
+windowFunction: funcType=windowFunctionType OVER spec=windowNameOrSpecification;
+
+/**
+ * EBNF 2023:
+ * <window function type> ::=
+ *   <rank function type> <left paren> <right paren>
+ *   | ROW_NUMBER <left paren> <right paren>
+ *   | <lead or lag function>
+ *   | and more...
+ */
+windowFunctionType
+    : rankFunctionType PAREN_LEFT PAREN_RIGHT # WindowFunctionTypeRank
+    | ROW_NUMBER PAREN_LEFT PAREN_RIGHT       # WindowFunctionTypeRowNumber
+    | leadOrLagFunction                       # WindowFunctionTypeLeadOrLag
     ;
+
+/**
+ * EBNF 2023:
+ * <rank function type> ::= RANK | DENSE_RANK | PERCENT_RANK | CUME_DIST
+ */
+rankFunctionType
+    : RANK | DENSE_RANK | PERCENT_RANK | CUME_DIST
+    ;
+
+/**
+ * EBNF 2023:
+ * <lead or lag function> ::=
+ *   <lead or lag> <left paren> <lead or lag extent>
+ *   [ <comma> <offset> [ <comma> <default expression> ] ] <right paren>
+ *   [ <window function null treatment> ]
+ * <lead or lag extent> ::= <value expression>
+ * <offset> ::= <unsigned integer>
+ * <default expression> ::= <value expression>
+ */
+leadOrLagFunction
+    : name=(LEAD|LAG) PAREN_LEFT extent=expr (COMMA offset=LITERAL_INTEGER (COMMA default=expr)? )? PAREN_RIGHT windowFunctionNullTreatment?
+    ;
+
+/**
+ * EBNF 2023:
+ * <window function null treatment> ::= RESPECT NULLS | IGNORE NULLS
+ */
+windowFunctionNullTreatment
+    : RESPECT NULLS
+    | IGNORE NULLS
+    ;
+
+/**
+ * EBNF 2023:
+ * <window name or specification> ::= <window name> | <in-line window specification>
+ * <window name> ::= <identifier>
+ * <in-line window specification> ::= <window specification>
+ */
+windowNameOrSpecification
+    : symbolPrimitive       # WindowNameOrSpec1
+    | windowSpecification   # WindowNameOrSpec2
+    ;
+
+/**
+ * EBNF 2023:
+ * <window specification> ::= <left paren> <window specification details> <right paren>
+ * <window specification details> ::= [ <existing window name> ] [ <window partition clause> ] [ <window order clause> ] [ <window frame clause> ]
+ * <existing window name> ::= <window name>
+ * <window frame clause> ::= ...
+ */
+windowSpecification
+    : PAREN_LEFT
+        existingWindowName=symbolPrimitive?
+        partition=windowPartitionClause?
+        order=orderByClause?
+        // TODO: windowFrameClause
+        PAREN_RIGHT
+    ;
+
+/**
+ * <window partition clause> ::= PARTITION BY <window partition column reference list>
+ * <window partition column reference list> ::= <window partition column reference> [ { <comma> <window partition column reference> }... ]
+ */
+windowPartitionClause: PARTITION BY col+=windowPartitionColumnReference (COMMA col+=windowPartitionColumnReference)*;
+
+/**
+ * <window partition column reference> ::= <column reference> [ <collate clause> ]
+ * <column reference> ::=
+ *   <basic identifier chain>
+ *   | MODULE <period> <qualified identifier> <period> <column name>
+ */
+windowPartitionColumnReference: qualifiedName;
 
 cast
     : CAST PAREN_LEFT expr AS type PAREN_RIGHT;
@@ -1083,14 +1168,14 @@ nonReserved
     | COLUMN_NAME | COMMAND_FUNCTION | COMMAND_FUNCTION_CODE | COMMITTED
     | CONDITION_IDENTIFIER | CONDITION_NUMBER | CONNECTION_NAME
     | CONSTRAINT_CATALOG | CONSTRAINT_NAME | CONSTRAINT_SCHEMA | CONTAINS
-    | CONVERT | COUNT | CURSOR_NAME
+    | CONVERT | COUNT | CUME_DIST | CURSOR_NAME
     | DATETIME_INTERVAL_CODE | DATETIME_INTERVAL_PRECISION | DEFINED
-    | DEFINER | DEGREE | DERIVED | DISPATCH
+    | DEFINER | DEGREE | DENSE_RANK | DERIVED | DISPATCH
     | EVERY | EXTRACT
     | FINAL | FORTRAN
     | G | GENERATED | GRANTED
     | HIERARCHY
-    | IMPLEMENTATION | INSENSITIVE | INSTANCE | INSTANTIABLE | INVOKER
+    | IGNORE | IMPLEMENTATION | INSENSITIVE | INSTANCE | INSTANTIABLE | INVOKER
     | K | KEY_MEMBER | KEY_TYPE
     | LENGTH | LOWER
     | M | MAX | MIN | MESSAGE_LENGTH | MESSAGE_OCTET_LENGTH | MESSAGE_TEXT
@@ -1099,8 +1184,8 @@ nonReserved
     | OCTET_LENGTH | ORDERING | OPTIONS | OVERLAY | OVERRIDING
     | PASCAL | PARAMETER_MODE | PARAMETER_NAME
     | PARAMETER_ORDINAL_POSITION | PARAMETER_SPECIFIC_CATALOG
-    | PARAMETER_SPECIFIC_NAME | PARAMETER_SPECIFIC_SCHEMA | PLI | POSITION
-    | REPEATABLE | RETURNED_CARDINALITY | RETURNED_LENGTH
+    | PARAMETER_SPECIFIC_NAME | PARAMETER_SPECIFIC_SCHEMA | PERCENT_RANK | PLI | POSITION
+    | RANK | REPEATABLE | RESPECT | RETURNED_CARDINALITY | RETURNED_LENGTH
     | RETURNED_OCTET_LENGTH | RETURNED_SQLSTATE | ROUTINE_CATALOG
     | ROUTINE_NAME | ROUTINE_SCHEMA | ROW_COUNT
     | SCALE | SCHEMA_NAME | SCOPE | SECURITY | SELF | SENSITIVE | SERIALIZABLE
