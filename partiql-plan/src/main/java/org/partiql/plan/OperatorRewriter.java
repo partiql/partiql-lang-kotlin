@@ -249,7 +249,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> projects_new = visitAll(projections, ctx, this::visitProjection);
         // rewrite projection
         if (input != input_new || projections != projects_new) {
-            return operators.project(input_new, projects_new);
+            RelProject newOp = operators.project(input_new, projects_new);
+            newOp.setType(rel.getType()); // TODO: types are lost for all plan nodes when rewritten with `OperatorRewriter`; we need to fix for all other nodes
+            return newOp;
         }
         return rel;
     }
