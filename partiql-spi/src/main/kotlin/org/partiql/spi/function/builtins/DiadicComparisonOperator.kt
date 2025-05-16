@@ -21,9 +21,8 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
     override fun getInstance(args: Array<PType>): Fn? {
         val lhs = args[0]
         val rhs = args[1]
-        val hasDecimal = lhs.code() == PType.DECIMAL || rhs.code() == PType.DECIMAL
         val allNumbers = (SqlTypeFamily.NUMBER.contains(lhs) && SqlTypeFamily.NUMBER.contains(rhs))
-        if (hasDecimal && allNumbers) {
+        if (allNumbers) {
             return getNumberInstance(lhs, rhs)
         }
         return super.getInstance(args)
@@ -39,7 +38,7 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
 
     abstract fun getNumberComparison(lhs: Number, rhs: Number): Boolean
 
-    private fun Datum.getNumber(): Number {
+    internal fun Datum.getNumber(): Number {
         return when (this.type.code()) {
             PType.TINYINT -> this.byte
             PType.INTEGER -> this.int
