@@ -160,7 +160,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
             // TODO assert on function name in plan typer .. here is not the place.
-            val args = node.args.map { visitRex(it, ctx) }
+            val args = node.args.map { visitRex(it, it.type) }
             val fns = node.candidates.map { it.fn.signature }
             val name = node.candidates.first().fn.name.getName()
             return operators.dispatch(name, fns, args)
@@ -181,26 +181,26 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpCastResolved(node: IRex.Op.Cast.Resolved, ctx: PType): Any {
-            val operand = visitRex(node.arg, ctx)
+            val operand = visitRex(node.arg, node.arg.type)
             val target = node.cast.target
             return operators.cast(operand, target)
         }
 
         override fun visitRexOpPathSymbol(node: IRex.Op.Path.Symbol, ctx: PType): Any {
-            val operand = visitRex(node.root, ctx)
+            val operand = visitRex(node.root, node.root.type)
             val symbol = node.key
             return operators.pathSymbol(operand, symbol)
         }
 
         override fun visitRexOpPathKey(node: IRex.Op.Path.Key, ctx: PType): Any {
-            val operand = visitRex(node.root, ctx)
-            val key = visitRex(node.key, ctx)
+            val operand = visitRex(node.root, node.root.type)
+            val key = visitRex(node.key, node.key.type)
             return operators.pathKey(operand, key)
         }
 
         override fun visitRexOpPathIndex(node: IRex.Op.Path.Index, ctx: PType): Any {
-            val operand = visitRex(node.root, ctx)
-            val index = visitRex(node.key, ctx)
+            val operand = visitRex(node.root, node.root.type)
+            val index = visitRex(node.key, node.key.type)
             return operators.pathIndex(operand, index)
         }
 
