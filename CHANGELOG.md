@@ -33,6 +33,7 @@ Thank you to all who have contributed!
 
 ### Fixed
 - `BETWEEN` operator function overloads in the partiql-planner
+- Mistyping of some Rex plan nodes
 
 ### Removed
 
