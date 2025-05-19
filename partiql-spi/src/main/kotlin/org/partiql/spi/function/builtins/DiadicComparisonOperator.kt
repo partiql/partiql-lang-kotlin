@@ -39,7 +39,7 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
 
     abstract fun getNumberComparison(lhs: Number, rhs: Number): Boolean
 
-    private fun Datum.getNumber(): Number {
+    internal fun Datum.getNumber(): Number {
         return when (this.type.code()) {
             PType.TINYINT -> this.byte
             PType.INTEGER -> this.int
