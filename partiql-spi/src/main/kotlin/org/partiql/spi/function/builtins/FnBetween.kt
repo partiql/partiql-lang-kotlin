@@ -5,11 +5,11 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function.instance
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
-import org.partiql.spi.function.builtins.FnGt.getNumber
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.NumberUtils.compareTo
+import org.partiql.spi.utils.getNumber
 import org.partiql.spi.value.Datum
 
 internal object FnBetween : FnOverload() {
