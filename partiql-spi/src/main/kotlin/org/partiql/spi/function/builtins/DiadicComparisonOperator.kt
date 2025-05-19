@@ -3,6 +3,7 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Fn
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.getNumber
 import org.partiql.spi.value.Datum
 
 /**
@@ -38,18 +39,4 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
     }
 
     abstract fun getNumberComparison(lhs: Number, rhs: Number): Boolean
-
-    private fun Datum.getNumber(): Number {
-        return when (this.type.code()) {
-            PType.TINYINT -> this.byte
-            PType.INTEGER -> this.int
-            PType.SMALLINT -> this.short
-            PType.BIGINT -> this.long
-            PType.REAL -> this.float
-            PType.DOUBLE -> this.double
-            PType.DECIMAL -> this.bigDecimal
-            PType.NUMERIC -> this.bigDecimal
-            else -> error("Unexpected type: ${this.type}")
-        }
-    }
 }

@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- `BETWEEN` operator function overloads in the partiql-planner
 
 ### Removed
 
