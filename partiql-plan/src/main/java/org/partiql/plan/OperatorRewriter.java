@@ -60,7 +60,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> groups_new = visitAll(groups, ctx, this::visitAggregateGroup);
         // rewrite aggregate
         if (input != input_new || measures != measures_new || groups != groups_new) {
-            return operators.aggregate(input_new, measures_new, groups_new);
+            RelAggregate newOp = operators.aggregate(input_new, measures_new, groups_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -93,7 +95,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rel right_new = visit(right, ctx, Rel.class);
         // rewrite correlate
         if (left != left_new || right != right_new) {
-            return operators.correlate(left_new, right_new, rel.getJoinType());
+            RelCorrelate newOp = operators.correlate(left_new, right_new, rel.getJoinType());
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -106,7 +110,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rel input_new = visit(input, ctx, Rel.class);
         // rewrite distinct
         if (input != input_new) {
-            return operators.distinct(input_new);
+            RelDistinct newOp = operators.distinct(input_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -122,7 +128,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rel right_new = visit(right, ctx, Rel.class);
         // rewrite except
         if (left != left_new || right != right_new) {
-            return operators.except(left_new, right_new, rel.isAll());
+            RelExcept newOp = operators.except(left_new, right_new, rel.isAll());
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -138,7 +146,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Exclusion> exclusions_new = visitAll(exclusions, ctx, this::visitExclusions);
         // rewrite exclude
         if (input != input_new) {
-            return operators.exclude(input_new, exclusions_new);
+            RelExclude newOp = operators.exclude(input_new, exclusions_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -159,7 +169,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex predicate_new = visit(predicate, ctx, Rex.class);
         // rewrite filter
         if (input != input_new || predicate != predicate_new) {
-            return operators.filter(input_new, predicate_new);
+            RelFilter newOp = operators.filter(input_new, predicate_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -174,7 +186,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rel right_new = visit(right, ctx, Rel.class);
         // rewrite intersect
         if (left != left_new || right != right_new) {
-            return operators.intersect(left_new, right_new, rel.isAll());
+            RelIntersect newOp = operators.intersect(left_new, right_new, rel.isAll());
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -186,7 +200,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex rex_new = visit(rex, ctx, Rex.class);
         // rewrite iterate
         if (rex != rex_new) {
-            return operators.iterate(rex_new);
+            RelIterate newOp = operators.iterate(rex_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -204,7 +220,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex condition_new = visit(condition, ctx, Rex.class);
         // rewrite join
         if (left != left_new || right != right_new || condition != condition_new) {
-            return operators.join(left_new, right_new, condition_new, rel.getJoinType());
+            RelJoin newOp = operators.join(left_new, right_new, condition_new, rel.getJoinType());
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -219,7 +237,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex limit_new = visit(limit, ctx, Rex.class);
         // rewrite limit
         if (input != input_new || limit != limit_new) {
-            return operators.limit(input_new, limit_new);
+            RelLimit newOp = operators.limit(input_new, limit_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -234,7 +254,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex offset_new = visit(offset, ctx, Rex.class);
         // rewrite offset
         if (input != input_new || offset != offset_new) {
-            return operators.offset(input_new, offset_new);
+            RelOffset newOp = operators.offset(input_new, offset_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -249,7 +271,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> projects_new = visitAll(projections, ctx, this::visitProjection);
         // rewrite projection
         if (input != input_new || projections != projects_new) {
-            return operators.project(input_new, projects_new);
+            RelProject newOp = operators.project(input_new, projects_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -267,7 +291,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex rex_new = visit(rex, ctx, Rex.class);
         // rewrite scan
         if (rex != rex_new) {
-            return operators.scan(rex_new);
+            RelScan newOp = operators.scan(rex_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -282,7 +308,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Collation> collations_new = visitAll(collations, ctx, this::visitCollation);
         // rewrite sort
         if (input != input_new || collations != collations_new) {
-            return operators.sort(input_new, collations_new);
+            RelSort newOp = operators.sort(input_new, collations_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -303,7 +331,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rel right_new = visit(right, ctx, Rel.class);
         // rewrite union
         if (left != left_new || right != right_new) {
-            return operators.union(left_new, right_new, rel.isAll());
+            RelUnion newOp = operators.union(left_new, right_new, rel.isAll());
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -313,7 +343,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex rex = rel.getRex();
         Rex rex_new = visit(rex, ctx, Rex.class);
         if (rex != rex_new) {
-            return operators.unpivot(rex);
+            RelUnpivot newOp = operators.unpivot(rex_new);
+            newOp.setType(rel.getType());
+            return newOp;
         }
         return rel;
     }
@@ -325,7 +357,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> values_new = visitAll(values, ctx, this::visitRex);
         // rewrite array
         if (values != values_new) {
-            return operators.array(values_new);
+            RexArray newOp = operators.array(values_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -337,7 +371,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> values_new = visitAll(values, ctx, this::visitRex);
         // rewrite bag
         if (values != values_new) {
-            return operators.bag(values_new);
+            RexBag newOp = operators.bag(values_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -349,7 +385,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> args_new = visitAll(args, ctx, this::visitRex);
         // rewrite call
         if (args != args_new) {
-            return operators.call(rex.getFunction(), args_new);
+            RexCall newOp = operators.call(rex.getFunction(), args_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -367,7 +405,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex default_new = (default_ != null) ? visit(default_, ctx, Rex.class) : null;
         // rewrite case
         if (match != match_new || branches != branches_new || default_ != default_new) {
-            return operators.caseWhen(match_new, branches_new, default_new);
+            RexCase newOp = operators.caseWhen(match_new, branches_new, default_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -394,7 +434,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex operand_new = visit(operand, ctx, Rex.class);
         // rewrite cast
         if (operand != operand_new) {
-            return operators.cast(operand_new, rex.getTarget());
+            RexCast newOp = operators.cast(operand_new, rex.getTarget());
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -406,7 +448,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> args_new = visitAll(args, ctx, this::visitRex);
         // rewrite coalesce
         if (args != args_new) {
-            return operators.coalesce(args_new);
+            RexCoalesce newOp = operators.coalesce(args_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -418,7 +462,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> args_new = visitAll(args, ctx, this::visitRex);
         // rewrite dispatch
         if (args != args_new) {
-            return operators.dispatch(rex.getName(), rex.getFunctions(), args_new);
+            RexDispatch newOp = operators.dispatch(rex.getName(), rex.getFunctions(), args_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -443,7 +489,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex v2_new = visit(v2, ctx, Rex.class);
         // rewrite nullif
         if (v1 != v1_new || v2 != v2_new) {
-            return operators.nullIf(v1_new, v2_new);
+            RexNullIf newOp = operators.nullIf(v1_new, v2_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -458,7 +506,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex index_new = visit(index, ctx, Rex.class);
         // rewrite path index
         if (operand != operand_new || index != index_new) {
-            return operators.pathIndex(operand_new, index_new);
+            RexPathIndex newOp = operators.pathIndex(operand_new, index_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -473,7 +523,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex key_new = visit(key, ctx, Rex.class);
         // rewrite path key
         if (operand != operand_new || key != key_new) {
-            return operators.pathKey(operand_new, key_new);
+            RexPathKey newOp = operators.pathKey(operand_new, key_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -485,7 +537,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex operand_new = visit(operand, ctx, Rex.class);
         // rewrite path symbol
         if (operand != operand_new) {
-            return operators.pathSymbol(operand_new, rex.getSymbol());
+            RexPathSymbol newOp = operators.pathSymbol(operand_new, rex.getSymbol());
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -503,7 +557,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex value_new = visit(value, ctx, Rex.class);
         // rewrite pivot
         if (input != input_new || key != key_new || value != value_new) {
-            return operators.pivot(input_new, key_new, value_new);
+            RexPivot newOp = operators.pivot(input_new, key_new, value_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -518,7 +574,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex constructor_new = visit(constructor, ctx, Rex.class);
         // rewrite select
         if (input != input_new || constructor != constructor_new) {
-            return operators.select(input_new, constructor_new);
+            RexSelect newOp = operators.select(input_new, constructor_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -530,7 +588,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Field> fields_new = visitAll(fields, ctx, this::visitStructField);
         // rewrite struct
         if (fields != fields_new) {
-            return operators.struct(fields_new);
+            RexStruct newOp = operators.struct(fields_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -560,7 +620,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex constructor_new = visit(constructor, ctx, Rex.class);
         // rewrite subquery
         if (input != input_new || constructor != constructor_new) {
-            return operators.subquery(input_new, constructor_new, rex.isScalar());
+            RexSubquery newOp = operators.subquery(input_new, constructor_new, rex.isScalar());
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -575,7 +637,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> args_new = visitAll(args, ctx, this::visitRex);
         // rewrite subquery comp
         if (input != input_new) {
-            return operators.subqueryComp(input_new, args_new, rex.getComparison(), rex.getQuantifier());
+            RexSubqueryComp newOp = operators.subqueryComp(input_new, args_new, rex.getComparison(), rex.getQuantifier());
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -590,7 +654,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> args_new = visitAll(args, ctx, this::visitRex);
         // rewrite subquery in
         if (input != input_new) {
-            return operators.subqueryIn(input_new, args_new);
+            RexSubqueryIn newOp = operators.subqueryIn(input_new, args_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -602,7 +668,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rel input_new = visit(input, ctx, Rel.class);
         // rewrite subquery test
         if (input != input_new) {
-            return operators.subqueryTest(input_new, rex.getTest());
+            RexSubqueryTest newOp = operators.subqueryTest(input_new, rex.getTest());
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
@@ -614,7 +682,9 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Rex> args_new = visitAll(args, ctx, this::visitRex);
         // rewrite spread
         if (args != args_new) {
-            return operators.spread(args_new);
+            RexSpread newOp = operators.spread(args_new);
+            newOp.setType(rex.getType());
+            return newOp;
         }
         return rex;
     }
