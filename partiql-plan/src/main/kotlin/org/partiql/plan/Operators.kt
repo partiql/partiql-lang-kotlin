@@ -52,6 +52,8 @@ import org.partiql.spi.value.Datum
  * The [Operators] interface is a factory to instantiate operator implementations.
  *
  * There is only ONE factory method per operators – i.e. no overloads or defaults.
+ *
+ * TODO support defining the type along with the operator's fields.
  */
 public interface Operators {
 
