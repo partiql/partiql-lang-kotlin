@@ -10,10 +10,14 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.types.PType
 import kotlin.test.Test
 
+/**
+ * Tests for converting the internal PartiQL plan to the public PartiQL plan.
+ */
 class InternalToPublicPlanTest {
     val parser = PartiQLParser.standard()
     val planner = PartiQLPlanner.standard()
 
+    // Test that the types are converted correctly from the internal plan to the public plan.
     @Test
     fun testCollectionArgs() {
         val parserResult = parser.parse("<<1>>")
