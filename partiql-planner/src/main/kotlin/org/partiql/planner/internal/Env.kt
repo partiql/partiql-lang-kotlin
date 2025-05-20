@@ -67,9 +67,11 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
         }
     }
 
-    fun getCandidates(identifier: Identifier, args: List<Rex>): List<FnOverload> {
+    fun getCandidates(identifier: Identifier, args: List<Rex>): List<FnOverload> = getCandidates(identifier, args.size)
+
+    fun getCandidates(identifier: Identifier, arity: Int): List<FnOverload> {
         return findFirstInCatalog { catalog ->
-            getCandidates(identifier, args, catalog)
+            getCandidates(identifier, arity, catalog)
         } ?: emptyList()
     }
 
@@ -77,6 +79,14 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
         return findFirstInCatalog { catalog ->
             resolveAgg(path, setQuantifier, args, catalog)
         }
+    }
+
+    fun getAggCandidates(path: String, args: List<Rex>): List<AggOverload> = getAggCandidates(path, args.size)
+
+    fun getAggCandidates(path: String, arity: Int): List<AggOverload> {
+        return findFirstInCatalog { catalog ->
+            getAggCandidates(path, arity, catalog)
+        } ?: emptyList()
     }
 
     /**
@@ -129,7 +139,13 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
     /**
      * @return a list of candidate functions that match the [identifier] and number of [args].
      */
-    fun getCandidates(identifier: Identifier, args: List<Rex>, catalog: Catalog): List<FnOverload>? {
+    fun getCandidates(identifier: Identifier, args: List<Rex>, catalog: Catalog): List<FnOverload>? =
+        getCandidates(identifier, args.size, catalog)
+
+    /**
+     * @return a list of candidate functions that match the [identifier] and number of [args].
+     */
+    fun getCandidates(identifier: Identifier, arity: Int, catalog: Catalog): List<FnOverload>? {
         // Reject qualified routine names.
         if (identifier.hasQualifier()) {
             error("Qualified functions are not supported.")
@@ -138,7 +154,21 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
         // 1. Search in the current catalog and namespace.
         val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
         val variants = catalog.getFunctions(session, name).toList()
-        val candidates = variants.filter { it.signature.arity == args.size }
+        val candidates = variants.filter { it.signature.arity == arity }
+        if (candidates.isEmpty()) {
+            return null
+        }
+        return candidates
+    }
+
+    /**
+     * @return a list of candidate aggregation functions that match the [identifier] and number of [args].
+     */
+    fun getAggCandidates(path: String, arity: Int, catalog: Catalog): List<AggOverload>? {
+        // 1. Search in the current catalog and namespace.
+        val name = path.lowercase() // CASE-NORMALIZED LOWER
+        val variants = catalog.getAggregations(session, name).toList()
+        val candidates = variants.filter { it.signature.arity == arity }
         if (candidates.isEmpty()) {
             return null
         }
@@ -186,6 +216,7 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
                 // Rewrite as a dynamic call to be typed by PlanTyper
                 Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Dynamic(args, candidates))
             }
+
             is FnMatch.Static -> {
                 // Apply the coercions as explicit casts
                 val coercions: List<Rex> = args.mapIndexed { i, arg ->
@@ -200,7 +231,12 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
         }
     }
 
-    private fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>, catalog: Catalog): Rel.Op.Aggregate.Call.Resolved? {
+    private fun resolveAgg(
+        path: String,
+        setQuantifier: SetQuantifier,
+        args: List<Rex>,
+        catalog: Catalog
+    ): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
 
         // 1. Search in the current catalog and namespace.
@@ -317,7 +353,8 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
                 // Exact match!
                 p.type.code() == a.code() -> continue
                 // If the argument is dynamic, we still need to cast the argument at runtime to the aggregate function's expected type
-                a.code() == PType.DYNAMIC -> mapping[i] = Ref.Cast(a.toCType(), p.type.toCType(), Ref.Cast.Safety.COERCION, true)
+                a.code() == PType.DYNAMIC -> mapping[i] =
+                    Ref.Cast(a.toCType(), p.type.toCType(), Ref.Cast.Safety.COERCION, true)
                 // If the parameter allows all types, continue.
                 p.type.code() == PType.DYNAMIC -> continue
                 // Check the Type Families (of argument and param) and coerce argument if possible; if not, this fails.
