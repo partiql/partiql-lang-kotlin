@@ -1817,6 +1817,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitFunctionCallAsterisk(ctx: GeneratedParser.FunctionCallAsteriskContext) = translate(ctx) {
             val function = visitQualifiedName(ctx.qualifiedName())
+            // Yet another special case for `COUNT(*)`
             exprCall(function, emptyList())
         }
 
