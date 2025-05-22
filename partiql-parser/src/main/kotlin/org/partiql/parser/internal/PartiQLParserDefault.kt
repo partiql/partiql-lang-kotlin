@@ -863,7 +863,11 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitQueryExpression(ctx: GeneratedParser.QueryExpressionContext) = translate(ctx) {
-            val body = visitAs<QueryBody>(ctx.queryExpressionBody())
+            val body = when (val node = visit(ctx.queryExpressionBody())) {
+                is QueryBody -> node
+                is ExprQuerySet -> node.body
+                else -> throw error(ctx, "Unexpected QueryExpression")
+            }
             val with = visitOrNull<With>(ctx.withClause())
             val orderBy = ctx.orderByClause()?.let { visitOrderByClause(it) }
             val limit = ctx.limitClause()?.let { visitLimitClause(it) }
