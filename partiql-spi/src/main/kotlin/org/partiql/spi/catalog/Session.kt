@@ -63,6 +63,7 @@ public interface Session {
         private var catalog: String? = null
         private var system: Catalog = System.INSTANCE
         private var catalogs: Catalogs.Builder = Catalogs.builder()
+        private var catalogNames: MutableList<String> = mutableListOf()
         private var namespace: Namespace = Namespace.empty()
         private var properties: MutableMap<String, String> = mutableMapOf()
 
@@ -111,6 +112,11 @@ public interface Session {
          */
         public fun catalogs(vararg catalogs: Catalog): Builder {
             for (catalog in catalogs) {
+                val catalogName = catalog.getName()
+                if (this.catalogNames.contains(catalogName)) {
+                    throw IllegalStateException("Catalog names must be unique: $catalogName")
+                }
+                this.catalogNames.add(catalogName)
                 this.catalogs.add(catalog)
             }
             return this

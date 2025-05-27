@@ -767,12 +767,19 @@ internal object RelConverter {
 
         private fun ExprCall.isAggregateCall(ctx: Context): Boolean {
             val fnName = this.function.identifier.text.lowercase()
-            if (fnName == "count" && this.args.isEmpty()) {
+            val isScalar = ctx.env.hasFn(fnName)
+            val isAggregate = if (fnName == "count" && this.args.isEmpty()) {
                 // Yet another special case for `COUNT(*)`
-                return ctx.env.getAggCandidates(fnName, this.args.size + 1).isNotEmpty()
+                ctx.env.getAggCandidates(fnName, this.args.size + 1).isNotEmpty()
             } else {
-                return ctx.env.getAggCandidates(fnName, this.args.size).isNotEmpty()
+                ctx.env.getAggCandidates(fnName, this.args.size).isNotEmpty()
             }
+
+            if (isAggregate && isScalar) {
+                throw IllegalStateException("Name registered as both a scalar and aggregate call: `$fnName`")
+            }
+
+            return isAggregate
         }
 
         override fun defaultReturn(node: AstNode, context: Context) = node

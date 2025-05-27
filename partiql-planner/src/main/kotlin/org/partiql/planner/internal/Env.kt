@@ -61,6 +61,15 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
         return null
     }
 
+    fun hasFn(path: String): Boolean {
+        val fns = findFirstInCatalog { catalog -> catalog.getFunctions(session, path.lowercase()).ifEmpty { null } }
+        if (fns == null) {
+            return false
+        } else {
+            return fns.isNotEmpty()
+        }
+    }
+
     fun resolveFn(identifier: Identifier, args: List<Rex>): Rex? {
         return findFirstInCatalog { catalog ->
             resolveFn(identifier, args, catalog)
@@ -73,6 +82,15 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
         return findFirstInCatalog { catalog ->
             getCandidates(identifier, arity, catalog)
         } ?: emptyList()
+    }
+
+    fun hasAgg(path: String): Boolean {
+        val aggs = findFirstInCatalog { catalog -> catalog.getAggregations(session, path.lowercase()).ifEmpty { null } }
+        if (aggs == null) {
+            return false
+        } else {
+            return aggs.isNotEmpty()
+        }
     }
 
     fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
@@ -162,7 +180,7 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
     }
 
     /**
-     * @return a list of candidate aggregation functions that match the [identifier] and number of [args].
+     * @return a list of candidate aggregation functions that match the [path] and [arity].
      */
     fun getAggCandidates(path: String, arity: Int, catalog: Catalog): List<AggOverload>? {
         // 1. Search in the current catalog and namespace.
