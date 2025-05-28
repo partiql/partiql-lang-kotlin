@@ -35,6 +35,7 @@ Thank you to all who have contributed!
 - `BETWEEN` operator function overloads in the partiql-planner
 - Mistyping of some Rex plan nodes
 - `OperatorRewriter` omitting types for rewritten nodes
+- fixed Aggregation function lookup so that custom overloads from `Catalog` are found
 
 ### Removed
 

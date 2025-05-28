@@ -184,7 +184,7 @@ internal object RelConverter {
                     var rel = visitFrom(sel.from, nil)
                     rel = convertWhere(rel, sel.where)
                     // kotlin does not have destructuring reassignment
-                    val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy)
+                    val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy, env)
                     sel = _sel
                     rel = _rel
                     // Plan.create (possibly rewritten) sel node
@@ -416,9 +416,9 @@ internal object RelConverter {
          *         1. Ast.Expr.SFW has every Ast.Expr.CallAgg replaced by a synthetic Ast.Expr.Var
          *         2. Rel which has the appropriate Rex.Agg calls and groups
          */
-        private fun convertAgg(input: Rel, select: QueryBody.SFW, groupBy: GroupBy?): Pair<QueryBody.SFW, Rel> {
+        private fun convertAgg(input: Rel, select: QueryBody.SFW, groupBy: GroupBy?, env: Env): Pair<QueryBody.SFW, Rel> {
             // Rewrite and extract all aggregations in the SELECT clause
-            val (sel, aggregations) = AggregationTransform.apply(select)
+            val (sel, aggregations) = AggregationTransform.apply(select, env)
 
             // No aggregation planning required for GROUP BY
             if (aggregations.isEmpty() && groupBy == null) {
@@ -445,6 +445,7 @@ internal object RelConverter {
                 // lowercase normalize all calls
                 val name = id.getIdentifier().getText().lowercase()
                 if (name == "count" && expr.args.isEmpty()) {
+                    // Yet another special case for `COUNT(*)`
                     relOpAggregateCallUnresolved(
                         name,
                         org.partiql.planner.internal.ir.SetQuantifier.ALL,
@@ -729,19 +730,16 @@ internal object RelConverter {
      * Rewrites a SELECT node replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
      */
     private object AggregationTransform : AstRewriter<AggregationTransform.Context>() {
-        // currently hard-coded
-        @JvmStatic
-        private val aggregates = setOf("count", "avg", "sum", "min", "max", "any", "some", "every")
-
         private data class Context(
             val aggregations: MutableList<ExprCall>,
-            val keys: List<GroupBy.Key>
+            val keys: List<GroupBy.Key>,
+            val env: Env
         )
 
-        fun apply(node: QueryBody.SFW): Pair<QueryBody.SFW, List<ExprCall>> {
+        fun apply(node: QueryBody.SFW, env: Env): Pair<QueryBody.SFW, List<ExprCall>> {
             val aggs = mutableListOf<ExprCall>()
             val keys = node.groupBy?.keys ?: emptyList()
-            val context = Context(aggs, keys)
+            val context = Context(aggs, keys, env)
             val select = super.visitQueryBodySFW(node, context) as QueryBody.SFW
             return Pair(select, aggs)
         }
@@ -758,9 +756,7 @@ internal object RelConverter {
         override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: Context): AstNode = node
 
         override fun visitExprCall(node: ExprCall, ctx: Context) =
-            // TODO replace w/ proper function resolution to determine whether a function call is a scalar or aggregate.
-            //  may require further modification of SPI interfaces to support
-            when (node.function.isAggregateCall()) {
+            when (node.isAggregateCall(ctx)) {
                 true -> {
                     val id = Identifier.delimited(syntheticAgg(ctx.aggregations.size))
                     ctx.aggregations += node
@@ -769,11 +765,22 @@ internal object RelConverter {
                 else -> node
             }
 
-        private fun String.isAggregateCall(): Boolean {
-            return aggregates.contains(this)
-        }
+        private fun ExprCall.isAggregateCall(ctx: Context): Boolean {
+            val fnName = this.function.identifier.text.lowercase()
+            val isScalar = ctx.env.hasFn(fnName)
+            val isAggregate = if (fnName == "count" && this.args.isEmpty()) {
+                // Yet another special case for `COUNT(*)`
+                ctx.env.getAggCandidates(fnName, this.args.size + 1).isNotEmpty()
+            } else {
+                ctx.env.getAggCandidates(fnName, this.args.size).isNotEmpty()
+            }
 
-        private fun Identifier.isAggregateCall(): Boolean = identifier.text.lowercase().isAggregateCall()
+            if (isAggregate && isScalar) {
+                throw IllegalStateException("Name registered as both a scalar and aggregate call: `$fnName`")
+            }
+
+            return isAggregate
+        }
 
         override fun defaultReturn(node: AstNode, context: Context) = node
     }
