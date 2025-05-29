@@ -36,6 +36,7 @@ Thank you to all who have contributed!
 - Mistyping of some Rex plan nodes
 - `OperatorRewriter` omitting types for rewritten nodes
 - fixed Aggregation function lookup so that custom overloads from `Catalog` are found
+- `SqlDialect` printing of AST literal string single quotes
 
 ### Removed
 

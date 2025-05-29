@@ -249,7 +249,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             Literal.MISSING -> "MISSING"
             Literal.BOOL -> lit.booleanValue().toString()
             Literal.APPROX_NUM, Literal.EXACT_NUM, Literal.INT_NUM -> lit.numberValue()
-            Literal.STRING -> String.format("'%s'", lit.stringValue())
+            Literal.STRING -> "'${lit.stringValue().replace("'", "''")}'"
             Literal.TYPED_STRING -> {
                 t = visitDataType(lit.dataType(), t)
                 String.format(" '%s'", lit.stringValue())

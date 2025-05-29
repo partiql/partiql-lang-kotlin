@@ -418,7 +418,19 @@ class SqlDialectTest {
                 "1.3", exprLit(exactNum(BigDecimal.valueOf(1.3)))
             ),
             expect(
-                """'hello'""", exprLit(string("hello"))
+                "'hello'", exprLit(string("hello"))
+            ),
+            expect(
+                "'''hello'''", exprLit(string("'hello'"))
+            ),
+            expect(
+                "'O''Riely'", exprLit(string("O'Riely"))
+            ),
+            expect(
+                """' one''two''three''"four" '""", exprLit(string(""" one'two'three'"four" """))
+            ),
+            expect(
+                "'one\\two'", exprLit(string("one\\two"))
             ),
             expect(
                 """hello""", regular("hello")
