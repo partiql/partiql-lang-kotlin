@@ -37,6 +37,7 @@ Thank you to all who have contributed!
 - `OperatorRewriter` omitting types for rewritten nodes
 - fixed Aggregation function lookup so that custom overloads from `Catalog` are found
 - `SqlDialect` printing of AST literal string single quotes
+- Parsing of `LIMIT`, `OFFSET`, and `ORDER BY` on set operators
 
 ### Removed
 
