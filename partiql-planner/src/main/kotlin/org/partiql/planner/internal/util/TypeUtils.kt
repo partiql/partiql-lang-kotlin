@@ -6,6 +6,11 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.types.PType
 
 internal object TypeUtils {
+    // Meta indicating whether the given `ROW` or collection type has an excluded field
+    private fun PType.addExcludedFieldMeta() {
+        this.metas["CONTAINS_EXCLUDED_FIELD"] = true
+    }
+
     /**
      * Applies the given exclusion path to produce the reduced [CompilerType]. [lastStepOptional] indicates if a previous
      * step in the exclude path includes a collection index exclude step. Currently, for paths with the last step as
@@ -23,7 +28,7 @@ internal object TypeUtils {
         return steps.fold(type) { acc, step ->
             when (acc.code()) {
                 PType.DYNAMIC -> CompilerType(PType.dynamic())
-                PType.ROW -> acc.excludeStruct(step, lastStepOptional)
+                PType.ROW -> acc.excludeRow(step, lastStepOptional)
                 PType.STRUCT -> acc
                 PType.ARRAY, PType.BAG -> acc.excludeCollection(step, lastStepOptional)
                 else -> acc
@@ -31,32 +36,37 @@ internal object TypeUtils {
         }
     }
 
+    private fun CompilerType.PTypeField.applyExclusion(substeps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean): CompilerType.PTypeField? {
+        val field = this
+        return if (substeps.isEmpty()) {
+            if (lastStepOptional) {
+                CompilerType.PTypeField(field.name, field.type)
+            } else {
+                null
+            }
+        } else {
+            val k = field.name
+            val v = field.type.exclude(substeps, lastStepOptional)
+            CompilerType.PTypeField(k, v)
+        }
+    }
+
     /**
-     * Applies exclusions to struct fields.
+     * Applies exclusions to `ROW` fields. Any `ROW`s that have an excluded field will also include the meta
+     * `CONTAINS_EXCLUDED_FIELD` set to true.
      *
      * @param step
      * @param lastStepOptional
      * @return
      */
-    internal fun CompilerType.excludeStruct(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): CompilerType {
+    internal fun CompilerType.excludeRow(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): CompilerType {
         val type = step.type
         val substeps = step.substeps
         val output = fields.mapNotNull { field ->
-            val newField = if (substeps.isEmpty()) {
-                if (lastStepOptional) {
-                    CompilerType.PTypeField(field.name, field.type)
-                } else {
-                    null
-                }
-            } else {
-                val k = field.name
-                val v = field.type.exclude(substeps, lastStepOptional)
-                CompilerType.PTypeField(k, v)
-            }
             when (type) {
                 is Rel.Op.Exclude.Type.StructSymbol -> {
                     if (type.symbol.equals(field.name, ignoreCase = true)) {
-                        newField
+                        field.applyExclusion(substeps, lastStepOptional)
                     } else {
                         field
                     }
@@ -64,20 +74,24 @@ internal object TypeUtils {
 
                 is Rel.Op.Exclude.Type.StructKey -> {
                     if (type.key == field.name) {
-                        newField
+                        field.applyExclusion(substeps, lastStepOptional)
                     } else {
                         field
                     }
                 }
-                is Rel.Op.Exclude.Type.StructWildcard -> newField
+                is Rel.Op.Exclude.Type.StructWildcard -> field.applyExclusion(substeps, lastStepOptional)
                 else -> field
             }
         }
-        return CompilerType(PType.row(output))
+        val res = CompilerType(PType.row(output))
+        this.addExcludedFieldMeta()
+        res.metas = this.metas
+        return res
     }
 
     /**
-     * Applies exclusions to collection element type.
+     * Applies exclusions to collection element type. Any collections that have an excluded field will also include
+     * the meta `CONTAINS_EXCLUDED_FIELD` set to true.
      *
      * @param step
      * @param lastStepOptional
@@ -106,10 +120,13 @@ internal object TypeUtils {
                 // the future
             }
         }
-        return when (this.code()) {
+        val res = when (this.code()) {
             PType.ARRAY -> PType.array(e).toCType()
             PType.BAG -> PType.bag(e).toCType()
             else -> throw IllegalStateException()
         }
+        this.addExcludedFieldMeta()
+        res.metas = this.metas
+        return res
     }
 }
