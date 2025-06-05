@@ -26,6 +26,9 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- **EXPERIMENTAL** add `metas` map for `PType`
+- partiql-planner: `ROW` or collection types with excluded fields resulting from `RelExclude` will include a meta
+`CONTAINS_EXCLUDED_FIELD` mapping to `true`
 
 ### Changed
 

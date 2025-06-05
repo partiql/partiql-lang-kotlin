@@ -504,6 +504,7 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static final field UNKNOWN I
 	public static final field VARCHAR I
 	public static final field VARIANT I
+	public field metas Ljava/util/Map;
 	protected fun <init> (I)V
 	public static fun array ()Lorg/partiql/spi/types/PType;
 	public static fun array (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
