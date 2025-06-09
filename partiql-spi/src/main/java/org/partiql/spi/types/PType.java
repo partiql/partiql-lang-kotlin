@@ -5,6 +5,8 @@ import org.partiql.spi.UnsupportedCodeException;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This represents a PartiQL type, whether it be a PartiQL primitive or user-defined.
@@ -34,6 +36,12 @@ public abstract class PType extends org.partiql.spi.Enum {
     protected PType(int code) {
         super(code);
     }
+
+    /**
+     * Additional information associated with a {@link PType}.
+     * Note: This is experimental and subject to change without prior notice!
+     */
+    public Map<String, Object> metas = new HashMap<>();
 
     /**
      * The fields of the type
