@@ -111,6 +111,22 @@ internal object RexConverter {
     private const val INTERVAL_DEFAULT_PRECISON = 2
     private const val INTERVAL_DEFAULT_FRACTIONAL_PRECISION = 6
 
+    private const val UNSPECIFIED_LENGTH = "UNSPECIFIED_LENGTH"
+    private const val UNSPECIFIED_PRECISION = "UNSPECIFIED_PRECISION"
+    private const val UNSPECIFIED_SCALE = "UNSPECIFIED_SCALE"
+
+    private fun PType.setUnspecifiedLengthMeta() {
+        this.metas[UNSPECIFIED_LENGTH] = true
+    }
+
+    private fun PType.setUnspecifiedPrecisionMeta() {
+        this.metas[UNSPECIFIED_PRECISION] = true
+    }
+
+    private fun PType.setUnspecifiedScaleMeta() {
+        this.metas[UNSPECIFIED_SCALE] = true
+    }
+
     internal fun apply(expr: Expr, context: Env): Rex = ToRex.visitExprCoerce(expr, context)
 
     internal fun applyRel(expr: Expr, context: Env): Rex = expr.accept(ToRex, context)
@@ -1058,17 +1074,33 @@ internal object RexConverter {
                 // TODO CHAR_VARYING, CHARACTER_LARGE_OBJECT, CHAR_LARGE_OBJECT
                 DataType.CHARACTER, DataType.CHAR -> {
                     val length = type.length ?: 1
-                    assertGtZeroAndCreate(PType.CHAR, "length", length, PType::character)
+                    assertGtZeroAndCreate(PType.CHAR, "length", length, PType::character).also {
+                        if (type.length == null) {
+                            it.setUnspecifiedLengthMeta()
+                        }
+                    }
                 }
                 DataType.CHARACTER_VARYING, DataType.VARCHAR -> {
                     val length = type.length ?: 1
-                    assertGtZeroAndCreate(PType.VARCHAR, "length", length, PType::varchar)
+                    assertGtZeroAndCreate(PType.VARCHAR, "length", length, PType::varchar).also {
+                        if (type.length == null) {
+                            it.setUnspecifiedLengthMeta()
+                        }
+                    }
                 }
-                DataType.CLOB -> assertGtZeroAndCreate(PType.CLOB, "length", type.length ?: Int.MAX_VALUE, PType::clob)
+                DataType.CLOB -> assertGtZeroAndCreate(PType.CLOB, "length", type.length ?: Int.MAX_VALUE, PType::clob).also {
+                    if (type.length == null) {
+                        it.setUnspecifiedLengthMeta()
+                    }
+                }
                 DataType.STRING -> PType.string()
                 // <binary large object string type>
                 // TODO BINARY_LARGE_OBJECT
-                DataType.BLOB -> assertGtZeroAndCreate(PType.BLOB, "length", type.length ?: Int.MAX_VALUE, PType::blob)
+                DataType.BLOB -> assertGtZeroAndCreate(PType.BLOB, "length", type.length ?: Int.MAX_VALUE, PType::blob).also {
+                    if (type.length == null) {
+                        it.setUnspecifiedLengthMeta()
+                    }
+                }
                 // <bit string type>
                 DataType.BIT -> error("BIT is not supported yet.")
                 DataType.BIT_VARYING -> error("BIT VARYING is not supported yet.")
@@ -1077,7 +1109,10 @@ internal object RexConverter {
                     val p = type.precision
                     val s = type.scale
                     when {
-                        p == null && s == null -> PType.decimal(38, 0)
+                        p == null && s == null -> PType.decimal(38, 0).also {
+                            it.setUnspecifiedPrecisionMeta()
+                            it.setUnspecifiedScaleMeta()
+                        }
                         p != null && s != null -> {
                             assertParamCompToZero(PType.NUMERIC, "precision", p, false)
                             assertParamCompToZero(PType.NUMERIC, "scale", s, true)
@@ -1088,7 +1123,7 @@ internal object RexConverter {
                         }
                         p != null && s == null -> {
                             assertParamCompToZero(PType.NUMERIC, "precision", p, false)
-                            PType.decimal(p, 0)
+                            PType.decimal(p, 0).also { it.setUnspecifiedScaleMeta() }
                         }
                         else -> error("Precision can never be null while scale is specified.")
                     }
@@ -1097,7 +1132,10 @@ internal object RexConverter {
                     val p = type.precision
                     val s = type.scale
                     when {
-                        p == null && s == null -> PType.decimal(38, 0)
+                        p == null && s == null -> PType.decimal(38, 0).also {
+                            it.setUnspecifiedPrecisionMeta()
+                            it.setUnspecifiedScaleMeta()
+                        }
                         p != null && s != null -> {
                             assertParamCompToZero(PType.DECIMAL, "precision", p, false)
                             assertParamCompToZero(PType.DECIMAL, "scale", s, true)
@@ -1108,7 +1146,7 @@ internal object RexConverter {
                         }
                         p != null && s == null -> {
                             assertParamCompToZero(PType.DECIMAL, "precision", p, false)
-                            PType.decimal(p, 0)
+                            PType.decimal(p, 0).also { it.setUnspecifiedScaleMeta() }
                         }
                         else -> error("Precision can never be null while scale is specified.")
                     }
@@ -1125,25 +1163,41 @@ internal object RexConverter {
                 DataType.BOOL -> PType.bool()
                 // <datetime type>
                 DataType.DATE -> PType.date()
-                DataType.TIME -> assertGtEqZeroAndCreate(PType.TIME, "precision", type.precision ?: 0, PType::time)
+                DataType.TIME -> assertGtEqZeroAndCreate(PType.TIME, "precision", type.precision ?: 0, PType::time).also {
+                    if (type.precision == null) {
+                        it.setUnspecifiedPrecisionMeta()
+                    }
+                }
                 DataType.TIME_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(
                     PType.TIMEZ,
                     "precision",
                     type.precision ?: 0,
                     PType::timez
-                )
+                ).also {
+                    if (type.precision == null) {
+                        it.setUnspecifiedPrecisionMeta()
+                    }
+                }
                 DataType.TIMESTAMP -> assertGtEqZeroAndCreate(
                     PType.TIMESTAMP,
                     "precision",
                     type.precision ?: 6,
                     PType::timestamp
-                )
+                ).also {
+                    if (type.precision == null) {
+                        it.setUnspecifiedPrecisionMeta()
+                    }
+                }
                 DataType.TIMESTAMP_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(
                     PType.TIMESTAMPZ,
                     "precision",
                     type.precision ?: 6,
                     PType::timestampz
-                )
+                ).also {
+                    if (type.precision == null) {
+                        it.setUnspecifiedPrecisionMeta()
+                    }
+                }
                 // <container type>
                 DataType.STRUCT -> PType.struct()
                 DataType.TUPLE -> PType.struct()
@@ -1154,6 +1208,7 @@ internal object RexConverter {
                 DataType.USER_DEFINED -> TODO("Custom type not supported ")
                 // <interval type>
                 DataType.INTERVAL -> {
+                    // TODO meta for interval when precision is unspecified
                     when (val q = type.intervalQualifier) {
                         is IntervalQualifier.Single -> {
                             val precision = q.precision ?: INTERVAL_DEFAULT_PRECISON
