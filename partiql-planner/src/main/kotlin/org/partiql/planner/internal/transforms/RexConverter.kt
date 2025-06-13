@@ -1153,14 +1153,14 @@ internal object RexConverter {
                 }
                 DataType.BIGINT, DataType.INT8, DataType.INTEGER8 -> PType.bigint()
                 DataType.INT4, DataType.INTEGER4, DataType.INTEGER, DataType.INT -> PType.integer()
-                DataType.INT2, DataType.SMALLINT -> PType.smallint()
+                DataType.INT2, DataType.INTEGER2, DataType.SMALLINT -> PType.smallint()
                 DataType.TINYINT -> PType.tinyint()
                 // <numeric type> - <approximate numeric type>
                 DataType.FLOAT -> PType.real()
                 DataType.REAL -> PType.real()
                 DataType.DOUBLE_PRECISION -> PType.doublePrecision()
                 // <boolean type>
-                DataType.BOOL -> PType.bool()
+                DataType.BOOL, DataType.BOOLEAN -> PType.bool()
                 // <datetime type>
                 DataType.DATE -> PType.date()
                 DataType.TIME -> assertGtEqZeroAndCreate(PType.TIME, "precision", type.precision ?: 0, PType::time).also {
