@@ -37,6 +37,11 @@ public abstract class PType extends org.partiql.spi.Enum {
         super(code);
     }
 
+    protected PType(int code, Map<String, Object> metas) {
+        super(code);
+        this.metas = metas;
+    }
+
     /**
      * Additional information associated with a {@link PType}.
      * Note: This is experimental and subject to change without prior notice!
@@ -631,6 +636,22 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     public static final int INTERVAL_DT = 27;
 
+    private static final String UNSPECIFIED_LENGTH = "UNSPECIFIED_LENGTH";
+    private static final String UNSPECIFIED_PRECISION = "UNSPECIFIED_PRECISION";
+    private static final String UNSPECIFIED_SCALE = "UNSPECIFIED_SCALE";
+
+    private static void setUnspecifiedLengthMeta(PType pType) {
+        pType.metas.put(UNSPECIFIED_LENGTH, true);
+    }
+
+    private static void setUnspecifiedPrecisionMeta(PType pType) {
+        pType.metas.put(UNSPECIFIED_PRECISION, true);
+    }
+
+    private static void setUnspecifiedScaleMeta(PType pType) {
+        pType.metas.put(UNSPECIFIED_SCALE, true);
+    }
+
     /**
      * Creates a type representing INTERVAL YEAR (precision)
      * @param precision the interval's leading field precision
@@ -827,7 +848,20 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     @NotNull
     public static PType numeric() {
-        return new PTypeDecimal(NUMERIC, 38, 0);
+        PType numeric = new PTypeDecimal(NUMERIC, 38, 0);
+        setUnspecifiedPrecisionMeta(numeric);
+        setUnspecifiedScaleMeta(numeric);
+        return numeric;
+    }
+
+    /**
+     * @return a SQL:1999 NUMERIC type with provided precision and default scale 0.
+     */
+    @NotNull
+    public static PType numeric(int precision) {
+        PType numeric = new PTypeDecimal(NUMERIC, precision, 0);
+        setUnspecifiedScaleMeta(numeric);
+        return numeric;
     }
 
     /**
@@ -839,11 +873,24 @@ public abstract class PType extends org.partiql.spi.Enum {
     }
 
     /**
+     * @return a PartiQL decimal type with provided precision and default scale 0.
+     */
+    @NotNull
+    public static PType decimal(int precision) {
+        PType decimal = new PTypeDecimal(PType.DECIMAL, precision, 0);
+        setUnspecifiedScaleMeta(decimal);
+        return decimal;
+    }
+
+    /**
      * @return a PartiQL decimal type with default precision (38) and scale (0).
      */
     @NotNull
     public static PType decimal() {
-        return new PTypeDecimal(PType.DECIMAL, 38, 0);
+        PType decimal = new PTypeDecimal(PType.DECIMAL, 38, 0);
+        setUnspecifiedPrecisionMeta(decimal);
+        setUnspecifiedScaleMeta(decimal);
+        return decimal;
     }
 
     /**
@@ -878,7 +925,9 @@ public abstract class PType extends org.partiql.spi.Enum {
     @NotNull
     @SuppressWarnings("unused")
     public static PType character() {
-        return new PTypeWithMaxLength(CHAR, 1);
+        PType character = new PTypeWithMaxLength(CHAR, 1);
+        setUnspecifiedLengthMeta(character);
+        return character;
     }
 
     /**
@@ -896,7 +945,9 @@ public abstract class PType extends org.partiql.spi.Enum {
     @NotNull
     @SuppressWarnings("unused")
     public static PType varchar() {
-        return new PTypeWithMaxLength(VARCHAR, 1);
+        PType varchar = new PTypeWithMaxLength(VARCHAR, 1);
+        setUnspecifiedLengthMeta(varchar);
+        return varchar;
     }
 
     /**
@@ -921,7 +972,9 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     @NotNull
     public static PType clob() {
-        return new PTypeWithMaxLength(CLOB, Integer.MAX_VALUE);
+        PType clob = new PTypeWithMaxLength(CLOB, Integer.MAX_VALUE);
+        setUnspecifiedLengthMeta(clob);
+        return clob;
     }
 
     /**
@@ -938,7 +991,9 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     @NotNull
     public static PType blob() {
-        return new PTypeWithMaxLength(BLOB, Integer.MAX_VALUE);
+        PType blob = new PTypeWithMaxLength(BLOB, Integer.MAX_VALUE);
+        setUnspecifiedLengthMeta(blob);
+        return blob;
     }
 
     /**
@@ -962,7 +1017,9 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     @NotNull
     public static PType time() {
-        return new PTypeWithPrecisionOnly(TIME, 6);
+        PType time = new PTypeWithPrecisionOnly(TIME, 6);
+        setUnspecifiedPrecisionMeta(time);
+        return time;
     }
 
     /**
@@ -980,7 +1037,9 @@ public abstract class PType extends org.partiql.spi.Enum {
     @NotNull
     @SuppressWarnings("unused")
     public static PType timez() {
-        return new PTypeWithPrecisionOnly(TIMEZ, 6);
+        PType timez = new PTypeWithPrecisionOnly(TIMEZ, 6);
+        setUnspecifiedPrecisionMeta(timez);
+        return timez;
     }
 
     /**
@@ -996,7 +1055,9 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     @NotNull
     public static PType timestamp() {
-        return new PTypeWithPrecisionOnly(TIMESTAMP, 6);
+        PType timestamp = new PTypeWithPrecisionOnly(TIMESTAMP, 6);
+        setUnspecifiedPrecisionMeta(timestamp);
+        return timestamp;
     }
 
     /**
@@ -1014,7 +1075,9 @@ public abstract class PType extends org.partiql.spi.Enum {
     @NotNull
     @SuppressWarnings("unused")
     public static PType timestampz() {
-        return new PTypeWithPrecisionOnly(TIMESTAMPZ, 6);
+        PType timestampz = new PTypeWithPrecisionOnly(TIMESTAMPZ, 6);
+        setUnspecifiedPrecisionMeta(timestampz);
+        return timestampz;
     }
 
     /**

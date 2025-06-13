@@ -18,6 +18,10 @@ internal class CompilerType(
     // Note: This is an experimental property.
     internal val isMissingValue: Boolean = false
 ) : PType(_delegate.code()) {
+    init {
+        this.metas = HashMap(_delegate.metas)
+    }
+
     fun getDelegate(): PType = _delegate
     override fun getFields(): MutableCollection<PTypeField> {
         return _delegate.fields.map { field ->
