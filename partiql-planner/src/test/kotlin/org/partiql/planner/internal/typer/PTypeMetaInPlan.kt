@@ -23,15 +23,15 @@ private const val UNSPECIFIED_SCALE = "UNSPECIFIED_SCALE"
  */
 class PTypeMetaInPlan {
     private val planner = PartiQLPlanner.standard()
-    private fun PType.assertHasLengthMeta() {
+    private fun PType.assertUnspecifiedLength() {
         assertEquals(this.metas[UNSPECIFIED_LENGTH], true)
     }
 
-    private fun PType.assertHasPrecisionMeta() {
+    private fun PType.assertUnspecifiedPrecision() {
         assertEquals(this.metas[UNSPECIFIED_PRECISION], true)
     }
 
-    private fun PType.assertHasScaleMeta() {
+    private fun PType.assertUnspecifiedScale() {
         assertEquals(this.metas[UNSPECIFIED_SCALE], true)
     }
 
@@ -50,99 +50,99 @@ class PTypeMetaInPlan {
     @Test
     fun `test decimal has no scale and no precision`() {
         val decimal = getRexCast(DataType.DECIMAL()).type.pType
-        decimal.assertHasPrecisionMeta()
-        decimal.assertHasScaleMeta()
+        decimal.assertUnspecifiedPrecision()
+        decimal.assertUnspecifiedScale()
     }
 
     @Test
     fun `test decimal has no scale`() {
         val decimal = getRexCast(DataType.DECIMAL(10)).type.pType
-        decimal.assertHasScaleMeta()
+        decimal.assertUnspecifiedScale()
     }
 
     @Test
     fun `test dec has no scale and no precision`() {
         val decimal = getRexCast(DataType.DEC()).type.pType
-        decimal.assertHasPrecisionMeta()
-        decimal.assertHasScaleMeta()
+        decimal.assertUnspecifiedPrecision()
+        decimal.assertUnspecifiedScale()
     }
 
     @Test
     fun `test dec has no scale`() {
         val decimal = getRexCast(DataType.DEC(10)).type.pType
-        decimal.assertHasScaleMeta()
+        decimal.assertUnspecifiedScale()
     }
 
     @Test
     fun `test numeric has no scale and no precision`() {
         val numeric = getRexCast(DataType.NUMERIC()).type.pType
-        numeric.assertHasPrecisionMeta()
-        numeric.assertHasScaleMeta()
+        numeric.assertUnspecifiedPrecision()
+        numeric.assertUnspecifiedScale()
     }
 
     @Test
     fun `test numeric has no scale`() {
         val numeric = getRexCast(DataType.NUMERIC(10)).type.pType
-        numeric.assertHasScaleMeta()
+        numeric.assertUnspecifiedScale()
     }
 
     @Test
     fun `test varchar has no length`() {
         val varchar = getRexCast(DataType.VARCHAR()).type.pType
-        varchar.assertHasLengthMeta()
+        varchar.assertUnspecifiedLength()
     }
 
     @Test
     fun `test character_varying has no length`() {
         val varchar = getRexCast(DataType.CHARACTER_VARYING()).type.pType
-        varchar.assertHasLengthMeta()
+        varchar.assertUnspecifiedLength()
     }
 
     @Test
     fun `test character has no length`() {
         val char = getRexCast(DataType.CHARACTER()).type.pType
-        char.assertHasLengthMeta()
+        char.assertUnspecifiedLength()
     }
 
     @Test
     fun `test char has no length`() {
         val char = getRexCast(DataType.CHAR()).type.pType
-        char.assertHasLengthMeta()
+        char.assertUnspecifiedLength()
     }
 
     @Test
     fun `test clob has no length`() {
         val clob = getRexCast(DataType.CLOB()).type.pType
-        clob.assertHasLengthMeta()
+        clob.assertUnspecifiedLength()
     }
 
     @Test
     fun `test blob has no length`() {
         val blob = getRexCast(DataType.BLOB()).type.pType
-        blob.assertHasLengthMeta()
+        blob.assertUnspecifiedLength()
     }
 
     @Test
     fun `test time has no precision`() {
         val time = getRexCast(DataType.TIME()).type.pType
-        time.assertHasPrecisionMeta()
+        time.assertUnspecifiedPrecision()
     }
 
     @Test
     fun `test timez has no precision`() {
         val timez = getRexCast(DataType.TIME_WITH_TIME_ZONE()).type.pType
-        timez.assertHasPrecisionMeta()
+        timez.assertUnspecifiedPrecision()
     }
 
     @Test
     fun `test timestamp has no precision`() {
         val timestamp = getRexCast(DataType.TIMESTAMP()).type.pType
-        timestamp.assertHasPrecisionMeta()
+        timestamp.assertUnspecifiedPrecision()
     }
 
     @Test
     fun `test timestampz has no precision`() {
         val timestampz = getRexCast(DataType.TIMESTAMP_WITH_TIME_ZONE()).type.pType
-        timestampz.assertHasPrecisionMeta()
+        timestampz.assertUnspecifiedPrecision()
     }
 }

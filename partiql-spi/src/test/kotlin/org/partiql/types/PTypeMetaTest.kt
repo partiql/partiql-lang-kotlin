@@ -12,89 +12,89 @@ private const val UNSPECIFIED_SCALE = "UNSPECIFIED_SCALE"
  * Tests that constructed PType instances have the correct metas.
  */
 class PTypeMetaTest {
-    private fun PType.assertHasLengthMeta() {
+    private fun PType.assertUnspecifiedLength() {
         assertEquals(this.metas[UNSPECIFIED_LENGTH], true)
     }
 
-    private fun PType.assertHasPrecisionMeta() {
+    private fun PType.assertUnspecifiedPrecision() {
         assertEquals(this.metas[UNSPECIFIED_PRECISION], true)
     }
 
-    private fun PType.assertHasScaleMeta() {
+    private fun PType.assertUnspecifiedScale() {
         assertEquals(this.metas[UNSPECIFIED_SCALE], true)
     }
 
     @Test
     fun `test decimal has no scale and no precision`() {
         val decimal = PType.decimal()
-        decimal.assertHasPrecisionMeta()
-        decimal.assertHasScaleMeta()
+        decimal.assertUnspecifiedPrecision()
+        decimal.assertUnspecifiedScale()
     }
 
     @Test
     fun `test decimal has no scale`() {
         val decimal = PType.decimal(10)
-        decimal.assertHasScaleMeta()
+        decimal.assertUnspecifiedScale()
     }
 
     @Test
     fun `test numeric has no scale and no precision`() {
         val numeric = PType.numeric()
-        numeric.assertHasPrecisionMeta()
-        numeric.assertHasScaleMeta()
+        numeric.assertUnspecifiedPrecision()
+        numeric.assertUnspecifiedScale()
     }
 
     @Test
     fun `test numeric has no scale`() {
         val numeric = PType.numeric(10)
-        numeric.assertHasScaleMeta()
+        numeric.assertUnspecifiedScale()
     }
 
     @Test
     fun `test varchar has no length`() {
         val varchar = PType.varchar()
-        varchar.assertHasLengthMeta()
+        varchar.assertUnspecifiedLength()
     }
 
     @Test
     fun `test character has no length`() {
         val char = PType.character()
-        char.assertHasLengthMeta()
+        char.assertUnspecifiedLength()
     }
 
     @Test
     fun `test clob has no length`() {
         val clob = PType.clob()
-        clob.assertHasLengthMeta()
+        clob.assertUnspecifiedLength()
     }
 
     @Test
     fun `test blob has no length`() {
         val blob = PType.blob()
-        blob.assertHasLengthMeta()
+        blob.assertUnspecifiedLength()
     }
 
     @Test
     fun `test time has no precision`() {
         val time = PType.time()
-        time.assertHasPrecisionMeta()
+        time.assertUnspecifiedPrecision()
     }
 
     @Test
     fun `test timez has no precision`() {
         val timez = PType.timez()
-        timez.assertHasPrecisionMeta()
+        timez.assertUnspecifiedPrecision()
     }
 
     @Test
     fun `test timestamp has no precision`() {
         val timestamp = PType.timestamp()
-        timestamp.assertHasPrecisionMeta()
+        timestamp.assertUnspecifiedPrecision()
     }
 
     @Test
     fun `test timestampz has no precision`() {
         val timestampz = PType.timestampz()
-        timestampz.assertHasPrecisionMeta()
+        timestampz.assertUnspecifiedPrecision()
     }
 }
