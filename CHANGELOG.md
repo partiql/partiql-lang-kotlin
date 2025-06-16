@@ -29,6 +29,8 @@ Thank you to all who have contributed!
 - **EXPERIMENTAL** add `metas` map for `PType`
 - partiql-planner: `ROW` or collection types with excluded fields resulting from `RelExclude` will include a meta
 `CONTAINS_EXCLUDED_FIELD` mapping to `true`
+- Static factories for creating `PType.decimal` and `PType.numeric` types with a precision and default scale
+- Metas attached to `PType`s indicating if a parameter (e.g. precision, scale, length) was specified
 
 ### Changed
 

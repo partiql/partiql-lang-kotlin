@@ -506,6 +506,7 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static final field VARIANT I
 	public field metas Ljava/util/Map;
 	protected fun <init> (I)V
+	protected fun <init> (ILjava/util/Map;)V
 	public static fun array ()Lorg/partiql/spi/types/PType;
 	public static fun array (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
 	public static fun bag ()Lorg/partiql/spi/types/PType;
@@ -521,6 +522,7 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static fun codes ()[I
 	public static fun date ()Lorg/partiql/spi/types/PType;
 	public static fun decimal ()Lorg/partiql/spi/types/PType;
+	public static fun decimal (I)Lorg/partiql/spi/types/PType;
 	public static fun decimal (II)Lorg/partiql/spi/types/PType;
 	public static fun doublePrecision ()Lorg/partiql/spi/types/PType;
 	public static fun dynamic ()Lorg/partiql/spi/types/PType;
@@ -547,6 +549,7 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static fun intervalYearMonth (I)Lorg/partiql/spi/types/PType;
 	public fun name ()Ljava/lang/String;
 	public static fun numeric ()Lorg/partiql/spi/types/PType;
+	public static fun numeric (I)Lorg/partiql/spi/types/PType;
 	public static fun numeric (II)Lorg/partiql/spi/types/PType;
 	public static fun of (I)Lorg/partiql/spi/types/PType;
 	public static fun real ()Lorg/partiql/spi/types/PType;
