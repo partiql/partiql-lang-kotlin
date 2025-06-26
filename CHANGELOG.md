@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.2.2](https://TODO.com) - 2025-06-26
+
+### Added
 - **EXPERIMENTAL** add `metas` map for `PType`
 - partiql-planner: `ROW` or collection types with excluded fields resulting from `RelExclude` will include a meta
 `CONTAINS_EXCLUDED_FIELD` mapping to `true`
@@ -50,6 +67,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @alancai98
 
 ## [1.2.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.1) - 2025-05-07
 

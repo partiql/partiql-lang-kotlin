@@ -14,9 +14,10 @@ rootProject.run {
     extensions.getByType(NexusPublishExtension::class.java).run {
         this.repositories {
             sonatype {
-                nexusUrl.set(uri("https://aws.oss.sonatype.org/service/local/"))
-                username.set(properties["ossrhUsername"].toString())
-                password.set(properties["ossrhPassword"].toString())
+                nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+                snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+                username.set(properties["centralPortalUsername"].toString())
+                password.set(properties["centralPortalPassword"].toString())
             }
         }
 
