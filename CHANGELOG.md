@@ -40,7 +40,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 
-## [1.2.2](https://TODO.com) - 2025-06-26
+## [1.2.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.2) - 2025-06-26
 
 ### Added
 - **EXPERIMENTAL** add `metas` map for `PType`
