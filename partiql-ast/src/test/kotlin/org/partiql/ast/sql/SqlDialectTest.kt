@@ -101,6 +101,7 @@ import org.partiql.ast.QueryBody
 import org.partiql.ast.Select
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
+import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
@@ -2034,6 +2035,58 @@ class SqlDialectTest {
                     )
                 )
             ),
+            expect(
+                "WITH a AS (SELECT * FROM t) SELECT * FROM a",
+                qSet(
+                    with = Ast.with(
+                        listOf(
+                            Ast.withListElement(
+                                queryName = regular("a"),
+                                asQuery = qSet(
+                                    body = sfw(
+                                        select = selectStar(),
+                                        from = table("t")
+                                    )
+                                ),
+                                columnList = null
+                            )
+                        ),
+                        isRecursive = false
+                    ),
+                    body = sfw(
+                        select = selectStar(),
+                        from = table("a"),
+                    ),
+                )
+            ),
+            expect(
+                "WITH a (b, c, d) AS (SELECT * FROM t) SELECT * FROM a",
+                qSet(
+                    with = Ast.with(
+                        listOf(
+                            Ast.withListElement(
+                                queryName = regular("a"),
+                                asQuery = qSet(
+                                    body = sfw(
+                                        select = selectStar(),
+                                        from = table("t")
+                                    )
+                                ),
+                                columnList = listOf(
+                                    regular("b"),
+                                    regular("c"),
+                                    regular("d")
+                                )
+                            )
+                        ),
+                        isRecursive = false
+                    ),
+                    body = sfw(
+                        select = selectStar(),
+                        from = table("a"),
+                    ),
+                )
+            ),
         )
 
         @JvmStatic
@@ -2635,11 +2688,12 @@ class SqlDialectTest {
             setq = null
         )
 
-        private fun qSet(body: QueryBody, orderBy: OrderBy? = null, limit: Expr? = null, offset: Expr? = null) = exprQuerySet(
+        private fun qSet(body: QueryBody, orderBy: OrderBy? = null, limit: Expr? = null, offset: Expr? = null, with: With? = null) = exprQuerySet(
             body = body,
             orderBy = orderBy,
             limit = limit,
-            offset = offset
+            offset = offset,
+            with = with
         )
 
         private fun sfw(select: Select, from: From, exclude: Exclude? = null, let: Let? = null, where: Expr? = null, groupBy: GroupBy? = null, having: Expr? = null) = queryBodySFW(

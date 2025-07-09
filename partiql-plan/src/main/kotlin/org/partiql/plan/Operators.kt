@@ -18,6 +18,7 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnpivot
+import org.partiql.plan.rel.RelWith
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
@@ -236,6 +237,18 @@ public interface Operators {
      * @return
      */
     public fun unpivot(rex: Rex): RelUnpivot = RelUnpivot.create(rex)
+
+    /**
+     * <p>
+     * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+     * </p>
+     * Create a [RelWith] instance.
+     *
+     * @param input
+     * @param elements
+     * @return
+     */
+    public fun with(input: Rel, elements: List<WithListElement>): RelWith = RelWith.create(input, elements)
 
     // --- REX OPERATORS -----------------------------------------------------------------------------------------------
 
