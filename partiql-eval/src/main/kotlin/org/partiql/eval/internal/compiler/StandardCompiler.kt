@@ -84,6 +84,7 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnpivot
+import org.partiql.plan.rel.RelWith
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
@@ -332,6 +333,12 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 Mode.STRICT -> RelOpUnpivot.Strict(input)
                 else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
+        }
+
+        override fun visitWith(rel: RelWith, ctx: Unit): ExprRelation {
+            // Rewrite to not include the `RelWith` (assumes the planner rewrote WITH variable references to the query
+            // representation)
+            return compile(rel.input, ctx)
         }
 
         override fun visitError(rex: RexError, ctx: Unit): ExprValue {

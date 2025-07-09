@@ -47,6 +47,8 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
+import org.partiql.ast.With
+import org.partiql.ast.WithListElement
 import org.partiql.ast.ddl.CreateTable
 import org.partiql.ast.dml.Delete
 import org.partiql.ast.dml.Insert
@@ -602,6 +604,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExprQuerySet(node: ExprQuerySet, tail: SqlBlock): SqlBlock {
         var t = tail
+        t = if (node.with != null) visitWith(node.with!!, t) else t
         // visit body (SFW or other SQL set op)
         t = visit(node.body, t)
         // ORDER BY
@@ -613,6 +616,27 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         // OFFSET
         val offset = node.offset
         t = if (offset != null) visitExprWrapped(offset, t concat " OFFSET ") else t
+        return t
+    }
+
+    override fun visitWith(node: With, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "WITH "
+        t = if (node.isRecursive) {
+            t concat "RECURSIVE "
+        } else {
+            t
+        }
+        t = t concat list("", " ") { node.elements }
+        return t
+    }
+
+    override fun visitWithListElement(node: WithListElement, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visit(node.queryName, t)
+        t = node.columnList?.let { columns -> t concat list(" (", ")") { columns } } ?: t
+        t = t concat " AS "
+        t = visitExprWrapped(node.asQuery, t)
         return t
     }
 

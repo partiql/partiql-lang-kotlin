@@ -18,7 +18,7 @@ import org.partiql.planner.internal.SqlPlanner
  */
 public class PartiQLPlannerBuilder {
 
-    private val flags: MutableSet<PlannerFlag> = mutableSetOf()
+    private val flags: MutableSet<PlannerFlag> = mutableSetOf(PlannerFlag.REPLACE_WITH_REFS)
     private val passes: MutableList<PartiQLPlannerPass> = mutableListOf()
 
     /**
@@ -58,6 +58,23 @@ public class PartiQLPlannerBuilder {
             flags.add(PlannerFlag.SIGNAL_MODE)
         } else {
             flags.remove(PlannerFlag.SIGNAL_MODE)
+        }
+        return this
+    }
+
+    /**
+     * **NOTE** This is experimental and subject to change without prior notice!
+     *
+     * Experimental planner mode to control whether WITH variable references are replaced with their definitions.
+     *
+     * @param replaceWith denotes whether to replace WITH variable references with their definitions.
+     * @return
+     */
+    public fun replaceWithReferences(replaceWith: Boolean = true): PartiQLPlannerBuilder {
+        if (replaceWith) {
+            flags.add(PlannerFlag.REPLACE_WITH_REFS)
+        } else {
+            flags.remove(PlannerFlag.REPLACE_WITH_REFS)
         }
         return this
     }
