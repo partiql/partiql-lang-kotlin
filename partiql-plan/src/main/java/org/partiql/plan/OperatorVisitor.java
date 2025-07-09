@@ -17,6 +17,7 @@ import org.partiql.plan.rel.RelScan;
 import org.partiql.plan.rel.RelSort;
 import org.partiql.plan.rel.RelUnion;
 import org.partiql.plan.rel.RelUnpivot;
+import org.partiql.plan.rel.RelWith;
 import org.partiql.plan.rex.RexArray;
 import org.partiql.plan.rex.RexBag;
 import org.partiql.plan.rex.RexCall;
@@ -132,6 +133,18 @@ public interface OperatorVisitor<R, C> {
     }
 
     default R visitUnpivot(@NotNull RelUnpivot rel, C ctx) {
+        return defaultVisit(rel, ctx);
+    }
+
+    /**
+     * <p>
+     * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+     * </p>
+     * @param rel
+     * @param ctx
+     * @return
+     */
+    default R visitWith(@NotNull RelWith rel, C ctx) {
         return defaultVisit(rel, ctx);
     }
     // --[Rex]-----------------------------------------------------------------------------------------------------------

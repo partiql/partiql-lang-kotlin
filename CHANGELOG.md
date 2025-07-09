@@ -26,6 +26,11 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
+- **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the 
+`OperatorVisitor`
+- **EXPERIMENTAL** partiql-planner: add planner builder function to control whether `With` table references are 
+rewritten to their query representation
 
 ### Changed
 

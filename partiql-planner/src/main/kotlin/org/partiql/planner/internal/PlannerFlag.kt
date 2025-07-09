@@ -16,5 +16,11 @@ internal enum class PlannerFlag {
      *
      *    The result plan will turn the problematic operation into a missing node.
      */
-    SIGNAL_MODE
+    SIGNAL_MODE,
+
+    /**
+     * Experimental flag to enable planner to replace references to WITH variables with their definitions.
+     * By default, this flag is included in the default planner phase.
+     */
+    REPLACE_WITH_REFS
 }
