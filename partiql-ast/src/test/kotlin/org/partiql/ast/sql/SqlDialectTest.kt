@@ -84,6 +84,7 @@ import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Identifier.Simple.delimited
 import org.partiql.ast.Identifier.Simple.regular
+import org.partiql.ast.IntervalQualifier
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Literal.approxNum
@@ -232,6 +233,26 @@ class SqlDialectTest {
     @MethodSource("subqueryCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testSubqueries(case: Case) = case.assert()
+
+    @ParameterizedTest(name = "intervalSingle #{index}")
+    @MethodSource("intervalSingleCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testIntervalSingle(case: Case) = case.assert()
+
+    @ParameterizedTest(name = "intervalRange #{index}")
+    @MethodSource("intervalRangeCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testIntervalRange(case: Case) = case.assert()
+
+    @ParameterizedTest(name = "intervalCast #{index}")
+    @MethodSource("intervalCastCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testIntervalCast(case: Case) = case.assert()
+
+    @ParameterizedTest(name = "intervalArith #{index}")
+    @MethodSource("intervalArithCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testIntervalArithCast(case: Case) = case.assert()
 
     companion object {
 
@@ -2666,6 +2687,1366 @@ class SqlDialectTest {
                 )
             ),
         )
+
+        // INTERVAL <interval string> <single datetime field>
+        @JvmStatic
+        private fun intervalSingleCases() = listOf(
+            expect(
+                "INTERVAL '10' YEAR",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.YEAR(),
+                        null,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' YEAR",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.YEAR(),
+                        null,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' YEAR (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.YEAR(),
+                        2,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' YEAR (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.YEAR(),
+                        2,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' MONTH",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.MONTH(),
+                        null,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' MONTH",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.MONTH(),
+                        null,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' MONTH (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.MONTH(),
+                        2,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' MONTH (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.MONTH(),
+                        2,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' DAY",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.DAY(),
+                        null,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' DAY",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.DAY(),
+                        null,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' DAY (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.DAY(),
+                        2,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' DAY (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.DAY(),
+                        2,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' HOUR",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.HOUR(),
+                        null,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' HOUR",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.HOUR(),
+                        null,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' HOUR (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.HOUR(),
+                        2,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' HOUR (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.HOUR(),
+                        2,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.MINUTE(),
+                        null,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.MINUTE(),
+                        null,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' MINUTE (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.MINUTE(),
+                        2,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' MINUTE (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.MINUTE(),
+                        2,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.SECOND(),
+                        null,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.SECOND(),
+                        null,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10' SECOND (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.SECOND(),
+                        2,
+                        null
+                    ),
+                    value = "10"
+                )
+            ),
+            expect(
+                "INTERVAL '-10' SECOND (2)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.SECOND(),
+                        2,
+                        null
+                    ),
+                    value = "-10"
+                )
+            ),
+            expect(
+                "INTERVAL '10.234' SECOND (2, 3)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.SECOND(),
+                        2,
+                        3
+                    ),
+                    value = "10.234"
+                )
+            ),
+            expect(
+                "INTERVAL '-10.234' SECOND (2, 3)",
+                interval(
+                    qualifier = IntervalQualifier.Single(
+                        DatetimeField.SECOND(),
+                        2,
+                        3
+                    ),
+                    value = "-10.234"
+                )
+            )
+        )
+
+        // CAST to INTERVAL
+        @JvmStatic
+        private fun intervalCastCases() = listOf(
+            expect(
+                "CAST(i AS INTERVAL YEAR)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL YEAR (2))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            2,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL MONTH)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.MONTH(),
+                            null,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL MONTH (2))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.MONTH(),
+                            2,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.DAY(),
+                            null,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY (2))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.DAY(),
+                            2,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL HOUR)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.HOUR(),
+                            null,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL HOUR (2))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.HOUR(),
+                            2,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL MINUTE)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.MINUTE(),
+                            null,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL MINUTE (2))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.MINUTE(),
+                            2,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL SECOND)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.SECOND(),
+                            null,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL SECOND (2))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.SECOND(),
+                            2,
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL SECOND (2, 3))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Single(
+                            DatetimeField.SECOND(),
+                            2,
+                            3
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL YEAR TO MONTH)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.YEAR(),
+                            null,
+                            DatetimeField.MONTH(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL YEAR (2) TO MONTH)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.YEAR(),
+                            2,
+                            DatetimeField.MONTH(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY TO HOUR)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.DAY(),
+                            null,
+                            DatetimeField.HOUR(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY (2) TO HOUR)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.DAY(),
+                            2,
+                            DatetimeField.HOUR(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY TO MINUTE)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.DAY(),
+                            null,
+                            DatetimeField.MINUTE(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY (2) TO MINUTE)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.DAY(),
+                            2,
+                            DatetimeField.MINUTE(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY TO SECOND)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.DAY(),
+                            null,
+                            DatetimeField.SECOND(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY (2) TO SECOND)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.DAY(),
+                            2,
+                            DatetimeField.SECOND(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY TO SECOND (3))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.DAY(),
+                            null,
+                            DatetimeField.SECOND(),
+                            3
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL DAY (2) TO SECOND (3))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.DAY(),
+                            2,
+                            DatetimeField.SECOND(),
+                            3
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL HOUR TO MINUTE)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.HOUR(),
+                            null,
+                            DatetimeField.MINUTE(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL HOUR (2) TO MINUTE)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.HOUR(),
+                            2,
+                            DatetimeField.MINUTE(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL HOUR TO SECOND)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.HOUR(),
+                            null,
+                            DatetimeField.SECOND(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL HOUR (2) TO SECOND)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.HOUR(),
+                            2,
+                            DatetimeField.SECOND(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL HOUR TO SECOND (3))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.HOUR(),
+                            null,
+                            DatetimeField.SECOND(),
+                            3
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL HOUR (2) TO SECOND (3))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.HOUR(),
+                            2,
+                            DatetimeField.SECOND(),
+                            3
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL MINUTE TO SECOND)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.MINUTE(),
+                            null,
+                            DatetimeField.SECOND(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL MINUTE (2) TO SECOND)",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.MINUTE(),
+                            2,
+                            DatetimeField.SECOND(),
+                            null
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL MINUTE TO SECOND (3))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.MINUTE(),
+                            null,
+                            DatetimeField.SECOND(),
+                            3
+                        )
+                    ),
+                )
+            ),
+            expect(
+                "CAST(i AS INTERVAL MINUTE (2) TO SECOND (3))",
+                exprCast(
+                    value = v("i"),
+                    asType = DataType.INTERVAL(
+                        IntervalQualifier.Range(
+                            DatetimeField.MINUTE(),
+                            2,
+                            DatetimeField.SECOND(),
+                            3
+                        )
+                    ),
+                )
+            )
+        )
+
+        // INTERVAL arithmetic
+        @JvmStatic
+        private fun intervalArithCases() = listOf(
+            expect(
+                "v + INTERVAL '10' YEAR",
+                exprOperator(
+                    symbol = "+",
+                    lhs = v("v"),
+                    rhs = interval(
+                        qualifier = IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        ),
+                        value = "10"
+                    ),
+                )
+            ),
+            expect(
+                "INTERVAL '10' YEAR + v",
+                exprOperator(
+                    symbol = "+",
+                    lhs = interval(
+                        qualifier = IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        ),
+                        value = "10"
+                    ),
+                    rhs = v("v"),
+                )
+            ),
+            expect(
+                "v - INTERVAL '10' YEAR",
+                exprOperator(
+                    symbol = "-",
+                    lhs = v("v"),
+                    rhs = interval(
+                        qualifier = IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        ),
+                        value = "10"
+                    ),
+                )
+            ),
+            expect(
+                "INTERVAL '10' YEAR - v",
+                exprOperator(
+                    symbol = "-",
+                    lhs = interval(
+                        qualifier = IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        ),
+                        value = "10"
+                    ),
+                    rhs = v("v"),
+                )
+            ),
+            expect(
+                "v * INTERVAL '10' YEAR",
+                exprOperator(
+                    symbol = "*",
+                    lhs = v("v"),
+                    rhs = interval(
+                        qualifier = IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        ),
+                        value = "10"
+                    ),
+                )
+            ),
+            expect(
+                "INTERVAL '10' YEAR * v",
+                exprOperator(
+                    symbol = "*",
+                    lhs = interval(
+                        qualifier = IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        ),
+                        value = "10"
+                    ),
+                    rhs = v("v"),
+                )
+            ),
+            expect(
+                "v / INTERVAL '10' YEAR",
+                exprOperator(
+                    symbol = "/",
+                    lhs = v("v"),
+                    rhs = interval(
+                        qualifier = IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        ),
+                        value = "10"
+                    ),
+                )
+            ),
+            expect(
+                "INTERVAL '10' YEAR / v",
+                exprOperator(
+                    symbol = "/",
+                    lhs = interval(
+                        qualifier = IntervalQualifier.Single(
+                            DatetimeField.YEAR(),
+                            null,
+                            null
+                        ),
+                        value = "10"
+                    ),
+                    rhs = v("v"),
+                )
+            ),
+        )
+
+        @JvmStatic
+        private fun intervalRangeCases() = listOf(
+            // <start field> TO <end field>
+            expect(
+                "INTERVAL '10-3' YEAR TO MONTH",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.YEAR(),
+                        null,
+                        DatetimeField.MONTH(),
+                        null
+                    ),
+                    value = "10-3"
+                )
+            ),
+            expect(
+                "INTERVAL '-10-3' YEAR TO MONTH",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.YEAR(),
+                        null,
+                        DatetimeField.MONTH(),
+                        null
+                    ),
+                    value = "-10-3"
+                )
+            ),
+            expect(
+                "INTERVAL '10-3' YEAR (2) TO MONTH",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.YEAR(),
+                        2,
+                        DatetimeField.MONTH(),
+                        null
+                    ),
+                    value = "10-3"
+                )
+            ),
+            expect(
+                "INTERVAL '-10-3' YEAR (2) TO MONTH",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.YEAR(),
+                        2,
+                        DatetimeField.MONTH(),
+                        null
+                    ),
+                    value = "-10-3"
+                )
+            ),
+            expect(
+                "INTERVAL '10 3' DAY TO HOUR",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        null,
+                        DatetimeField.HOUR(),
+                        null
+                    ),
+                    value = "10 3"
+                )
+            ),
+            expect(
+                "INTERVAL '-10 3' DAY TO HOUR",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        null,
+                        DatetimeField.HOUR(),
+                        null
+                    ),
+                    value = "-10 3"
+                )
+            ),
+            expect(
+                "INTERVAL '10 3' DAY (2) TO HOUR",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        2,
+                        DatetimeField.HOUR(),
+                        null
+                    ),
+                    value = "10 3"
+                )
+            ),
+            expect(
+                "INTERVAL '-10 3' DAY (2) TO HOUR",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        2,
+                        DatetimeField.HOUR(),
+                        null
+                    ),
+                    value = "-10 3"
+                )
+            ),
+            expect(
+                "INTERVAL '10 3:4' DAY TO MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        null,
+                        DatetimeField.MINUTE(),
+                        null
+                    ),
+                    value = "10 3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '-10 3:4' DAY TO MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        null,
+                        DatetimeField.MINUTE(),
+                        null
+                    ),
+                    value = "-10 3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '10 3:4' DAY (2) TO MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        2,
+                        DatetimeField.MINUTE(),
+                        null
+                    ),
+                    value = "10 3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '-10 3:4' DAY (2) TO MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        2,
+                        DatetimeField.MINUTE(),
+                        null
+                    ),
+                    value = "-10 3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '10 3:4:5' DAY TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        null,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "10 3:4:5"
+                )
+            ),
+            expect(
+                "INTERVAL '-10 3:4:5' DAY TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        null,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "-10 3:4:5"
+                )
+            ),
+            expect(
+                "INTERVAL '10 3:4:5' DAY (2) TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        2,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "10 3:4:5"
+                )
+            ),
+            expect(
+                "INTERVAL '-10 3:4:5' DAY (2) TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        2,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "-10 3:4:5"
+                )
+            ),
+            expect(
+                "INTERVAL '10 3:4:5.678' DAY TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        null,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "10 3:4:5.678"
+                )
+            ),
+            expect(
+                "INTERVAL '-10 3:4:5.678' DAY TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        null,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "-10 3:4:5.678"
+                )
+            ),
+            expect(
+                "INTERVAL '10 3:4:5.678' DAY (2) TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        2,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "10 3:4:5.678"
+                )
+            ),
+            expect(
+                "INTERVAL '-10 3:4:5.678' DAY (2) TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.DAY(),
+                        2,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "-10 3:4:5.678"
+                )
+            ),
+            expect(
+                "INTERVAL '3:4' HOUR TO MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        null,
+                        DatetimeField.MINUTE(),
+                        null
+                    ),
+                    value = "3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '-3:4' HOUR TO MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        null,
+                        DatetimeField.MINUTE(),
+                        null
+                    ),
+                    value = "-3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '3:4' HOUR (2) TO MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        2,
+                        DatetimeField.MINUTE(),
+                        null
+                    ),
+                    value = "3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '-3:4' HOUR (2) TO MINUTE",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        2,
+                        DatetimeField.MINUTE(),
+                        null
+                    ),
+                    value = "-3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '2:3:4' HOUR TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        null,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "2:3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '-2:3:4' HOUR TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        null,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "-2:3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '2:3:4' HOUR (2) TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        2,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "2:3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '-2:3:4' HOUR (2) TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        2,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "-2:3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '2:3:4.567' HOUR TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        null,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "2:3:4.567"
+                )
+            ),
+            expect(
+                "INTERVAL '-2:3:4.567' HOUR TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        null,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "-2:3:4.567"
+                )
+            ),
+            expect(
+                "INTERVAL '2:3:4.567' HOUR (2) TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        2,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "2:3:4.567"
+                )
+            ),
+            expect(
+                "INTERVAL '-2:3:4.567' HOUR (2) TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.HOUR(),
+                        2,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "-2:3:4.567"
+                )
+            ),
+            expect(
+                "INTERVAL '3:4' MINUTE TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.MINUTE(),
+                        null,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '-3:4' MINUTE TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.MINUTE(),
+                        null,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "-3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '3:4' MINUTE (2) TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.MINUTE(),
+                        2,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '-3:4' MINUTE (2) TO SECOND",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.MINUTE(),
+                        2,
+                        DatetimeField.SECOND(),
+                        null
+                    ),
+                    value = "-3:4"
+                )
+            ),
+            expect(
+                "INTERVAL '3:4.567' MINUTE TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.MINUTE(),
+                        null,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "3:4.567"
+                )
+            ),
+            expect(
+                "INTERVAL '-3:4.567' MINUTE TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.MINUTE(),
+                        null,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "-3:4.567"
+                )
+            ),
+            expect(
+                "INTERVAL '3:4.567' MINUTE (2) TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.MINUTE(),
+                        2,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "3:4.567"
+                )
+            ),
+            expect(
+                "INTERVAL '-3:4.567' MINUTE (2) TO SECOND (3)",
+                interval(
+                    qualifier = IntervalQualifier.Range(
+                        DatetimeField.MINUTE(),
+                        2,
+                        DatetimeField.SECOND(),
+                        3
+                    ),
+                    value = "-3:4.567"
+                )
+            )
+        )
+
+        private fun interval(qualifier: IntervalQualifier, value: String) =
+            exprLit(
+                typedString(DataType.INTERVAL(qualifier), value)
+            )
 
         private fun expect(
             expected: String,

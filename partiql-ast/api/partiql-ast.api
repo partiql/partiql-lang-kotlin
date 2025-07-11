@@ -3379,6 +3379,10 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitIdentifierSimple (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsert (Lorg/partiql/ast/dml/Insert;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitIntervalQualifierRange (Lorg/partiql/ast/IntervalQualifier$Range;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIntervalQualifierRange (Lorg/partiql/ast/IntervalQualifier$Range;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitIntervalQualifierSingle (Lorg/partiql/ast/IntervalQualifier$Single;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIntervalQualifierSingle (Lorg/partiql/ast/IntervalQualifier$Single;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;

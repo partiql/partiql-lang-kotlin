@@ -113,7 +113,7 @@ public abstract class IntervalQualifier extends AstNode {
                 throw new IllegalArgumentException("Invalid interval start field: " + startField.name());
             }
             if (startFieldPrecision != null && (startFieldPrecision <= 0 || startFieldPrecision > MAX_PRECISION)) {
-                throw new IllegalArgumentException("Invalid leading field precision" + startFieldPrecision);
+                throw new IllegalArgumentException("Invalid leading field precision " + startFieldPrecision);
             }
         }
 
