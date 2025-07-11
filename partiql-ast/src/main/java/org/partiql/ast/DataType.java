@@ -143,7 +143,7 @@ public final class DataType extends AstEnum {
     public static final int TIMESTAMP = 36;
     public static final int TIMESTAMP_WITH_TIME_ZONE = 37;
     // <interval type>
-    public static final int INTERVAL = 38; // TODO not defined in parser yet
+    public static final int INTERVAL = 38;
     // <container type>
     public static final int STRUCT = 39;
     public static final int TUPLE = 40;

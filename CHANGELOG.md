@@ -31,6 +31,7 @@ Thank you to all who have contributed!
 `OperatorVisitor`
 - **EXPERIMENTAL** partiql-planner: add planner builder function to control whether `With` table references are 
 rewritten to their query representation
+- partiql-ast: `INTERVAL` data type and literal implementation in `SqlDialect`
 
 ### Changed
 
