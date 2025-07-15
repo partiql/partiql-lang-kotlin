@@ -64,7 +64,7 @@ class DatumWriterTextPrettyTests {
           INTERVAL '1 2:3:4.50' DAY (2) TO SECOND (2),
           INTERVAL '1:2' HOUR (2) TO MINUTE,
           INTERVAL '1:2:3.40' HOUR (2) TO SECOND (2),
-          INTERVAL '0:1:2.30' HOUR (2) TO SECOND (2),
+          INTERVAL '1:2.30' MINUTE (2) TO SECOND (2),
           {
             'bar': [
               1,

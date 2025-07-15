@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Specify the correct qualifier for `INTERVAL` datum with `MINUTE TO SECOND`
 
 ### Removed
 
@@ -39,6 +40,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @zyfy29
 
 ## [1.2.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.2) - 2025-06-26
 
