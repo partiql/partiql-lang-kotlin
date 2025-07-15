@@ -66,6 +66,8 @@ public class PartiQLPlannerBuilder {
      * **NOTE** This is experimental and subject to change without prior notice!
      *
      * Experimental planner mode to control whether WITH variable references are replaced with their definitions.
+     * Evaluating plans without the inline WITH rewrites is not yet supported. Users seeking to evaluate the WITH clause
+     * should use the default planner or set [replaceWith] to true.
      *
      * @param replaceWith denotes whether to replace WITH variable references with their definitions.
      * @return
