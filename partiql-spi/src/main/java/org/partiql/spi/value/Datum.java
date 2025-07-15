@@ -1118,7 +1118,7 @@ public interface Datum extends Iterable<Datum> {
         DatumIntervalHelpers.checkUsingPrecision(minutes, precision);
         DatumIntervalHelpers.checkSeconds(seconds);
         int newNanos = DatumIntervalHelpers.coerceNanos(nanos, fractionalPrecision);
-        return new DatumIntervalDayTime(0, 0, minutes, seconds, newNanos, precision, fractionalPrecision, IntervalCode.HOUR_SECOND);
+        return new DatumIntervalDayTime(0, 0, minutes, seconds, newNanos, precision, fractionalPrecision, IntervalCode.MINUTE_SECOND);
     }
 
     /**
