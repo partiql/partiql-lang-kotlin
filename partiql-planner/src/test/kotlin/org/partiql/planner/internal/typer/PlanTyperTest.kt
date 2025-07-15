@@ -129,7 +129,7 @@ class PlanTyperTest {
                     .build(),
                 config.errorListener
             )
-            return PlanTyperWrapper(PlanTyper(env, config, setOf(PlannerFlag.REPLACE_WITH_REFS)))
+            return PlanTyperWrapper(PlanTyper(env, config, setOf(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)))
         }
     }
 

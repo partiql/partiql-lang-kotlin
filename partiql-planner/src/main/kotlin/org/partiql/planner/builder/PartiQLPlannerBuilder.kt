@@ -18,7 +18,7 @@ import org.partiql.planner.internal.SqlPlanner
  */
 public class PartiQLPlannerBuilder {
 
-    private val flags: MutableSet<PlannerFlag> = mutableSetOf(PlannerFlag.REPLACE_WITH_REFS)
+    private val flags: MutableSet<PlannerFlag> = mutableSetOf(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
     private val passes: MutableList<PartiQLPlannerPass> = mutableListOf()
 
     /**
@@ -70,11 +70,11 @@ public class PartiQLPlannerBuilder {
      * @param replaceWith denotes whether to replace WITH variable references with their definitions.
      * @return
      */
-    public fun replaceWithReferences(replaceWith: Boolean = true): PartiQLPlannerBuilder {
+    public fun forceInlineWithClause(replaceWith: Boolean = true): PartiQLPlannerBuilder {
         if (replaceWith) {
-            flags.add(PlannerFlag.REPLACE_WITH_REFS)
+            flags.add(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
         } else {
-            flags.remove(PlannerFlag.REPLACE_WITH_REFS)
+            flags.remove(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
         }
         return this
     }

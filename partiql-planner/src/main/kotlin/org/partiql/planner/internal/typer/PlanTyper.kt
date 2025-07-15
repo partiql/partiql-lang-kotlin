@@ -295,7 +295,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 element.copy(representation = representation)
             }
             // Include the WITH elements iff the `flags` contains the `REPLACE_WITH_REFS` planner flag.
-            val rewriteWith = flags.contains(PlannerFlag.REPLACE_WITH_REFS)
+            val rewriteWith = flags.contains(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
             val withElements = if (rewriteWith) {
                 elements
             } else {

@@ -22,5 +22,5 @@ internal enum class PlannerFlag {
      * Experimental flag to enable planner to replace references to WITH variables with their definitions.
      * By default, this flag is included in the default planner phase.
      */
-    REPLACE_WITH_REFS
+    FORCE_INLINE_WITH_CLAUSE
 }

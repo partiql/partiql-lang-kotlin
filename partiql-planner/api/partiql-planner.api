@@ -29,8 +29,8 @@ public final class org/partiql/planner/builder/PartiQLPlannerBuilder {
 	public final fun addPass (Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 	public final fun addPasses ([Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
-	public final fun replaceWithReferences (Z)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
-	public static synthetic fun replaceWithReferences$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public final fun forceInlineWithClause (Z)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public static synthetic fun forceInlineWithClause$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 	public final fun signal (Z)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 	public static synthetic fun signal$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 }
