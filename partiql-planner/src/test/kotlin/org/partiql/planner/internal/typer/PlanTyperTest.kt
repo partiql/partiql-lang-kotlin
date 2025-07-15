@@ -3,6 +3,7 @@ package org.partiql.planner.internal.typer
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.refObj
@@ -128,7 +129,7 @@ class PlanTyperTest {
                     .build(),
                 config.errorListener
             )
-            return PlanTyperWrapper(PlanTyper(env, config))
+            return PlanTyperWrapper(PlanTyper(env, config, setOf(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)))
         }
     }
 

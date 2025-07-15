@@ -18,7 +18,7 @@ import org.partiql.planner.internal.SqlPlanner
  */
 public class PartiQLPlannerBuilder {
 
-    private val flags: MutableSet<PlannerFlag> = mutableSetOf()
+    private val flags: MutableSet<PlannerFlag> = mutableSetOf(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
     private val passes: MutableList<PartiQLPlannerPass> = mutableListOf()
 
     /**
@@ -58,6 +58,25 @@ public class PartiQLPlannerBuilder {
             flags.add(PlannerFlag.SIGNAL_MODE)
         } else {
             flags.remove(PlannerFlag.SIGNAL_MODE)
+        }
+        return this
+    }
+
+    /**
+     * **NOTE** This is experimental and subject to change without prior notice!
+     *
+     * Experimental planner mode to control whether WITH variable references are replaced with their definitions.
+     * Evaluating plans without the inline WITH rewrites is not yet supported. Users seeking to evaluate the WITH clause
+     * should use the default planner or set [replaceWith] to true.
+     *
+     * @param replaceWith denotes whether to replace WITH variable references with their definitions.
+     * @return
+     */
+    public fun forceInlineWithClause(replaceWith: Boolean = true): PartiQLPlannerBuilder {
+        if (replaceWith) {
+            flags.add(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
+        } else {
+            flags.remove(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
         }
         return this
     }

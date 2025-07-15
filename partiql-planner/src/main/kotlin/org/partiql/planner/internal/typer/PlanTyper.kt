@@ -18,6 +18,7 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
+import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.exclude.ExcludeRepr
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Rel
@@ -67,7 +68,7 @@ import kotlin.math.max
  *
  * @property env
  */
-internal class PlanTyper(private val env: Env, config: Context) {
+internal class PlanTyper(private val env: Env, config: Context, private val flags: Set<PlannerFlag>) {
 
     private val _listener = config.errorListener
 
@@ -293,7 +294,20 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 val representation = element.representation.type(emptyList(), outer)
                 element.copy(representation = representation)
             }
-            val newStack = outer + Scope(listOf(), outer, elements)
+            // Include the WITH elements iff the `flags` contains the `REPLACE_WITH_REFS` planner flag.
+            val rewriteWith = flags.contains(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
+            val withElements = if (rewriteWith) {
+                elements
+            } else {
+                emptyList()
+            }
+            val newStack = outer + Scope(
+                elements.map { element ->
+                    Rel.Binding(element.name, element.representation.type)
+                },
+                outer,
+                withElements
+            )
             val input = RelTyper(newStack, Strategy.LOCAL).visitRel(node.input, node.input.type)
             val type = input.type
             return Rel(type, node.copy(elements = elements, input = input))

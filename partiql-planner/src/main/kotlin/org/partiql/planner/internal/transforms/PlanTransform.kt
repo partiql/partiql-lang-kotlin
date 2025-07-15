@@ -6,6 +6,7 @@ import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operators
 import org.partiql.plan.Plan
+import org.partiql.plan.WithListElement
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelType
 import org.partiql.plan.rex.Rex
@@ -243,11 +244,17 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRelOpWith(node: Rel.Op.With, ctx: PType): org.partiql.plan.rel.Rel {
-            return visitRel(node.input, ctx)
+            return operators.with(
+                input = visitRel(node.input, ctx),
+                elements = node.elements.map { visitRelOpWithWithListElement(it, ctx) }
+            )
         }
 
-        override fun visitRelOpWithWithListElement(node: Rel.Op.With.WithListElement, ctx: PType): Any? {
-            error("WITH clause element was not transformed yet.")
+        override fun visitRelOpWithWithListElement(node: Rel.Op.With.WithListElement, ctx: PType): WithListElement {
+            return WithListElement(
+                node.name,
+                visitRex(node.representation, ctx)
+            )
         }
 
         override fun visitRelOpAggregateCallUnresolved(node: IRel.Op.Aggregate.Call.Unresolved, ctx: PType): Any {

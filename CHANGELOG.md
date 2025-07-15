@@ -26,6 +26,13 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
+- **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the 
+`OperatorVisitor`
+- **EXPERIMENTAL** partiql-planner: add planner builder function to control whether `With` table references are 
+rewritten to their query representation
+  - **NOTE** evaluating plans without the inlined `With` rewrite will not work as expected. Users trying to evaluate
+  `With` should use the default planner.
 
 ### Changed
 
@@ -41,6 +48,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @zyfy29
+- @alancai98
 
 ## [1.2.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.2) - 2025-06-26
 

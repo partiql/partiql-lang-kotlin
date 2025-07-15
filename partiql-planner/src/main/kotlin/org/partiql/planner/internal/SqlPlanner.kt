@@ -42,7 +42,7 @@ internal class SqlPlanner(
             val root = AstToPlan.apply(ast, env)
 
             // 3. Resolve variables
-            val typer = PlanTyper(env, ctx)
+            val typer = PlanTyper(env, ctx, flags)
             val typed = typer.resolve(root)
             val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
 
