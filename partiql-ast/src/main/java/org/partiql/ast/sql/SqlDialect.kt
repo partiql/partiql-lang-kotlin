@@ -30,6 +30,7 @@ import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Identifier.Simple
 import org.partiql.ast.Identifier.regular
+import org.partiql.ast.IntervalQualifier
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Literal
@@ -230,7 +231,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             DataType.TIME_WITH_TIME_ZONE -> tail concat type("TIME", node.precision, gap = true) concat(" WITH TIME ZONE")
             DataType.TIMESTAMP_WITH_TIME_ZONE -> tail concat type("TIMESTAMP", node.precision, gap = true) concat(" WITH TIME ZONE")
             // <interval type>
-            DataType.INTERVAL -> tail concat type("INTERVAL", node.precision)
+            DataType.INTERVAL -> visit(node.intervalQualifier, tail concat "INTERVAL ")
             // <container type>
             DataType.STRUCT, DataType.TUPLE -> tail concat node.name()
             // <collection type>
@@ -246,19 +247,54 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprLit(node: ExprLit, tail: SqlBlock): SqlBlock {
         val lit = node.lit
         var t = tail
-        val litText = when (lit.code()) {
-            Literal.NULL -> "NULL"
-            Literal.MISSING -> "MISSING"
-            Literal.BOOL -> lit.booleanValue().toString()
-            Literal.APPROX_NUM, Literal.EXACT_NUM, Literal.INT_NUM -> lit.numberValue()
-            Literal.STRING -> "'${lit.stringValue().replace("'", "''")}'"
+        when (lit.code()) {
+            Literal.NULL -> t = t concat "NULL"
+            Literal.MISSING -> t = t concat "MISSING"
+            Literal.BOOL -> t = t concat lit.booleanValue().toString()
+            Literal.APPROX_NUM, Literal.EXACT_NUM, Literal.INT_NUM -> t = t concat lit.numberValue()
+            Literal.STRING -> t = t concat "'${lit.stringValue().replace("'", "''")}'"
             Literal.TYPED_STRING -> {
-                t = visitDataType(lit.dataType(), t)
-                String.format(" '%s'", lit.stringValue())
+                val dataType = lit.dataType()
+                when (dataType.code()) {
+                    DataType.INTERVAL -> {
+                        t = t concat "INTERVAL '${lit.stringValue()}' "
+                        t = visit(dataType.intervalQualifier, t)
+                    }
+                    else -> {
+                        t = visitDataType(lit.dataType(), t)
+                        t = t concat String.format(" '%s'", lit.stringValue())
+                    }
+                }
             }
             else -> error("Unsupported literal type $lit")
         }
-        return t concat litText
+        return t
+    }
+
+    override fun visitIntervalQualifierSingle(node: IntervalQualifier.Single, tail: SqlBlock): SqlBlock {
+        var singleField = node.field.name()
+        if (node.precision != null) {
+            singleField += if (node.fractionalPrecision != null) {
+                " (${node.precision}, ${node.fractionalPrecision})"
+            } else {
+                " (${node.precision})"
+            }
+        }
+        return tail concat singleField
+    }
+
+    override fun visitIntervalQualifierRange(node: IntervalQualifier.Range, tail: SqlBlock): SqlBlock {
+        val startField = node.startField
+        val endField = node.endField
+        var datetimeField = startField.name()
+        if (node.startFieldPrecision != null) {
+            datetimeField += " (${node.startFieldPrecision})"
+        }
+        datetimeField += " TO ${endField.name()}"
+        if (node.endFieldFractionalPrecision != null) {
+            datetimeField += " (${node.endFieldFractionalPrecision})"
+        }
+        return tail concat datetimeField
     }
 
     override fun visitExprVariant(node: ExprVariant, tail: SqlBlock): SqlBlock {
