@@ -2,6 +2,8 @@ package org.partiql.planner.internal.util
 
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.IntervalQualifier
+import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedFractionalPrecisionMeta
+import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedPrecisionMeta
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.util.regex.Matcher
@@ -51,7 +53,7 @@ internal object IntervalUtils {
         val integral: Int = matcher.group("is1")!!.toInt().times(sign)
         val fractional: Int? = matcher.group("is2")?.getNanosFromFractionalSeconds()?.times(sign)
         val precision = qualifier.precision ?: DEFAULT_INTERVAL_PRECISION
-        return when (qualifier.field.code()) {
+        val datum = when (qualifier.field.code()) {
             DatetimeField.YEAR -> {
                 assertNullFractionalSeconds(fractional, qualifier.field)
                 Datum.intervalYear(integral, precision)
@@ -81,6 +83,13 @@ internal object IntervalUtils {
             }
             else -> error("Could not parse interval string: $input with given qualifier: $qualifier")
         }
+        if (qualifier.precision == null) {
+            datum.type.setUnspecifiedPrecisionMeta()
+        }
+        if (qualifier.fractionalPrecision == null) {
+            datum.type.setUnspecifiedFractionalPrecisionMeta()
+        }
+        return datum
     }
 
     private class IntervalFieldExtractor(
@@ -102,7 +111,7 @@ internal object IntervalUtils {
     private fun parseIntervalRange(input: String, qualifier: IntervalQualifier.Range): Datum {
         val start = qualifier.startField.code()
         val end = qualifier.endField.code()
-        when (start to end) {
+        val datum = when (start to end) {
             DatetimeField.YEAR to DatetimeField.MONTH -> {
                 val matcher: Matcher = INTERVAL_YEAR_MONTH.matcher(input)
                 if (!matcher.matches()) {
@@ -110,7 +119,7 @@ internal object IntervalUtils {
                 }
                 val extractor = IntervalFieldExtractor(matcher)
                 val precision = qualifier.startFieldPrecision ?: DEFAULT_INTERVAL_PRECISION
-                return Datum.intervalYearMonth(extractor.year, extractor.month, precision)
+                Datum.intervalYearMonth(extractor.year, extractor.month, precision)
             }
             DatetimeField.DAY to DatetimeField.HOUR -> {
                 val matcher: Matcher = INTERVAL_DAY_HOUR.matcher(input)
@@ -119,7 +128,7 @@ internal object IntervalUtils {
                 }
                 val extractor = IntervalFieldExtractor(matcher)
                 val precision = qualifier.startFieldPrecision ?: DEFAULT_INTERVAL_PRECISION
-                return Datum.intervalDayHour(extractor.day, extractor.hour, precision)
+                Datum.intervalDayHour(extractor.day, extractor.hour, precision)
             }
             DatetimeField.DAY to DatetimeField.MINUTE -> {
                 val matcher: Matcher = INTERVAL_DAY_MINUTE.matcher(input)
@@ -128,7 +137,7 @@ internal object IntervalUtils {
                 }
                 val extractor = IntervalFieldExtractor(matcher)
                 val precision = qualifier.startFieldPrecision ?: DEFAULT_INTERVAL_PRECISION
-                return Datum.intervalDayMinute(extractor.day, extractor.hour, extractor.minute, precision)
+                Datum.intervalDayMinute(extractor.day, extractor.hour, extractor.minute, precision)
             }
             DatetimeField.DAY to DatetimeField.SECOND -> {
                 val matcher: Matcher = INTERVAL_DAY_SECOND.matcher(input)
@@ -138,7 +147,7 @@ internal object IntervalUtils {
                 val extractor = IntervalFieldExtractor(matcher)
                 val precision = qualifier.startFieldPrecision ?: DEFAULT_INTERVAL_PRECISION
                 val scale = qualifier.endFieldFractionalPrecision ?: DEFAULT_INTERVAL_FRACTIONAL_PRECISION
-                return Datum.intervalDaySecond(extractor.day, extractor.hour, extractor.minute, extractor.second, extractor.nanos, precision, scale)
+                Datum.intervalDaySecond(extractor.day, extractor.hour, extractor.minute, extractor.second, extractor.nanos, precision, scale)
             }
             DatetimeField.HOUR to DatetimeField.MINUTE -> {
                 val matcher: Matcher = INTERVAL_HOUR_MINUTE.matcher(input)
@@ -147,7 +156,7 @@ internal object IntervalUtils {
                 }
                 val extractor = IntervalFieldExtractor(matcher)
                 val precision = qualifier.startFieldPrecision ?: DEFAULT_INTERVAL_PRECISION
-                return Datum.intervalHourMinute(extractor.hour, extractor.minute, precision)
+                Datum.intervalHourMinute(extractor.hour, extractor.minute, precision)
             }
             DatetimeField.HOUR to DatetimeField.SECOND -> {
                 val matcher: Matcher = INTERVAL_HOUR_SECOND.matcher(input)
@@ -157,7 +166,7 @@ internal object IntervalUtils {
                 val extractor = IntervalFieldExtractor(matcher)
                 val precision = qualifier.startFieldPrecision ?: DEFAULT_INTERVAL_PRECISION
                 val scale = qualifier.endFieldFractionalPrecision ?: DEFAULT_INTERVAL_FRACTIONAL_PRECISION
-                return Datum.intervalHourSecond(extractor.hour, extractor.minute, extractor.second, extractor.nanos, precision, scale)
+                Datum.intervalHourSecond(extractor.hour, extractor.minute, extractor.second, extractor.nanos, precision, scale)
             }
             DatetimeField.MINUTE to DatetimeField.SECOND -> {
                 val matcher: Matcher = INTERVAL_MINUTE_SECOND.matcher(input)
@@ -167,10 +176,17 @@ internal object IntervalUtils {
                 val extractor = IntervalFieldExtractor(matcher)
                 val precision = qualifier.startFieldPrecision ?: DEFAULT_INTERVAL_PRECISION
                 val scale = qualifier.endFieldFractionalPrecision ?: DEFAULT_INTERVAL_FRACTIONAL_PRECISION
-                return Datum.intervalMinuteSecond(extractor.minute, extractor.second, extractor.nanos, precision, scale)
+                Datum.intervalMinuteSecond(extractor.minute, extractor.second, extractor.nanos, precision, scale)
             }
             else -> error("Not a valid interval range: ${qualifier.startField} TO ${qualifier.endField}.")
         }
+        if (qualifier.startFieldPrecision == null) {
+            datum.type.setUnspecifiedPrecisionMeta()
+        }
+        if (qualifier.endFieldFractionalPrecision == null) {
+            datum.type.setUnspecifiedFractionalPrecisionMeta()
+        }
+        return datum
     }
 
     private fun assertNullFractionalSeconds(fractionalSeconds: Int?, field: DatetimeField) {
