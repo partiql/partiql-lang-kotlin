@@ -41,6 +41,7 @@ rewritten to their query representation
 
 ### Fixed
 - Specify the correct qualifier for `INTERVAL` datum with `MINUTE TO SECOND`
+- Handle the case where `From` contains multiple table references and enable querying from comma joining multiple values in a from source without any alias
 
 ### Removed
 
@@ -50,6 +51,7 @@ rewritten to their query representation
 Thank you to all who have contributed!
 - @zyfy29
 - @alancai98
+- @XuechunHHH
 
 ## [1.2.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.2) - 2025-06-26
 
