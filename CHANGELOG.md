@@ -33,6 +33,7 @@ Thank you to all who have contributed!
 rewritten to their query representation
   - **NOTE** evaluating plans without the inlined `With` rewrite will not work as expected. Users trying to evaluate
   `With` should use the default planner.
+- Signed `INTERVAL` literals support 
 
 ### Changed
 
