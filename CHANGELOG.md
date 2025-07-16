@@ -34,6 +34,7 @@ rewritten to their query representation
   - **NOTE** evaluating plans without the inlined `With` rewrite will not work as expected. Users trying to evaluate
   `With` should use the default planner.
 - Signed `INTERVAL` literals support 
+- Metas attached to `INTERVAL` `PType`s if an `INTERVAL` has an unspecified precision or fractional precision
 
 ### Changed
 
@@ -41,7 +42,9 @@ rewritten to their query representation
 
 ### Fixed
 - Specify the correct qualifier for `INTERVAL` datum with `MINUTE TO SECOND`
+- CLI printing of negative interval literals
 - Handle the case where `From` contains multiple table references and enable querying from comma joining multiple values in a from source without any alias
+
 
 ### Removed
 

@@ -114,17 +114,22 @@ internal object RexConverter {
     private const val UNSPECIFIED_LENGTH = "UNSPECIFIED_LENGTH"
     private const val UNSPECIFIED_PRECISION = "UNSPECIFIED_PRECISION"
     private const val UNSPECIFIED_SCALE = "UNSPECIFIED_SCALE"
+    private const val UNSPECIFIED_FRACTIONAL_PRECISION = "UNSPECIFIED_FRACTIONAL_PRECISION"
 
     private fun PType.setUnspecifiedLengthMeta() {
         this.metas[UNSPECIFIED_LENGTH] = true
     }
 
-    private fun PType.setUnspecifiedPrecisionMeta() {
+    internal fun PType.setUnspecifiedPrecisionMeta() {
         this.metas[UNSPECIFIED_PRECISION] = true
     }
 
     private fun PType.setUnspecifiedScaleMeta() {
         this.metas[UNSPECIFIED_SCALE] = true
+    }
+
+    internal fun PType.setUnspecifiedFractionalPrecisionMeta() {
+        this.metas[UNSPECIFIED_FRACTIONAL_PRECISION] = true
     }
 
     internal fun apply(expr: Expr, context: Env): Rex = ToRex.visitExprCoerce(expr, context)
