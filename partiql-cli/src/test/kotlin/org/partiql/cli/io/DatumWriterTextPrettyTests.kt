@@ -65,6 +65,13 @@ class DatumWriterTextPrettyTests {
           INTERVAL '1:2' HOUR (2) TO MINUTE,
           INTERVAL '1:2:3.40' HOUR (2) TO SECOND (2),
           INTERVAL '1:2.30' MINUTE (2) TO SECOND (2),
+          INTERVAL '-5-2' YEAR (2) TO MONTH,
+          INTERVAL '-1 1' DAY (2) TO HOUR,
+          INTERVAL '-1 2:3' DAY (2) TO MINUTE,
+          INTERVAL '-1 2:3:4.50' DAY (2) TO SECOND (2),
+          INTERVAL '-1:2' HOUR (2) TO MINUTE,
+          INTERVAL '-1:2:3.40' HOUR (2) TO SECOND (2),
+          INTERVAL '-1:2.30' MINUTE (2) TO SECOND (2),
           {
             'bar': [
               1,
@@ -126,6 +133,14 @@ class DatumWriterTextPrettyTests {
             Datum.intervalHourMinute(1, 2, 2),
             Datum.intervalHourSecond(1, 2, 3, 400000000, 2, 2),
             Datum.intervalMinuteSecond(1, 2, 300000000, 2, 2),
+            // Negative intervals
+            Datum.intervalYearMonth(-5, -2, 2),
+            Datum.intervalDayHour(-1, -1, 2),
+            Datum.intervalDayMinute(-1, -2, -3, 2),
+            Datum.intervalDaySecond(-1, -2, -3, -4, -500000000, 2, 2),
+            Datum.intervalHourMinute(-1, -2, 2),
+            Datum.intervalHourSecond(-1, -2, -3, -400000000, 2, 2),
+            Datum.intervalMinuteSecond(-1, -2, -300000000, 2, 2),
             // TODO: Technically, structs and bags are unordered. This may or may not lead to issues in the future
             //  when testing. We should potentially instead rewrite these tests to re-parse the output and do a full-on
             //  comparison between the values instead. This approach, however, would not take into account the indents.
