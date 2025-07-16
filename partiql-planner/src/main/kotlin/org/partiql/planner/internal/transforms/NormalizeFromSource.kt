@@ -32,17 +32,35 @@ import org.partiql.planner.internal.util.BinderUtils.toBinder
  * Assign aliases to any FROM source which does not have one.
  */
 internal object NormalizeFromSource : AstPass {
-
     override fun apply(statement: Statement): Statement = statement.accept(Visitor, 0) as Statement
 
     private object Visitor : AstRewriter<Int>() {
-
         // Each SFW starts the ctx count again.
-        override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: Int): AstNode = super.visitQueryBodySFW(node, 0)
+        override fun visitQueryBodySFW(
+            node: QueryBody.SFW,
+            ctx: Int,
+        ): AstNode = super.visitQueryBodySFW(node, 0)
 
-        override fun visitFrom(node: From, ctx: Int) = super.visitFrom(node, ctx) as From
+        override fun visitFrom(
+            node: From,
+            ctx: Int,
+        ): From {
+            // Handle the case where From contains multiple table references
+            if (node.tableRefs.size > 1) {
+                val newTableRefs =
+                    node.tableRefs.mapIndexed { index, tableRef ->
+                        tableRef.accept(this, ctx + index) as FromTableRef // assigning different context values to each table reference
+                    }
+                return From(newTableRefs)
+            }
+            // Handle single table
+            return super.visitFrom(node, ctx) as From
+        }
 
-        override fun visitFromJoin(node: FromJoin, ctx: Int): FromJoin {
+        override fun visitFromJoin(
+            node: FromJoin,
+            ctx: Int,
+        ): FromJoin {
             val lhs = node.lhs.accept(this, ctx) as FromTableRef
             val rhs = node.rhs.accept(this, ctx + 1) as FromTableRef
             val condition = node.condition?.accept(this, ctx) as Expr?
@@ -53,7 +71,10 @@ internal object NormalizeFromSource : AstPass {
             }
         }
 
-        override fun visitFromExpr(node: FromExpr, ctx: Int): FromExpr {
+        override fun visitFromExpr(
+            node: FromExpr,
+            ctx: Int,
+        ): FromExpr {
             val expr = node.expr.accept(this, ctx) as Expr
             var i = ctx
             var asAlias = node.asAlias
