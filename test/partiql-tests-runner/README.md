@@ -12,11 +12,11 @@ This package enables:
 
 ```shell
 # default, test data from partiql-tests submodule will be used
-./gradlew :test:partiql-tests-runner:ConformanceTestReport
+./gradlew :test:partiql-tests-runner:generateTestReport  
 
 # override test data location
 PARTIQL_TESTS_DATA=/path/to/partiql-tests/data \
-./gradlew :test:partiql-tests-runner:ConformanceTestReport
+./gradlew :test:partiql-tests-runner:generateTestReport  
 ```
 The report is written into folder `test/partiql-tests-runner/build/conformance_test_results`.
 
@@ -29,3 +29,9 @@ The report contains two type of comparison:
 ./gradlew :test:partiql-tests-runner:run --args="pathToFirstConformanceTestResults pathToSecondConformanceTestResults firstCommitId secondCommitId pathToComparisonReport"
 ```
 The last argument, `pathToComparisonReport` is for the `.md` file into which to write the comparison report.
+
+You can also check the report via JUnitPlatform:
+
+```shell
+     open ./build/reports/tests/generateTestReport/index.html
+```

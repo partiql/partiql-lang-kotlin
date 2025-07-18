@@ -18,7 +18,6 @@ import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.fromJoin
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
-import org.partiql.ast.From
 import org.partiql.ast.FromExpr
 import org.partiql.ast.FromJoin
 import org.partiql.ast.FromTableRef
@@ -42,18 +41,6 @@ internal object NormalizeFromSource : AstPass {
         // Each SFW starts the ctx count again.
         override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: IntCounter): AstNode =
             super.visitQueryBodySFW(node, IntCounter(0))
-
-        override fun visitFrom(node: From, ctx: IntCounter): From {
-            // Handle the case where From contains multiple table references
-            if (node.tableRefs.size > 1) {
-                val newTableRefs = node.tableRefs.map { tableRef ->
-                    tableRef.accept(this, ctx) as FromTableRef // assigning different context values to each table reference
-                }
-                return From(newTableRefs)
-            }
-            // Handle single table
-            return super.visitFrom(node, ctx) as From
-        }
 
         override fun visitFromJoin(node: FromJoin, ctx: IntCounter): FromJoin {
             val lhs = node.lhs.accept(this, ctx) as FromTableRef
@@ -85,7 +72,4 @@ internal object NormalizeFromSource : AstPass {
             }
         }
     }
-
-    fun visitStatement(node: Statement): Statement =
-        node.accept(Visitor, IntCounter(0)) as Statement
 }
