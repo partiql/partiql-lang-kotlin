@@ -43,8 +43,7 @@ rewritten to their query representation
 ### Fixed
 - Specify the correct qualifier for `INTERVAL` datum with `MINUTE TO SECOND`
 - CLI printing of negative interval literals
-- Handle the case where `From` contains multiple table references and enable querying from comma joining multiple values in a from source without any alias
-
+- Fix alias collision problem when multiple table references need auto-generated aliases
 
 ### Removed
 

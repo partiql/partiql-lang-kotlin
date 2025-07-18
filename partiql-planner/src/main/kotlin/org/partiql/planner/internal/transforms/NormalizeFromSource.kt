@@ -32,37 +32,32 @@ import org.partiql.planner.internal.util.BinderUtils.toBinder
  * Assign aliases to any FROM source which does not have one.
  */
 internal object NormalizeFromSource : AstPass {
-    override fun apply(statement: Statement): Statement = statement.accept(Visitor, 0) as Statement
+    override fun apply(statement: Statement): Statement = statement.accept(Visitor, IntCounter(0)) as Statement
 
-    private object Visitor : AstRewriter<Int>() {
+    internal class IntCounter(var counter: Int = 0) {
+        fun next(): Int = counter++
+    }
+
+    private object Visitor : AstRewriter<IntCounter>() {
         // Each SFW starts the ctx count again.
-        override fun visitQueryBodySFW(
-            node: QueryBody.SFW,
-            ctx: Int,
-        ): AstNode = super.visitQueryBodySFW(node, 0)
+        override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: IntCounter): AstNode =
+            super.visitQueryBodySFW(node, IntCounter(0))
 
-        override fun visitFrom(
-            node: From,
-            ctx: Int,
-        ): From {
+        override fun visitFrom(node: From, ctx: IntCounter): From {
             // Handle the case where From contains multiple table references
             if (node.tableRefs.size > 1) {
-                val newTableRefs =
-                    node.tableRefs.mapIndexed { index, tableRef ->
-                        tableRef.accept(this, ctx + index) as FromTableRef // assigning different context values to each table reference
-                    }
+                val newTableRefs = node.tableRefs.map { tableRef ->
+                    tableRef.accept(this, ctx) as FromTableRef // assigning different context values to each table reference
+                }
                 return From(newTableRefs)
             }
             // Handle single table
             return super.visitFrom(node, ctx) as From
         }
 
-        override fun visitFromJoin(
-            node: FromJoin,
-            ctx: Int,
-        ): FromJoin {
+        override fun visitFromJoin(node: FromJoin, ctx: IntCounter): FromJoin {
             val lhs = node.lhs.accept(this, ctx) as FromTableRef
-            val rhs = node.rhs.accept(this, ctx + 1) as FromTableRef
+            val rhs = node.rhs.accept(this, ctx) as FromTableRef
             val condition = node.condition?.accept(this, ctx) as Expr?
             return if (lhs !== node.lhs || rhs !== node.rhs || condition !== node.condition) {
                 fromJoin(lhs, rhs, node.joinType, condition)
@@ -71,21 +66,17 @@ internal object NormalizeFromSource : AstPass {
             }
         }
 
-        override fun visitFromExpr(
-            node: FromExpr,
-            ctx: Int,
-        ): FromExpr {
+        override fun visitFromExpr(node: FromExpr, ctx: IntCounter): FromExpr {
             val expr = node.expr.accept(this, ctx) as Expr
-            var i = ctx
             var asAlias = node.asAlias
             var atAlias = node.atAlias
             // derive AS alias
             if (asAlias == null) {
-                asAlias = expr.toBinder(i++)
+                asAlias = expr.toBinder(ctx.next())
             }
             // derive AT binder
             if (atAlias == null && node.fromType == FromType.UNPIVOT()) {
-                atAlias = expr.toBinder(i++)
+                atAlias = expr.toBinder(ctx.next())
             }
             return if (expr !== node.expr || asAlias !== node.asAlias || atAlias !== node.atAlias) {
                 fromExpr(expr = expr, fromType = node.fromType, asAlias = asAlias, atAlias = atAlias)
@@ -94,4 +85,7 @@ internal object NormalizeFromSource : AstPass {
             }
         }
     }
+
+    fun visitStatement(node: Statement): Statement =
+        node.accept(Visitor, IntCounter(0)) as Statement
 }
