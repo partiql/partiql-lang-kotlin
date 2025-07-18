@@ -1213,7 +1213,6 @@ internal object RexConverter {
                 DataType.USER_DEFINED -> TODO("Custom type not supported ")
                 // <interval type>
                 DataType.INTERVAL -> {
-                    // TODO meta for interval when precision is unspecified
                     when (val q = type.intervalQualifier) {
                         is IntervalQualifier.Single -> {
                             val precision = q.precision ?: INTERVAL_DEFAULT_PRECISON
@@ -1226,6 +1225,13 @@ internal object RexConverter {
                                 DatetimeField.MINUTE -> PType.intervalMinute(precision)
                                 DatetimeField.SECOND -> PType.intervalSecond(precision, fractionalPrecision)
                                 else -> error("Unsupported DatetimeField: ${q.field}")
+                            }.also {
+                                if (q.precision == null) {
+                                    it.setUnspecifiedPrecisionMeta()
+                                }
+                                if (q.fractionalPrecision == null) {
+                                    it.setUnspecifiedFractionalPrecisionMeta()
+                                }
                             }
                         }
                         is IntervalQualifier.Range -> {
@@ -1242,6 +1248,13 @@ internal object RexConverter {
                                 DatetimeField.HOUR to DatetimeField.SECOND -> PType.intervalHourSecond(precision, scale)
                                 DatetimeField.MINUTE to DatetimeField.SECOND -> PType.intervalMinuteSecond(precision, scale)
                                 else -> error("Unsupported DatetimeField: $lhsField to $rhsField")
+                            }.also {
+                                if (q.startFieldPrecision == null) {
+                                    it.setUnspecifiedPrecisionMeta()
+                                }
+                                if (q.endFieldFractionalPrecision == null) {
+                                    it.setUnspecifiedFractionalPrecisionMeta()
+                                }
                             }
                         }
                         else -> error("Unsupported IntervalQualifier: $q")
