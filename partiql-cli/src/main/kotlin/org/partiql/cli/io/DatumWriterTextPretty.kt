@@ -348,14 +348,8 @@ class DatumWriterTextPretty(
             if (scale == 0) {
                 return@buildString
             }
-            val before = value.toString()
-            val beforeLength = before.length
-            val toPadBefore = nanoLength - beforeLength
-            if (toPadBefore > 0) {
-                append("0".repeat(toPadBefore))
-            }
-            val remaining = before.substring(0, scale - toPadBefore)
-            append(remaining)
+            val paddedValue = value.toString().padStart(nanoLength, '0')
+            append(paddedValue.substring(0, minOf(scale, paddedValue.length)))
         }
     }
 

@@ -42,6 +42,7 @@ rewritten to their query representation
 
 ### Fixed
 - Specify the correct qualifier for `INTERVAL` datum with `MINUTE TO SECOND`
+- Handle the formatting when the nanoseconds of `INTERVAL` datum underflow
 - CLI printing of negative interval literals
 - Fix alias collision problem when multiple table references need auto-generated aliases
 
