@@ -1,8 +1,6 @@
 package org.partiql.cli.io
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -75,6 +73,7 @@ class DatumWriterTextPrettyTests {
           INTERVAL '-1:2:3.40' HOUR (2) TO SECOND (2),
           INTERVAL '-1:2.30' MINUTE (2) TO SECOND (2),
           INTERVAL '3:4.00' MINUTE (2) TO SECOND (2),
+          INTERVAL '3:4.012345678' MINUTE (2) TO SECOND (9),
           {
             'bar': [
               1,
@@ -145,6 +144,7 @@ class DatumWriterTextPrettyTests {
             Datum.intervalHourSecond(-1, -2, -3, -400000000, 2, 2),
             Datum.intervalMinuteSecond(-1, -2, -300000000, 2, 2),
             Datum.intervalMinuteSecond(3, 4, 0, 2, 2),
+            Datum.intervalMinuteSecond(3, 4, 12345678, 2, 9),
             // TODO: Technically, structs and bags are unordered. This may or may not lead to issues in the future
             //  when testing. We should potentially instead rewrite these tests to re-parse the output and do a full-on
             //  comparison between the values instead. This approach, however, would not take into account the indents.
@@ -164,22 +164,10 @@ class DatumWriterTextPrettyTests {
                 ),
             ),
         )
-
-        @JvmStatic
-        fun fractionalSecondsCases(): List<Any> {
-            return listOf(
-                arrayOf(12345678, 9, ".012345678"),
-                arrayOf(123456789, 9, ".123456789"),
-                arrayOf(300000000, 1, ".3"),
-                arrayOf(500000000, 2, ".50"),
-                arrayOf(0, 2, ".00"),
-                arrayOf(20000, 3, ".000"),
-            )
-        }
     }
 
     @Test
-    fun testWrite() {
+    fun test() {
         // Prepare
         val sb: StringBuilder = StringBuilder()
         val writer = DatumWriterTextPretty(sb)
@@ -187,13 +175,5 @@ class DatumWriterTextPrettyTests {
         writer.write(data)
         // Assert
         assertEquals(EXPECTED_OUTPUT, sb.toString())
-    }
-
-    @ParameterizedTest
-    @MethodSource("fractionalSecondsCases")
-    fun testFractionalSeconds(value: Int, scale: Int, expected: String) {
-        val sb: StringBuilder = StringBuilder()
-        val writer = DatumWriterTextPretty(sb)
-        assertEquals(expected, writer.fractionalSeconds(value, scale))
     }
 }

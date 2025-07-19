@@ -1,6 +1,5 @@
 package org.partiql.cli.io
 
-import com.google.common.annotations.VisibleForTesting
 import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -342,8 +341,7 @@ class DatumWriterTextPretty(
         }
     }
 
-    @VisibleForTesting
-    internal fun fractionalSeconds(value: Int, scale: Int): String {
+    private fun fractionalSeconds(value: Int, scale: Int): String {
         val nanoLength = 9
         return buildString {
             append(".")
