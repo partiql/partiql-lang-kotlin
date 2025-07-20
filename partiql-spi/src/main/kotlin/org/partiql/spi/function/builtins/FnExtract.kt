@@ -38,7 +38,7 @@ internal val Fn_EXTRACT_YEAR__INTERVAL__INT32 = FunctionUtils.hidden(
     name = "extract_year",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.intervalYear(6)),
+        Parameter("interval", PType.intervalYear(6)),
     ),
 ){ args ->
     val v = args[0]
@@ -74,7 +74,7 @@ internal val Fn_EXTRACT_MONTH__INTERVAL__INT32 = FunctionUtils.hidden(
     name = "extract_month",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.intervalYear(6)),
+        Parameter("interval", PType.intervalYear(6)),
     ),
 ){ args ->
     val v = args[0]
@@ -111,7 +111,7 @@ internal val Fn_EXTRACT_DAY__INTERVAL__INT32 = FunctionUtils.hidden(
     name = "extract_day",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.intervalDay(6)),
+        Parameter("interval", PType.intervalDay(6)),
     ),
 ){ args ->
     val v = args[0]
@@ -147,7 +147,7 @@ internal val Fn_EXTRACT_HOUR__INTERVAL__INT32 = FunctionUtils.hidden(
     name = "extract_hour",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.intervalDay(6)),
+        Parameter("interval", PType.intervalDay(6)),
     ),
 ){ args ->
     val v = args[0]
@@ -183,7 +183,7 @@ internal val Fn_EXTRACT_MINUTE__INTERVAL__INT32 = FunctionUtils.hidden(
     name = "extract_minute",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.intervalDay(6)),
+        Parameter("interval", PType.intervalDay(6)),
     ),
 ){ args ->
     val v = args[0]
@@ -229,7 +229,7 @@ internal val Fn_EXTRACT_SECOND__INTERVAL__DECIMAL_ARBITRARY = FunctionUtils.hidd
     name = "extract_second",
     returns = PType.decimal(11, 9), // TODO: Rewrite using new function modeling.
     parameters = arrayOf(
-        Parameter("datetime", PType.intervalDay(6)),
+        Parameter("interval", PType.intervalDay(6)),
     ),
 ) { args ->
     val v = args[0]
