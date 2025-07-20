@@ -180,7 +180,7 @@ internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = FunctionUtils.hidden(
 }
 
 internal val Fn_EXTRACT_MINUTE__INTERVAL__INT32 = FunctionUtils.hidden(
-    name = "extract_hour",
+    name = "extract_minute",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.intervalDay(6)),

@@ -499,7 +499,7 @@ EXTRACT(TIMEZONE_HOUR FROM TIME WITH TIME ZONE '23:12:59-08:30')    -- -8
 EXTRACT(TIMEZONE_MINUTE FROM TIME WITH TIME ZONE '23:12:59-08:30')  -- -30
 
 ```
-*Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` and `TIME` (without time zone) types, as well as for `INTERVAL` types which do not have timezone information..
+*Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` and `TIME` (without time zone) types, as well as for `INTERVAL` types which do not have timezone information.
 
 ### `FILTER_DISTINCT` -- since v0.7.0
 
