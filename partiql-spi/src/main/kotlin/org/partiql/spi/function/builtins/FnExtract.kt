@@ -34,6 +34,17 @@ internal val Fn_EXTRACT_YEAR__TIMESTAMP__INT32 = FunctionUtils.hidden(
     Datum.integer(v.year)
 }
 
+internal val Fn_EXTRACT_YEAR__INTERVAL__INT32 = FunctionUtils.hidden(
+    name = "extract_year",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("datetime", PType.intervalYear(6)),
+    ),
+){ args ->
+    val v = args[0]
+    Datum.integer(v.years)
+}
+
 //
 // Extract Month
 //
@@ -57,6 +68,17 @@ internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = FunctionUtils.hidden(
 ) { args ->
     val v = args[0].localDateTime
     Datum.integer(v.monthValue)
+}
+
+internal val Fn_EXTRACT_MONTH__INTERVAL__INT32 = FunctionUtils.hidden(
+    name = "extract_month",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("datetime", PType.intervalYear(6)),
+    ),
+){ args ->
+    val v = args[0]
+    Datum.integer(v.months)
 }
 
 //
@@ -85,6 +107,17 @@ internal val Fn_EXTRACT_DAY__TIMESTAMP__INT32 = FunctionUtils.hidden(
     Datum.integer(v.dayOfMonth)
 }
 
+internal val Fn_EXTRACT_DAY__INTERVAL__INT32 = FunctionUtils.hidden(
+    name = "extract_day",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("datetime", PType.intervalDay(6)),
+    ),
+){ args ->
+    val v = args[0]
+    Datum.integer(v.days)
+}
+
 //
 // Extract Hour
 //
@@ -110,6 +143,17 @@ internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = FunctionUtils.hidden(
     Datum.integer(v.hour)
 }
 
+internal val Fn_EXTRACT_HOUR__INTERVAL__INT32 = FunctionUtils.hidden(
+    name = "extract_hour",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("datetime", PType.intervalDay(6)),
+    ),
+){ args ->
+    val v = args[0]
+    Datum.integer(v.hours)
+}
+
 //
 // Extract Minute
 //
@@ -133,6 +177,17 @@ internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = FunctionUtils.hidden(
 ) { args ->
     val v = args[0].localDateTime
     Datum.integer(v.minute)
+}
+
+internal val Fn_EXTRACT_MINUTE__INTERVAL__INT32 = FunctionUtils.hidden(
+    name = "extract_hour",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("datetime", PType.intervalDay(6)),
+    ),
+){ args ->
+    val v = args[0]
+    Datum.integer(v.minutes)
 }
 
 //
@@ -167,6 +222,18 @@ internal val Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY = FunctionUtils.hid
 ) { args ->
     val v = args[0].localDateTime
     val d = BigDecimal(v.second).add(BigDecimal(v.nano).scaleByPowerOfTen(-9))
+    Datum.decimal(d, 11, 9)
+}
+
+internal val Fn_EXTRACT_SECOND__INTERVAL__DECIMAL_ARBITRARY = FunctionUtils.hidden(
+    name = "extract_second",
+    returns = PType.decimal(11, 9), // TODO: Rewrite using new function modeling.
+    parameters = arrayOf(
+        Parameter("datetime", PType.intervalDay(6)),
+    ),
+) { args ->
+    val v = args[0]
+    val d = BigDecimal(v.seconds).add(BigDecimal(v.nanos).scaleByPowerOfTen(-9))
     Datum.decimal(d, 11, 9)
 }
 
