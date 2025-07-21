@@ -40,7 +40,7 @@ internal val Fn_EXTRACT_YEAR__INTERVAL__INT32 = FunctionUtils.hidden(
     parameters = arrayOf(
         Parameter("interval", PType.intervalYear(6)),
     ),
-){ args ->
+) { args ->
     val v = args[0]
     Datum.integer(v.years)
 }
@@ -76,7 +76,7 @@ internal val Fn_EXTRACT_MONTH__INTERVAL__INT32 = FunctionUtils.hidden(
     parameters = arrayOf(
         Parameter("interval", PType.intervalYear(6)),
     ),
-){ args ->
+) { args ->
     val v = args[0]
     Datum.integer(v.months)
 }
@@ -113,7 +113,7 @@ internal val Fn_EXTRACT_DAY__INTERVAL__INT32 = FunctionUtils.hidden(
     parameters = arrayOf(
         Parameter("interval", PType.intervalDay(6)),
     ),
-){ args ->
+) { args ->
     val v = args[0]
     Datum.integer(v.days)
 }
@@ -149,7 +149,7 @@ internal val Fn_EXTRACT_HOUR__INTERVAL__INT32 = FunctionUtils.hidden(
     parameters = arrayOf(
         Parameter("interval", PType.intervalDay(6)),
     ),
-){ args ->
+) { args ->
     val v = args[0]
     Datum.integer(v.hours)
 }
@@ -185,7 +185,7 @@ internal val Fn_EXTRACT_MINUTE__INTERVAL__INT32 = FunctionUtils.hidden(
     parameters = arrayOf(
         Parameter("interval", PType.intervalDay(6)),
     ),
-){ args ->
+) { args ->
     val v = args[0]
     Datum.integer(v.minutes)
 }
