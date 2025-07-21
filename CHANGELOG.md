@@ -45,6 +45,7 @@ rewritten to their query representation
 - Handle the formatting when the nanoseconds of `INTERVAL` datum underflow
 - CLI printing of negative interval literals
 - Fix alias collision problem when multiple table references need auto-generated aliases
+- Add `ABS` function support on `INTERVAL` field
 
 ### Removed
 

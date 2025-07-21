@@ -27,6 +27,8 @@ internal object Builtins {
         Fn_ABS__FLOAT32__FLOAT32,
         Fn_ABS__FLOAT64__FLOAT64,
         Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
+        Fn_ABS__INTERVAL_YM__INTERVAL_YM,
+        Fn_ABS__INTERVAL_DT__INTERVAL_DT,
         Fn_AND__BOOL_BOOL__BOOL,
         FnBetween,
         Fn_BIT_LENGTH__STRING__INT32,
