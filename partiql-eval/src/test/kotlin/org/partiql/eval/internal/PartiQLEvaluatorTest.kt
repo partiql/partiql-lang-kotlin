@@ -65,6 +65,11 @@ class PartiQLEvaluatorTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun castTests(tc: SuccessTestCase) = tc.run()
 
+    @ParameterizedTest
+    @MethodSource("intervalAbsTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun intervalAbsTests(tc: SuccessTestCase) = tc.run()
+
     companion object {
 
         @JvmStatic
@@ -1406,6 +1411,168 @@ class PartiQLEvaluatorTest {
                         "orderName" to stringValue("apples")
                     )
                 )
+            )
+        )
+
+        @JvmStatic
+        fun intervalAbsTestCases() = listOf(
+            // Year-Month interval tests
+            SuccessTestCase(
+                input = "ABS(INTERVAL '1-6' YEAR TO MONTH)",
+                expected = Datum.intervalYearMonth(1, 6, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '+1-6' YEAR TO MONTH)",
+                expected = Datum.intervalYearMonth(1, 6, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-1-6' YEAR TO MONTH)",
+                expected = Datum.intervalYearMonth(1, 6, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '100-6' YEAR(3) TO MONTH)",
+                expected = Datum.intervalYearMonth(100, 6, 3)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-100-6' YEAR(3) TO MONTH)",
+                expected = Datum.intervalYearMonth(100, 6, 3)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '5' YEAR)",
+                expected = Datum.intervalYear(5, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-5' YEAR)",
+                expected = Datum.intervalYear(5, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '100' MONTH(3))",
+                expected = Datum.intervalMonth(100, 3)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-100' MONTH(3))",
+                expected = Datum.intervalMonth(100, 3)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '0-0' YEAR TO MONTH)",
+                expected = Datum.intervalYearMonth(0, 0, 2)
+            ),
+            // Day-Time interval tests  
+            SuccessTestCase(
+                input = "ABS(INTERVAL '5' DAY)",
+                expected = Datum.intervalDay(5, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-5' DAY)",
+                expected = Datum.intervalDay(5, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '100' DAY(3))",
+                expected = Datum.intervalDay(100, 3)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-100' DAY(3))",
+                expected = Datum.intervalDay(100, 3)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '3' HOUR)",
+                expected = Datum.intervalHour(3, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-3' HOUR)",
+                expected = Datum.intervalHour(3, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '30' MINUTE)",
+                expected = Datum.intervalMinute(30, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-30' MINUTE)",
+                expected = Datum.intervalMinute(30, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '45.123' SECOND)",
+                expected = Datum.intervalSecond(45, 123000000, 2, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-45.123' SECOND)",
+                expected = Datum.intervalSecond(45, 123000000, 2, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '123.456789' SECOND(3,6))",
+                expected = Datum.intervalSecond(123, 456789000, 3, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-123.456789' SECOND(3,6))",
+                expected = Datum.intervalSecond(123, 456789000, 3, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '1 2' DAY TO HOUR)",
+                expected = Datum.intervalDayHour(1, 2, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-1 2' DAY TO HOUR)",
+                expected = Datum.intervalDayHour(1, 2, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '1 2:30' DAY TO MINUTE)",
+                expected = Datum.intervalDayMinute(1, 2, 30, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-1 2:30' DAY TO MINUTE)",
+                expected = Datum.intervalDayMinute(1, 2, 30, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '100 10:30' DAY(3) TO MINUTE)",
+                expected = Datum.intervalDayMinute(100, 10, 30, 3)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-100 10:30' DAY(3) TO MINUTE)",
+                expected = Datum.intervalDayMinute(100, 10, 30, 3)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '1 2:30:45.567' DAY TO SECOND)",
+                expected = Datum.intervalDaySecond(1, 2, 30, 45, 567000000, 2, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-1 2:30:45.567' DAY TO SECOND)",
+                expected = Datum.intervalDaySecond(1, 2, 30, 45, 567000000, 2, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '100 10:30:45.123456' DAY(3) TO SECOND(6))",
+                expected = Datum.intervalDaySecond(100, 10, 30, 45, 123456000, 3, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-100 10:30:45.123456' DAY(3) TO SECOND(6))",
+                expected = Datum.intervalDaySecond(100, 10, 30, 45, 123456000, 3, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '2:30' HOUR TO MINUTE)",
+                expected = Datum.intervalHourMinute(2, 30, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-2:30' HOUR TO MINUTE)",
+                expected = Datum.intervalHourMinute(2, 30, 2)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '2:30:45.789' HOUR TO SECOND)",
+                expected = Datum.intervalHourSecond(2, 30, 45, 789000000, 2, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-2:30:45.789' HOUR TO SECOND)",
+                expected = Datum.intervalHourSecond(2, 30, 45, 789000000, 2, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '30:45.123' MINUTE TO SECOND)",
+                expected = Datum.intervalMinuteSecond(30, 45, 123000000, 2, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '-30:45.123' MINUTE TO SECOND)",
+                expected = Datum.intervalMinuteSecond(30, 45, 123000000, 2, 6)
+            ),
+            SuccessTestCase(
+                input = "ABS(INTERVAL '0 0:0:0' DAY TO SECOND)",
+                expected = Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)
             )
         )
     }
