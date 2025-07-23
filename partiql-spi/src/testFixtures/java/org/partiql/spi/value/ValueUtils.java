@@ -24,6 +24,8 @@ import static org.partiql.spi.types.PType.DECIMAL;
 import static org.partiql.spi.types.PType.DOUBLE;
 import static org.partiql.spi.types.PType.DYNAMIC;
 import static org.partiql.spi.types.PType.INTEGER;
+import static org.partiql.spi.types.PType.INTERVAL_DT;
+import static org.partiql.spi.types.PType.INTERVAL_YM;
 import static org.partiql.spi.types.PType.NUMERIC;
 import static org.partiql.spi.types.PType.REAL;
 import static org.partiql.spi.types.PType.ROW;
