@@ -118,16 +118,24 @@ internal val Fn_ABS__INTERVAL_YM__INTERVAL_YM = Function.overload(
     parameters = arrayOf(Parameter("value", PType.intervalYearMonth(2))),
 ) { args ->
     val interval = args[0]
-    if (interval.type.getIntervalCode() == IntervalCode.MONTH) {
-        Datum.intervalMonth(interval.months.absoluteValue, interval.type.precision)
-    } else {
-        Datum.intervalYearMonth(
+    when (interval.type.getIntervalCode()) {
+        IntervalCode.YEAR -> Datum.intervalYear(
+            interval.years.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.MONTH -> Datum.intervalMonth(
+            interval.months.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.YEAR_MONTH -> Datum.intervalYearMonth(
             interval.years.absoluteValue,
             interval.months.absoluteValue,
             interval.type.precision,
         )
+        else -> throw IllegalArgumentException("Unexpected interval code for year-month interval: ${interval.type.getIntervalCode()}")
     }
 }
+
 internal val Fn_ABS__INTERVAL_DT__INTERVAL_DT = Function.overload(
     name = "abs",
     returns = PType.intervalDaySecond(2, 6), // Default precision 2, fractional precision 6
@@ -194,6 +202,6 @@ internal val Fn_ABS__INTERVAL_DT__INTERVAL_DT = Function.overload(
             interval.type.precision,
             interval.type.fractionalPrecision,
         )
-        else -> interval
+        else -> throw IllegalArgumentException("Unexpected interval code for day-time interval: $intervalCode")
     }
 }
