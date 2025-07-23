@@ -24,6 +24,8 @@ import static org.partiql.spi.types.PType.DECIMAL;
 import static org.partiql.spi.types.PType.DOUBLE;
 import static org.partiql.spi.types.PType.DYNAMIC;
 import static org.partiql.spi.types.PType.INTEGER;
+import static org.partiql.spi.types.PType.INTERVAL_DT;
+import static org.partiql.spi.types.PType.INTERVAL_YM;
 import static org.partiql.spi.types.PType.NUMERIC;
 import static org.partiql.spi.types.PType.REAL;
 import static org.partiql.spi.types.PType.ROW;
@@ -90,6 +92,23 @@ public class ValueUtils {
                 return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(datum.getLocalDateTime()));
             case TIMESTAMPZ:
                 return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(datum.getOffsetDateTime()));
+            // TODO: Temporary placeholder for INTERVAL NULL handling.
+            // We're not adding full INTERVAL support to this function due to PartiQLValue removal.
+            // Related issues:
+            // https://github.com/partiql/partiql-lang-kotlin/issues/1782
+            // https://github.com/partiql/partiql-lang-kotlin/issues/1783
+            case INTERVAL_YM:
+                if (datum.isNull()) {
+                    return PartiQL.nullValue();
+                } else {
+                    throw new UnsupportedOperationException("Unsupported datum type: " + type);
+                }
+            case INTERVAL_DT:
+                if (datum.isNull()) {
+                    return PartiQL.nullValue();
+                } else {
+                    throw new UnsupportedOperationException("Unsupported datum type: " + type);
+                }
             case BAG:
                 return datum.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(datum));
             case ARRAY:

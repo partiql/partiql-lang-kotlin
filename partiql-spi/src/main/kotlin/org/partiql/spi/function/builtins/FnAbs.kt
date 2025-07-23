@@ -6,6 +6,7 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
+import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import kotlin.math.absoluteValue
@@ -109,4 +110,98 @@ internal val Fn_ABS__FLOAT64__FLOAT64 = Function.overload(
 ) { args ->
     val value = args[0].double
     Datum.doublePrecision(value.absoluteValue)
+}
+
+internal val Fn_ABS__INTERVAL_YM__INTERVAL_YM = Function.overload(
+    name = "abs",
+    returns = PType.intervalYearMonth(2), // Default precision 2
+    parameters = arrayOf(Parameter("value", PType.intervalYearMonth(2))),
+) { args ->
+    val interval = args[0]
+    when (interval.type.getIntervalCode()) {
+        IntervalCode.YEAR -> Datum.intervalYear(
+            interval.years.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.MONTH -> Datum.intervalMonth(
+            interval.months.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.YEAR_MONTH -> Datum.intervalYearMonth(
+            interval.years.absoluteValue,
+            interval.months.absoluteValue,
+            interval.type.precision,
+        )
+        else -> throw IllegalArgumentException("Unexpected interval code for year-month interval: ${interval.type.getIntervalCode()}")
+    }
+}
+
+internal val Fn_ABS__INTERVAL_DT__INTERVAL_DT = Function.overload(
+    name = "abs",
+    returns = PType.intervalDaySecond(2, 6), // Default precision 2, fractional precision 6
+    parameters = arrayOf(Parameter("value", PType.intervalDaySecond(2, 6))),
+) { args ->
+    val interval = args[0]
+    val intervalCode = interval.type.getIntervalCode()
+    when (intervalCode) {
+        IntervalCode.DAY -> Datum.intervalDay(
+            interval.days.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.HOUR -> Datum.intervalHour(
+            interval.hours.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.MINUTE -> Datum.intervalMinute(
+            interval.minutes.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.SECOND -> Datum.intervalSecond(
+            interval.seconds.absoluteValue,
+            interval.nanos.absoluteValue,
+            interval.type.precision,
+            interval.type.fractionalPrecision,
+        )
+        IntervalCode.DAY_HOUR -> Datum.intervalDayHour(
+            interval.days.absoluteValue,
+            interval.hours.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.DAY_MINUTE -> Datum.intervalDayMinute(
+            interval.days.absoluteValue,
+            interval.hours.absoluteValue,
+            interval.minutes.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.DAY_SECOND -> Datum.intervalDaySecond(
+            interval.days.absoluteValue,
+            interval.hours.absoluteValue,
+            interval.minutes.absoluteValue,
+            interval.seconds.absoluteValue,
+            interval.nanos.absoluteValue,
+            interval.type.precision,
+            interval.type.fractionalPrecision,
+        )
+        IntervalCode.HOUR_MINUTE -> Datum.intervalHourMinute(
+            interval.hours.absoluteValue,
+            interval.minutes.absoluteValue,
+            interval.type.precision,
+        )
+        IntervalCode.HOUR_SECOND -> Datum.intervalHourSecond(
+            interval.hours.absoluteValue,
+            interval.minutes.absoluteValue,
+            interval.seconds.absoluteValue,
+            interval.nanos.absoluteValue,
+            interval.type.precision,
+            interval.type.fractionalPrecision,
+        )
+        IntervalCode.MINUTE_SECOND -> Datum.intervalMinuteSecond(
+            interval.minutes.absoluteValue,
+            interval.seconds.absoluteValue,
+            interval.nanos.absoluteValue,
+            interval.type.precision,
+            interval.type.fractionalPrecision,
+        )
+        else -> throw IllegalArgumentException("Unexpected interval code for day-time interval: $intervalCode")
+    }
 }
