@@ -35,6 +35,7 @@ rewritten to their query representation
   `With` should use the default planner.
 - Signed `INTERVAL` literals support 
 - Metas attached to `INTERVAL` `PType`s if an `INTERVAL` has an unspecified precision or fractional precision
+- `EXTRACT` function support on `INTERVAL` datum
 
 ### Changed
 

@@ -454,6 +454,8 @@ and `DateTime` type is one of
 * `DATE`
 * `TIME`
 * `TIMESTAMP` 
+* `INTERVAL_YM`
+* `INTERVAL_DT`
 
 *Note* that `ExtractDateTimePart` **differs** from `DateTimePart` in [DATE_ADD](#date_add). 
 
@@ -486,11 +488,18 @@ EXTRACT(HOUR FROM TIME '23:12:59')                         -- 23
 EXTRACT(MINUTE FROM TIME '23:12:59')                       -- 12
 EXTRACT(SECOND FROM TIME '23:12:59')                       -- 59
 EXTRACT(SECOND FROM TIME (2) '23:12:59.128')               -- 59.13
+EXTRACT(YEAR FROM INTERVAL '1-2' YEAR TO MONTH)            -- 1
+EXTRACT(MONTH FROM INTERVAL '1-2' YEAR TO MONTH)           -- 2
+EXTRACT(DAY FROM INTERVAL '3 4:5:6.789' DAY TO SECOND)     -- 3
+EXTRACT(HOUR FROM INTERVAL '3 4:5:6.789' DAY TO SECOND)    -- 4
+EXTRACT(MINUTE FROM INTERVAL '3 4:5:6.789' DAY TO SECOND)  -- 5
+EXTRACT(SECOND FROM INTERVAL '3 4:5:6.789' DAY TO SECOND)           -- 6.789
+EXTRACT(SECOND FROM INTERVAL '3 4:5:6.789' DAY TO SECOND(2))        -- 6.78
 EXTRACT(TIMEZONE_HOUR FROM TIME WITH TIME ZONE '23:12:59-08:30')    -- -8
 EXTRACT(TIMEZONE_MINUTE FROM TIME WITH TIME ZONE '23:12:59-08:30')  -- -30
 
 ```
-*Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` and `TIME` (without time zone) type. 
+*Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` and `TIME` (without time zone) types, as well as for `INTERVAL` types which do not have timezone information.
 
 ### `FILTER_DISTINCT` -- since v0.7.0
 
