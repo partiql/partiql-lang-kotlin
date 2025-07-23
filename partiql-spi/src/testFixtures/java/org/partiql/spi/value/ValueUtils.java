@@ -90,6 +90,18 @@ public class ValueUtils {
                 return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(datum.getLocalDateTime()));
             case TIMESTAMPZ:
                 return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(datum.getOffsetDateTime()));
+            case INTERVAL_YM:
+                if (datum.isNull()) {
+                    return PartiQL.nullValue();
+                } else {
+                    throw new UnsupportedOperationException("Unsupported datum type: " + type);
+                }
+            case INTERVAL_DT:
+                if (datum.isNull()) {
+                    return PartiQL.nullValue();
+                } else {
+                    throw new UnsupportedOperationException("Unsupported datum type: " + type);
+                }
             case BAG:
                 return datum.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(datum));
             case ARRAY:
