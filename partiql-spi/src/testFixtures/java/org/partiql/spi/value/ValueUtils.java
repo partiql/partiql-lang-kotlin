@@ -92,6 +92,11 @@ public class ValueUtils {
                 return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(datum.getLocalDateTime()));
             case TIMESTAMPZ:
                 return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(datum.getOffsetDateTime()));
+            // TODO: Temporary placeholder for INTERVAL NULL handling.
+            // We're not adding full INTERVAL support to this function due to PartiQLValue removal.
+            // Related issues:
+            // https://github.com/partiql/partiql-lang-kotlin/issues/1782
+            // https://github.com/partiql/partiql-lang-kotlin/issues/1783
             case INTERVAL_YM:
                 if (datum.isNull()) {
                     return PartiQL.nullValue();
