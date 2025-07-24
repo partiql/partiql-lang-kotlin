@@ -118,7 +118,7 @@ class DatumWriterTextPretty(
 
     private fun writeVariant(datum: Datum) {
         this.out.print("`")
-        this.out.print(datum.pack(Charsets.UTF_8))
+        this.out.print(String(datum.pack(Charsets.UTF_8), Charsets.UTF_8))
         this.out.print("`")
     }
 

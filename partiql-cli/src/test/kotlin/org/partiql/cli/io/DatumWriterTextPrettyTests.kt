@@ -74,6 +74,7 @@ class DatumWriterTextPrettyTests {
           INTERVAL '-1:2.30' MINUTE (2) TO SECOND (2),
           INTERVAL '3:4.00' MINUTE (2) TO SECOND (2),
           INTERVAL '3:4.012345678' MINUTE (2) TO SECOND (9),
+          `{pdx:{region:foo,segmentCount:42},iad:{region:bar,segmentCount:43}}`,
           {
             'bar': [
               1,
@@ -145,6 +146,7 @@ class DatumWriterTextPrettyTests {
             Datum.intervalMinuteSecond(-1, -2, -300000000, 2, 2),
             Datum.intervalMinuteSecond(3, 4, 0, 2, 2),
             Datum.intervalMinuteSecond(3, 4, 12345678, 2, 9),
+            Datum.ion("{ pdx: { region: 'foo', segmentCount: 42 }, iad: { region: 'bar', segmentCount: 43 }}"),
             // TODO: Technically, structs and bags are unordered. This may or may not lead to issues in the future
             //  when testing. We should potentially instead rewrite these tests to re-parse the output and do a full-on
             //  comparison between the values instead. This approach, however, would not take into account the indents.
