@@ -6,8 +6,11 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.IntervalUtils
 import org.partiql.spi.utils.NumberUtils.isZero
+import org.partiql.spi.utils.getNumber
 import org.partiql.spi.value.Datum
+import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal object FnDivide : DiadicArithmeticOperator("divide") {
@@ -127,6 +130,19 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
                 throw PErrors.divisionByZeroException(arg0, PType.doublePrecision())
             }
             Datum.doublePrecision(arg0 / arg1)
+        }
+    }
+
+    override fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn? {
+        val op = IntervalUtils.intervalDivide(lhs) ?: return null
+        return basic(lhs, lhs, rhs) { args ->
+            val interval = args[0]
+            val number = args[1].getNumber()
+            if (number.isZero()) {
+                throw PErrors.divisionByZeroException(interval, lhs)
+            }
+
+            op(interval, BigDecimal(number.toString()))
         }
     }
 }
