@@ -10,6 +10,7 @@ import org.partiql.spi.utils.IntervalUtils
 import org.partiql.spi.utils.NumberUtils.isZero
 import org.partiql.spi.utils.getNumber
 import org.partiql.spi.value.Datum
+import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal object FnDivide : DiadicArithmeticOperator("divide") {
@@ -133,14 +134,15 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
     }
 
     override fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn? {
-        val op = IntervalUtils.getIntervalWithFactor(lhs) ?: return null
+        val op = IntervalUtils.intervalDivide(lhs) ?: return null
         return basic(lhs, lhs, rhs) { args ->
             val interval = args[0]
             val number = args[1].getNumber()
             if (number.isZero()) {
                 throw PErrors.divisionByZeroException(interval, lhs)
             }
-            op(1 / number.toDouble(), interval)
+
+            op(interval, BigDecimal(number.toString()))
         }
     }
 }

@@ -48,6 +48,7 @@ rewritten to their query representation
 - Fix alias collision problem when multiple table references need auto-generated aliases
 - Add `ABS` function support on `INTERVAL` field
 - Display of `Ion` in PartiQL CLI output
+- Support `INTERVAL` times and divide with numerics
 
 ### Removed
 

@@ -11,6 +11,7 @@ import org.partiql.spi.utils.NumberUtils.byteOverflows
 import org.partiql.spi.utils.NumberUtils.shortOverflows
 import org.partiql.spi.utils.getNumber
 import org.partiql.spi.value.Datum
+import java.math.BigDecimal
 
 internal object FnTimes : DiadicArithmeticOperator("times") {
 
@@ -120,20 +121,20 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
     }
 
     override fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn? {
-        val op = IntervalUtils.getIntervalWithFactor(lhs) ?: return null
+        val op = IntervalUtils.intervalMultiply(lhs) ?: return null
         return basic(lhs, lhs, rhs) { args ->
             val interval = args[0]
             val number = args[1].getNumber()
-            op(number.toDouble(), interval)
+            op(interval, BigDecimal(number.toString()))
         }
     }
 
     override fun getNumberIntervalInstance(lhs: PType, rhs: PType): Fn? {
-        val op = IntervalUtils.getIntervalWithFactor(rhs) ?: return null
+        val op = IntervalUtils.intervalMultiply(rhs) ?: return null
         return basic(rhs, lhs, rhs) { args ->
             val number = args[0].getNumber()
             val interval = args[1]
-            op(number.toDouble(), interval)
+            op(interval, BigDecimal(number.toString()))
         }
     }
 }

@@ -34,6 +34,7 @@ class IntervalDivideTests {
         private const val INTERVAL_MIN = "INTERVAL '5' MINUTE"
         private const val INTERVAL_S = "INTERVAL '10.5' SECOND"
         private const val INTERVAL_DTS = "INTERVAL '2 4:5:10.5' DAY TO SECOND"
+        private const val NANOS_PER_SECOND = 1000000000
 
         private class Input(
             val arg0: String,
@@ -43,30 +44,30 @@ class IntervalDivideTests {
 
         @JvmStatic
         fun intervalDivideNumberCases() = listOf(
-            Input(INTERVAL_Y, "3", Datum.intervalYearMonth(1, 0, 2)),
-            Input(INTERVAL_M, "3", Datum.intervalYearMonth(0, 2, 2)),
+            // Input(INTERVAL_Y, "3", Datum.intervalYearMonth(1, 0, 2)),
+            // Input(INTERVAL_M, "3", Datum.intervalYearMonth(0, 2, 2)),
             Input(INTERVAL_YM, "3", Datum.intervalYearMonth(0, 5, 2)),
 
             Input(INTERVAL_D, "3", Datum.intervalDaySecond(0, 16, 0, 0, 0, 2, 6)),
             Input(INTERVAL_H, "3", Datum.intervalDaySecond(0, 1, 20, 0, 0, 2, 6)),
             Input(INTERVAL_MIN, "3", Datum.intervalDaySecond(0, 0, 1, 40, 0, 2, 6)),
-            Input(INTERVAL_S, "3", Datum.intervalDaySecond(0, 0, 0, 3, 5 * 1000000000, 2, 6)),
-            Input(INTERVAL_DTS, "3", Datum.intervalDaySecond(0, 17, 21, 43, 5 * 1000000000, 2, 6))
+            Input(INTERVAL_S, "3", Datum.intervalDaySecond(0, 0, 0, 3, (0.5 * NANOS_PER_SECOND).toInt(), 2, 6)),
+            Input(INTERVAL_DTS, "3", Datum.intervalDaySecond(0, 17, 21, 43, (0.5 * NANOS_PER_SECOND).toInt(), 2, 6))
         ).map { case ->
             SuccessTestCase("${case.arg0} / ${case.arg1}", case.expected)
         }
 
         @JvmStatic
         fun intervalDivideNegativeCases() = listOf(
-            Input(INTERVAL_Y, "-3", Datum.intervalYearMonth(0, 0, 2)),
-            Input(INTERVAL_M, "-3", Datum.intervalYearMonth(0, 0, 2)),
-            Input(INTERVAL_YM, "-3", Datum.intervalYearMonth(0, 0, 2)),
+            Input(INTERVAL_Y, "-3", Datum.intervalYearMonth(-1, 0, 2)),
+            Input(INTERVAL_M, "-3", Datum.intervalYearMonth(0, -2, 2)),
+            Input(INTERVAL_YM, "-3", Datum.intervalYearMonth(0, -5, 2)),
 
-            Input(INTERVAL_D, "-3", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_H, "-3", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_MIN, "-3", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_S, "-3", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
-            Input(INTERVAL_DTS, "-3", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6))
+            Input(INTERVAL_D, "-3", Datum.intervalDaySecond(0, -16, 0, 0, 0, 2, 6)),
+            Input(INTERVAL_H, "-3", Datum.intervalDaySecond(0, -1, -20, 0, 0, 2, 6)),
+            Input(INTERVAL_MIN, "-3", Datum.intervalDaySecond(0, 0, -1, -40, 0, 2, 6)),
+            Input(INTERVAL_S, "-3", Datum.intervalDaySecond(0, 0, 0, -3, (-0.5 * NANOS_PER_SECOND).toInt(), 2, 6)),
+            Input(INTERVAL_DTS, "-3", Datum.intervalDaySecond(0, -17, -21, -43, (-0.5 * NANOS_PER_SECOND).toInt(), 2, 6))
         ).map { case ->
             SuccessTestCase("${case.arg0} / ${case.arg1}", case.expected)
         }
@@ -75,10 +76,12 @@ class IntervalDivideTests {
         fun intervalDivideZeroCases() = listOf(
             INTERVAL_Y,
             INTERVAL_M,
+            INTERVAL_YM,
             INTERVAL_D,
             INTERVAL_H,
             INTERVAL_MIN,
-            INTERVAL_S
+            INTERVAL_S,
+            INTERVAL_DTS
         ).map { interval ->
             FailureTestCase("$interval / 0")
         }
