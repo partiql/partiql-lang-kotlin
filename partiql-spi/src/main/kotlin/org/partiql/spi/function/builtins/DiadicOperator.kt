@@ -445,7 +445,7 @@ internal abstract class DiadicOperator(
         fillTable(PType.INTERVAL_YM, PType.REAL) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
         fillTable(PType.INTERVAL_DT, PType.REAL) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
         fillTable(PType.REAL, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.NUMERIC, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+        fillTable(PType.REAL, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
 
         // DOUBLE
         fillTable(PType.INTERVAL_YM, PType.DOUBLE) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
