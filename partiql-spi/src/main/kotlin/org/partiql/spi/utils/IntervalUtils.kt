@@ -7,7 +7,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 
-internal object  IntervalUtils {
+internal object IntervalUtils {
     private const val MONTHS_PER_YEAR = 12
     private const val SECONDS_PER_MINUTE = 60
     private const val MINUTES_PER_HOUR = 60
@@ -28,6 +28,7 @@ internal object  IntervalUtils {
                 val months = (totalMonthsInDecimal.toLong() % MONTHS_PER_YEAR).toInt()
                 Datum.intervalYearMonth(years, months, interval.precision)
             }
+
             IntervalCode.DAY,
             IntervalCode.DAY_HOUR,
             IntervalCode.DAY_MINUTE,
@@ -42,6 +43,7 @@ internal object  IntervalUtils {
                 val resultInBigDecimal = totalSecondsInBigDecimal.divide(number)
                 fromSecond(resultInBigDecimal, interval.precision, interval.fractionalPrecision)
             }
+
             else -> { num, i -> Datum.missing() }
         }
     }
@@ -58,6 +60,7 @@ internal object  IntervalUtils {
                 val months = (totalMonthsInDouble % MONTHS_PER_YEAR).toInt()
                 Datum.intervalYearMonth(years, months, interval.precision)
             }
+
             IntervalCode.DAY,
             IntervalCode.DAY_HOUR,
             IntervalCode.DAY_MINUTE,
@@ -72,12 +75,13 @@ internal object  IntervalUtils {
                 val resultInBigDecimal = totalSecondsInBigDecimal * number
                 fromSecond(resultInBigDecimal, interval.precision, interval.fractionalPrecision)
             }
+
             else -> { num, i -> Datum.missing() }
         }
     }
 
-    private fun toSeconds(i: Datum): BigDecimal{
-        if(i.type.code() == PType.INTERVAL_DT){
+    private fun toSeconds(i: Datum): BigDecimal {
+        if (i.type.code() == PType.INTERVAL_DT) {
             val daysInSeconds = i.days * SECONDS_PER_DAY.toLong()
             val hoursInSeconds = i.hours * SECONDS_PER_HOUR.toLong()
             val minutesInSeconds = i.minutes * SECONDS_PER_MINUTE.toLong()
@@ -88,7 +92,7 @@ internal object  IntervalUtils {
         }
     }
 
-    private fun fromSecond(totalSeconds: BigDecimal, precision: Int, fractionalPrecision: Int): Datum{
+    private fun fromSecond(totalSeconds: BigDecimal, precision: Int, fractionalPrecision: Int): Datum {
         val resultTotalNanos: BigInteger = totalSeconds.movePointRight(9).toBigIntegerExact()
         val divRem = resultTotalNanos.divideAndRemainder(BigInteger.valueOf(NANOS_PER_SECOND.toLong()))
         val resultTotalSeconds = divRem[0].toLong()
@@ -102,6 +106,14 @@ internal object  IntervalUtils {
         val minutes = (remainingSecondsAfterHours / SECONDS_PER_MINUTE).toInt()
         val seconds = remainingSecondsAfterHours % SECONDS_PER_MINUTE
 
-        return Datum.intervalDaySecond(days, hours, minutes, seconds.toInt(), divRem[1].toInt(), precision, fractionalPrecision)
+        return Datum.intervalDaySecond(
+            days,
+            hours,
+            minutes,
+            seconds.toInt(),
+            divRem[1].toInt(),
+            precision,
+            fractionalPrecision
+        )
     }
 }

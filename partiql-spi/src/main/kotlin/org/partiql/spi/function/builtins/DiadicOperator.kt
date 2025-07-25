@@ -292,7 +292,7 @@ internal abstract class DiadicOperator(
      * @param rhs a type of interval
      * @return an instance of a function
      */
-    open fun  getNumberIntervalInstance(lhs: PType, rhs: PType): Fn? {
+    open fun getNumberIntervalInstance(lhs: PType, rhs: PType): Fn? {
         return null
     }
 
@@ -301,7 +301,7 @@ internal abstract class DiadicOperator(
      * @param rhs a type of number
      * @return an instance of a function
      */
-    open fun  getIntervalNumberInstance(lhs: PType, rhs: PType): Fn? {
+    open fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn? {
         return null
     }
 
