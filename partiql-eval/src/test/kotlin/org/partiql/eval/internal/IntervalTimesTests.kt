@@ -14,11 +14,6 @@ class IntervalTimesTests {
     fun intervalTimesNumber(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
-    @MethodSource("numberTimesIntervalCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun numberTimesInterval(tc: SuccessTestCase) = tc.run()
-
-    @ParameterizedTest
     @MethodSource("intervalTimesZeroCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun intervalTimesZero(tc: SuccessTestCase) = tc.run()
@@ -71,21 +66,7 @@ class IntervalTimesTests {
             Input(INTERVAL_DTS, "20", Datum.intervalDaySecond(43, 9, 43, 30, 0, 2, 6)),
         ).map { case ->
             SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-        }
-
-        @JvmStatic
-        fun numberTimesIntervalCases() = listOf(
-            Input("2", INTERVAL_Y, Datum.intervalYearMonth(6, 0, 2)),
-            Input("2", INTERVAL_M, Datum.intervalYearMonth(1, 2, 2)),
-            Input("2", INTERVAL_YM, Datum.intervalYearMonth(2, 10, 2)),
-
-            Input("20", INTERVAL_D, Datum.intervalDaySecond(40, 0, 0, 0, 0, 2, 6)),
-            Input("20", INTERVAL_H, Datum.intervalDaySecond(3, 8, 0, 0, 0, 2, 6)),
-            Input("20", INTERVAL_MIN, Datum.intervalDaySecond(0, 1, 40, 0, 0, 2, 6)),
-            Input("20", INTERVAL_S, Datum.intervalDaySecond(0, 0, 3, 30, 0, 2, 6)),
-            Input("20", INTERVAL_DTS, Datum.intervalDaySecond(43, 9, 43, 30, 0, 2, 6)),
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
         }
 
         @JvmStatic
