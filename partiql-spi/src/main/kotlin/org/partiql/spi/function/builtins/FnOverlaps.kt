@@ -30,8 +30,9 @@ internal object FnOverlaps : FnOverload() {
         val arg0 = args[0]
         val arg1 = args[1]
         // Both arguments must be collections (arrays or bags)
-        if ((arg0.code() == PType.ARRAY || arg0.code() == PType.BAG) && 
-            (arg1.code() == PType.ARRAY || arg1.code() == PType.BAG)) {
+        if ((arg0.code() == PType.ARRAY || arg0.code() == PType.BAG) &&
+            (arg1.code() == PType.ARRAY || arg1.code() == PType.BAG)
+        ) {
             return getCollectionInstance(arg0, arg1)
         }
         return null
