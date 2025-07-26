@@ -36,6 +36,8 @@ rewritten to their query representation
 - Signed `INTERVAL` literals support 
 - Metas attached to `INTERVAL` `PType`s if an `INTERVAL` has an unspecified precision or fractional precision
 - `EXTRACT` function support on `INTERVAL` datum
+- `ABS` function support on `INTERVAL` values
+- support for `OVERLAPS` predict
 
 ### Changed
 
@@ -46,7 +48,6 @@ rewritten to their query representation
 - Handle the formatting when the nanoseconds of `INTERVAL` datum underflow
 - CLI printing of negative interval literals
 - Fix alias collision problem when multiple table references need auto-generated aliases
-- Add `ABS` function support on `INTERVAL` field
 - Display of `Ion` in PartiQL CLI output
 
 ### Removed

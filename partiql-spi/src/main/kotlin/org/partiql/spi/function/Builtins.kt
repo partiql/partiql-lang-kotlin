@@ -31,6 +31,7 @@ internal object Builtins {
         Fn_ABS__INTERVAL_DT__INTERVAL_DT,
         Fn_AND__BOOL_BOOL__BOOL,
         FnBetween,
+        FnOverlaps,
         Fn_BIT_LENGTH__STRING__INT32,
         Fn_BIT_LENGTH__CLOB__INT32,
         FnBitwiseAnd,

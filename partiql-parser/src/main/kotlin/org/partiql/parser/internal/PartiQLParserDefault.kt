@@ -70,6 +70,7 @@ import org.partiql.ast.Ast.exprNullIf
 import org.partiql.ast.Ast.exprNullPredicate
 import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.exprOr
+import org.partiql.ast.Ast.exprOverlaps
 import org.partiql.ast.Ast.exprOverlay
 import org.partiql.ast.Ast.exprParameter
 import org.partiql.ast.Ast.exprPath
@@ -1662,6 +1663,12 @@ internal class PartiQLParserDefault : PartiQLParser {
             val escape = visitOrNull<Expr>(ctx.escape)
             val not = ctx.NOT() != null
             exprLike(value, pattern, escape, not)
+        }
+
+        override fun visitPredicateOverlaps(ctx: GeneratedParser.PredicateOverlapsContext) = translate(ctx) {
+            val lhs = visitAs<Expr>(ctx.lhs)
+            val rhs = visitAs<Expr>(ctx.rhs)
+            exprOverlaps(lhs, rhs)
         }
 
         /**

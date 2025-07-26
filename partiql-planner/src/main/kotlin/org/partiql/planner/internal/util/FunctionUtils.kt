@@ -49,6 +49,7 @@ internal object FunctionUtils {
     val OP_LIKE: String = hide("like")
     val OP_LIKE_ESCAPE: String = hide("like_escape")
     val OP_BETWEEN: String = hide("between")
+    val OP_OVERLAPS: String = hide("overlaps")
     val OP_IN_COLLECTION: String = hide("in_collection")
     val OP_IS_NULL: String = hide("is_null")
     val OP_IS_MISSING: String = hide("is_missing")

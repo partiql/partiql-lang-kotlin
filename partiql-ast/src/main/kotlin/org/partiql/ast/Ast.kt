@@ -42,6 +42,7 @@ import org.partiql.ast.expr.ExprNullIf
 import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
+import org.partiql.ast.expr.ExprOverlaps
 import org.partiql.ast.expr.ExprOverlay
 import org.partiql.ast.expr.ExprParameter
 import org.partiql.ast.expr.ExprPath
@@ -95,6 +96,11 @@ public object Ast {
     @JvmStatic
     public fun exprBetween(value: Expr, from: Expr, to: Expr, not: Boolean): ExprBetween {
         return ExprBetween(value, from, to, not)
+    }
+
+    @JvmStatic
+    public fun exprOverlaps(lhs: Expr, rhs: Expr): ExprOverlaps {
+        return ExprOverlaps(lhs, rhs)
     }
 
     @JvmStatic

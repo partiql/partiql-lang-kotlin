@@ -46,6 +46,7 @@ import org.partiql.ast.expr.ExprNullIf
 import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
+import org.partiql.ast.expr.ExprOverlaps
 import org.partiql.ast.expr.ExprOverlay
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprPosition
@@ -1016,6 +1017,22 @@ internal object RexConverter {
                     else -> call(FunctionUtils.OP_TRIM_CHARS, arg0, arg1)
                 }
             }
+            return rex(type, call)
+        }
+
+        /**
+         * SQL Spec 1999: Section 8.12 <overlaps predicate>
+         *
+         * <overlaps predicate> ::=
+         *    <row value expression 1> OVERLAPS <row value expression 2>
+         * <row value expression 1> ::= <row value expression>
+         * <row value expression 2> ::= <row value expression>
+         */
+        override fun visitExprOverlaps(node: ExprOverlaps, ctx: Env): Rex {
+            val type = BOOL
+            val arg0 = visitExprCoerce(node.lhs, ctx)
+            val arg1 = visitExprCoerce(node.rhs, ctx)
+            val call = call(FunctionUtils.OP_OVERLAPS, arg0, arg1)
             return rex(type, call)
         }
 
