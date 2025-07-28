@@ -361,16 +361,6 @@ public abstract class AstVisitor<R, C> {
      * @param ctx TODO
      * @return TODO
      */
-    public R visitWindowReference(WindowReference node, C ctx) {
-        return node.accept(this, ctx);
-    }
-
-    /**
-     * TODO
-     * @param node TODO
-     * @param ctx TODO
-     * @return TODO
-     */
     public R visitWindowPartitionClause(WindowPartitionClause node, C ctx) {
         return node.accept(this, ctx);
     }
@@ -402,26 +392,6 @@ public abstract class AstVisitor<R, C> {
      * @return TODO
      */
     public R visitWindowPartitionName(WindowPartition.Name node, C ctx) {
-        return defaultVisit(node, ctx);
-    }
-
-    /**
-     * TODO
-     * @param node TODO
-     * @param ctx TODO
-     * @return TODO
-     */
-    public R visitWindowReferenceName(WindowReference.Name node, C ctx) {
-        return defaultVisit(node, ctx);
-    }
-
-    /**
-     * TODO
-     * @param node TODO
-     * @param ctx TODO
-     * @return TODO
-     */
-    public R visitWindowReferenceInLineSpecification(WindowReference.InLineSpecification node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

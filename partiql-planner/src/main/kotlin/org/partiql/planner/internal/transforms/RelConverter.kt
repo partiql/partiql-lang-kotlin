@@ -50,7 +50,6 @@ import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionSimpleName
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowPartition
-import org.partiql.ast.WindowReference
 import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
@@ -553,18 +552,16 @@ internal object RelConverter {
 
             // Loop through functions and add to internal data structure
             windowFunctions.forEach { (bindingName, function) ->
-                when (val ref = function.windowReference) {
-                    is WindowReference.InLineSpecification -> {
-                        ref.specification.existingName?.let {
-                            env.listener.report(PErrors.featureNotSupported("Window referencing other window"))
-                        }
-                        windows.addFunctionWithInLineWindowSpec(ref.specification, function, bindingName)
+                val spec = function.windowSpecification
+                // We currently don't support creating windows from windows.
+                // If an existing name exists, we need to make sure that we aren't partitioning/sorting against it.
+                if (spec.existingName != null) {
+                    if (spec.orderClause != null || spec.partitionClause != null) {
+                        env.listener.report(PErrors.featureNotSupported("Window referencing other window"))
                     }
-                    is WindowReference.Name -> windows.addFunctionWithWindowRef(ref.name.text, function, bindingName)
-                    else -> {
-                        val cause = IllegalStateException("Window Reference ${ref.javaClass.simpleName} not supported.")
-                        env.listener.report(PErrors.internalError(cause))
-                    }
+                    windows.addFunctionWithWindowRef(spec.existingName!!.text, function, bindingName)
+                } else {
+                    windows.addFunctionWithInLineWindowSpec(spec, function, bindingName)
                 }
             }
 

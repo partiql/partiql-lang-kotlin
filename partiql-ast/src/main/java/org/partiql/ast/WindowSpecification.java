@@ -9,9 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a window specification.
+ * Represents a window specification or a window reference.
  * @see WindowClause.WindowDefinition#getSpecification()
- * @see WindowReference.InLineSpecification
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
@@ -44,8 +43,8 @@ public final class WindowSpecification extends AstNode {
     }
 
     /**
-     * Returns the existing name of the window specification.
-     * @return the existing name of the window specification
+     * Returns the name of an existing window specification.
+     * @return the name of an existing window specification
      */
     @Nullable
     public Identifier.Simple getExistingName() {

@@ -89,7 +89,7 @@ public final class ExprWindow extends Expr {
 
     /**
      * Represents the OVER clause of a window function. E.g. {@code OVER (PARTITION BY <expr> ORDER BY <expr>)}.
-     * @deprecated This is replaced by {@link org.partiql.ast.WindowReference}.
+     * @deprecated This is replaced by {@link org.partiql.ast.WindowSpecification}.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

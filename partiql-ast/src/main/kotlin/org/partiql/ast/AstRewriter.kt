@@ -839,9 +839,9 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitExprWindowFunction(node: ExprWindowFunction, ctx: C): AstNode {
         val functionType = visitWindowFunctionType(node.functionType, ctx) as WindowFunctionType
-        val windowReference = visitWindowReference(node.windowReference, ctx) as WindowReference
-        return if (functionType !== node.functionType || windowReference !== node.windowReference) {
-            ExprWindowFunction(functionType, windowReference)
+        val windowSpec = visitWindowSpecification(node.windowSpecification, ctx) as WindowSpecification
+        return if (functionType !== node.functionType || windowSpec !== node.windowSpecification) {
+            ExprWindowFunction(functionType, windowSpec)
         } else {
             node
         }
@@ -861,24 +861,6 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val identifier = visitIdentifier(node.columnReference, ctx) as Identifier
         return if (identifier !== node.columnReference) {
             WindowPartition.Name(identifier)
-        } else {
-            node
-        }
-    }
-
-    override fun visitWindowReferenceInLineSpecification(node: WindowReference.InLineSpecification, ctx: C): AstNode {
-        val specification = visitWindowSpecification(node.specification, ctx) as WindowSpecification
-        return if (specification !== node.specification) {
-            WindowReference.InLineSpecification(specification)
-        } else {
-            node
-        }
-    }
-
-    override fun visitWindowReferenceName(node: WindowReference.Name, ctx: C): AstNode {
-        val name = visitIdentifierSimple(node.name, ctx) as Identifier.Simple
-        return if (name !== node.name) {
-            WindowReference.Name(name)
         } else {
             node
         }

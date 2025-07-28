@@ -179,7 +179,6 @@ import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowOrderClause
 import org.partiql.ast.WindowPartition
 import org.partiql.ast.WindowPartitionClause
-import org.partiql.ast.WindowReference
 import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
 import org.partiql.ast.WithListElement
@@ -2005,7 +2004,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
         override fun visitWindowFunction(ctx: GeneratedParser.WindowFunctionContext) = translate(ctx) {
             val type = visitAs<WindowFunctionType>(ctx.windowFunctionType())
-            val ref = visitAs<WindowReference>(ctx.windowNameOrSpecification())
+            val ref = visit(ctx.windowNameOrSpecification()) as WindowSpecification
             ExprWindowFunction(type, ref)
         }
 
@@ -2065,12 +2064,11 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitWindowNameOrSpec1(ctx: GeneratedParser.WindowNameOrSpec1Context) = translate(ctx) {
             val name = visitSymbolPrimitive(ctx.symbolPrimitive())
-            WindowReference.Name(name)
+            WindowSpecification(name, null, null)
         }
 
         override fun visitWindowNameOrSpec2(ctx: GeneratedParser.WindowNameOrSpec2Context) = translate(ctx) {
-            val spec = visitWindowSpecification(ctx.windowSpecification())
-            WindowReference.InLineSpecification(spec)
+            visitWindowSpecification(ctx.windowSpecification())
         }
 
         /**

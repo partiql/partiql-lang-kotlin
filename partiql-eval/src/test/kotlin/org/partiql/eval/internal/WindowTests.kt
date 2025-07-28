@@ -10,7 +10,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 
 /**
- * This test file tests Common Table Expressions.
+ * This test file tests window functions/clause.
  */
 class WindowTests {
 
