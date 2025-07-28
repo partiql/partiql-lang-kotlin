@@ -45,10 +45,16 @@ import org.partiql.ast.SelectStar
 import org.partiql.ast.SelectValue
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
+import org.partiql.ast.Sort
+import org.partiql.ast.WindowFunctionNullTreatment
+import org.partiql.ast.WindowFunctionType
+import org.partiql.ast.WindowPartition
+import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
+import org.partiql.ast.expr.ExprWindowFunction
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.ir.Rel
@@ -77,17 +83,22 @@ import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpSortSpec
 import org.partiql.planner.internal.ir.relOpUnpivot
+import org.partiql.planner.internal.ir.relOpWindow
+import org.partiql.planner.internal.ir.relOpWindowWindowFunction
 import org.partiql.planner.internal.ir.relOpWith
 import org.partiql.planner.internal.ir.relOpWithWithListElement
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.BinderUtils.toBinder
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -189,6 +200,9 @@ internal object RelConverter {
                     rel = _rel
                     // Plan.create (possibly rewritten) sel node
                     rel = convertHaving(rel, sel.having)
+                    val (windowSel, windowRel) = convertWindow(rel, sel)
+                    rel = windowRel
+                    sel = windowSel
                     rel = convertOrderBy(rel, orderBy)
                     // offset should precede limit
                     rel = convertOffset(rel, offset)
@@ -500,6 +514,182 @@ internal object RelConverter {
             val op = relOpAggregate(input, strategy, calls, groups)
             val rel = rel(type, op)
             return Pair(sel, rel)
+        }
+
+        /**
+         * Append [Rel.Op.Window] only if SELECT & ORDER BY contains window functions and/or if the WINDOW clause exists
+         */
+        private fun convertWindow(input: Rel, select: QueryBody.SFW): Pair<QueryBody.SFW, Rel> {
+            // Rewrite and extract all window functions in the SELECT clause
+            val (sel, windowFunctions) = WindowTransform.apply(select)
+            if (windowFunctions.isEmpty()) {
+                // Regardless of whether there is a window clause, there are no outputs or technical ordering
+                // of the output window relation, therefore, we can just return the input.
+                return Pair(select, input)
+            }
+
+            // Grab window definitions and add to internal data structure
+            val windows = InternalWindowDefinitions(env)
+            select.window?.definitions?.map {
+                it.specification.existingName?.let {
+                    env.listener.report(PErrors.featureNotSupported("Window referencing other window"))
+                }
+                windows.addWindowDef(it.name.text, it.specification)
+            }
+
+            // Loop through functions and add to internal data structure
+            windowFunctions.forEach { (bindingName, function) ->
+                val spec = function.windowSpecification
+                // We currently don't support creating windows from windows.
+                // If an existing name exists, we need to make sure that we aren't partitioning/sorting against it.
+                if (spec.existingName != null) {
+                    if (spec.orderClause != null || spec.partitionClause != null) {
+                        env.listener.report(PErrors.featureNotSupported("Window referencing other window"))
+                    }
+                    windows.addFunctionWithWindowRef(spec.existingName!!.text, function, bindingName)
+                } else {
+                    windows.addFunctionWithInLineWindowSpec(spec, function, bindingName)
+                }
+            }
+
+            // Convert window definitions to plan nodes. Fold to each be their own window nodes, and return.
+            // Schema = (input bindings... functions...)
+            val rel = windows.getAll().foldRight(input) { window, current ->
+                val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
+                val partitions = window.spec.partitionClause?.map {
+                    if (it !is WindowPartition.Name) {
+                        val cause = IllegalStateException("Window Partition ${it.javaClass.simpleName} not supported.")
+                        env.listener.report(PErrors.internalError(cause))
+                        return@map Rex(PType.dynamic().toCType(), rexOpErr())
+                    }
+                    val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
+                    rex(PType.dynamic().toCType(), op)
+                } ?: emptyList()
+                val functionNodes = window.functions.map { convertWindowFunction(it) }
+                val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType()) }
+                val newSchema = current.type.schema + functionBindings
+                val type = relType(newSchema, emptySet())
+                val op = relOpWindow(current, functionNodes, partitions, orderBy)
+                rel(type, op)
+            }
+            return Pair(sel, rel)
+        }
+
+        private class InternalWindowDefinitions(
+            private val env: Env
+        ) {
+            private val definitions = mutableMapOf<String, InternalWindowDefinition>()
+            private val inLineWindowDefs = mutableListOf<InternalWindowDefinition>()
+
+            fun addWindowDef(name: String, spec: WindowSpecification) {
+                assertKeyDoesNotExist(name)
+                definitions[name] = InternalWindowDefinition(spec, mutableListOf(), mutableListOf())
+            }
+
+            fun addFunctionWithInLineWindowSpec(spec: WindowSpecification, function: ExprWindowFunction, functionBinding: String) {
+                val def = InternalWindowDefinition(spec, mutableListOf(), mutableListOf())
+                def.functions.add(function)
+                def.functionBindings.add(functionBinding)
+                inLineWindowDefs.add(def)
+            }
+
+            fun addFunctionWithWindowRef(name: String, function: ExprWindowFunction, functionBinding: String) {
+                val def = getStrict(name) ?: return
+                def.functions.add(function)
+                def.functionBindings.add(functionBinding)
+            }
+
+            fun getAll(): List<InternalWindowDefinition> {
+                return definitions.values + inLineWindowDefs
+            }
+
+            private fun assertKeyDoesNotExist(name: String) {
+                if (definitions.containsKey(name)) {
+                    val id = org.partiql.spi.catalog.Identifier.delimited(name)
+                    // TODO: We may want to introduce a VAR_DECL_AMBIGUOUS or NAME_SHADOW warning.
+                    env.listener.report(PErrors.varRefAmbiguous(null, id))
+                    return
+                }
+            }
+
+            private fun getStrict(name: String): InternalWindowDefinition? {
+                return definitions[name] ?: run {
+                    val id = org.partiql.spi.catalog.Identifier.delimited(name)
+                    env.listener.report(PErrors.varRefNotFound(null, id, emptyList()))
+                    return null
+                }
+            }
+        }
+
+        private class InternalWindowDefinition(
+            val spec: WindowSpecification,
+            val functions: MutableList<ExprWindowFunction>,
+            val functionBindings: MutableList<String>,
+        )
+
+        private fun convertSort(it: Sort): Rel.Op.Sort.Spec {
+            val rex = it.expr.toRex(env)
+            val order = when (it.order?.code()) {
+                Order.DESC -> when (it.nulls?.code()) {
+                    Nulls.LAST -> Rel.Op.Sort.Order.DESC_NULLS_LAST
+                    Nulls.FIRST, null -> Rel.Op.Sort.Order.DESC_NULLS_FIRST
+                    else -> error("Unexpected Nulls type: ${it.nulls}")
+                }
+                else -> when (it.nulls?.code()) {
+                    Nulls.FIRST -> Rel.Op.Sort.Order.ASC_NULLS_FIRST
+                    Nulls.LAST, null -> Rel.Op.Sort.Order.ASC_NULLS_LAST
+                    else -> error("Unexpected Nulls type: ${it.nulls}")
+                }
+            }
+            return relOpSortSpec(rex, order)
+        }
+
+        private fun convertWindowFunction(node: ExprWindowFunction): Rel.Op.Window.WindowFunction {
+            return when (val windowType = node.functionType) {
+                is WindowFunctionType.Rank -> {
+                    val name = when (windowType.type) {
+                        WindowFunctionType.Rank.RANK -> "rank"
+                        WindowFunctionType.Rank.DENSE_RANK -> "dense_rank"
+                        WindowFunctionType.Rank.PERCENT_RANK -> "percent_rank"
+                        else -> {
+                            PErrors.internalError(IllegalStateException("Window function $windowType unknown."))
+                            "unknown"
+                        }
+                    }
+                    relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                }
+                is WindowFunctionType.CumeDist -> {
+                    relOpWindowWindowFunction("cume_dist", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                }
+                is WindowFunctionType.RowNumber -> {
+                    relOpWindowWindowFunction("row_number", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                }
+                is WindowFunctionType.LeadOrLag -> {
+                    val name = when (windowType.isLag) {
+                        true -> "lag"
+                        false -> "lead"
+                    }
+                    val isIgnoreNulls = when (windowType.nullTreatment?.code()) {
+                        WindowFunctionNullTreatment.RESPECT_NULLS, null -> false
+                        WindowFunctionNullTreatment.IGNORE_NULLS -> true
+                        else -> {
+                            val cause = IllegalStateException("Unexpected WindowFunctionNullTreatment type: ${windowType.nullTreatment}")
+                            env.listener.report(PErrors.internalError(cause))
+                            false
+                        }
+                    }
+                    val extent = windowType.extent.toRex(env)
+                    val offset = windowType.offset?.let { rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(it))) } ?: rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(1)))
+                    val default = windowType.defaultValue?.toRex(env) ?: rex(extent.type, rexOpLit(Datum.nullValue(extent.type)))
+                    val args = listOf(extent, offset, default)
+                    relOpWindowWindowFunction(name, args, isIgnoreNulls, null, null)
+                }
+                else -> {
+                    val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
+                    env.listener.report(PErrors.internalError(cause))
+                    relOpWindowWindowFunction("unknown", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                }
+            }
         }
 
         /**
