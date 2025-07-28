@@ -37,7 +37,7 @@ rewritten to their query representation
 - Metas attached to `INTERVAL` `PType`s if an `INTERVAL` has an unspecified precision or fractional precision
 - `EXTRACT` function support on `INTERVAL` datum
 - `ABS` function support on `INTERVAL` values
-- support for `OVERLAPS` predict
+- support for `OVERLAPS` predicate
 
 ### Changed
 
