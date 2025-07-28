@@ -24,8 +24,4 @@ internal class LeadFunction(
         val newEnv = env.push(row)
         return expr.eval(newEnv)
     }
-
-    override fun reset() {
-        // Do nothing
-    }
 }
