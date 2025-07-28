@@ -243,6 +243,22 @@ rel::{
       input: rel,
     },
 
+    window::{
+      input: rel,
+      functions: list::[window_function],
+      partitions: list::[rex],
+      sorts: list::['.rel.op.sort.spec'],
+      _: [
+        window_function::{
+          name: string,
+          args: list::[rex],
+          is_ignore_nulls: bool,
+          parameter_types: optional::list::[static_type],
+          return_type: optional::static_type
+        }
+      ]
+    },
+
     filter::{
       input:      rel,
       predicate:  rex,

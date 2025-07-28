@@ -55,6 +55,7 @@ import org.partiql.ast.expr.ExprValues
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.ExprWindow
+import org.partiql.ast.expr.ExprWindowFunction
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.graph.GraphMatch
 import org.partiql.ast.graph.GraphPattern
@@ -726,10 +727,11 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val where = node.where?.let { visitExpr(it, ctx) as Expr? }
         val groupBy = node.groupBy?.let { visitGroupBy(it, ctx) as GroupBy? }
         val having = node.having?.let { visitExpr(it, ctx) as Expr? }
+        val window = node.window?.let { visitWindowClause(it, ctx) as WindowClause }
         return if (select !== node.select || exclude !== node.exclude || from !== node.from || let !==
-            node.let || where !== node.where || groupBy !== node.groupBy || having !== node.having
+            node.let || where !== node.where || groupBy !== node.groupBy || having !== node.having || window !== node.window
         ) {
-            QueryBody.SFW(select, exclude, from, let, where, groupBy, having)
+            QueryBody.SFW(select, exclude, from, let, where, groupBy, having, window)
         } else {
             node
         }
@@ -771,6 +773,101 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val setq = node.setq
         return if (items !== node.items || setq !== node.setq) {
             SelectList(items, setq)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowClause(node: WindowClause, ctx: C): AstNode {
+        val definitions = _visitList(node.definitions, ctx, ::visitWindowDefinition)
+        return if (definitions !== node.definitions) {
+            WindowClause(definitions)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowDefinition(node: WindowClause.WindowDefinition, ctx: C): AstNode {
+        val name = visitIdentifierSimple(node.name, ctx) as Identifier.Simple
+        val spec = visitWindowSpecification(node.specification, ctx) as WindowSpecification
+        return if (name !== node.name || spec !== node.specification) {
+            WindowClause.WindowDefinition(name, spec)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowSpecification(node: WindowSpecification, ctx: C): AstNode {
+        val partitionClause = node.partitionClause?.let { visitWindowPartitionClause(it, ctx) as WindowPartitionClause }
+        val orderClause = node.orderClause?.let { visitWindowOrderClause(it, ctx) as WindowOrderClause }
+        val name = node.existingName?.let { visitIdentifierSimple(it, ctx) as Identifier.Simple }
+        return if (partitionClause !== node.partitionClause || orderClause !== node.orderClause || name !== node.existingName) {
+            WindowSpecification(name, partitionClause, orderClause)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowPartitionClause(node: WindowPartitionClause, ctx: C): AstNode {
+        val partitions = _visitList(node.partitions, ctx, ::visitWindowPartition)
+        return if (partitions !== node.partitions) {
+            WindowPartitionClause(partitions)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowOrderClause(node: WindowOrderClause, ctx: C): AstNode {
+        val sorts = _visitList(node.sorts, ctx, ::visitSort)
+        return if (sorts !== node.sorts) {
+            WindowOrderClause(sorts)
+        } else {
+            node
+        }
+    }
+
+    override fun visitExprWindowFunction(node: ExprWindowFunction, ctx: C): AstNode {
+        val functionType = visitWindowFunctionType(node.functionType, ctx) as WindowFunctionType
+        val windowReference = visitWindowReference(node.windowReference, ctx) as WindowReference
+        return if (functionType !== node.functionType || windowReference !== node.windowReference) {
+            ExprWindowFunction(functionType, windowReference)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeLagOrLead(node: WindowFunctionType.LeadOrLag, ctx: C): AstNode {
+        val extent = visitExpr(node.extent, ctx) as Expr
+        val default = node.defaultValue?.let { visitExpr(it, ctx) as Expr }
+        return if (extent !== node.extent || default !== node.defaultValue) {
+            WindowFunctionType.LeadOrLag(node.isLead, extent, node.offset, default, node.nullTreatment)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowPartitionName(node: WindowPartition.Name, ctx: C): AstNode {
+        val identifier = visitIdentifier(node.columnReference, ctx) as Identifier
+        return if (identifier !== node.columnReference) {
+            WindowPartition.Name(identifier)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowReferenceInLineSpecification(node: WindowReference.InLineSpecification, ctx: C): AstNode {
+        val specification = visitWindowSpecification(node.specification, ctx) as WindowSpecification
+        return if (specification !== node.specification) {
+            WindowReference.InLineSpecification(specification)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowReferenceName(node: WindowReference.Name, ctx: C): AstNode {
+        val name = visitIdentifierSimple(node.name, ctx) as Identifier.Simple
+        return if (name !== node.name) {
+            WindowReference.Name(name)
         } else {
             node
         }
