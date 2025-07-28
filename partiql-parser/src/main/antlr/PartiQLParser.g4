@@ -987,7 +987,6 @@ overlay
     ;
 
 /**
- * RFC: https://github.com/partiql/partiql-docs/issues/31.
  * EBNF 2023:
  * <window function> ::= <window function type> OVER <window name or specification>
  */
