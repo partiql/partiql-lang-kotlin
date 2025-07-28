@@ -20,15 +20,9 @@ internal abstract class NavigationFunction : WindowFunction {
      */
     abstract fun eval(env: Environment): Datum
 
-    /**
-     * Reset the function to its initial state.
-     */
-    abstract fun reset()
-
     override fun reset(partition: WindowPartition) {
         this.partition = partition
         currentPosition = -1L
-        reset()
     }
 
     override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum {
