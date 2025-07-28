@@ -73,7 +73,17 @@ public final class WindowSpecification extends AstNode {
     @NotNull
     @Override
     public List<AstNode> getChildren() {
-        return new ArrayList<>();
+        List<AstNode> children = new ArrayList<>();
+        if (this.existingName != null) {
+            children.add(this.existingName);
+        }
+        if (this.partitionClause != null) {
+            children.add(this.partitionClause);
+        }
+        if (this.orderClause != null) {
+            children.add(this.orderClause);
+        }
+        return children;
     }
 
     @Override

@@ -29,7 +29,7 @@ internal object WindowFunctionSignatureProvider {
                 "lag", "lead" -> lagOrLead(n, args[0], args[1], args[2], ignoreNulls)
                 else -> null
             }
-            else -> throw IllegalArgumentException("Unknown window function: $name")
+            else -> null
         }
     }
 
