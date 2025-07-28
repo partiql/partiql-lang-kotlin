@@ -15,44 +15,105 @@ import java.util.List;
  * @see ExprWindowFunction#getFunctionType() 
  */
 public abstract class WindowFunctionType extends AstNode {
+
     /**
-     * A window function that takes no arguments.
+     * The RANK window function.
      * @see ExprWindowFunction#getFunctionType()
-     * @see WindowFunctionSimpleName
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
-    public static final class NoArg extends WindowFunctionType {
-        private final WindowFunctionSimpleName name;
+    public static final class Rank extends WindowFunctionType {
+        private int _type;
 
         /**
-         * Constructs a no-argument window function type.
-         * @param name the name of the window function
+         * The plain RANK variant.
          */
-        public NoArg(@NotNull WindowFunctionSimpleName name) {
-            this.name = name;
+        public static int RANK = 0;
+
+        /**
+         * The DENSE RANK variant.
+         */
+        public static int DENSE_RANK = 1;
+
+        /**
+         * The PERCENT RANK variant.
+         */
+        public static int PERCENT_RANK = 2;
+
+        /**
+         * See the static fields of the {@link Rank} class.
+         * @return the type of rank function.
+         */
+        public int getType() {
+            return _type;
         }
 
         /**
-         * Returns the name of the window function.
-         * @return the name of the window function
+         * Constructs a RANK function.
+         * @param type the type of the RANK function. See the static fields in the {@link Rank} class.
          */
-        @NotNull
-        public WindowFunctionSimpleName getName() {
-            return this.name;
+        public Rank(int type) {
+            this._type = type;
         }
 
         @NotNull
         @Override
         public List<AstNode> getChildren() {
-            List<AstNode> kids = new ArrayList<>();
-            kids.add(name);
-            return kids;
+            return new ArrayList<>();
         }
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitWindowFunctionTypeNoArg(this, ctx);
+            return visitor.visitWindowFunctionTypeRank(this, ctx);
+        }
+    }
+
+    /**
+     * The CUME_DIST window function.
+     * @see ExprWindowFunction#getFunctionType()
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    public static final class CumeDist extends WindowFunctionType {
+        /**
+         * Constructs a CUME_DIST window function.
+         */
+        public CumeDist() {}
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeCumeDist(this, ctx);
+        }
+    }
+
+    /**
+     * The ROW_NUMBER window function.
+     * @see ExprWindowFunction#getFunctionType()
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    public static final class RowNumber extends WindowFunctionType {
+
+        /**
+         * Constructs a new ROW_NUMBER window function.
+         */
+        public RowNumber() {}
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeRowNumber(this, ctx);
         }
     }
 

@@ -47,7 +47,6 @@ import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.WindowFunctionNullTreatment
-import org.partiql.ast.WindowFunctionSimpleName
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowPartition
 import org.partiql.ast.WindowSpecification
@@ -659,17 +658,23 @@ internal object RelConverter {
 
         private fun convertWindowFunction(node: ExprWindowFunction): Rel.Op.Window.WindowFunction {
             return when (val windowType = node.functionType) {
-                is WindowFunctionType.NoArg -> {
-                    val name = when (windowType.name.code()) {
-                        WindowFunctionSimpleName.RANK -> "rank"
-                        WindowFunctionSimpleName.ROW_NUMBER -> "row_number"
-                        WindowFunctionSimpleName.DENSE_RANK -> "dense_rank"
+                is WindowFunctionType.Rank -> {
+                    val name = when (windowType.type) {
+                        WindowFunctionType.Rank.RANK -> "rank"
+                        WindowFunctionType.Rank.DENSE_RANK -> "dense_rank"
+                        WindowFunctionType.Rank.PERCENT_RANK -> "percent_rank"
                         else -> {
-                            env.listener.report(PErrors.featureNotSupported("Window Function ${windowType.name}"))
+                            PErrors.internalError(IllegalStateException("Window function $windowType unknown."))
                             "unknown"
                         }
                     }
                     relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                }
+                is WindowFunctionType.CumeDist -> {
+                    relOpWindowWindowFunction("cume_dist", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                }
+                is WindowFunctionType.RowNumber -> {
+                    relOpWindowWindowFunction("row_number", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
                 }
                 is WindowFunctionType.LeadOrLag -> {
                     val name = when (windowType.isLag) {

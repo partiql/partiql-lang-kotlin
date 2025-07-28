@@ -444,8 +444,14 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitWindowClause (Lorg/partiql/ast/WindowClause;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$WindowDefinition;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$WindowDefinition;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypeLagOrLead (Lorg/partiql/ast/WindowFunctionType$LeadOrLag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLagOrLead (Lorg/partiql/ast/WindowFunctionType$LeadOrLag;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWindowFunctionTypeRank (Lorg/partiql/ast/WindowFunctionType$Rank;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeRank (Lorg/partiql/ast/WindowFunctionType$Rank;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWindowFunctionTypeRowNumber (Lorg/partiql/ast/WindowFunctionType$RowNumber;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeRowNumber (Lorg/partiql/ast/WindowFunctionType$RowNumber;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowPartitionName (Lorg/partiql/ast/WindowPartition$Name;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowPartitionName (Lorg/partiql/ast/WindowPartition$Name;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowSpecification (Lorg/partiql/ast/WindowSpecification;Ljava/lang/Object;)Ljava/lang/Object;
@@ -603,8 +609,10 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitWindowClause (Lorg/partiql/ast/WindowClause;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$WindowDefinition;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionType (Lorg/partiql/ast/WindowFunctionType;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLagOrLead (Lorg/partiql/ast/WindowFunctionType$LeadOrLag;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitWindowFunctionTypeNoArg (Lorg/partiql/ast/WindowFunctionType$NoArg;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeRank (Lorg/partiql/ast/WindowFunctionType$Rank;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeRowNumber (Lorg/partiql/ast/WindowFunctionType$RowNumber;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowPartition (Lorg/partiql/ast/WindowPartition;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowPartitionName (Lorg/partiql/ast/WindowPartition$Name;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowSpecification (Lorg/partiql/ast/WindowSpecification;Ljava/lang/Object;)Ljava/lang/Object;
@@ -1604,28 +1612,22 @@ public final class org/partiql/ast/WindowFunctionNullTreatment : org/partiql/ast
 	public fun name ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/WindowFunctionSimpleName : org/partiql/ast/AstEnum {
-	public static final field CUME_DIST I
-	public static final field DENSE_RANK I
-	public static final field PERCENT_RANK I
-	public static final field RANK I
-	public static final field ROW_NUMBER I
-	public static fun CUME_DIST ()Lorg/partiql/ast/WindowFunctionSimpleName;
-	public static fun DENSE_RANK ()Lorg/partiql/ast/WindowFunctionSimpleName;
-	public static fun PERCENT_RANK ()Lorg/partiql/ast/WindowFunctionSimpleName;
-	public static fun RANK ()Lorg/partiql/ast/WindowFunctionSimpleName;
-	public static fun ROW_NUMBER ()Lorg/partiql/ast/WindowFunctionSimpleName;
+public abstract class org/partiql/ast/WindowFunctionType : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public final class org/partiql/ast/WindowFunctionType$CumeDist : org/partiql/ast/WindowFunctionType {
+	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun code ()I
-	public static fun codes ()[I
+	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$CumeDist$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
-	public fun name ()Ljava/lang/String;
 }
 
-public abstract class org/partiql/ast/WindowFunctionType : org/partiql/ast/AstNode {
-	public fun <init> ()V
+public class org/partiql/ast/WindowFunctionType$CumeDist$Builder {
+	public fun build ()Lorg/partiql/ast/WindowFunctionType$CumeDist;
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/ast/WindowFunctionType$LeadOrLag : org/partiql/ast/WindowFunctionType {
@@ -1653,19 +1655,36 @@ public class org/partiql/ast/WindowFunctionType$LeadOrLag$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/WindowFunctionType$NoArg : org/partiql/ast/WindowFunctionType {
-	public fun <init> (Lorg/partiql/ast/WindowFunctionSimpleName;)V
+public final class org/partiql/ast/WindowFunctionType$Rank : org/partiql/ast/WindowFunctionType {
+	public static field DENSE_RANK I
+	public static field PERCENT_RANK I
+	public static field RANK I
+	public fun <init> (I)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$NoArg$Builder;
+	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$Rank$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getName ()Lorg/partiql/ast/WindowFunctionSimpleName;
+	public fun getType ()I
 	public fun hashCode ()I
 }
 
-public class org/partiql/ast/WindowFunctionType$NoArg$Builder {
-	public fun build ()Lorg/partiql/ast/WindowFunctionType$NoArg;
-	public fun name (Lorg/partiql/ast/WindowFunctionSimpleName;)Lorg/partiql/ast/WindowFunctionType$NoArg$Builder;
+public class org/partiql/ast/WindowFunctionType$Rank$Builder {
+	public fun _type (I)Lorg/partiql/ast/WindowFunctionType$Rank$Builder;
+	public fun build ()Lorg/partiql/ast/WindowFunctionType$Rank;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/WindowFunctionType$RowNumber : org/partiql/ast/WindowFunctionType {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$RowNumber$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/WindowFunctionType$RowNumber$Builder {
+	public fun build ()Lorg/partiql/ast/WindowFunctionType$RowNumber;
 	public fun toString ()Ljava/lang/String;
 }
 

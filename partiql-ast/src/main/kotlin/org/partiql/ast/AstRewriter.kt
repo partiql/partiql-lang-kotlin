@@ -841,6 +841,18 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
+    override fun visitWindowFunctionTypeRank(node: WindowFunctionType.Rank, ctx: C): AstNode {
+        return node
+    }
+
+    override fun visitWindowFunctionTypeCumeDist(node: WindowFunctionType.CumeDist, ctx: C): AstNode {
+        return node
+    }
+
+    override fun visitWindowFunctionTypeRowNumber(node: WindowFunctionType.RowNumber, ctx: C): AstNode {
+        return node
+    }
+
     override fun visitWindowPartitionName(node: WindowPartition.Name, ctx: C): AstNode {
         val identifier = visitIdentifier(node.columnReference, ctx) as Identifier
         return if (identifier !== node.columnReference) {

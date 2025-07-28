@@ -351,8 +351,28 @@ public abstract class AstVisitor<R, C> {
      * @param ctx TODO
      * @return TODO
      */
-    public R visitWindowFunctionTypeNoArg(WindowFunctionType.NoArg node, C ctx) {
-        return defaultVisit(node, ctx);
+    public R visitWindowFunctionTypeRank(WindowFunctionType.Rank node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowFunctionTypeCumeDist(WindowFunctionType.CumeDist node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowFunctionTypeRowNumber(WindowFunctionType.RowNumber node, C ctx) {
+        return node.accept(this, ctx);
     }
 
     /**
