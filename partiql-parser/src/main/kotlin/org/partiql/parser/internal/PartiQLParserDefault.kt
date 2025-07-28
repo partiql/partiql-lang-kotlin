@@ -176,9 +176,7 @@ import org.partiql.ast.WindowClause
 import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionSimpleName
 import org.partiql.ast.WindowFunctionType
-import org.partiql.ast.WindowOrderClause
 import org.partiql.ast.WindowPartition
-import org.partiql.ast.WindowPartitionClause
 import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
 import org.partiql.ast.WithListElement
@@ -2045,11 +2043,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             WindowFunctionType.LeadOrLag(isLead, extent, offset, default, nullTreatment)
         }
 
-        override fun visitWindowPartitionClause(ctx: GeneratedParser.WindowPartitionClauseContext) = translate(ctx) {
-            val partitions = ctx.col.map { visitWindowPartitionColumnReference(it) }
-            WindowPartitionClause(partitions)
-        }
-
         override fun visitWindowPartitionColumnReference(ctx: GeneratedParser.WindowPartitionColumnReferenceContext) = translate(ctx) {
             val id = visitQualifiedName(ctx.qualifiedName())
             WindowPartition.Name(id)
@@ -2057,8 +2050,10 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitWindowSpecification(ctx: GeneratedParser.WindowSpecificationContext) = translate(ctx) {
             val existingName = ctx.existingWindowName?.let { visitSymbolPrimitive(it) }
-            val partitionClause = ctx.partition?.let { visitWindowPartitionClause(it) }
-            val orderClause = ctx.order?.let { visitOrderByClause(it) }?.let { WindowOrderClause(it.sorts) }
+            val partitionClause = ctx.partition?.let {
+                it.col.map { visitWindowPartitionColumnReference(it) }
+            }
+            val orderClause = ctx.order?.let { visitOrderByClause(it) }
             WindowSpecification(existingName, partitionClause, orderClause)
         }
 

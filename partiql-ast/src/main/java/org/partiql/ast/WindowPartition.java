@@ -10,13 +10,11 @@ import java.util.List;
 /**
  * Represents a partition specified by a window specification.
  * @see Name
- * @see WindowPartitionClause#getPartitions()
  * @see WindowSpecification#getPartitionClause()
  */
 public abstract class WindowPartition extends AstNode {
     /**
      * Represents a partition specified by a name.
-     * @see WindowPartitionClause#getPartitions()
      * @see WindowSpecification#getPartitionClause()
      */
     @Builder(builderClassName = "Builder")

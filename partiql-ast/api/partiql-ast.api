@@ -446,10 +446,6 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$WindowDefinition;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypeLagOrLead (Lorg/partiql/ast/WindowFunctionType$LeadOrLag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLagOrLead (Lorg/partiql/ast/WindowFunctionType$LeadOrLag;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitWindowOrderClause (Lorg/partiql/ast/WindowOrderClause;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitWindowOrderClause (Lorg/partiql/ast/WindowOrderClause;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitWindowPartitionClause (Lorg/partiql/ast/WindowPartitionClause;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitWindowPartitionClause (Lorg/partiql/ast/WindowPartitionClause;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowPartitionName (Lorg/partiql/ast/WindowPartition$Name;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowPartitionName (Lorg/partiql/ast/WindowPartition$Name;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowSpecification (Lorg/partiql/ast/WindowSpecification;Ljava/lang/Object;)Ljava/lang/Object;
@@ -609,9 +605,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitWindowFunctionType (Lorg/partiql/ast/WindowFunctionType;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLagOrLead (Lorg/partiql/ast/WindowFunctionType$LeadOrLag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeNoArg (Lorg/partiql/ast/WindowFunctionType$NoArg;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitWindowOrderClause (Lorg/partiql/ast/WindowOrderClause;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowPartition (Lorg/partiql/ast/WindowPartition;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitWindowPartitionClause (Lorg/partiql/ast/WindowPartitionClause;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowPartitionName (Lorg/partiql/ast/WindowPartition$Name;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowSpecification (Lorg/partiql/ast/WindowSpecification;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWith (Lorg/partiql/ast/With;Ljava/lang/Object;)Ljava/lang/Object;
@@ -1675,22 +1669,6 @@ public class org/partiql/ast/WindowFunctionType$NoArg$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/WindowOrderClause : org/partiql/ast/AstNode {
-	public fun <init> (Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/WindowOrderClause$Builder;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun getSorts ()Ljava/util/List;
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/WindowOrderClause$Builder {
-	public fun build ()Lorg/partiql/ast/WindowOrderClause;
-	public fun sorts (Ljava/util/List;)Lorg/partiql/ast/WindowOrderClause$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract class org/partiql/ast/WindowPartition : org/partiql/ast/AstNode {
 	public fun <init> ()V
 }
@@ -1711,39 +1689,23 @@ public class org/partiql/ast/WindowPartition$Name$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/WindowPartitionClause : org/partiql/ast/AstNode {
-	public fun <init> (Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/WindowPartitionClause$Builder;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun getPartitions ()Ljava/util/List;
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/WindowPartitionClause$Builder {
-	public fun build ()Lorg/partiql/ast/WindowPartitionClause;
-	public fun partitions (Ljava/util/List;)Lorg/partiql/ast/WindowPartitionClause$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class org/partiql/ast/WindowSpecification : org/partiql/ast/AstNode {
-	public fun <init> (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/WindowPartitionClause;Lorg/partiql/ast/WindowOrderClause;)V
+	public fun <init> (Lorg/partiql/ast/Identifier$Simple;Ljava/util/List;Lorg/partiql/ast/OrderBy;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/WindowSpecification$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun getExistingName ()Lorg/partiql/ast/Identifier$Simple;
-	public fun getOrderClause ()Lorg/partiql/ast/WindowOrderClause;
-	public fun getPartitionClause ()Lorg/partiql/ast/WindowPartitionClause;
+	public fun getOrderClause ()Lorg/partiql/ast/OrderBy;
+	public fun getPartitionClause ()Ljava/util/List;
 	public fun hashCode ()I
 }
 
 public class org/partiql/ast/WindowSpecification$Builder {
 	public fun build ()Lorg/partiql/ast/WindowSpecification;
 	public fun existingName (Lorg/partiql/ast/Identifier$Simple;)Lorg/partiql/ast/WindowSpecification$Builder;
-	public fun orderClause (Lorg/partiql/ast/WindowOrderClause;)Lorg/partiql/ast/WindowSpecification$Builder;
-	public fun partitionClause (Lorg/partiql/ast/WindowPartitionClause;)Lorg/partiql/ast/WindowSpecification$Builder;
+	public fun orderClause (Lorg/partiql/ast/OrderBy;)Lorg/partiql/ast/WindowSpecification$Builder;
+	public fun partitionClause (Ljava/util/List;)Lorg/partiql/ast/WindowSpecification$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 

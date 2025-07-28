@@ -361,26 +361,6 @@ public abstract class AstVisitor<R, C> {
      * @param ctx TODO
      * @return TODO
      */
-    public R visitWindowPartitionClause(WindowPartitionClause node, C ctx) {
-        return node.accept(this, ctx);
-    }
-
-    /**
-     * TODO
-     * @param node TODO
-     * @param ctx TODO
-     * @return TODO
-     */
-    public R visitWindowOrderClause(WindowOrderClause node, C ctx) {
-        return node.accept(this, ctx);
-    }
-
-    /**
-     * TODO
-     * @param node TODO
-     * @param ctx TODO
-     * @return TODO
-     */
     public R visitWindowPartition(WindowPartition node, C ctx) {
         return node.accept(this, ctx);
     }
