@@ -174,7 +174,6 @@ import org.partiql.ast.Sort
 import org.partiql.ast.Statement
 import org.partiql.ast.WindowClause
 import org.partiql.ast.WindowFunctionNullTreatment
-import org.partiql.ast.WindowFunctionSimpleName
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowPartition
 import org.partiql.ast.WindowSpecification
@@ -2008,18 +2007,17 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitWindowFunctionTypeRank(ctx: GeneratedParser.WindowFunctionTypeRankContext) = translate(ctx) {
             val func = ctx.rankFunctionType()
-            val name = when {
-                func.RANK() != null -> WindowFunctionSimpleName.RANK()
-                func.DENSE_RANK() != null -> WindowFunctionSimpleName.DENSE_RANK()
-                func.PERCENT_RANK() != null -> WindowFunctionSimpleName.PERCENT_RANK()
-                func.CUME_DIST() != null -> WindowFunctionSimpleName.CUME_DIST()
+            when {
+                func.RANK() != null -> WindowFunctionType.Rank(WindowFunctionType.Rank.RANK)
+                func.DENSE_RANK() != null -> WindowFunctionType.Rank(WindowFunctionType.Rank.DENSE_RANK)
+                func.PERCENT_RANK() != null -> WindowFunctionType.Rank(WindowFunctionType.Rank.PERCENT_RANK)
+                func.CUME_DIST() != null -> WindowFunctionType.CumeDist()
                 else -> throw error(ctx, "Expected one of: RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST")
             }
-            WindowFunctionType.NoArg(name)
         }
 
         override fun visitWindowFunctionTypeRowNumber(ctx: GeneratedParser.WindowFunctionTypeRowNumberContext) = translate(ctx) {
-            WindowFunctionType.NoArg(WindowFunctionSimpleName.ROW_NUMBER())
+            WindowFunctionType.RowNumber()
         }
 
         override fun visitWindowFunctionNullTreatment(ctx: GeneratedParser.WindowFunctionNullTreatmentContext) = translate(ctx) {
