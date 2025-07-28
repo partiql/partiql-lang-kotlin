@@ -21,10 +21,10 @@ public final class WindowSpecification extends AstNode {
     private final Identifier.Simple existingName;
 
     @Nullable
-    private final WindowPartitionClause partitionClause;
+    private final List<WindowPartition> partitionClause;
 
     @Nullable
-    private final WindowOrderClause orderClause;
+    private final OrderBy orderClause;
 
     /**
      * Constructs a new window specification.
@@ -34,8 +34,8 @@ public final class WindowSpecification extends AstNode {
      */
     public WindowSpecification(
             @Nullable Identifier.Simple existingName,
-            @Nullable WindowPartitionClause partitionClause,
-            @Nullable WindowOrderClause orderClause
+            @Nullable List<WindowPartition> partitionClause,
+            @Nullable OrderBy orderClause
     ) {
         this.existingName = existingName;
         this.partitionClause = partitionClause;
@@ -56,7 +56,7 @@ public final class WindowSpecification extends AstNode {
      * @return the partition clause of the window specification
      */
     @Nullable
-    public WindowPartitionClause getPartitionClause() {
+    public List<WindowPartition> getPartitionClause() {
         return this.partitionClause;
     }
 
@@ -65,7 +65,7 @@ public final class WindowSpecification extends AstNode {
      * @return the order clause of the window specification
      */
     @Nullable
-    public WindowOrderClause getOrderClause() {
+    public OrderBy getOrderClause() {
         return this.orderClause;
     }
 
@@ -77,7 +77,7 @@ public final class WindowSpecification extends AstNode {
             children.add(this.existingName);
         }
         if (this.partitionClause != null) {
-            children.add(this.partitionClause);
+            children.addAll(this.partitionClause);
         }
         if (this.orderClause != null) {
             children.add(this.orderClause);

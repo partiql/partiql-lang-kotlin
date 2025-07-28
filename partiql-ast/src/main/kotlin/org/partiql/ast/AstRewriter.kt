@@ -809,29 +809,13 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitWindowSpecification(node: WindowSpecification, ctx: C): AstNode {
-        val partitionClause = node.partitionClause?.let { visitWindowPartitionClause(it, ctx) as WindowPartitionClause }
-        val orderClause = node.orderClause?.let { visitWindowOrderClause(it, ctx) as WindowOrderClause }
+        val partitionClause = node.partitionClause?.let {
+            it.map { partition -> visitWindowPartition(partition, ctx) as WindowPartition }
+        }
+        val orderClause = node.orderClause?.let { visitOrderBy(it, ctx) as OrderBy }
         val name = node.existingName?.let { visitIdentifierSimple(it, ctx) as Identifier.Simple }
         return if (partitionClause !== node.partitionClause || orderClause !== node.orderClause || name !== node.existingName) {
             WindowSpecification(name, partitionClause, orderClause)
-        } else {
-            node
-        }
-    }
-
-    override fun visitWindowPartitionClause(node: WindowPartitionClause, ctx: C): AstNode {
-        val partitions = _visitList(node.partitions, ctx, ::visitWindowPartition)
-        return if (partitions !== node.partitions) {
-            WindowPartitionClause(partitions)
-        } else {
-            node
-        }
-    }
-
-    override fun visitWindowOrderClause(node: WindowOrderClause, ctx: C): AstNode {
-        val sorts = _visitList(node.sorts, ctx, ::visitSort)
-        return if (sorts !== node.sorts) {
-            WindowOrderClause(sorts)
         } else {
             node
         }
