@@ -6,8 +6,10 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
+import java.time.LocalDate
 
 /**
  * This test file tests window functions/clause.
@@ -54,6 +56,31 @@ class WindowTests {
             }
         }
 
+        private class StockPrice(
+            val year: Int,
+            val month: Int,
+            val day: Int,
+            val ticker: String,
+            val price: Double,
+        ) {
+            fun toDatum(): Datum {
+                val fields = listOfNotNull(
+                    Field.of("_date", Datum.date(LocalDate.of(year, month, day))),
+                    Field.of("ticker", Datum.string(ticker)),
+                    Field.of("price", Datum.doublePrecision(price)),
+                )
+                return Datum.struct(fields)
+            }
+        }
+
+        private val stock_prices = listOf(
+            StockPrice(2025, 9, 30, "AMZN", 113.00),
+            StockPrice(2025, 10, 4, "AMZN", 121.09),
+            StockPrice(2025, 9, 30, "GOOG", 96.15),
+            StockPrice(2025, 10, 3, "GOOG", 99.30),
+            StockPrice(2025, 10, 4, "GOOG", 101.04)
+        )
+
         private val employees = listOf(
             Employee(0, "Jacob", "Marketing", 40, "Alexa"),
             Employee(1, "Marcus", "Sales", 28, "Gary"),
@@ -71,6 +98,10 @@ class WindowTests {
             Global(
                 name = "employee",
                 value = Datum.bag(employees.map { it.toDatum() })
+            ),
+            Global(
+                name = "stock_prices",
+                value = Datum.bag(stock_prices.map { it.toDatum() })
             )
         )
 
@@ -265,6 +296,73 @@ class WindowTests {
                     rowOfPartner(8, 3, 3, 3, "Yi", FALLBACK),
                 ),
             ),
+            SuccessTestCase(
+                name = "With group by",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = """
+                    SELECT
+                        _month AS current_month,
+                        ticker AS ticker,
+                        AVG(price) AS current_month_average,
+                        LAG(AVG(price)) OVER (PARTITION BY ticker ORDER BY _month) AS previous_month_avg
+                    FROM stock_prices AS sp
+                    GROUP BY
+                        EXTRACT(MONTH FROM sp._date) AS _month,
+                        sp.ticker AS ticker
+                    GROUP AS g;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfStockPrice(9, "AMZN", 113.00, null),
+                    rowOfStockPrice(10, "AMZN", 121.09, 113.00),
+                    rowOfStockPrice(9, "GOOG", 96.15, null),
+                    rowOfStockPrice(10, "GOOG", 100.17, 96.15),
+                ),
+            ),
+            SuccessTestCase(
+                name = "With subquery",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = """
+                    SELECT
+                        LAG(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp._date) AS previous_price,
+                        (
+                            SELECT
+                                LAG(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp._date) AS inner_lag
+                            FROM <<1>>
+                       ) AS nested
+                    FROM stock_prices AS sp
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfStockPrice(null),
+                    rowOfStockPrice(113.0),
+                    rowOfStockPrice(null),
+                    rowOfStockPrice(96.15),
+                    rowOfStockPrice(99.30),
+                ),
+            ),
+            SuccessTestCase(
+                name = "With order by",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = """
+                    SELECT sp._date AS _date,
+                        sp.ticker AS ticker,
+                        sp.price AS current_price,
+                        LAG(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp._date) AS previous_price
+                    FROM stock_prices AS sp
+                    ORDER BY sp._date DESC;
+                """.trimIndent(),
+                expected = Datum.array(
+                    listOf(
+                        rowOfStockPrice(2025, 10, 4, "AMZN", 121.09, 113.0),
+                        rowOfStockPrice(2025, 10, 4, "GOOG", 101.04, 99.3),
+                        rowOfStockPrice(2025, 10, 3, "GOOG", 99.3, 96.15),
+                        rowOfStockPrice(2025, 9, 30, "AMZN", 113.0, null),
+                        rowOfStockPrice(2025, 9, 30, "GOOG", 96.15, null),
+                    )
+                ),
+            ),
         )
 
         /**
@@ -342,6 +440,52 @@ class WindowTests {
                 lag?.let { Field.of("_lag", Datum.string(it)) },
                 lead?.let { Field.of("_lead", Datum.string(it)) },
             )
+            return Datum.struct(fields)
+        }
+
+        private fun rowOfStockPrice(month: Int, ticker: String, avg: Double, prevAvg: Double?): Datum {
+            val fields = mutableListOf(
+                Field.of("current_month", Datum.integer(month)),
+                Field.of("ticker", Datum.string(ticker)),
+                Field.of("current_month_average", Datum.doublePrecision(avg)),
+            )
+            val last = when (prevAvg) {
+                null -> Field.of("previous_month_avg", Datum.nullValue(PType.doublePrecision()))
+                else -> Field.of("previous_month_avg", Datum.doublePrecision(prevAvg))
+            }
+            fields.add(last)
+            return Datum.struct(fields)
+        }
+
+        private fun rowOfStockPrice(prevPrice: Double?): Datum {
+            val fields = mutableListOf<Field>()
+            val first = when (prevPrice) {
+                null -> Field.of("previous_price", Datum.nullValue(PType.doublePrecision()))
+                else -> Field.of("previous_price", Datum.doublePrecision(prevPrice))
+            }
+            fields.add(first)
+            fields.add(Field.of("nested", Datum.nullValue(PType.doublePrecision())),)
+            return Datum.struct(fields)
+        }
+
+        private fun rowOfStockPrice(
+            year: Int,
+            month: Int,
+            day: Int,
+            ticker: String,
+            currentPrice: Double,
+            prevPrice: Double?
+        ): Datum {
+            val fields = mutableListOf(
+                Field.of("_date", Datum.date(LocalDate.of(year, month, day))),
+                Field.of("ticker", Datum.string(ticker)),
+                Field.of("current_price", Datum.doublePrecision(currentPrice)),
+            )
+            val last = when (prevPrice) {
+                null -> Field.of("previous_price", Datum.nullValue(PType.doublePrecision()))
+                else -> Field.of("previous_price", Datum.doublePrecision(prevPrice))
+            }
+            fields.add(last)
             return Datum.struct(fields)
         }
 
