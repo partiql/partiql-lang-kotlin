@@ -186,6 +186,19 @@ internal object PErrors {
         )
     }
 
+    internal fun varRefAmbiguous(
+        location: SourceLocation?,
+        id: Identifier?,
+    ): PError {
+        return PError(
+            PError.VAR_REF_AMBIGUOUS,
+            Severity.WARNING(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("ID" to id)
+        )
+    }
+
     /**
      * @param path see [PError.INVALID_EXCLUDE_PATH]
      * @return an error representing [PError.INVALID_EXCLUDE_PATH]
