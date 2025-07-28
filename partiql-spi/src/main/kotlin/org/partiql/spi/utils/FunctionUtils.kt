@@ -4,7 +4,6 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
-import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.NumberUtils.isNumber
 import org.partiql.spi.value.Datum
@@ -95,9 +94,7 @@ internal object FunctionUtils {
     }
 
     internal fun isDateTimeType(type: PType): Boolean {
-        return SqlTypeFamily.TIME.contains(type) ||
-            SqlTypeFamily.TIMESTAMP.contains(type) ||
-            type.code() == PType.DATE
+        return type.code() == PType.DATE
     }
 
     internal fun isIntervalType(type: PType): Boolean {

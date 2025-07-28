@@ -5,7 +5,6 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function.instance
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
-import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.FunctionUtils.isDateTimeType
@@ -59,6 +58,17 @@ internal object FnOverlaps : FnOverload() {
                 // D2: value of the first field of <row value expression 2>
                 val d2 = period2[0]
                 val field2 = period2[1]
+                // For the datetime validation:
+                if (!d1.isNull && !isDateTimeType(d1.type)) {
+                    throw IllegalArgumentException("OVERLAPS predicate requires datetime start values, but got: ${d1.type}")
+                }
+                if (!d2.isNull && !isDateTimeType(d2.type)) {
+                    throw IllegalArgumentException("OVERLAPS predicate requires datetime start values, but got: ${d2.type}")
+                }
+                // If D1 or D2 is null, return null
+                if (d1.isNull || d2.isNull) {
+                    return@instance Datum.nullValue()
+                }
                 // Calculate E1 and E2
                 val e1 = calculateEndpoint(d1, field1) ?: return@instance Datum.nullValue()
                 val e2 = calculateEndpoint(d2, field2) ?: return@instance Datum.nullValue()
@@ -79,10 +89,7 @@ internal object FnOverlaps : FnOverload() {
 
     private fun calculateEndpoint(start: Datum, field: Datum): Datum? {
         if (field.isNull) {
-            throw PErrors.unexpectedTypeException(
-                field.type,
-                listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYear(2), PType.intervalDay(2))
-            )
+            return null
         }
         // If field is a datetime, use it directly as E
         if (isDateTimeType(field.type)) {
@@ -90,12 +97,13 @@ internal object FnOverlaps : FnOverload() {
         }
         // If field is an interval, calculate E = D + I
         if (isIntervalType(field.type)) {
+            if (start.isNull) {
+                return null
+            }
             return addInterval(start, field)
         }
-        throw PErrors.unexpectedTypeException(
-            field.type,
-            listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYear(2), PType.intervalDay(2))
-        )
+        // Throw error for invalid field types
+        throw IllegalArgumentException("OVERLAPS predicate requires datetime or interval types, but got: ${field.type}")
     }
 
     private fun addInterval(datetime: Datum, interval: Datum): Datum? {
