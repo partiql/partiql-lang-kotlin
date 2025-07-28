@@ -302,7 +302,7 @@ public object Ast {
     }
 
     @JvmStatic
-    @Deprecated("This is replaced by WindowReference.")
+    @Deprecated("This is replaced by WindowSpecification.")
     public fun exprWindowOver(partitions: List<Expr>, sorts: List<Sort>): ExprWindow.Over {
         return ExprWindow.Over(partitions, sorts)
     }
