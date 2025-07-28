@@ -569,7 +569,7 @@ internal object RelConverter {
             // Schema = (input bindings... functions...)
             val rel = windows.getAll().foldRight(input) { window, current ->
                 val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
-                val partitions = window.spec.partitionClause?.partitions?.map {
+                val partitions = window.spec.partitionClause?.map {
                     if (it !is WindowPartition.Name) {
                         val cause = IllegalStateException("Window Partition ${it.javaClass.simpleName} not supported.")
                         env.listener.report(PErrors.internalError(cause))
