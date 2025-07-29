@@ -122,7 +122,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
     }
 
     override fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn? {
-        val op = IntervalUtils.intervalMultiply(lhs) ?: return null
+        val op = IntervalUtils.intervalMultiply(lhs)
         return basic(lhs, lhs, rhs) { args ->
             val interval = args[0]
             val number = args[1].getNumber()
@@ -131,7 +131,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
     }
 
     override fun getNumberIntervalInstance(lhs: PType, rhs: PType): Fn? {
-        val op = IntervalUtils.intervalMultiply(rhs) ?: return null
+        val op = IntervalUtils.intervalMultiply(rhs)
         return basic(rhs, lhs, rhs) { args ->
             val number = args[0].getNumber()
             val interval = args[1]
