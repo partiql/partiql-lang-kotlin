@@ -8,7 +8,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 
 internal object IntervalUtils {
-    private const val NANO_PRECISION = 9;
+    private const val NANO_PRECISION = 9
     private const val MONTHS_PER_YEAR = 12L
     private const val SECONDS_PER_MINUTE = 60L
     private const val MINUTES_PER_HOUR = 60L
@@ -16,12 +16,12 @@ internal object IntervalUtils {
     private const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
     private const val SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY
     private const val NANOS_PER_SECOND = 1_000_000_000L
-    
+
     /**
      * Divides an interval by a numeric value.
      * For YEAR_MONTH Interval, We maintain the integer part (precision 0) and truncate the floating part
      * For DAY_SECOND Interval, We maintain the precision of 9 for nanoseconds and truncate the additional part
-     * 
+     *
      * @param interval The interval type to divide
      * @return A function that takes an interval Datum and BigDecimal divisor, returns the divided interval
      */
@@ -31,7 +31,7 @@ internal object IntervalUtils {
             IntervalCode.MONTH,
             IntervalCode.YEAR_MONTH -> { i, number ->
                 // get total months from the interval as long as it can hold the interval with precision = 9.
-                val totalMonths : Long = i.years * MONTHS_PER_YEAR + i.months
+                val totalMonths: Long = i.years * MONTHS_PER_YEAR + i.months
                 // use big decimal to do the calculation as we can control the round mode.
                 // RoundingMode.DOWN mode is used to truncate fraction part e.g. 2.9 months will be 2 months.
                 val totalMonthsInDecimal = BigDecimal(totalMonths).divide(number, 0, RoundingMode.DOWN)
@@ -55,7 +55,7 @@ internal object IntervalUtils {
                 fromSecond(resultInBigDecimal, interval.precision, interval.fractionalPrecision)
             }
 
-            else -> { num, i ->  throw IllegalArgumentException("Unable to calculate division for INTERVAL expression") }
+            else -> { num, i -> throw IllegalArgumentException("Unable to calculate division for INTERVAL expression") }
         }
     }
 
@@ -73,7 +73,7 @@ internal object IntervalUtils {
             IntervalCode.MONTH,
             IntervalCode.YEAR_MONTH -> { i, number ->
                 // get total months from the interval as long as it can hold the interval with precision = 9.
-                val totalMonths : Long = i.years * MONTHS_PER_YEAR + i.months
+                val totalMonths: Long = i.years * MONTHS_PER_YEAR + i.months
                 // for interval multiply, fraction part is truncated when converting to Long type which is consistent
                 // with RoundingMode.Down
                 val totalMonthsInDecimal = BigDecimal(totalMonths).multiply(number)
@@ -97,7 +97,7 @@ internal object IntervalUtils {
                 fromSecond(resultInBigDecimal, interval.precision, interval.fractionalPrecision)
             }
 
-            else -> { num, i -> throw IllegalArgumentException("Unable to calculate multiply for INTERVAL expression")  }
+            else -> { num, i -> throw IllegalArgumentException("Unable to calculate multiply for INTERVAL expression") }
         }
     }
 

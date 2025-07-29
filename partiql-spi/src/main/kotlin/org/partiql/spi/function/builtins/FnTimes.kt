@@ -12,7 +12,6 @@ import org.partiql.spi.utils.NumberUtils.byteOverflows
 import org.partiql.spi.utils.NumberUtils.shortOverflows
 import org.partiql.spi.utils.getNumber
 import org.partiql.spi.value.Datum
-import java.math.BigDecimal
 
 internal object FnTimes : DiadicArithmeticOperator("times") {
 

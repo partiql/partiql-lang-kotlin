@@ -190,8 +190,6 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
                     arg0 in allIntervalYMType && arg1 in allNumberPType -> PType.intervalYearMonth(9)
                     arg0 in allIntervalDTType && arg1 in allNumberPType -> PType.intervalDaySecond(9, 6)
                     arg0 == arg1 -> arg1
-                    // TODO arg0 == StaticType.DECIMAL && arg1 == StaticType.FLOAT -> arg1 // TODO: The cast table is wrong. Honestly, it should be deleted.
-                    // TODO arg1 == StaticType.DECIMAL && arg0 == StaticType.FLOAT -> arg0 // TODO: The cast table is wrong
                     castTablePType(arg1, arg0) == CastType.COERCION -> arg0
                     castTablePType(arg0, arg1) == CastType.COERCION -> arg1
                     else -> error("Arguments do not conform to parameters. Args: $args")
