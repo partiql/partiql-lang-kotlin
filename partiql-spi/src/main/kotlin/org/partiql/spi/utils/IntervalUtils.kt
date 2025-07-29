@@ -8,22 +8,22 @@ import java.math.BigInteger
 import java.math.RoundingMode
 
 internal object IntervalUtils {
-    private const val MONTHS_PER_YEAR = 12
-    private const val SECONDS_PER_MINUTE = 60
-    private const val MINUTES_PER_HOUR = 60
-    private const val HOURS_PER_DAY = 24
+    private const val MONTHS_PER_YEAR = 12L
+    private const val SECONDS_PER_MINUTE = 60L
+    private const val MINUTES_PER_HOUR = 60L
+    private const val HOURS_PER_DAY = 24L
     private const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
     private const val SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY
-    private const val NANOS_PER_SECOND = 1_000_000_000
+    private const val NANOS_PER_SECOND = 1_000_000_000L
 
-    fun intervalDivide(interval: PType): ((Datum, BigDecimal) -> Datum)? {
+    fun intervalDivide(interval: PType): ((Datum, BigDecimal) -> Datum) {
         return when (interval.intervalCode) {
             IntervalCode.YEAR,
             IntervalCode.MONTH,
             IntervalCode.YEAR_MONTH -> { i, number ->
-                val totalMonths = i.years * MONTHS_PER_YEAR + i.months
-                // Double is good to avoid calculation inaccuracy as we truncate fraction part
-                val totalMonthsInDecimal = BigDecimal(totalMonths).divide(number, RoundingMode.DOWN)
+                // get total months from the interval as long
+                val totalMonths : Long = i.years * MONTHS_PER_YEAR + i.months
+                val totalMonthsInDecimal = BigDecimal(totalMonths).divide(number, 0, RoundingMode.DOWN)
                 val years = (totalMonthsInDecimal.toLong() / MONTHS_PER_YEAR).toInt()
                 val months = (totalMonthsInDecimal.toLong() % MONTHS_PER_YEAR).toInt()
                 Datum.intervalYearMonth(years, months, interval.precision)
@@ -44,20 +44,19 @@ internal object IntervalUtils {
                 fromSecond(resultInBigDecimal, interval.precision, interval.fractionalPrecision)
             }
 
-            else -> { num, i -> Datum.missing() }
+            else -> { num, i ->  throw IllegalArgumentException("Unable to calculate division for INTERVAL expression") }
         }
     }
 
-    fun intervalMultiply(interval: PType): ((Datum, BigDecimal) -> Datum)? {
+    fun intervalMultiply(interval: PType): ((Datum, BigDecimal) -> Datum) {
         return when (interval.intervalCode) {
             IntervalCode.YEAR,
             IntervalCode.MONTH,
             IntervalCode.YEAR_MONTH -> { i, number ->
-                val totalMonths = i.years * MONTHS_PER_YEAR + i.months
-                // Double is good to avoid calculation inaccuracy as we truncate fraction part
-                val totalMonthsInDouble = totalMonths * number.toDouble()
-                val years = (totalMonthsInDouble / MONTHS_PER_YEAR).toInt()
-                val months = (totalMonthsInDouble % MONTHS_PER_YEAR).toInt()
+                val totalMonths : Long = i.years * MONTHS_PER_YEAR + i.months
+                val totalMonthsInDecimal = BigDecimal(totalMonths) * number
+                val years = (totalMonthsInDecimal.toLong() / MONTHS_PER_YEAR).toInt()
+                val months = (totalMonthsInDecimal.toLong() % MONTHS_PER_YEAR).toInt()
                 Datum.intervalYearMonth(years, months, interval.precision)
             }
 
@@ -76,25 +75,25 @@ internal object IntervalUtils {
                 fromSecond(resultInBigDecimal, interval.precision, interval.fractionalPrecision)
             }
 
-            else -> { num, i -> Datum.missing() }
+            else -> { num, i -> throw IllegalArgumentException("Unable to calculate multiply for INTERVAL expression")  }
         }
     }
 
     private fun toSeconds(i: Datum): BigDecimal {
         if (i.type.code() == PType.INTERVAL_DT) {
-            val daysInSeconds = i.days * SECONDS_PER_DAY.toLong()
-            val hoursInSeconds = i.hours * SECONDS_PER_HOUR.toLong()
-            val minutesInSeconds = i.minutes * SECONDS_PER_MINUTE.toLong()
+            val daysInSeconds = i.days * SECONDS_PER_DAY
+            val hoursInSeconds = i.hours * SECONDS_PER_HOUR
+            val minutesInSeconds = i.minutes * SECONDS_PER_MINUTE
             val totalSeconds = daysInSeconds + hoursInSeconds + minutesInSeconds + i.seconds
             return BigDecimal.valueOf(totalSeconds).add(BigDecimal.valueOf(i.nanos.toLong(), 9))
         } else {
-            throw UnsupportedOperationException("Unable to convert non DayToSeconds type")
+            throw UnsupportedOperationException("Unable to convert non DayToSeconds type to seconds")
         }
     }
 
     private fun fromSecond(totalSeconds: BigDecimal, precision: Int, fractionalPrecision: Int): Datum {
         val resultTotalNanos: BigInteger = totalSeconds.movePointRight(9).toBigIntegerExact()
-        val divRem = resultTotalNanos.divideAndRemainder(BigInteger.valueOf(NANOS_PER_SECOND.toLong()))
+        val divRem = resultTotalNanos.divideAndRemainder(BigInteger.valueOf(NANOS_PER_SECOND))
         val resultTotalSeconds = divRem[0].toLong()
 
         val days = (resultTotalSeconds / SECONDS_PER_DAY).toInt()

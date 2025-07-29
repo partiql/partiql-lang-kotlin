@@ -29,9 +29,24 @@ class IntervalTimesTests {
     fun intervalTimesDecimal(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
-    @MethodSource("intervalTimesWithOverflowCases")
+    @MethodSource("intervalTimesCalculationOverflow")
     @Execution(ExecutionMode.CONCURRENT)
-    fun intervalTimesNine(tc: SuccessTestCase) = tc.run()
+    fun intervalTimesCalculationOverflow(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("intervaltimesWithPrecisionOverflowCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun intervaltimesWithPrecisionOverflowCases(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("intervalTimesNullCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun intervalTimesNull(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("intervalTimesMissingCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun intervalTimesMissing(tc: SuccessTestCase) = tc.run()
 
     companion object {
 
@@ -82,6 +97,7 @@ class IntervalTimesTests {
             Input(INTERVAL_DTS, "0", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6))
         ).map { case ->
             SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
         }
 
         @JvmStatic
@@ -97,6 +113,7 @@ class IntervalTimesTests {
             Input(INTERVAL_DTS, "-20", Datum.intervalDaySecond(-43, -9, -43, -30, 0, 2, 6)),
         ).map { case ->
             SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
         }
 
         @JvmStatic
@@ -112,14 +129,56 @@ class IntervalTimesTests {
             Input(INTERVAL_DTS, "2.1", Datum.intervalDaySecond(4, 13, 22, 52, (0.05 * NANOS_PER_SECOND).toInt(), 2, 6)),
         ).map { case ->
             SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
         }
 
         @JvmStatic
-        fun intervalTimesWithOverflowCases() = listOf(
+        fun intervalTimesCalculationOverflow() = listOf(
             Input(INTERVAL_YM_LARGE, "9", Datum.intervalYearMonth(999999, 9, 6)),
             Input(INTERVAL_DTS_LARGE, "9", Datum.intervalDaySecond(999999, 9, 9, 9, 999999000, 6, 6)),
         ).map { case ->
             SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        }
+
+        @JvmStatic
+        fun intervaltimesWithPrecisionOverflowCases() = listOf(
+            "$INTERVAL_Y * 50", // default year precision is 2. And 3 * 50 will exceed the year precision and fail
+            "$INTERVAL_D * 50" // default day precision is 2. And 3 * 50 will exceed the year precision and fail
+        ).map { exp ->
+            FailureTestCase(exp)
+        }
+
+        @JvmStatic
+        fun intervalTimesNullCases() = listOf(
+            Input(INTERVAL_Y, "NULL", Datum.nullValue()),
+            Input(INTERVAL_M, "NULL", Datum.nullValue()),
+            Input(INTERVAL_YM, "NULL", Datum.nullValue()),
+
+            Input(INTERVAL_D, "NULL", Datum.nullValue()),
+            Input(INTERVAL_H, "NULL", Datum.nullValue()),
+            Input(INTERVAL_MIN, "NULL", Datum.nullValue()),
+            Input(INTERVAL_S, "NULL", Datum.nullValue()),
+            Input(INTERVAL_DTS, "NULL", Datum.nullValue())
+        ).map { case ->
+            SuccessTestCase("${case.arg0} / ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg0} / ${case.arg1}", case.expected)
+        }
+
+        @JvmStatic
+        fun intervalTimesMissingCases() = listOf(
+            Input(INTERVAL_Y, "MISSING", Datum.missing()),
+            Input(INTERVAL_M, "MISSING", Datum.missing()),
+            Input(INTERVAL_YM, "MISSING", Datum.missing()),
+
+            Input(INTERVAL_D, "MISSING", Datum.missing()),
+            Input(INTERVAL_H, "MISSING", Datum.missing()),
+            Input(INTERVAL_MIN, "MISSING", Datum.missing()),
+            Input(INTERVAL_S, "MISSING", Datum.missing()),
+            Input(INTERVAL_DTS, "MISSING", Datum.missing())
+        ).map { case ->
+            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
         }
     }
 }

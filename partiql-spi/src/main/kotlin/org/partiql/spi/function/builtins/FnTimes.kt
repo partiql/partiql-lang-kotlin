@@ -7,6 +7,7 @@ import org.partiql.spi.function.Fn
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.IntervalUtils
+import org.partiql.spi.utils.NumberUtils
 import org.partiql.spi.utils.NumberUtils.byteOverflows
 import org.partiql.spi.utils.NumberUtils.shortOverflows
 import org.partiql.spi.utils.getNumber
@@ -125,7 +126,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
         return basic(lhs, lhs, rhs) { args ->
             val interval = args[0]
             val number = args[1].getNumber()
-            op(interval, BigDecimal(number.toString()))
+            op(interval, NumberUtils.bigDecimalOf(number))
         }
     }
 
@@ -134,7 +135,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
         return basic(rhs, lhs, rhs) { args ->
             val number = args[0].getNumber()
             val interval = args[1]
-            op(interval, BigDecimal(number.toString()))
+            op(interval, NumberUtils.bigDecimalOf(number))
         }
     }
 }
