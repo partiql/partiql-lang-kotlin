@@ -116,5 +116,29 @@ internal object FnOverlaps : FnOverload() {
         }
     }
 
-    private fun compareValues(a: Datum, b: Datum): Int = Datum.comparator().compare(a, b)
+    private fun compareValues(a: Datum, b: Datum): Int {
+        // Validate datetime types are comparable according to SQL-99 spec
+        if (isDateTimeType(a.type) && isDateTimeType(b.type)) {
+            validateDateTimeComparison(a.type, b.type)
+        }
+        return Datum.comparator().compare(a, b)
+    }
+
+    private fun validateDateTimeComparison(type1: PType, type2: PType) {
+        val code1 = type1.code()
+        val code2 = type2.code()
+        val compatible = when {
+            // DATE types are comparable with DATE types
+            code1 == PType.DATE && code2 == PType.DATE -> true
+            // TODO(): We currently don't support TIMEZ & TIMESTAMPZ
+            // TIME types (with or without timezone) are comparable with each other
+            (code1 == PType.TIME || code1 == PType.TIMEZ) && (code2 == PType.TIME || code2 == PType.TIMEZ) -> true
+            // TIMESTAMP types (with or without timezone) are comparable with each other
+            (code1 == PType.TIMESTAMP || code1 == PType.TIMESTAMPZ) && (code2 == PType.TIMESTAMP || code2 == PType.TIMESTAMPZ) -> true
+            else -> false
+        }
+        if (!compatible) {
+            throw IllegalArgumentException("Datetime types with different primary datetime fields are not comparable: ${type1.name()} and ${type2.name()}")
+        }
+    }
 }

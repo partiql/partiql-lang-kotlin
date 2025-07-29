@@ -94,7 +94,10 @@ internal object FunctionUtils {
     }
 
     internal fun isDateTimeType(type: PType): Boolean {
-        return type.code() == PType.DATE
+        return when (type.code()) {
+            PType.DATE, PType.TIME, PType.TIMEZ, PType.TIMESTAMP, PType.TIMESTAMPZ -> true
+            else -> false
+        }
     }
 
     internal fun isIntervalType(type: PType): Boolean {
