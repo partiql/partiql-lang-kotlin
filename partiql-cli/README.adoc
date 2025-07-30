@@ -18,14 +18,14 @@ partiql sample.csv    # '' format derived from extension
 cat sample.ion | partiql -f ion    # Load from stdin with the specified input format (-f) Ion.
 
 # program string
-partiql 'SELECT * FROM stdin' sample.ion
-cat sample.ion | partiql -f ion 'SELECT * FROM stdin'
+partiql -q 'SELECT * FROM stdin' sample.ion
+cat sample.ion | partiql -f ion -q 'SELECT * FROM stdin'
 
 # program script
 #   > cat script.sql
 #   > SELECT * FROM stdin
 partiql -q script.sql sample.ion
-cat sample.ion | partiql -f ion 'SELECT * FROM stdin'
+cat sample.ion | partiql -f ion -q 'SELECT * FROM stdin'
 ----
 
 [source,shell,subs=normal]

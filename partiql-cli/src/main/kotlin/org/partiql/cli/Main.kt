@@ -19,6 +19,10 @@ import org.partiql.cli.io.Format
 import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
+import org.partiql.eval.Mode
+import org.partiql.eval.compiler.PartiQLCompiler
+import org.partiql.parser.PartiQLParser
+import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -101,6 +105,7 @@ internal class MainCommand : Runnable {
         names = ["-f", "--format"],
         description = ["The data format, using the form <input>[:<output>]."],
         paramLabel = "<input[:output]>",
+        defaultValue = "ION:ION",
         converter = [Format.Converter::class],
     )
     lateinit var format: Pair<Format, Format>
@@ -139,17 +144,15 @@ internal class MainCommand : Runnable {
     )
     lateinit var warningsAsErrors: Array<ErrorCodeString>
 
-    @CommandLine.Parameters(
-        index = "0",
-        arity = "0..1",
+    @CommandLine.Option(
+        names = ["-q", "--query"],
         description = ["An optional PartiQL statement string."],
         paramLabel = "'statement'",
-        converter = [PairConverter::class],
     )
-    var program: Pair<String?, File?>? = null
+    var program: String? = null
 
     @CommandLine.Parameters(
-        index = "1..*",
+        index = "0..*",
         arity = "0..*",
         description = ["An optional list of files to execute the statement against."],
     )
@@ -174,10 +177,10 @@ internal class MainCommand : Runnable {
      * Returns the query text if present by parsing either the program string or the query file.
      */
     private fun statement(): String? {
-        if (program != null && program!!.first != null && include != null) {
+        if (program != null && include != null) {
             error("Cannot specify both a query file and query string.")
         }
-        return program?.first ?: include?.readText()
+        return program ?: include?.readText()
     }
 
     private fun shell() {
@@ -238,17 +241,11 @@ internal class MainCommand : Runnable {
             // return mapOf("default" to connector)
         }
         // Derive a `default catalog from stdin (or file streams)
-        val stream = stream()
-        val datum = if (stream != null) {
-            val reader = DatumReader.ion(stream)
-            val values = reader.readAll()
-            when (values.size) {
-                0 -> Datum.nullValue()
-                1 -> values.first()
-                else -> Datum.bag(values)
-            }
-        } else {
-            Datum.nullValue()
+
+        val datum = when(format.first) {
+            Format.ION -> parseIon()
+            Format.PARTIQL -> parsePartiQL()
+            else -> throw UnsupportedOperationException("Unsupported input format ${format.first}")
         }
         val catalog = Catalog.builder()
             .name("default")
@@ -261,6 +258,47 @@ internal class MainCommand : Runnable {
             )
             .build()
         return listOf(catalog)
+    }
+
+    private fun parsePartiQL(): Datum {
+        val compiler = PartiQLCompiler.standard()
+        val parser = PartiQLParser.standard()
+        val planner = PartiQLPlanner.standard()
+        val stream = stream()
+        val datum = if (stream != null) {
+            val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
+            val catalog = Catalog.builder()
+                .name("memory")
+                .build()
+            val session = Session.builder()
+                .catalog("memory")
+                .catalogs(catalog)
+                .build()
+            val parseResult = parser.parse(data)
+            val statement = parseResult.statements[0]
+            val plan = planner.plan(statement, session).plan
+            return compiler.prepare(plan, Mode.PERMISSIVE()).execute()
+        } else {
+            Datum.nullValue()
+        }
+
+        return datum
+    }
+
+    private fun parseIon(): Datum {
+        val stream = stream()
+        val datum = if (stream != null) {
+            val reader = DatumReader.ion(stream)
+            val values = reader.readAll()
+            when (values.size) {
+                0 -> Datum.nullValue()
+                1 -> values.first()
+                else -> Datum.bag(values)
+            }
+        } else {
+            Datum.nullValue()
+        }
+        return datum
     }
 
     /**
@@ -281,9 +319,6 @@ internal class MainCommand : Runnable {
      */
     private fun stream(): InputStream? {
         val streams: MutableList<InputStream> = mutableListOf()
-        if (program?.second != null) {
-            streams.add(program!!.second!!.inputStream())
-        }
         if (files != null) {
             streams.addAll(files!!.map { it.inputStream() })
         }
