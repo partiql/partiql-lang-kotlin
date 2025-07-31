@@ -24,8 +24,6 @@ internal object IntervalUtils {
 
     /**
      * Divides an interval by a numeric value.
-     * For YEAR_MONTH Interval, We maintain the integer part (precision 0) and truncate the floating part
-     * For DAY_SECOND Interval, We maintain the precision of 9 for nanoseconds and truncate the additional part
      *
      * @param interval The interval type to divide
      * @return A function that takes an interval Datum and BigDecimal divisor, returns the divided interval
@@ -67,8 +65,6 @@ internal object IntervalUtils {
 
     /**
      * Multiplies an interval by a numeric value.
-     * For YEAR_MONTH Interval, We maintain the integer part (precision 0) and truncate the floating part
-     * For DAY_SECOND Interval, We maintain the precision of 9 for nanoseconds and truncate the additional part
      *
      * @param interval The interval type to multiply
      * @return A function that takes an interval Datum and BigDecimal multiplier, returns the multiplied interval
