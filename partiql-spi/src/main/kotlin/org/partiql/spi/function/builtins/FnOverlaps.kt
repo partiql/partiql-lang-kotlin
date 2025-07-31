@@ -5,6 +5,8 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function.instance
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.internal.PErrors
+import org.partiql.spi.function.builtins.internal.PErrors.cardinalityViolationException
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.FunctionUtils.isDateTimeType
@@ -49,8 +51,11 @@ internal object FnOverlaps : FnOverload() {
                 val period1 = args[0].toList()
                 val period2 = args[1].toList()
                 // Each period must have exactly 2 elements (start, end)
-                if (period1.size != 2 || period2.size != 2) {
-                    return@instance Datum.nullValue()
+                if (period1.size != 2) {
+                    throw cardinalityViolationException(period1.size, 2)
+                }
+                if (period2.size != 2) {
+                    throw cardinalityViolationException(period2.size, 2)
                 }
                 // D1: value of the first field of <row value expression 1>
                 val d1 = period1[0]
@@ -60,10 +65,16 @@ internal object FnOverlaps : FnOverload() {
                 val field2 = period2[1]
                 // For the datetime validation:
                 if (!d1.isNull && !isDateTimeType(d1.type)) {
-                    throw IllegalArgumentException("OVERLAPS predicate requires datetime start values, but got: ${d1.type}")
+                    throw PErrors.unexpectedTypeException(d1.type, listOf(PType.date(), PType.time(), PType.timestamp()))
                 }
                 if (!d2.isNull && !isDateTimeType(d2.type)) {
-                    throw IllegalArgumentException("OVERLAPS predicate requires datetime start values, but got: ${d2.type}")
+                    throw PErrors.unexpectedTypeException(d2.type, listOf(PType.date(), PType.time(), PType.timestamp()))
+                }
+                if (!field1.isNull && !isDateTimeType(field1.type) && !isIntervalType(field1.type)) {
+                    throw PErrors.unexpectedTypeException(field1.type, listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
+                }
+                if (!field2.isNull && !isDateTimeType(field2.type) && !isIntervalType(field2.type)) {
+                    throw PErrors.unexpectedTypeException(field2.type, listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
                 }
                 // If D1 or D2 is null, return null
                 if (d1.isNull || d2.isNull) {
@@ -73,8 +84,8 @@ internal object FnOverlaps : FnOverload() {
                 val e1 = calculateEndpoint(d1, field1) ?: return@instance Datum.nullValue()
                 val e2 = calculateEndpoint(d2, field2) ?: return@instance Datum.nullValue()
                 // Calculate S1, T1, S2, T2 according to SQL-99 spec
-                val (s1, t1) = if (d1.isNull || compareValues(e1, d1) < 0) Pair(e1, d1) else Pair(d1, e1)
-                val (s2, t2) = if (d2.isNull || compareValues(e2, d2) < 0) Pair(e2, d2) else Pair(d2, e2)
+                val (s1, t1) = if (compareValues(e1, d1) < 0) Pair(e1, d1) else Pair(d1, e1)
+                val (s2, t2) = if (compareValues(e2, d2) < 0) Pair(e2, d2) else Pair(d2, e2)
                 // Apply SQL-99 OVERLAPS formula:
                 // (S1 > S2 AND NOT (S1 >= T2 AND T1 >= T2)) OR
                 // (S2 > S1 AND NOT (S2 >= T1 AND T2 >= T1)) OR
@@ -97,13 +108,10 @@ internal object FnOverlaps : FnOverload() {
         }
         // If field is an interval, calculate E = D + I
         if (isIntervalType(field.type)) {
-            if (start.isNull) {
-                return null
-            }
             return addInterval(start, field)
         }
-        // Throw error for invalid field types
-        throw IllegalArgumentException("OVERLAPS predicate requires datetime or interval types, but got: ${field.type}")
+        // Should not reach here
+        throw PErrors.unexpectedTypeException(field.type, listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
     }
 
     private fun addInterval(datetime: Datum, interval: Datum): Datum? {
@@ -131,6 +139,7 @@ internal object FnOverlaps : FnOverload() {
             // DATE types are comparable with DATE types
             code1 == PType.DATE && code2 == PType.DATE -> true
             // TODO(): We currently don't support TIMEZ & TIMESTAMPZ
+            // Related Issue: https://github.com/partiql/partiql-lang-kotlin/issues/1795
             // TIME types (with or without timezone) are comparable with each other
             (code1 == PType.TIME || code1 == PType.TIMEZ) && (code2 == PType.TIME || code2 == PType.TIMEZ) -> true
             // TIMESTAMP types (with or without timezone) are comparable with each other
@@ -138,7 +147,7 @@ internal object FnOverlaps : FnOverload() {
             else -> false
         }
         if (!compatible) {
-            throw IllegalArgumentException("Datetime types with different primary datetime fields are not comparable: ${type1.name()} and ${type2.name()}")
+            throw PErrors.unexpectedTypeException(type1, listOf(type2))
         }
     }
 }
