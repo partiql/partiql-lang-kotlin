@@ -120,21 +120,21 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
         }
     }
 
-    override fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn? {
+    override fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn {
         val op = IntervalUtils.intervalMultiply(lhs)
         return basic(lhs, lhs, rhs) { args ->
             val interval = args[0]
             val number = args[1].getNumber()
-            op(interval, NumberUtils.bigDecimalOf(number))
+            op(interval, number)
         }
     }
 
-    override fun getNumberIntervalInstance(lhs: PType, rhs: PType): Fn? {
+    override fun getNumberIntervalInstance(lhs: PType, rhs: PType): Fn {
         val op = IntervalUtils.intervalMultiply(rhs)
         return basic(rhs, lhs, rhs) { args ->
             val number = args[0].getNumber()
             val interval = args[1]
-            op(interval, NumberUtils.bigDecimalOf(number))
+            op(interval, number)
         }
     }
 }

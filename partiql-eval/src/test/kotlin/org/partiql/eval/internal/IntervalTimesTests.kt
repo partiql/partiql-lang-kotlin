@@ -29,6 +29,11 @@ class IntervalTimesTests {
     fun intervalTimesDecimal(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
+    @MethodSource("intervalTimesDoubleCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun intervalTimesDouble(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
     @MethodSource("intervalTimesCalculationOverflow")
     @Execution(ExecutionMode.CONCURRENT)
     fun intervalTimesCalculationOverflow(tc: SuccessTestCase) = tc.run()
@@ -127,6 +132,22 @@ class IntervalTimesTests {
             Input(INTERVAL_MIN, "2.1", Datum.intervalDaySecond(0, 0, 10, 30, 0, 2, 6)),
             Input(INTERVAL_S, "2.1", Datum.intervalDaySecond(0, 0, 0, 22, (0.05 * NANOS_PER_SECOND).toInt(), 2, 6)),
             Input(INTERVAL_DTS, "2.1", Datum.intervalDaySecond(4, 13, 22, 52, (0.05 * NANOS_PER_SECOND).toInt(), 2, 6)),
+        ).map { case ->
+            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        }
+
+        @JvmStatic
+        fun intervalTimesDoubleCases() = listOf(
+            Input(INTERVAL_Y, "2.25e-1", Datum.intervalYearMonth(0, 8, 2)),
+            Input(INTERVAL_M, "2.25e-1", Datum.intervalYearMonth(0, 1, 2)),
+            Input(INTERVAL_YM, "2.25e-1", Datum.intervalYearMonth(0, 3, 2)),
+
+            Input(INTERVAL_D, "2.25e-1", Datum.intervalDaySecond(0, 10, 48, 0, 0, 2, 6)),
+            Input(INTERVAL_H, "2.25e-1", Datum.intervalDaySecond(0, 0, 54, 0, 0, 2, 6)),
+            Input(INTERVAL_MIN, "2.25e-1", Datum.intervalDaySecond(0, 0, 1, 7, 500000000, 2, 6)),
+            Input(INTERVAL_S, "2.25e-1", Datum.intervalDaySecond(0, 0, 0, 2, 362500000, 2, 6)),
+            Input(INTERVAL_DTS, "2.25e-1", Datum.intervalDaySecond(0, 11, 43, 9, 862500000, 2, 6))
         ).map { case ->
             SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
             SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)

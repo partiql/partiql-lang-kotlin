@@ -37,13 +37,18 @@ class IntervalDivideTests {
     @MethodSource("intervalDivideDecimalCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun intervalDivideDecimal(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("intervalDivideDoubleCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun intervalDivideDouble(tc: SuccessTestCase) = tc.run()
+
     @ParameterizedTest
     @MethodSource("intervalDivideWithPrecisionOverflowCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun intervalDivideWithPrecisionOverflowCases(tc: FailureTestCase) = tc.run()
 
     companion object {
-
         private const val INTERVAL_Y = "INTERVAL '3' YEAR"
         private const val INTERVAL_M = "INTERVAL '7' MONTH"
         private const val INTERVAL_YM = "INTERVAL '1-5' YEAR TO MONTH"
@@ -106,6 +111,22 @@ class IntervalDivideTests {
             SuccessTestCase("${case.arg0} / ${case.arg1}", case.expected)
         }
 
+        @JvmStatic
+        fun intervalDivideDoubleCases() = listOf(
+            Input(INTERVAL_Y, "2.25e-1", Datum.intervalYearMonth(13, 4, 2)),
+            Input(INTERVAL_M, "2.25e-1", Datum.intervalYearMonth(2, 7, 2)),
+            Input(INTERVAL_YM, "2.25e-1", Datum.intervalYearMonth(6, 3, 2)),
+
+            // DT interval computation is using BigDecimal internally. When double is converted to BigDecimal, some inaccuracy is introduced.
+            // For example, 4 hours / 0.225 = 64,000 seconds, which is 17h46m40s. But what you get is 639999,99999999999 and then converted 17h46m39.999999s
+            Input(INTERVAL_D, "2.25e-1", Datum.intervalDaySecond(8, 21, 19, 59, 999999999, 2, 6)),
+            Input(INTERVAL_H, "2.25e-1", Datum.intervalDaySecond(0, 17, 46, 39, 999999999, 2, 6)),
+            Input(INTERVAL_MIN, "2.25e-1", Datum.intervalDaySecond(0, 0, 22, 13, 333333333, 2, 6)),
+            Input(INTERVAL_S, "2.25e-1", Datum.intervalDaySecond(0, 0, 0, 46, 666666666, 2, 6)),
+            Input(INTERVAL_DTS, "2.25e-1", Datum.intervalDaySecond(9, 15, 29, 39, 999999999, 2, 6))
+        ).map { case ->
+            SuccessTestCase("${case.arg0} / ${case.arg1}", case.expected)
+        }
         @JvmStatic
         fun intervalDivideWithPrecisionOverflowCases() = listOf(
             "$INTERVAL_Y / 0.03", // default year precision is 2. And 3 / 0.03 will exceed the year precision and fail

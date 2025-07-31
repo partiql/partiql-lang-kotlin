@@ -133,7 +133,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
         }
     }
 
-    override fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn? {
+    override fun getIntervalNumberInstance(lhs: PType, rhs: PType): Fn {
         val op = IntervalUtils.intervalDivide(lhs)
         return basic(lhs, lhs, rhs) { args ->
             val interval = args[0]
@@ -142,7 +142,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
                 throw PErrors.divisionByZeroException(interval, lhs)
             }
 
-            op(interval, NumberUtils.bigDecimalOf(number))
+            op(interval, number)
         }
     }
 }
