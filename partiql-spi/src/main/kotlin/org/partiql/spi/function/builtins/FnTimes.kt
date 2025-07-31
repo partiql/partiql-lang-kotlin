@@ -7,7 +7,6 @@ import org.partiql.spi.function.Fn
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.IntervalUtils
-import org.partiql.spi.utils.NumberUtils
 import org.partiql.spi.utils.NumberUtils.byteOverflows
 import org.partiql.spi.utils.NumberUtils.shortOverflows
 import org.partiql.spi.utils.getNumber

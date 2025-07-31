@@ -141,8 +141,8 @@ internal object IntervalUtils {
         )
     }
 
-    private fun getFractionPrecision(interval: PType): Int{
-        return when(interval.intervalCode){
+    private fun getFractionPrecision(interval: PType): Int {
+        return when (interval.intervalCode) {
             IntervalCode.SECOND,
             IntervalCode.MINUTE_SECOND,
             IntervalCode.HOUR_SECOND,
