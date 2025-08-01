@@ -89,6 +89,12 @@ internal class MainCommand : Runnable {
     var dir: File? = null
 
     @CommandLine.Option(
+        names = ["-e", "--env"],
+        description = ["File containing the global environment"],
+    )
+    var env: File? = null
+
+    @CommandLine.Option(
         names = ["--strict"],
         description = ["Execute in strict (type-checking) mode."],
     )
@@ -105,7 +111,6 @@ internal class MainCommand : Runnable {
         names = ["-f", "--format"],
         description = ["The data format, using the form <input>[:<output>]."],
         paramLabel = "<input[:output]>",
-        defaultValue = "ION:ION",
         converter = [Format.Converter::class],
     )
     lateinit var format: Pair<Format, Format>
@@ -144,15 +149,17 @@ internal class MainCommand : Runnable {
     )
     lateinit var warningsAsErrors: Array<ErrorCodeString>
 
-    @CommandLine.Option(
-        names = ["-q", "--query"],
+    @CommandLine.Parameters(
+        index = "0",
+        arity = "0..1",
         description = ["An optional PartiQL statement string."],
         paramLabel = "'statement'",
+        converter = [PairConverter::class],
     )
-    var program: String? = null
+    var program: Pair<String?, File?>? = null
 
     @CommandLine.Parameters(
-        index = "0..*",
+        index = "1..*",
         arity = "0..*",
         description = ["An optional list of files to execute the statement against."],
     )
@@ -177,10 +184,10 @@ internal class MainCommand : Runnable {
      * Returns the query text if present by parsing either the program string or the query file.
      */
     private fun statement(): String? {
-        if (program != null && include != null) {
+        if (program != null && program!!.first != null && include != null) {
             error("Cannot specify both a query file and query string.")
         }
-        return program ?: include?.readText()
+        return program?.first ?: include?.readText()
     }
 
     private fun shell() {
@@ -240,52 +247,39 @@ internal class MainCommand : Runnable {
             // val connector = LocalPlugin.create(root.toPath())
             // return mapOf("default" to connector)
         }
+
+        if(env != null){
+            return listOf(parsePartiQL(env!!))
+        }
+
         // Derive a `default catalog from stdin (or file streams)
 
-        val datum = when(format.first) {
-            Format.ION -> parseIon()
-            Format.PARTIQL -> parsePartiQL()
-            else -> throw UnsupportedOperationException("Unsupported input format ${format.first}")
-        }
-        val catalog = Catalog.builder()
-            .name("default")
-            .define(
-                Table.standard(
-                    name = Name.of("stdin"),
-                    schema = datum.type,
-                    datum = datum,
-                )
-            )
-            .build()
-        return listOf(catalog)
+        return listOf(parseIon())
     }
 
-    private fun parsePartiQL(): Datum {
+    private fun parsePartiQL(env: File): Catalog {
+        val stream = env.inputStream()
         val compiler = PartiQLCompiler.standard()
         val parser = PartiQLParser.standard()
         val planner = PartiQLPlanner.standard()
-        val stream = stream()
-        val datum = if (stream != null) {
-            val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
-            val catalog = Catalog.builder()
-                .name("memory")
-                .build()
-            val session = Session.builder()
-                .catalog("memory")
-                .catalogs(catalog)
-                .build()
-            val parseResult = parser.parse(data)
-            val statement = parseResult.statements[0]
-            val plan = planner.plan(statement, session).plan
-            return compiler.prepare(plan, Mode.PERMISSIVE()).execute()
-        } else {
-            Datum.nullValue()
-        }
+        val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
+        val parseResult = parser.parse(data)
+        val statement = parseResult.statements[0]
+        val plan = planner.plan(statement, Session.empty()).plan
+        val statementplan = compiler.prepare(plan, Mode.PERMISSIVE())
+        val datum = statementplan.execute()
 
-        return datum
+        println(datum.type)
+
+        val catalog = Catalog.builder()
+            .name("default").apply {
+                datum
+            }
+            .build()
+        return catalog
     }
 
-    private fun parseIon(): Datum {
+    private fun parseIon(): Catalog {
         val stream = stream()
         val datum = if (stream != null) {
             val reader = DatumReader.ion(stream)
@@ -298,7 +292,18 @@ internal class MainCommand : Runnable {
         } else {
             Datum.nullValue()
         }
-        return datum
+
+        val catalog = Catalog.builder()
+            .name("default")
+            .define(
+                Table.standard(
+                    name = Name.of("stdin"),
+                    schema = datum.type,
+                    datum = datum,
+                )
+            )
+            .build()
+        return catalog
     }
 
     /**
@@ -319,6 +324,9 @@ internal class MainCommand : Runnable {
      */
     private fun stream(): InputStream? {
         val streams: MutableList<InputStream> = mutableListOf()
+        if (program?.second != null) {
+            streams.add(program!!.second!!.inputStream())
+        }
         if (files != null) {
             streams.addAll(files!!.map { it.inputStream() })
         }
