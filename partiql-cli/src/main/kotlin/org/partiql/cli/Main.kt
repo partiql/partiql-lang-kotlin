@@ -253,7 +253,6 @@ internal class MainCommand : Runnable {
         }
 
         // Derive a `default catalog from stdin (or file streams)
-
         return listOf(parseIon())
     }
 
@@ -266,15 +265,16 @@ internal class MainCommand : Runnable {
         val parseResult = parser.parse(data)
         val statement = parseResult.statements[0]
         val plan = planner.plan(statement, Session.empty()).plan
-        val statementplan = compiler.prepare(plan, Mode.PERMISSIVE())
-        val datum = statementplan.execute()
-
-        println(datum.type)
-
+        val datum = compiler.prepare(plan, Mode.PERMISSIVE()).execute()
         val catalog = Catalog.builder()
-            .name("default").apply {
-                datum
-            }
+            .name("default")
+            .define(
+                Table.standard(
+                    name = Name.of("stdin"),
+                    schema = datum.type,
+                    datum = datum,
+                )
+            )
             .build()
         return catalog
     }
