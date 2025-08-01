@@ -27,7 +27,7 @@ internal val Fn_AND__BOOL_BOOL__BOOL = FunctionUtils.hidden(
         lhsIsUnknown && rhsIsUnknown -> Datum.nullValue(PType.bool())
         !lhsIsUnknown && lhs.boolean && rhsIsUnknown -> Datum.nullValue(PType.bool())
         !rhsIsUnknown && rhs.boolean && lhsIsUnknown -> Datum.nullValue(PType.bool())
-        !lhs.boolean || !rhs.boolean -> Datum.bool(false)
-        else -> Datum.bool(true)
+        !lhsIsUnknown && !rhsIsUnknown -> Datum.bool(lhs.boolean && rhs.boolean)
+        else -> Datum.bool(false)
     }
 }
