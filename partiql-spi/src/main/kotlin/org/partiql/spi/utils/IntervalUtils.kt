@@ -38,9 +38,9 @@ internal object IntervalUtils {
                 // For approximate number type, it will introduce inaccuracy when converting to BigDecimal,
                 // so we keep it as approximate type for the calculation.
                 // Intermediate result is converted to Long type, which will lead to fractional part truncated
-                val resultTotalMonths : Long = when (number) {
+                val resultTotalMonths: Long = when (number) {
                     is Float,
-                    is Double ->  (totalMonths / number.toDouble()).toLong()
+                    is Double -> (totalMonths / number.toDouble()).toLong()
                     else -> NumberUtils.bigDecimalOf(totalMonths).divide(NumberUtils.bigDecimalOf(number), INTERVAL_ROUNDING_MODE).toLong()
                 }
 
@@ -87,9 +87,9 @@ internal object IntervalUtils {
                 // For approximate number type, it will introduce inaccuracy when converting to BigDecimal,
                 // so we keep it as approximate type for the calculation.
                 // Intermediate result is converted to Long type, which will lead to fractional part truncated
-                val resultTotalMonths : Long = when (number) {
+                val resultTotalMonths: Long = when (number) {
                     is Float,
-                    is Double ->  (totalMonths * number.toDouble()).toLong()
+                    is Double -> (totalMonths * number.toDouble()).toLong()
                     else -> NumberUtils.bigDecimalOf(totalMonths).multiply(NumberUtils.bigDecimalOf(number)).toLong()
                 }
                 val years = (resultTotalMonths / MONTHS_PER_YEAR).toInt()
