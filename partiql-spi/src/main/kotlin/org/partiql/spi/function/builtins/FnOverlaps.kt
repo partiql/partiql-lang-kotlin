@@ -2,7 +2,7 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnOverload
-import org.partiql.spi.function.Function.instance
+import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.internal.PErrors
@@ -30,9 +30,9 @@ internal object FnOverlaps : FnOverload() {
     override fun getInstance(args: Array<out PType>): Fn? {
         val arg0 = args[0]
         val arg1 = args[1]
-        // Both arguments must be collections (arrays or bags)
-        if ((arg0.code() == PType.ARRAY || arg0.code() == PType.BAG) &&
-            (arg1.code() == PType.ARRAY || arg1.code() == PType.BAG)
+        // Both arguments must be collections (arrays or bags) or dynamic/unknown types
+        if ((arg0.code() == PType.ARRAY || arg0.code() == PType.BAG || arg0.code() == PType.UNKNOWN) &&
+            (arg1.code() == PType.ARRAY || arg1.code() == PType.BAG || arg1.code() == PType.UNKNOWN)
         ) {
             return getCollectionInstance(arg0, arg1)
         }
@@ -40,13 +40,15 @@ internal object FnOverlaps : FnOverload() {
     }
 
     private fun getCollectionInstance(arg0: PType, arg1: PType): Fn {
-        return instance(
+        return Function.instance(
             name = name,
             returns = PType.bool(),
             parameters = arrayOf(
                 Parameter("period1", arg0),
                 Parameter("period2", arg1)
             ),
+            isNullCall = false,
+            isMissingCall = true,
             invoke = { args ->
                 val period1 = args[0].toList()
                 val period2 = args[1].toList()
@@ -64,21 +66,25 @@ internal object FnOverlaps : FnOverload() {
                 val d2 = period2[0]
                 val field2 = period2[1]
                 // For the datetime validation:
-                if (!d1.isNull && !isDateTimeType(d1.type)) {
+                if (!d1.isNull && !d1.isMissing && !isDateTimeType(d1.type)) {
                     throw PErrors.unexpectedTypeException(d1.type, listOf(PType.date(), PType.time(), PType.timestamp()))
                 }
-                if (!d2.isNull && !isDateTimeType(d2.type)) {
+                if (!d2.isNull && !d2.isMissing && !isDateTimeType(d2.type)) {
                     throw PErrors.unexpectedTypeException(d2.type, listOf(PType.date(), PType.time(), PType.timestamp()))
                 }
-                if (!field1.isNull && !isDateTimeType(field1.type) && !isIntervalType(field1.type)) {
+                if (!field1.isNull && !field1.isMissing && !isDateTimeType(field1.type) && !isIntervalType(field1.type)) {
                     throw PErrors.unexpectedTypeException(field1.type, listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
                 }
-                if (!field2.isNull && !isDateTimeType(field2.type) && !isIntervalType(field2.type)) {
+                if (!field2.isNull && !field2.isMissing && !isDateTimeType(field2.type) && !isIntervalType(field2.type)) {
                     throw PErrors.unexpectedTypeException(field2.type, listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
                 }
                 // If D1 or D2 is null, return null
                 if (d1.isNull || d2.isNull) {
                     return@instance Datum.nullValue()
+                }
+                // If D1 or D2 is missing, propagate missing
+                if (d1.isMissing || d2.isMissing) {
+                    return@instance Datum.missing()
                 }
                 // Calculate E1 and E2
                 val e1 = calculateEndpoint(d1, field1) ?: return@instance Datum.nullValue()
@@ -99,7 +105,7 @@ internal object FnOverlaps : FnOverload() {
     }
 
     private fun calculateEndpoint(start: Datum, field: Datum): Datum? {
-        if (field.isNull) {
+        if (field.isNull || field.isMissing) {
             return null
         }
         // If field is a datetime, use it directly as E
