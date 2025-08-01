@@ -13,19 +13,20 @@ partiql                     # No arguments
 partiql -d=/path/to/db      # Launch an interactive shell for the database in /path/to/db
 partiql sample.ion    # Load sample.ion into the database environment as the binding `stdin`
 partiql sample.csv    # '' format derived from extension
+partiql -e sample.env    # Load partiQL literal data into partiQL shell
 
 # stdin
 cat sample.ion | partiql -f ion    # Load from stdin with the specified input format (-f) Ion.
 
 # program string
-partiql -q 'SELECT * FROM stdin' sample.ion
-cat sample.ion | partiql -f ion -q 'SELECT * FROM stdin'
+partiql 'SELECT * FROM stdin' sample.ion
+cat sample.ion | partiql -f ion 'SELECT * FROM stdin'
 
 # program script
 #   > cat script.sql
 #   > SELECT * FROM stdin
 partiql -q script.sql sample.ion
-cat sample.ion | partiql -f ion -q 'SELECT * FROM stdin'
+cat sample.ion | partiql -f ion 'SELECT * FROM stdin'
 ----
 
 [source,shell,subs=normal]
