@@ -6,6 +6,15 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.spi.value.Datum
 
+/**
+ * Test cases for interval multiplication operations.
+ * Tests multiplication of intervals by numeric values including integers, decimals, floats,
+ * negative numbers, zero, null, missing values, and precision overflow scenarios.
+ *
+ * Related Github issues:
+ * https://github.com/partiql/partiql-lang/issues/100
+ * https://github.com/partiql/partiql-lang-kotlin/issues/1784
+ */
 class IntervalTimesTests {
 
     @ParameterizedTest

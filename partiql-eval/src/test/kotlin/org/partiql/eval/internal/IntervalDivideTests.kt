@@ -6,6 +6,15 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.spi.value.Datum
 
+/**
+ * Test cases for interval division operations.
+ * Tests division of intervals by numeric values including integers, decimals, doubles,
+ * negative numbers, null, missing values, and edge cases like division by zero.
+ *
+ * Related Github issues:
+ * https://github.com/partiql/partiql-lang/issues/100
+ * https://github.com/partiql/partiql-lang-kotlin/issues/1784
+ */
 class IntervalDivideTests {
 
     @ParameterizedTest

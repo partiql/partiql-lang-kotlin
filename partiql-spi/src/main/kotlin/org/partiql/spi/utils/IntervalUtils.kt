@@ -35,9 +35,17 @@ internal object IntervalUtils {
             IntervalCode.YEAR_MONTH -> { i, number ->
                 // get total months from the interval as Long Type as it can hold the interval with max precision = 9.
                 val totalMonths: Long = i.years * MONTHS_PER_YEAR + i.months
-                val totalMonthsInDouble = totalMonths / number.toDouble()
-                val years = (totalMonthsInDouble.toLong() / MONTHS_PER_YEAR).toInt()
-                val months = (totalMonthsInDouble.toLong() % MONTHS_PER_YEAR).toInt()
+                // For approximate number type, it will introduce inaccuracy when converting to BigDecimal,
+                // so we keep it as approximate type for the calculation.
+                // Intermediate result is converted to Long type, which will lead to fractional part truncated
+                val resultTotalMonths : Long = when (number) {
+                    is Float,
+                    is Double ->  (totalMonths / number.toDouble()).toLong()
+                    else -> NumberUtils.bigDecimalOf(totalMonths).divide(NumberUtils.bigDecimalOf(number), INTERVAL_ROUNDING_MODE).toLong()
+                }
+
+                val years = (resultTotalMonths / MONTHS_PER_YEAR).toInt()
+                val months = (resultTotalMonths % MONTHS_PER_YEAR).toInt()
                 Datum.intervalYearMonth(years, months, interval.precision)
             }
 
@@ -76,9 +84,16 @@ internal object IntervalUtils {
             IntervalCode.YEAR_MONTH -> { i, number ->
                 // get total months from the interval as Long Type as it can hold the interval with max precision = 9.
                 val totalMonths: Long = i.years * MONTHS_PER_YEAR + i.months
-                val totalMonthsInDouble = totalMonths * number.toDouble()
-                val years = (totalMonthsInDouble / MONTHS_PER_YEAR).toInt()
-                val months = (totalMonthsInDouble % MONTHS_PER_YEAR).toInt()
+                // For approximate number type, it will introduce inaccuracy when converting to BigDecimal,
+                // so we keep it as approximate type for the calculation.
+                // Intermediate result is converted to Long type, which will lead to fractional part truncated
+                val resultTotalMonths : Long = when (number) {
+                    is Float,
+                    is Double ->  (totalMonths * number.toDouble()).toLong()
+                    else -> NumberUtils.bigDecimalOf(totalMonths).multiply(NumberUtils.bigDecimalOf(number)).toLong()
+                }
+                val years = (resultTotalMonths / MONTHS_PER_YEAR).toInt()
+                val months = (resultTotalMonths % MONTHS_PER_YEAR).toInt()
                 Datum.intervalYearMonth(years, months, interval.precision)
             }
 
@@ -100,7 +115,7 @@ internal object IntervalUtils {
                 fromSecond(resultInBigDecimal, interval.precision, getFractionPrecision(interval))
             }
 
-            else -> throw IllegalArgumentException("Unable to calculate multiply for INTERVAL expression")
+            else -> throw IllegalArgumentException("Unable to calculate multiplication for INTERVAL expression")
         }
     }
 
@@ -112,7 +127,7 @@ internal object IntervalUtils {
             val totalSeconds = daysInSeconds + hoursInSeconds + minutesInSeconds + i.seconds
             return BigDecimal.valueOf(totalSeconds).add(BigDecimal.valueOf(i.nanos.toLong(), NANO_MAX_PRECISION))
         } else {
-            throw UnsupportedOperationException("Unable to convert non DayToSeconds type to seconds")
+            throw UnsupportedOperationException("Unable to convert non-INTERVAL_DT type to seconds")
         }
     }
 
@@ -153,7 +168,7 @@ internal object IntervalUtils {
             IntervalCode.HOUR,
             IntervalCode.HOUR_MINUTE,
             IntervalCode.MINUTE -> INTERVAL_DEFAULT_FRACTIONAL_PRECISION
-            else -> throw IllegalArgumentException("Cannot get fraction precision for Non-INTERVAL_DT type")
+            else -> throw IllegalArgumentException("Cannot get fractional precision for non-INTERVAL_DT type")
         }
     }
 }
