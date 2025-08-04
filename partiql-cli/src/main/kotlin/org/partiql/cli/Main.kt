@@ -267,14 +267,15 @@ internal class MainCommand : Runnable {
         val plan = planner.plan(statement, Session.empty()).plan
         val datum = compiler.prepare(plan, Mode.PERMISSIVE()).execute()
         val catalog = Catalog.builder()
-            .name("default")
-            .define(
-                Table.standard(
-                    name = Name.of("stdin"),
-                    schema = datum.type,
-                    datum = datum,
-                )
-            )
+            .name("default").apply {
+                datum.fields.forEach { it ->
+                    define(Table.standard(
+                        name = Name.of(it.name),
+                        schema = it.value.type,
+                        datum = it.value
+                    ))
+                }
+            }
             .build()
         return catalog
     }
