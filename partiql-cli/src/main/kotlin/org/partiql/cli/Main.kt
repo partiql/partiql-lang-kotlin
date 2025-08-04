@@ -248,7 +248,7 @@ internal class MainCommand : Runnable {
             // return mapOf("default" to connector)
         }
 
-        if(env != null){
+        if (env != null) {
             return listOf(parsePartiQL(env!!))
         }
 
@@ -269,11 +269,13 @@ internal class MainCommand : Runnable {
         val catalog = Catalog.builder()
             .name("default").apply {
                 datum.fields.forEach { it ->
-                    define(Table.standard(
-                        name = Name.of(it.name),
-                        schema = it.value.type,
-                        datum = it.value
-                    ))
+                    define(
+                        Table.standard(
+                            name = Name.of(it.name),
+                            schema = it.value.type,
+                            datum = it.value
+                        )
+                    )
                 }
             }
             .build()
