@@ -47,6 +47,7 @@ man partiql
 **OPTIONS**
     -d file, --dir=file
         The database directory.
+
     -e file, --env=file
         Load PartiQL literal data as default catalog data
 
@@ -58,6 +59,46 @@ man partiql
 
     --strict
         Strict mode (type-checking) throws runtime exceptions on mistyped operations.
+
+**Loading PartiQL Environment files**
+    The PartiQL environment files are formatted as PartiQL literal and expected to be a single struct where each key-value pair corresponds to a new table in the default catalog. You can load environment file into partiql interactive shell and run query against the tables.
+
+    For example, start the shell with "partiql -e Tutorial/code/q1.env", which will load the following table into default catalog.
+
+    Data:
++++
+    {
+        'hr': {
+            'employees': <<
+                { 'id': 3, 'name': 'Bob Smith',   'title': null },
+                { 'id': 4, 'name': 'Susan Smith', 'title': 'Dev Mgr' },
+                { 'id': 6, 'name': 'Jane Smith',  'title': 'Software Eng 2'}
+            >>
+        }
+    }
++++
+    Query:
++++
+    SELECT e.id,
+           e.name AS employeeName,
+           e.title AS title
+    FROM hr.employees e
+    WHERE e.title = 'Dev Mgr'
++++
+
+    Output:
++++
+    <<
+      {
+        'id': 4,
+        'employeeName': 'Susan Smith',
+        'title': 'Dev Mgr'
+      }
+    >>
+    ---
+    OK!
++++
+
 ----
 
 

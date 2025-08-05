@@ -259,6 +259,8 @@ internal class MainCommand : Runnable {
         val stream = env.inputStream()
         val pipeline = pipeline()
         val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
+        // The PartiQL environment files are formatted as PartiQL literal and expected to be a single struct
+        // where each key-value pair corresponds to a new table in the default catalog.
         val datum = pipeline.execute(data, Session.empty())
         val catalog = Catalog.builder()
             .name("default").apply {
