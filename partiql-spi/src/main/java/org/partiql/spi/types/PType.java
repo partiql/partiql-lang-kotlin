@@ -326,7 +326,7 @@ public abstract class PType extends org.partiql.spi.Enum {
     public static final int BIGINT = 5;
 
     /**
-     * PartiQL's big integer type.
+     * SQL's numeric type.
      * <br>
      * <br>
      * <b>Type Syntax</b>: <code>NUMERIC</code>
