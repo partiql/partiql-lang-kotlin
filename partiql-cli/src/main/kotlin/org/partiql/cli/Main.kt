@@ -19,10 +19,6 @@ import org.partiql.cli.io.Format
 import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
-import org.partiql.eval.Mode
-import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.PartiQLParser
-import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -191,20 +187,20 @@ internal class MainCommand : Runnable {
     }
 
     private fun shell() {
-        val config = getPipelineConfig()
-        val pipeline = when (strict) {
-            true -> Pipeline.strict(System.out, config)
-            else -> Pipeline.default(System.out, config)
-        }
+        val pipeline = pipeline()
         Shell(pipeline, session(), debug).start()
     }
 
-    private fun run(statement: String) {
+    private fun pipeline(): Pipeline {
         val config = getPipelineConfig()
-        val pipeline = when (strict) {
+        return when (strict) {
             true -> Pipeline.strict(System.out, config)
             else -> Pipeline.default(System.out, config)
         }
+    }
+
+    private fun run(statement: String) {
+        val pipeline = pipeline()
         val program = statement.trimHashBang()
         val session = session()
         val result = try {
@@ -249,23 +245,21 @@ internal class MainCommand : Runnable {
         }
 
         if (env != null) {
-            return listOf(parsePartiQL(env!!))
+            return listOf(loadPartiQL(env!!))
         }
 
         // Derive a `default catalog from stdin (or file streams)
-        return listOf(parseIon())
+        return listOf(loadIon())
     }
 
-    private fun parsePartiQL(env: File): Catalog {
+    private fun loadPartiQL(env: File): Catalog {
+        if (!env.exists()) {
+            error("File not exists! Please check the env file path.")
+        }
         val stream = env.inputStream()
-        val compiler = PartiQLCompiler.standard()
-        val parser = PartiQLParser.standard()
-        val planner = PartiQLPlanner.standard()
+        val pipeline = pipeline()
         val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
-        val parseResult = parser.parse(data)
-        val statement = parseResult.statements[0]
-        val plan = planner.plan(statement, Session.empty()).plan
-        val datum = compiler.prepare(plan, Mode.PERMISSIVE()).execute()
+        val datum = pipeline.execute(data, Session.empty())
         val catalog = Catalog.builder()
             .name("default").apply {
                 datum.fields.forEach { it ->
@@ -282,7 +276,7 @@ internal class MainCommand : Runnable {
         return catalog
     }
 
-    private fun parseIon(): Catalog {
+    private fun loadIon(): Catalog {
         val stream = stream()
         val datum = if (stream != null) {
             val reader = DatumReader.ion(stream)

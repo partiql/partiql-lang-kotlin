@@ -36,6 +36,7 @@ rewritten to their query representation
 - Signed `INTERVAL` literals support 
 - Metas attached to `INTERVAL` `PType`s if an `INTERVAL` has an unspecified precision or fractional precision
 - `EXTRACT` function support on `INTERVAL` datum
+- Add cli option -e to load PartiQL literal data as default catalog data
 
 ### Changed
 

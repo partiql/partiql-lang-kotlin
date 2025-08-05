@@ -47,6 +47,8 @@ man partiql
 **OPTIONS**
     -d file, --dir=file
         The database directory.
+    -e file, --env=file
+        Load PartiQL literal data as default catalog data
 
     -f format, --format=format
         Specify the input:output data format.
