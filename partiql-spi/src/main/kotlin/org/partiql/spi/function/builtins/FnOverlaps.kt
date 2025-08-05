@@ -11,6 +11,10 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.FunctionUtils.isDateTimeType
 import org.partiql.spi.utils.FunctionUtils.isIntervalType
+import org.partiql.spi.utils.FunctionUtils.isUnknown
+import org.partiql.spi.utils.FunctionUtils.logicalAnd
+import org.partiql.spi.utils.FunctionUtils.logicalNot
+import org.partiql.spi.utils.FunctionUtils.logicalOr
 import org.partiql.spi.value.Datum
 
 /**
@@ -23,6 +27,8 @@ import org.partiql.spi.value.Datum
  */
 internal object FnOverlaps : FnOverload() {
     val name = FunctionUtils.hide("overlaps")
+    private val datetimeTypes = listOf(PType.date(), PType.time(), PType.timez(), PType.timestamp(), PType.timestampz())
+    private val fieldTypes = listOf(PType.date(), PType.time(), PType.timez(), PType.timestamp(), PType.timestampz(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6))
     override fun getSignature(): RoutineOverloadSignature {
         return RoutineOverloadSignature(name, listOf(PType.dynamic(), PType.dynamic()))
     }
@@ -47,7 +53,7 @@ internal object FnOverlaps : FnOverload() {
                 Parameter("period1", arg0),
                 Parameter("period2", arg1)
             ),
-            isNullCall = false,
+            isNullCall = true,
             isMissingCall = true,
             invoke = { args ->
                 val period1 = args[0].toList()
@@ -66,43 +72,23 @@ internal object FnOverlaps : FnOverload() {
                 val d2 = period2[0]
                 val field2 = period2[1]
                 // For the datetime validation:
-                if (!d1.isNull && !d1.isMissing && !isDateTimeType(d1.type)) {
-                    throw PErrors.unexpectedTypeException(d1.type, listOf(PType.date(), PType.time(), PType.timestamp()))
+                if (!isUnknown(d1) && !isDateTimeType(d1.type)) {
+                    throw PErrors.unexpectedTypeException(d1.type, datetimeTypes)
                 }
-                if (!d2.isNull && !d2.isMissing && !isDateTimeType(d2.type)) {
-                    throw PErrors.unexpectedTypeException(d2.type, listOf(PType.date(), PType.time(), PType.timestamp()))
+                if (!isUnknown(d2) && !isDateTimeType(d2.type)) {
+                    throw PErrors.unexpectedTypeException(d2.type, datetimeTypes)
                 }
-                if (!field1.isNull && !field1.isMissing && !isDateTimeType(field1.type) && !isIntervalType(field1.type)) {
-                    throw PErrors.unexpectedTypeException(field1.type, listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
+                if (!isUnknown(field1) && !isDateTimeType(field1.type) && !isIntervalType(field1.type)) {
+                    throw PErrors.unexpectedTypeException(field1.type, fieldTypes)
                 }
-                if (!field2.isNull && !field2.isMissing && !isDateTimeType(field2.type) && !isIntervalType(field2.type)) {
-                    throw PErrors.unexpectedTypeException(field2.type, listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
+                if (!isUnknown(field2) && !isDateTimeType(field2.type) && !isIntervalType(field2.type)) {
+                    throw PErrors.unexpectedTypeException(field2.type, fieldTypes)
                 }
                 // Calculate E1 and E2
                 val e1 = calculateEndpoint(d1, field1)
                 val e2 = calculateEndpoint(d2, field2)
-                // If D1 is null or E1 < D1, then S1 = E1 and T1 = D1. Otherwise, S1 = D1 and T1 = E1.
-                val (s1, t1) = if (d1.isNull || d1.isMissing) {
-                    Pair(e1, d1)
-                } else {
-                    val cmp = compareValues(e1, d1)
-                    if (cmp != null && !cmp.isNull && !cmp.isMissing && cmp.int < 0) {
-                        Pair(e1, d1)
-                    } else {
-                        Pair(d1, e1)
-                    }
-                }
-                // If D2 is null or E2 < D2, then S2 = E2 and T2 = D2. Otherwise, S2 = D2 and T2 = E2.
-                val (s2, t2) = if (d2.isNull || d2.isMissing) {
-                    Pair(e2, d2)
-                } else {
-                    val cmp = compareValues(e2, d2)
-                    if (cmp != null && !cmp.isNull && !cmp.isMissing && cmp.int < 0) {
-                        Pair(e2, d2)
-                    } else {
-                        Pair(d2, e2)
-                    }
-                }
+                val (s1, t1) = calculateStartEnd(d1, e1)
+                val (s2, t2) = calculateStartEnd(d2, e2)
                 // Apply SQL-99 OVERLAPS formula:
                 // (S1 > S2 AND NOT (S1 >= T2 AND T1 >= T2)) OR
                 // (S2 > S1 AND NOT (S2 >= T1 AND T2 >= T1)) OR
@@ -112,9 +98,9 @@ internal object FnOverlaps : FnOverload() {
         )
     }
 
-    private fun calculateEndpoint(start: Datum, field: Datum): Datum? {
+    private fun calculateEndpoint(start: Datum, field: Datum): Datum {
         // If field is null or a datetime, use it directly as E
-        if (field.isNull || field.isMissing || isDateTimeType(field.type)) {
+        if (isUnknown(field) || isDateTimeType(field.type)) {
             return field
         }
         // If field is an interval, calculate E = D + I
@@ -122,22 +108,18 @@ internal object FnOverlaps : FnOverload() {
             return addInterval(start, field)
         }
         // Should not reach here
-        throw PErrors.unexpectedTypeException(field.type, listOf(PType.date(), PType.time(), PType.timestamp(), PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
+        throw PErrors.unexpectedTypeException(field.type, fieldTypes)
     }
 
-    private fun addInterval(datetime: Datum, interval: Datum): Datum? {
-        return try {
-            val plusFn = FnPlus.getInstance(arrayOf(datetime.type, interval.type)) ?: return null
-            val result = plusFn.invoke(arrayOf(datetime, interval))
-            if (result.isNull) null else result
-        } catch (_: Exception) {
-            null
-        }
+    private fun addInterval(datetime: Datum, interval: Datum): Datum {
+        val plusFn = FnPlus.getInstance(arrayOf(datetime.type, interval.type))
+            ?: throw PErrors.unexpectedTypeException(interval.type, listOf(PType.intervalYearMonth(2), PType.intervalDaySecond(2, 6)))
+        return plusFn.invoke(arrayOf(datetime, interval))
     }
 
-    private fun compareValues(a: Datum?, b: Datum?): Datum? {
+    private fun compareValues(a: Datum, b: Datum): Datum {
         // If either value is null or missing, propagate that
-        if (a == null || b == null || a.isNull || b.isNull) return Datum.nullValue()
+        if (a.isNull || b.isNull) return Datum.nullValue()
         if (a.isMissing || b.isMissing) return Datum.missing()
         // Validate datetime types are comparable according to SQL-99 spec
         if (isDateTimeType(a.type) && isDateTimeType(b.type)) {
@@ -165,7 +147,7 @@ internal object FnOverlaps : FnOverload() {
         }
     }
 
-    private fun evaluateOverlapsFormula(s1: Datum?, t1: Datum?, s2: Datum?, t2: Datum?): Datum {
+    private fun evaluateOverlapsFormula(s1: Datum, t1: Datum, s2: Datum, t2: Datum): Datum {
         val s1GreaterS2 = isGreater(s1, s2)
         val s2GreaterS1 = isGreater(s2, s1)
         val s1EqualsS2 = isEqual(s1, s2)
@@ -174,51 +156,34 @@ internal object FnOverlaps : FnOverload() {
         return logicalOr(logicalOr(condition1, condition2), s1EqualsS2)
     }
 
-    private fun isGreater(a: Datum?, b: Datum?): Datum {
-        val cmp = compareValues(a, b) ?: return Datum.nullValue(PType.bool())
-        if (cmp.isNull || cmp.isMissing) return cmp
+    private fun isGreater(a: Datum, b: Datum): Datum {
+        val cmp = compareValues(a, b)
+        if (isUnknown(cmp)) return cmp
         return Datum.bool(cmp.int > 0)
     }
 
-    private fun isGreaterOrEqual(a: Datum?, b: Datum?): Datum {
-        val cmp = compareValues(a, b) ?: return Datum.nullValue(PType.bool())
-        if (cmp.isNull || cmp.isMissing) return cmp
+    private fun isGreaterOrEqual(a: Datum, b: Datum): Datum {
+        val cmp = compareValues(a, b)
+        if (isUnknown(cmp)) return cmp
         return Datum.bool(cmp.int >= 0)
     }
 
-    private fun isEqual(a: Datum?, b: Datum?): Datum {
-        val cmp = compareValues(a, b) ?: return Datum.nullValue(PType.bool())
-        if (cmp.isNull || cmp.isMissing) return cmp
+    private fun calculateStartEnd(d: Datum, e: Datum): Pair<Datum, Datum> {
+        return if (isUnknown(d)) {
+            Pair(e, d)
+        } else {
+            val cmp = compareValues(e, d)
+            if (!isUnknown(cmp) && cmp.int < 0) {
+                Pair(e, d)
+            } else {
+                Pair(d, e)
+            }
+        }
+    }
+
+    private fun isEqual(a: Datum, b: Datum): Datum {
+        val cmp = compareValues(a, b)
+        if (isUnknown(cmp)) return cmp
         return Datum.bool(cmp.int == 0)
-    }
-
-    // Follow logical operations behavior in FnAnd, FnOr, and FnNot
-    private fun logicalAnd(a: Datum, b: Datum): Datum {
-        val aIsUnknown = a.isNull || a.isMissing
-        val bIsUnknown = b.isNull || b.isMissing
-        return when {
-            aIsUnknown && bIsUnknown -> Datum.nullValue(PType.bool())
-            !aIsUnknown && a.getBoolean() && bIsUnknown -> Datum.nullValue(PType.bool())
-            !bIsUnknown && b.getBoolean() && aIsUnknown -> Datum.nullValue(PType.bool())
-            !a.getBoolean() || !b.getBoolean() -> Datum.bool(false)
-            else -> Datum.bool(true)
-        }
-    }
-
-    private fun logicalOr(a: Datum, b: Datum): Datum {
-        val aIsUnknown = a.isNull || a.isMissing
-        val bIsUnknown = b.isNull || b.isMissing
-        return when {
-            aIsUnknown && bIsUnknown -> Datum.nullValue(PType.bool())
-            !aIsUnknown && !bIsUnknown -> Datum.bool(a.getBoolean() || b.getBoolean())
-            aIsUnknown && b.getBoolean() -> Datum.bool(true)
-            bIsUnknown && a.getBoolean() -> Datum.bool(true)
-            else -> Datum.nullValue(PType.bool())
-        }
-    }
-
-    private fun logicalNot(a: Datum): Datum {
-        if (a.isNull || a.isMissing) return Datum.nullValue(PType.bool())
-        return Datum.bool(!a.boolean)
     }
 }

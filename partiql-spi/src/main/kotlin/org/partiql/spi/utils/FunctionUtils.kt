@@ -103,4 +103,40 @@ internal object FunctionUtils {
     internal fun isIntervalType(type: PType): Boolean {
         return type.code() == PType.INTERVAL_YM || type.code() == PType.INTERVAL_DT
     }
+
+    internal fun isUnknown(datum: Datum): Boolean {
+        return datum.isNull || datum.isMissing
+    }
+
+    /**
+     * Logical operation following SQL:1999 Section 6.30 Table 13.
+     */
+    internal fun logicalAnd(a: Datum, b: Datum): Datum {
+        val aIsUnknown = isUnknown(a)
+        val bIsUnknown = isUnknown(b)
+        return when {
+            aIsUnknown && bIsUnknown -> Datum.nullValue(PType.bool())
+            !aIsUnknown && a.boolean && bIsUnknown -> Datum.nullValue(PType.bool())
+            !bIsUnknown && b.boolean && aIsUnknown -> Datum.nullValue(PType.bool())
+            !a.boolean || !b.boolean -> Datum.bool(false)
+            else -> Datum.bool(true)
+        }
+    }
+
+    internal fun logicalOr(a: Datum, b: Datum): Datum {
+        val aIsUnknown = isUnknown(a)
+        val bIsUnknown = isUnknown(b)
+        return when {
+            aIsUnknown && bIsUnknown -> Datum.nullValue(PType.bool())
+            !aIsUnknown && !bIsUnknown -> Datum.bool(a.boolean || b.boolean)
+            aIsUnknown && b.boolean -> Datum.bool(true)
+            bIsUnknown && a.boolean -> Datum.bool(true)
+            else -> Datum.nullValue(PType.bool())
+        }
+    }
+
+    internal fun logicalNot(a: Datum): Datum {
+        if (isUnknown(a)) return Datum.nullValue(PType.bool())
+        return Datum.bool(!a.boolean)
+    }
 }
