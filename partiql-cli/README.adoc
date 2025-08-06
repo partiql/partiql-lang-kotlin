@@ -13,6 +13,7 @@ partiql                     # No arguments
 partiql -d=/path/to/db      # Launch an interactive shell for the database in /path/to/db
 partiql sample.ion    # Load sample.ion into the database environment as the binding `stdin`
 partiql sample.csv    # '' format derived from extension
+partiql -e sample.env    # Load partiQL literal data into partiQL shell
 
 # stdin
 cat sample.ion | partiql -f ion    # Load from stdin with the specified input format (-f) Ion.
@@ -47,6 +48,9 @@ man partiql
     -d file, --dir=file
         The database directory.
 
+    -e file, --env=file
+        Load PartiQL literal data as default catalog data
+
     -f format, --format=format
         Specify the input:output data format.
 
@@ -55,6 +59,7 @@ man partiql
 
     --strict
         Strict mode (type-checking) throws runtime exceptions on mistyped operations.
+
 ----
 
 
@@ -82,4 +87,47 @@ The input format is derived from the extension, or can be explicitly specified w
 | JSON | .json
 | Ion | .ion .10n
 |===
+
+== Loading PartiQL Environment files
+The PartiQL environment files are formatted as PartiQL literal and expected to be a single struct where each key-value pair corresponds to a new table in the default catalog. You can load environment file into partiql interactive shell and run query against the tables.
+
+For example, start the shell with "partiql -e Tutorial/code/q1.env", which will load the following table into default catalog.
+
+Data:
+[source,shell]
+----
+{
+    'hr': {
+        'employees': <<
+            { 'id': 3, 'name': 'Bob Smith',   'title': null },
+            { 'id': 4, 'name': 'Susan Smith', 'title': 'Dev Mgr' },
+            { 'id': 6, 'name': 'Jane Smith',  'title': 'Software Eng 2'}
+        >>
+    }
+}
+----
+
+Query:
+[source,shell]
+----
+SELECT e.id,
+       e.name AS employeeName,
+       e.title AS title
+FROM hr.employees e
+WHERE e.title = 'Dev Mgr'
+----
+
+Output:
+[source,shell]
+----
+    <<
+      {
+        'id': 4,
+        'employeeName': 'Susan Smith',
+        'title': 'Dev Mgr'
+      }
+    >>
+    ---
+    OK!
+----
 
