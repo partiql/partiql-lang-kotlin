@@ -49,7 +49,7 @@ rewritten to their query representation
 - Add `ABS` function support on `INTERVAL` field
 - Display of `Ion` in PartiQL CLI output
 - Support `INTERVAL` times and divide with numerics
-- `missing` propagation behavior in functions args
+- Prioritize `missing` propagation when both `null` and `missing` exist in function args
 
 ### Removed
 
