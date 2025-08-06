@@ -67,6 +67,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprOperator (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOperator;
 	public static synthetic fun exprOperator$default (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprOperator;
 	public static final fun exprOr (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOr;
+	public static final fun exprOverlaps (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOverlaps;
 	public static final fun exprOverlay (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOverlay;
 	public static final fun exprOverlay (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOverlay;
 	public static synthetic fun exprOverlay$default (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprOverlay;
@@ -315,6 +316,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitExprOperator (Lorg/partiql/ast/expr/ExprOperator;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprOr (Lorg/partiql/ast/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOr (Lorg/partiql/ast/expr/ExprOr;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprOverlaps (Lorg/partiql/ast/expr/ExprOverlaps;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOverlaps (Lorg/partiql/ast/expr/ExprOverlaps;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprOverlay (Lorg/partiql/ast/expr/ExprOverlay;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOverlay (Lorg/partiql/ast/expr/ExprOverlay;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprParameter (Lorg/partiql/ast/expr/ExprParameter;Ljava/lang/Object;)Ljava/lang/Object;
@@ -496,6 +499,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitExprNullPredicate (Lorg/partiql/ast/expr/ExprNullPredicate;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOperator (Lorg/partiql/ast/expr/ExprOperator;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOr (Lorg/partiql/ast/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOverlaps (Lorg/partiql/ast/expr/ExprOverlaps;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOverlay (Lorg/partiql/ast/expr/ExprOverlay;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprParameter (Lorg/partiql/ast/expr/ExprParameter;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprPath (Lorg/partiql/ast/expr/ExprPath;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2450,6 +2454,24 @@ public class org/partiql/ast/expr/ExprOr$Builder {
 	public fun build ()Lorg/partiql/ast/expr/ExprOr;
 	public fun lhs (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOr$Builder;
 	public fun rhs (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOr$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/expr/ExprOverlaps : org/partiql/ast/expr/Expr {
+	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/expr/ExprOverlaps$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getLhs ()Lorg/partiql/ast/expr/Expr;
+	public fun getRhs ()Lorg/partiql/ast/expr/Expr;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/expr/ExprOverlaps$Builder {
+	public fun build ()Lorg/partiql/ast/expr/ExprOverlaps;
+	public fun lhs (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOverlaps$Builder;
+	public fun rhs (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOverlaps$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 

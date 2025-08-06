@@ -118,6 +118,9 @@ t1 * t2;
 --#[expr-41]
 t1 / t2;
 
+--#[expr-42]
+t1 OVERLAPS t2;
+
 --#[expr-66]
 CURRENT_USER;
 

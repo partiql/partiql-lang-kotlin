@@ -41,6 +41,7 @@ import org.partiql.ast.expr.ExprNullIf
 import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
+import org.partiql.ast.expr.ExprOverlaps
 import org.partiql.ast.expr.ExprOverlay
 import org.partiql.ast.expr.ExprParameter
 import org.partiql.ast.expr.ExprPath
@@ -299,6 +300,16 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val rhs = visitExpr(node.rhs, ctx) as Expr
         return if (lhs !== node.lhs || rhs !== node.rhs) {
             ExprOr(lhs, rhs)
+        } else {
+            node
+        }
+    }
+
+    override fun visitExprOverlaps(node: ExprOverlaps, ctx: C): AstNode {
+        val lhs = visitExpr(node.lhs, ctx) as Expr
+        val rhs = visitExpr(node.rhs, ctx) as Expr
+        return if (lhs !== node.lhs || rhs !== node.rhs) {
+            ExprOverlaps(lhs, rhs)
         } else {
             node
         }

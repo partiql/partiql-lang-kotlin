@@ -43,6 +43,7 @@ import org.partiql.ast.expr.ExprNullIf;
 import org.partiql.ast.expr.ExprOperator;
 import org.partiql.ast.expr.ExprOr;
 import org.partiql.ast.expr.ExprOverlay;
+import org.partiql.ast.expr.ExprOverlaps;
 import org.partiql.ast.expr.ExprParameter;
 import org.partiql.ast.expr.ExprPath;
 import org.partiql.ast.expr.ExprPosition;
@@ -340,6 +341,10 @@ public abstract class AstVisitor<R, C> {
     }
 
     public R visitExprBetween(ExprBetween node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitExprOverlaps(ExprOverlaps node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

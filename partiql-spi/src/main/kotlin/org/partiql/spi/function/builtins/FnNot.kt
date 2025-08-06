@@ -7,7 +7,7 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
-import org.partiql.spi.value.Datum
+import org.partiql.spi.utils.FunctionUtils.logicalNot
 
 /**
  * This is the boolean NOT predicate. Its name is hidden via the use of [FunctionUtils.hide].
@@ -19,11 +19,6 @@ internal val Fn_NOT__BOOL__BOOL = FnOverload.Builder(name)
     .addParameter(Parameter("value", PType.dynamic()))
     .returns(PType.bool())
     .body { args ->
-        val arg = args[0]
-        if (arg.isMissing) {
-            return@body Datum.nullValue(PType.bool())
-        }
-        val value = arg.boolean
-        return@body Datum.bool(value.not())
+        logicalNot(args[0])
     }
     .build()

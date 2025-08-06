@@ -45,6 +45,21 @@ internal object PErrors {
         return PRuntimeException(unexpectedType(actual, expected))
     }
 
+    fun cardinalityViolationException(actual: Int, expected: Int): PRuntimeException {
+        return PRuntimeException(
+            PError(
+                PError.CARDINALITY_VIOLATION,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                mapOf(
+                    "ACTUAL" to actual,
+                    "EXPECTED" to expected
+                )
+            )
+        )
+    }
+
     private fun internalError(cause: Throwable): PError {
         return PError(
             PError.INTERNAL_ERROR,

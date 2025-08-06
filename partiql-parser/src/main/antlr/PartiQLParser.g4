@@ -825,6 +825,7 @@ exprPredicate
     | lhs=exprPredicate NOT? IN rhs=mathOp00                           # PredicateIn
     | lhs=exprPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=expr )? # PredicateLike
     | lhs=exprPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00 # PredicateBetween
+    | lhs=exprPredicate OVERLAPS rhs=mathOp00                          # PredicateOverlaps
     | parent=mathOp00                                                  # PredicateBase
     ;
 
