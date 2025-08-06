@@ -26,10 +26,13 @@ import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
+import org.partiql.spi.value.InvalidOperationException
 import org.partiql.spi.value.ValueUtils
 import org.partiql.spi.value.io.PartiQLValueTextWriter
 import picocli.CommandLine
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.InputStream
 import java.io.SequenceInputStream
 import java.util.Collections
@@ -83,6 +86,12 @@ internal class MainCommand : Runnable {
         description = ["Path to the database directory"],
     )
     var dir: File? = null
+
+    @CommandLine.Option(
+        names = ["-e", "--env"],
+        description = ["File containing the global environment"],
+    )
+    var env: File? = null
 
     @CommandLine.Option(
         names = ["--strict"],
@@ -181,20 +190,20 @@ internal class MainCommand : Runnable {
     }
 
     private fun shell() {
-        val config = getPipelineConfig()
-        val pipeline = when (strict) {
-            true -> Pipeline.strict(System.out, config)
-            else -> Pipeline.default(System.out, config)
-        }
+        val pipeline = pipeline()
         Shell(pipeline, session(), debug).start()
     }
 
-    private fun run(statement: String) {
+    private fun pipeline(): Pipeline {
         val config = getPipelineConfig()
-        val pipeline = when (strict) {
+        return when (strict) {
             true -> Pipeline.strict(System.out, config)
             else -> Pipeline.default(System.out, config)
         }
+    }
+
+    private fun run(statement: String) {
+        val pipeline = pipeline()
         val program = statement.trimHashBang()
         val session = session()
         val result = try {
@@ -237,7 +246,50 @@ internal class MainCommand : Runnable {
             // val connector = LocalPlugin.create(root.toPath())
             // return mapOf("default" to connector)
         }
+
+        if (env != null) {
+            return listOf(loadPartiQL(env!!))
+        }
+
         // Derive a `default catalog from stdin (or file streams)
+        return listOf(loadIon())
+    }
+
+    private fun loadPartiQL(env: File): Catalog {
+        try {
+            val stream = env.inputStream()
+            val pipeline = pipeline()
+            val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
+            // The PartiQL environment files are formatted as PartiQL literal and expected to be a single struct
+            // where each key-value pair corresponds to a new table in the default catalog.
+            val datum = pipeline.execute(data, Session.empty())
+            return Catalog.builder()
+                .name("default").apply {
+                    datum.fields.forEach { it ->
+                        define(
+                            Table.standard(
+                                name = Name.of(it.name),
+                                schema = it.value.type,
+                                datum = it.value
+                            )
+                        )
+                    }
+                }
+                .build()
+        } catch (e: FileNotFoundException) {
+            error("The environment file does not exist: ${env.path}")
+        } catch (e: IOException) {
+            error("Failed to read the environment file: ${e.message}")
+        } catch (e: Pipeline.PipelineException) {
+            error("Failed to parse the environment file: ${e.message}")
+        } catch (e: InvalidOperationException) {
+            error("The environment file must contain a struct with table definitions")
+        } catch (e: Exception) {
+            error("Unexpected error occurs when loading the environment file: ${e.message}")
+        }
+    }
+
+    private fun loadIon(): Catalog {
         val stream = stream()
         val datum = if (stream != null) {
             val reader = DatumReader.ion(stream)
@@ -250,6 +302,7 @@ internal class MainCommand : Runnable {
         } else {
             Datum.nullValue()
         }
+
         val catalog = Catalog.builder()
             .name("default")
             .define(
@@ -260,7 +313,7 @@ internal class MainCommand : Runnable {
                 )
             )
             .build()
-        return listOf(catalog)
+        return catalog
     }
 
     /**
