@@ -65,6 +65,9 @@ final class DatumTimestamp implements Datum {
 
     @Override
     public String toString() {
-        return this.value.toString();
+        return "DatumTimestamp{" +
+                "_type=" + type +
+                ", _value=" + value +
+                '}';
     }
 }

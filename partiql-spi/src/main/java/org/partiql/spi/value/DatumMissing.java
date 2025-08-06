@@ -29,4 +29,11 @@ class DatumMissing implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        return "DatumMissing{" +
+                "_type=" + _type +
+                '}';
+    }
 }

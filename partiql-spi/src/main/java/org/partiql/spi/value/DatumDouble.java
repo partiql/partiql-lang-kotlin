@@ -32,6 +32,9 @@ class DatumDouble implements Datum {
 
     @Override
     public String toString() {
-        return "dp::" + _value;
+        return "DatumDouble{" +
+                "_type=" + _type +
+                ", _value=" + _value +
+                '}';
     }
 }

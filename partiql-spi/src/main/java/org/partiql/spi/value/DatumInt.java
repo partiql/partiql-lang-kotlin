@@ -30,7 +30,8 @@ class DatumInt implements Datum {
     @Override
     public String toString() {
         return "DatumInt{" +
-                "_value=" + _value +
+                "_type=" + _type +
+                ", _value=" + _value +
                 '}';
     }
 }
