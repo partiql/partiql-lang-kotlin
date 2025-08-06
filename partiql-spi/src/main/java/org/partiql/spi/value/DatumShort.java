@@ -26,4 +26,12 @@ class DatumShort implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        return "DatumShort{" +
+                "_type=" + _type +
+                ", _value=" + _value +
+                '}';
+    }
 }

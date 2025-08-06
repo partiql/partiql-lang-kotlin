@@ -30,4 +30,12 @@ class DatumChars implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        return "DatumChars{" +
+                "_type=" + _type +
+                ", _value=" + _value +
+                '}';
+    }
 }

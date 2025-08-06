@@ -35,6 +35,9 @@ final class DatumDate implements Datum {
 
     @Override
     public String toString() {
-        return this.value.toString();
+        return "DatumDate{" +
+                "_type=" + type +
+                ", _value=" + value +
+                '}';
     }
 }

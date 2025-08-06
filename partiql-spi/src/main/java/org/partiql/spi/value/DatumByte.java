@@ -1,5 +1,6 @@
 package org.partiql.spi.value;
 
+import kotlin.text.HexFormat;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
@@ -30,5 +31,14 @@ class DatumByte implements Datum {
     @Override
     public PType getType() {
         return _type;
+    }
+
+    @Override
+    public String toString() {
+
+        return "DatumByte{" +
+                "_type=" + _type +
+                ", _value=" + _value +
+                '}';
     }
 }

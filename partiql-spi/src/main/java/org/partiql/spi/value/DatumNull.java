@@ -211,4 +211,11 @@ class DatumNull implements Datum {
             throw new InvalidOperationException(getType(), "getOffsetDateTime");
         }
     }
+
+    @Override
+    public String toString() {
+        return "DatumNull{" +
+                "_type=" + _type +
+                '}';
+    }
 }

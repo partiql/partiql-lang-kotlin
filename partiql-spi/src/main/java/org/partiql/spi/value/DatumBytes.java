@@ -34,4 +34,17 @@ class DatumBytes implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : _value) {
+            sb.append(String.format("%02X", b & 0xFF));
+        }
+
+        return "DatumBytes{" +
+                "_type=" + _type +
+                ", _value=" + sb.toString() +
+                '}';
+    }
 }

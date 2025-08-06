@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * This shall always be package-private (internal).
@@ -39,9 +42,13 @@ class DatumCollection implements Datum {
 
     @Override
     public String toString() {
+        StringJoiner joiner = new StringJoiner(", ", "[", "]");
+
+        _value.forEach(d -> joiner.add(d.toString()));
+
         return "DatumCollection{" +
                 "_type=" + _type +
-                ", _value=" + _value +
+                ", _value=" + joiner +
                 '}';
     }
 }
