@@ -219,7 +219,7 @@ class DatumToStringTest {
         assertEquals(
             "DatumRow{_type=ROW(col1: STRING, col2: BAG(DYNAMIC)), " +
                 "_value={ col2: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}], " +
-                "col1: [DatumString{_type=STRING, _value=John}] }",
+                "col1: [DatumString{_type=STRING, _value=John}] }}",
             datumWithNested.toString()
         )
     }

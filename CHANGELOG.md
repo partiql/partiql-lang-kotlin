@@ -36,7 +36,7 @@ rewritten to their query representation
 - Signed `INTERVAL` literals support 
 - Metas attached to `INTERVAL` `PType`s if an `INTERVAL` has an unspecified precision or fractional precision
 - `EXTRACT` function support on `INTERVAL` datum
-
+- Add toString() support for all datum types
 ### Changed
 
 ### Deprecated
