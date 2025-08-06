@@ -51,6 +51,7 @@ rewritten to their query representation
 - Fix alias collision problem when multiple table references need auto-generated aliases
 - Display of `Ion` in PartiQL CLI output
 - Support `INTERVAL` times and divide with numerics
+- Prioritize `missing` propagation when both `null` and `missing` exist in function args
 
 ### Removed
 
