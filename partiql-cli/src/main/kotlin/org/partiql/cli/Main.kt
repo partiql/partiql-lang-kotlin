@@ -26,10 +26,13 @@ import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
+import org.partiql.spi.value.InvalidOperationException
 import org.partiql.spi.value.ValueUtils
 import org.partiql.spi.value.io.PartiQLValueTextWriter
 import picocli.CommandLine
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.InputStream
 import java.io.SequenceInputStream
 import java.util.Collections
@@ -253,29 +256,37 @@ internal class MainCommand : Runnable {
     }
 
     private fun loadPartiQL(env: File): Catalog {
-        if (!env.exists()) {
-            error("File not exists! Please check the env file path.")
-        }
-        val stream = env.inputStream()
-        val pipeline = pipeline()
-        val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
-        // The PartiQL environment files are formatted as PartiQL literal and expected to be a single struct
-        // where each key-value pair corresponds to a new table in the default catalog.
-        val datum = pipeline.execute(data, Session.empty())
-        val catalog = Catalog.builder()
-            .name("default").apply {
-                datum.fields.forEach { it ->
-                    define(
-                        Table.standard(
-                            name = Name.of(it.name),
-                            schema = it.value.type,
-                            datum = it.value
+        try {
+            val stream = env.inputStream()
+            val pipeline = pipeline()
+            val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
+            // The PartiQL environment files are formatted as PartiQL literal and expected to be a single struct
+            // where each key-value pair corresponds to a new table in the default catalog.
+            val datum = pipeline.execute(data, Session.empty())
+            return Catalog.builder()
+                .name("default").apply {
+                    datum.fields.forEach { it ->
+                        define(
+                            Table.standard(
+                                name = Name.of(it.name),
+                                schema = it.value.type,
+                                datum = it.value
+                            )
                         )
-                    )
+                    }
                 }
-            }
-            .build()
-        return catalog
+                .build()
+        } catch (e: FileNotFoundException) {
+            error("The environment file does not exist: ${env.path}")
+        } catch (e: IOException) {
+            error("Failed to read the environment file: ${e.message}")
+        } catch (e: Pipeline.PipelineException) {
+            error("Failed to parse the environment file: ${e.message}")
+        } catch (e: InvalidOperationException) {
+            error("The environment file must contain a struct with table definitions")
+        } catch (e: Exception) {
+            error("Unexpected error occurs when loading the environment file: ${e.message}")
+        }
     }
 
     private fun loadIon(): Catalog {
