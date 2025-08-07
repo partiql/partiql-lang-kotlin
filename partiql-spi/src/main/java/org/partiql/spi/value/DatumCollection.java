@@ -42,13 +42,9 @@ class DatumCollection implements Datum {
 
     @Override
     public String toString() {
-        StringJoiner joiner = new StringJoiner(", ", "[", "]");
-
-        _value.forEach(d -> joiner.add(d.toString()));
-
         return "DatumCollection{" +
                 "_type=" + _type +
-                ", _value=" + joiner +
+                ", _value=" + DatumUtils.formatListToString(_value) +
                 '}';
     }
 }

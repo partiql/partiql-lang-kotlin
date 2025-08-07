@@ -55,7 +55,7 @@ class DatumToStringTest {
     fun testDatumBytesToString() {
         val datum = Datum.blob(byteArrayOf(10, 50, 100, 127))
 
-        assertEquals("DatumBytes{_type=BLOB(${Integer.MAX_VALUE}), _value=0A32647F}", datum.toString())
+        assertEquals("DatumBytes{_type=BLOB(${Integer.MAX_VALUE}), _value=[10, 50, 100, 127]}", datum.toString())
     }
 
     @Test

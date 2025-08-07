@@ -78,25 +78,9 @@ class DatumStruct implements Datum {
 
     @Override
     public String toString() {
-        StringJoiner outerJoiner = new StringJoiner(", ", "{", "}");
-
-        _delegate.forEach((key, value) -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append(key);
-            sb.append(": ");
-
-            StringJoiner innerJoiner = new StringJoiner(", ", "[", "]");
-            for (Datum d : value) {
-                innerJoiner.add(d.toString());
-            }
-            sb.append(innerJoiner);
-
-            outerJoiner.add(sb.toString());
-        });
-
         return "DatumStruct{" +
                 "_type=" + _type +
-                ", _value=" + outerJoiner +
+                ", _value=" + DatumUtils.formatFieldsToString(_delegate) +
                 '}';
     }
 }
