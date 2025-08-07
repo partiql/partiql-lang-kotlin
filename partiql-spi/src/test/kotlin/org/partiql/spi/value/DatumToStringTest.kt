@@ -118,16 +118,20 @@ class DatumToStringTest {
 
     @Test
     fun testDatumIntervalDayTimeToString() {
-        val datum = Datum.intervalDaySecond(1, 2, 30, 45, 500000000, 2, 6)
+        val datumDaySecond = Datum.intervalDaySecond(1, 2, 30, 45, 500000000, 2, 6)
+        val datumDay = Datum.intervalDay(10, 2)
 
-        assertEquals("DatumIntervalDayTime{_type=DAY (2) TO SECOND (6), _value=INTERVAL '1 2:30:45.500000000'}", datum.toString())
+        assertEquals("DatumIntervalDayTime{_type=DAY (2) TO SECOND (6), _value=INTERVAL '1 2:30:45.500000000'}", datumDaySecond.toString())
+        assertEquals("DatumIntervalDayTime{_type=DAY (2), _value=INTERVAL '10 0:0:0.0'}", datumDay.toString())
     }
 
     @Test
     fun testDatumIntervalYearMonthToString() {
-        val datum = Datum.intervalYearMonth(2, 6, 2)
+        val datumYearMonth = Datum.intervalYearMonth(2, 6, 2)
+        val datumYear = Datum.intervalYear(5, 2)
 
-        assertEquals("DatumIntervalYearMonth{_type=YEAR (2) TO MONTH, _value=INTERVAL '2-6'}", datum.toString())
+        assertEquals("DatumIntervalYearMonth{_type=YEAR (2) TO MONTH, _value=INTERVAL '2-6'}", datumYearMonth.toString())
+        assertEquals("DatumIntervalYearMonth{_type=YEAR (2), _value=INTERVAL '5-0'}", datumYear.toString())
     }
 
     @Test
