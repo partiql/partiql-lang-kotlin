@@ -4,7 +4,12 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 import org.partiql.spi.types.PTypeField;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 
 /**
  * This shall always be package-private (internal).
@@ -94,25 +99,9 @@ class DatumRow implements Datum {
 
     @Override
     public String toString() {
-        StringJoiner outerJoiner = new StringJoiner(", ", "{", "}");
-
-        _delegate.forEach((key, value) -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append(key);
-            sb.append(": ");
-
-            StringJoiner innerJoiner = new StringJoiner(", ", "[", "]");
-            for(Datum d: value){
-                innerJoiner.add(d.toString());
-            }
-            sb.append(innerJoiner);
-
-            outerJoiner.add(sb.toString());
-        });
-
         return "DatumRow{" +
                 "_type=" + _type +
-                ", _value=" + outerJoiner +
+                ", _value=" + DatumUtils.formatFieldsToString(_delegate) +
                 '}';
     }
 }

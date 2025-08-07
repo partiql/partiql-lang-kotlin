@@ -3,6 +3,8 @@ package org.partiql.spi.value;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
+import java.util.StringJoiner;
+
 /**
  * This shall always be package-private (internal).
  * <p></p>
@@ -37,14 +39,15 @@ class DatumBytes implements Datum {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        StringJoiner joiner = new StringJoiner(", ", "[", "]");
         for (byte b : _value) {
-            sb.append(String.format("%02X", b & 0xFF));
+            joiner.add(Byte.toString(b));
         }
 
         return "DatumBytes{" +
                 "_type=" + _type +
-                ", _value=" + sb.toString() +
+                ", _value=" + joiner +
                 '}';
+
     }
 }
