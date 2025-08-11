@@ -45,5 +45,7 @@ include(
     "docs:upgrades:v0.6-to-v0.7-upgrade:examples",
     "docs:upgrades:v0.6-to-v0.7-upgrade:upgraded-examples",
     "docs:upgrades:v0.7-to-v0.8-upgrade:examples",
-    "docs:upgrades:v0.7-to-v0.8-upgrade:upgraded-examples"
+    "docs:upgrades:v0.7-to-v0.8-upgrade:upgraded-examples",
+    "docs:upgrades:v0.14-to-v1-upgrade:examples",
+    "docs:upgrades:v0.14-to-v1-upgrade:upgraded-examples"
 )
