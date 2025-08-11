@@ -15,10 +15,21 @@ import java.time.ZoneOffset
 
 /**
  * Test cases for toString methods of all Datum implementations.
- * Verifies that each Datum class produces expected string representations.
- *
  * Test methods are in alphabetical order by method name
+ *
+ * The test suite is created using snapshot test. A .snap file was created after first run.
+ * On subsequent test runs, the .snap file is compared with the one procured before.
+ * If not match, the test will fail and a .snap.debug with the conflict is created.
+ * You need to decide if you have introduced a regression or intentionally made the change.
+ *
+ * If you introduced a regression, please fix the code.
+ * Otherwise, you can manually modify the .snap file to make it pass or delete it,
+ * and it will be generated again from scratch.
+ * Once you fix the test, the *.snap.debug file will get deleted.
+ *
+ * For more information, please refer to https://github.com/origin-energy/java-snapshot-testing
  */
+
 @ExtendWith(SnapshotExtension::class)
 class DatumToStringTest {
 
