@@ -78,13 +78,68 @@ DatumInt{_type=INTEGER, _value=42}
 ]
 
 
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumDayHour]=[
+DatumIntervalDayTime{_type=DAY (2) TO HOUR, _value=INTERVAL '3 12:0:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumDayMinute]=[
+DatumIntervalDayTime{_type=DAY (2) TO MINUTE, _value=INTERVAL '2 8:45:0.0'}
+]
+
+
 org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumDaySecond]=[
 DatumIntervalDayTime{_type=DAY (2) TO SECOND (6), _value=INTERVAL '1 2:30:45.500000000'}
 ]
 
 
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumDay]=[
+DatumIntervalDayTime{_type=DAY (2), _value=INTERVAL '10 0:0:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumHourMinute]=[
+DatumIntervalDayTime{_type=HOUR (2) TO MINUTE, _value=INTERVAL '0 14:30:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumHourSecond]=[
+DatumIntervalDayTime{_type=HOUR (2) TO SECOND (6), _value=INTERVAL '0 6:15:20.750000000'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumHour]=[
+DatumIntervalDayTime{_type=HOUR (2), _value=INTERVAL '0 5:0:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumMinuteSecond]=[
+DatumIntervalDayTime{_type=MINUTE (2) TO SECOND (6), _value=INTERVAL '0 0:25:30.250000000'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumMinute]=[
+DatumIntervalDayTime{_type=MINUTE (2), _value=INTERVAL '0 0:30:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumSecond]=[
+DatumIntervalDayTime{_type=SECOND (2, 6), _value=INTERVAL '0 0:0:45.500000000'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalYearMonthToString[datumMonth]=[
+DatumIntervalYearMonth{_type=MONTH (2), _value=INTERVAL '0-15'}
+]
+
+
 org.partiql.spi.value.DatumToStringTest.testDatumIntervalYearMonthToString[datumYearMonth]=[
 DatumIntervalYearMonth{_type=YEAR (2) TO MONTH, _value=INTERVAL '2-6'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalYearMonthToString[datumYear]=[
+DatumIntervalYearMonth{_type=YEAR (2), _value=INTERVAL '15-0'}
 ]
 
 

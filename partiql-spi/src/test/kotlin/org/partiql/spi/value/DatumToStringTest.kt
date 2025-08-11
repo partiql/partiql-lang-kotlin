@@ -113,16 +113,38 @@ class DatumToStringTest {
 
     @Test
     fun testDatumIntervalDayTimeToString() {
+        val datumDay = Datum.intervalDay(10, 2)
+        val datumHour = Datum.intervalHour(5, 2)
+        val datumMinute = Datum.intervalMinute(30, 2)
+        val datumSecond = Datum.intervalSecond(45, 500000000, 2, 6)
+        val datumDayHour = Datum.intervalDayHour(3, 12, 2)
+        val datumDayMinute = Datum.intervalDayMinute(2, 8, 45, 2)
         val datumDaySecond = Datum.intervalDaySecond(1, 2, 30, 45, 500000000, 2, 6)
+        val datumHourMinute = Datum.intervalHourMinute(14, 30, 2)
+        val datumHourSecond = Datum.intervalHourSecond(6, 15, 20, 750000000, 2, 6)
+        val datumMinuteSecond = Datum.intervalMinuteSecond(25, 30, 250000000, 2, 6)
 
+        expect.scenario("datumDay").toMatchSnapshot(datumDay)
+        expect.scenario("datumHour").toMatchSnapshot(datumHour)
+        expect.scenario("datumMinute").toMatchSnapshot(datumMinute)
+        expect.scenario("datumSecond").toMatchSnapshot(datumSecond)
+        expect.scenario("datumDayHour").toMatchSnapshot(datumDayHour)
+        expect.scenario("datumDayMinute").toMatchSnapshot(datumDayMinute)
         expect.scenario("datumDaySecond").toMatchSnapshot(datumDaySecond)
+        expect.scenario("datumHourMinute").toMatchSnapshot(datumHourMinute)
+        expect.scenario("datumHourSecond").toMatchSnapshot(datumHourSecond)
+        expect.scenario("datumMinuteSecond").toMatchSnapshot(datumMinuteSecond)
     }
 
     @Test
     fun testDatumIntervalYearMonthToString() {
         val datumYearMonth = Datum.intervalYearMonth(2, 6, 2)
+        val datumYear = Datum.intervalYear(15, 2)
+        val datumMonth = Datum.intervalMonth(15, 2)
 
         expect.scenario("datumYearMonth").toMatchSnapshot(datumYearMonth)
+        expect.scenario("datumYear").toMatchSnapshot(datumYear)
+        expect.scenario("datumMonth").toMatchSnapshot(datumMonth)
     }
 
     @Test
