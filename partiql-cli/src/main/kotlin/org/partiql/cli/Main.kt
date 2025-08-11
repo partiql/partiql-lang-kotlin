@@ -15,6 +15,7 @@
 
 package org.partiql.cli
 
+import org.partiql.cli.io.DatumWriterTextPretty
 import org.partiql.cli.io.Format
 import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
@@ -27,8 +28,6 @@ import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.InvalidOperationException
-import org.partiql.spi.value.ValueUtils
-import org.partiql.spi.value.io.PartiQLValueTextWriter
 import picocli.CommandLine
 import java.io.File
 import java.io.FileNotFoundException
@@ -216,9 +215,8 @@ internal class MainCommand : Runnable {
         // TODO add format support
         checkFormat(format)
         try {
-            val writer = PartiQLValueTextWriter(System.out)
-            val p = ValueUtils.newPartiQLValue(result)
-            writer.append(p) // TODO: Create a Datum writer
+            val writer = DatumWriterTextPretty(System.out)
+            writer.write(result)
         } catch (e: PRuntimeException) {
             val msg = ErrorMessageFormatter.message(e.error)
             error(msg)
