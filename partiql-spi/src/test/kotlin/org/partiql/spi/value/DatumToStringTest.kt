@@ -185,7 +185,6 @@ class DatumToStringTest {
         expect.scenario("datum").toMatchSnapshot(datum)
         expect.scenario("datumWithNested").toMatchSnapshot(datumWithNested)
         expect.scenario("datumWithDuplicateKey").toMatchSnapshot(datumWithDuplicateKey)
-
     }
 
     @Test
