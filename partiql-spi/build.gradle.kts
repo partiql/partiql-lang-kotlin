@@ -23,6 +23,8 @@ dependencies {
     api(Deps.ionElement)
     implementation(Deps.kotlinxCollections)
     testImplementation(Deps.kasechange)
+    testImplementation(Deps.snapshotTest)
+    testImplementation(Deps.slf4j)
 }
 
 tasks.shadowJar {
