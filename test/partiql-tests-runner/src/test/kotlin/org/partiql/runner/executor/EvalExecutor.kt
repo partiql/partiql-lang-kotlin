@@ -3,7 +3,6 @@ package org.partiql.runner.executor
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.AnyElement
-import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
@@ -16,6 +15,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.runner.CompileType
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
+import org.partiql.runner.util.toIonElement
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
@@ -27,10 +27,7 @@ import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.spi.value.ValueUtils
-import org.partiql.value.PartiQLValue
 import org.partiql.value.io.DatumIonReaderBuilder
-import org.partiql.value.toIon
 import kotlin.test.assertEquals
 
 /**
@@ -93,57 +90,21 @@ class EvalExecutor(
     }
 
     override fun toIon(value: Datum): IonValue {
-        val partiql = ValueUtils.newPartiQLValue(value)
-        return partiql.toIon().toIonValue(ION)
+        return value.toIonElement().toIonValue(ION)
     }
 
-    // TODO: Use DATUM
     override fun compare(actual: Datum, expect: Datum): Boolean {
-        return valueComparison(ValueUtils.newPartiQLValue(actual), ValueUtils.newPartiQLValue(expect))
-    }
-
-    // Value comparison of PartiQL Value that utilized Ion Hashcode.
-    // in here, null.bool is considered equivalent to null
-    // missing is considered different from null
-    // annotation::1 is considered different from 1
-    // 1 of type INT is considered the same as 1 of type INT32
-    // we should probably consider adding our own hashcode implementation
-    private fun valueComparison(v1: PartiQLValue, v2: PartiQLValue): Boolean {
-        // Additional check to put on annotation
-        // we want to have
-        // annotation::null.int == annotation::null.bool  <- True
-        // annotation::null.int == other::null.int <- False
-        if (v1.annotations != v2.annotations) {
-            return false
-        }
-        if (v1.isNull && v2.isNull) {
-            return true
-        }
-        // TODO: this comparator is designed for order by
-        //  One of the false result it might produce is that
-        //  it treats MISSING and NULL equally.
-        //  we should move to hash or equals in value class once
-        //  we finished implementing those.
-        if (comparator.compare(v1, v2) == 0) {
-            return true
-        }
-        if (v1.toIon().hashCode() == v2.toIon().hashCode()) {
-            return true
-        }
-        // Ion element hash code contains a bug
-        // Hashcode of BigIntIntElementImpl(BigInteger.ONE) is not the same as that of LongIntElementImpl(1)
-        if (v1.toIon().type == ElementType.INT && v2.toIon().type == ElementType.INT) {
-            return v1.toIon().asAnyElement().bigIntegerValue == v2.toIon().asAnyElement().bigIntegerValue
-        }
-        return false
+        // If the type is Ion, convert to lower case for comparison
+        val actualValue = if (actual.type.code() == PType.VARIANT) actual.lower() else actual
+        val expectedValue = if (expect.type.code() == PType.VARIANT) expect.lower() else expect
+        return comparator.compare(actualValue, expectedValue) == 0
     }
 
     companion object {
         val compiler = PartiQLCompiler.standard()
         val parser = PartiQLParser.standard()
         val planner = PartiQLPlanner.standard()
-        // TODO REPLACE WITH DATUM COMPARATOR
-        val comparator = PartiQLValue.comparator()
+        val comparator = Datum.comparator()
     }
 
     object Factory : TestExecutor.Factory<Statement, Datum> {
@@ -201,7 +162,7 @@ class EvalExecutor(
          * TODO until this point, PartiQL Kotlin has only done top-level bindings.
          * TODO https://github.com/partiql/partiql-tests/issues/127
          *
-         * Test data is "PartiQL encoded as Ion" hence we need the PartiQLValueIonReader.
+         * Test data is "PartiQL encoded as Ion" hence we need the DatumIonReader.
          */
         private fun Catalog.Builder.load(env: StructElement) {
             for (f in env.fields) {
