@@ -192,10 +192,10 @@ class DatumToStringTest {
         val datum = Datum.struct(fields)
         val datumWithNested = Datum.struct(fieldsWithNested)
 
-        assertEquals("DatumStruct{_type=STRUCT, _value={ name: [DatumString{_type=STRING, _value=John}], age: [DatumInt{_type=INTEGER, _value=30}] }}", datum.toString())
+        assertEquals("DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value=John}], age: [DatumInt{_type=INTEGER, _value=30}]}}", datum.toString())
         assertEquals(
-            "DatumStruct{_type=STRUCT, _value={ name: [DatumString{_type=STRING, _value=John}], " +
-                "property: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}] }}",
+            "DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value=John}], " +
+                "property: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}]}}",
             datumWithNested.toString()
         )
     }
@@ -215,11 +215,16 @@ class DatumToStringTest {
         val datum = Datum.row(fields)
         val datumWithNested = Datum.row(fieldsWithNested)
 
-        assertEquals("DatumRow{_type=ROW(col1: STRING, col2: INTEGER), _value={ col2: [DatumInt{_type=INTEGER, _value=30}], col1: [DatumString{_type=STRING, _value=John}] }}", datum.toString())
+        assertEquals("DatumRow{_type=ROW(col1: STRING, col2: INTEGER), _value={col2: [DatumInt{_type=INTEGER, _value=30}], col1: [DatumString{_type=STRING, _value=John}]}}", datum.toString())
         assertEquals(
             "DatumRow{_type=ROW(col1: STRING, col2: BAG(DYNAMIC)), " +
+<<<<<<< HEAD
                 "_value={ col2: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}], " +
                 "col1: [DatumString{_type=STRING, _value=John}] }",
+=======
+                "_value={col2: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}], " +
+                "col1: [DatumString{_type=STRING, _value=John}]}}",
+>>>>>>> 075f2eb71 (remove extra space)
             datumWithNested.toString()
         )
     }

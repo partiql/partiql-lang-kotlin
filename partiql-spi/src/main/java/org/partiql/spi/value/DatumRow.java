@@ -94,7 +94,7 @@ class DatumRow implements Datum {
 
     @Override
     public String toString() {
-        StringJoiner outerJoiner = new StringJoiner(", ", "{ ", " }");
+        StringJoiner outerJoiner = new StringJoiner(", ", "{", "}");
 
         _delegate.forEach((key, value) -> {
             StringBuilder sb = new StringBuilder();
