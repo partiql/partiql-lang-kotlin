@@ -33,6 +33,9 @@ class DatumFloat implements Datum {
 
     @Override
     public String toString() {
-        return "r::" + _value;
+        return "DatumFloat{" +
+                "_type=" + _type +
+                ", _value=" + _value +
+                '}';
     }
 }

@@ -3,11 +3,7 @@ package org.partiql.spi.value;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This shall always be package-private (internal).
@@ -82,15 +78,9 @@ class DatumStruct implements Datum {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("struct::{ ");
-        for (Map.Entry<String, List<Datum>> entry : _delegate.entrySet()) {
-            sb.append(entry.getKey());
-            sb.append(": ");
-            sb.append(entry.getValue().toString());
-            sb.append(", ");
-        }
-        sb.append(" }");
-        return sb.toString();
+        return "DatumStruct{" +
+                "_type=" + _type +
+                ", _value=" + DatumUtils.formatFieldsToString(_delegate) +
+                '}';
     }
 }

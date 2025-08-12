@@ -26,4 +26,12 @@ class DatumBoolean implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        return "DatumBoolean{" +
+                "_type=" + _type +
+                ", _value=" + _value +
+                '}';
+    }
 }

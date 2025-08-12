@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * This shall always be package-private (internal).
@@ -41,7 +44,7 @@ class DatumCollection implements Datum {
     public String toString() {
         return "DatumCollection{" +
                 "_type=" + _type +
-                ", _value=" + _value +
+                ", _value=" + DatumUtils.formatListToString(_value) +
                 '}';
     }
 }
