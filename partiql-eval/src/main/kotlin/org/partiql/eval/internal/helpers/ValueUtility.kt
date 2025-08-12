@@ -113,8 +113,8 @@ internal object ValueUtility {
     }
 
     /**
-     * Takes in a [Datum] that is any integer type ([PartiQLValueType.INT8], [PartiQLValueType.INT8],
-     * [PartiQLValueType.INT8], [PartiQLValueType.INT8], [PartiQLValueType.INT8]) and returns the [Int] (potentially
+     * Takes in a [Datum] that is any integer type (TINYINT, SMALLINT,
+     * INTEGER, BIGINT) and returns the [Int] (potentially
      * coerced) that represents the integer.
      *
      * INTERNAL NOTE: This should NOT exist. The PLANNER should be in charge of making sure that the appropriate type is

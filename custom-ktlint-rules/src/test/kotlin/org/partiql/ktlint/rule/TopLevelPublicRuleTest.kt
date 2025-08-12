@@ -110,7 +110,7 @@ class TopLevelPublicRuleTest {
     fun `different top level annotation`() {
         val code =
             """
-            @file:OptIn(PartiQLValueExperimental::class)
+            @file:OptIn(Experimental::class)
             public fun publicTopLevelFun() {}   // ktlint error
 
             fun publicTopLevelFun2() {}         // ktlint error

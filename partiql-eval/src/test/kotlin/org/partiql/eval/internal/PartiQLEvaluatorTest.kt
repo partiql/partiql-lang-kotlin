@@ -1854,7 +1854,7 @@ class PartiQLEvaluatorTest {
 
     // PartiQL Specification Section 8
     @Test
-    @Disabled("Currently, .check(<PartiQLValue>) is failing for MISSING. This will be resolved by Datum.")
+    @Disabled("Currently, .check(<Datum>) is failing for MISSING. This needs to be resolved.")
     fun missingAndTruePermissive() =
         SuccessTestCase(
             input = "MISSING AND TRUE;",
@@ -1863,7 +1863,7 @@ class PartiQLEvaluatorTest {
 
     // PartiQL Specification Section 8
     @Test
-    @Disabled("Currently, .check(<PartiQLValue>) is failing for MISSING. This will be resolved by Datum.")
+    @Disabled("Currently, .check(<Datum>) is failing for MISSING. This needs to be resolved.")
     fun missingAndTrueStrict() = SuccessTestCase(
         input = "MISSING AND TRUE;",
         expected = Datum.nullValue(PType.bool()), // TODO: Is this right?
