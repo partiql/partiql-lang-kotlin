@@ -1138,7 +1138,7 @@ public interface Datum extends Iterable<Datum> {
      */
     @NotNull
     static Comparator<Datum> comparator() {
-        return comparator(true);
+        return comparator(true, false);
     }
 
     /**
@@ -1152,17 +1152,39 @@ public interface Datum extends Iterable<Datum> {
      * operations.
      * </p>
      * @param nullsFirst if true, nulls are ordered before non-null values, otherwise after.
-     * @return the default comparator for {@link Datum}.
+     * @return the default comparator for {@link Datum}. By default, distinguishNullMissing is set to false.
      * @see Datum
      * @see java.util.TreeSet
      * @see java.util.TreeMap
      */
     @NotNull
     static Comparator<Datum> comparator(boolean nullsFirst) {
+        return comparator(nullsFirst, false);
+    }
+
+    /**
+     * Comparator for PartiQL values.
+     * <p>
+     * This may be used for the comparison operators, GROUP BY, ORDER BY, and DISTINCT. The conventional use
+     * of {@link java.util.HashMap}, {@link java.util.HashSet}, {@link Object#hashCode()}, and
+     * {@link Object#equals(Object)} will not work outright with Datum to implement the before-mentioned operations due
+     * to requirements by the PartiQL and SQL Specifications. One may use {@link java.util.TreeMap} and
+     * {@link java.util.TreeSet} in combination with this {@link Comparator} to implement the before-mentioned
+     * operations.
+     * </p>
+     * @param nullsFirst if true, nulls are ordered before non-null values, otherwise after.
+     * @param distinguishNullMissing if true, null and missing values are distinguished (null < missing), otherwise they are treated as equivalent. By default, this is set to false and only set to true when testing for now.
+     * @return the comparator for {@link Datum}.
+     * @see Datum
+     * @see java.util.TreeSet
+     * @see java.util.TreeMap
+     */
+    @NotNull
+    static Comparator<Datum> comparator(boolean nullsFirst, boolean distinguishNullMissing) {
         if (nullsFirst) {
-            return new DatumComparator.NullsFirst();
+            return new DatumComparator.NullsFirst(distinguishNullMissing);
         } else {
-            return new DatumComparator.NullsLast();
+            return new DatumComparator.NullsLast(distinguishNullMissing);
         }
     }
 }

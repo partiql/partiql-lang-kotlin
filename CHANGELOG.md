@@ -41,7 +41,6 @@ rewritten to their query representation
 - Add cli option -e to load PartiQL literal data as default catalog data
 
 ### Changed
-- Migrate the usage of `PartiQLValue` to `Datum` in conformance tests
 
 ### Deprecated
 

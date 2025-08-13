@@ -104,7 +104,7 @@ class EvalExecutor(
         val compiler = PartiQLCompiler.standard()
         val parser = PartiQLParser.standard()
         val planner = PartiQLPlanner.standard()
-        val comparator = Datum.comparator()
+        val comparator = Datum.comparator(true, true)
     }
 
     object Factory : TestExecutor.Factory<Statement, Datum> {
@@ -153,7 +153,7 @@ class EvalExecutor(
             assertEquals(1, parseResult.statements.size)
             val stmt = parseResult.statements[0]
             val plan = planner.plan(stmt, session).plan
-            return (plan.action as Query).getRex().getType().getPType()
+            return (plan.action as Query).getRex().getType().pType
         }
 
         /**

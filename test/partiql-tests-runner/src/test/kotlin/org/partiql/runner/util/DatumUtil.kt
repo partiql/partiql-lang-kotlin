@@ -12,23 +12,48 @@ import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
+import com.amazon.ionelement.api.ionTimestamp
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
 // For error display only
 internal fun Datum.toIonElement(): IonElement {
     return when {
-        this.isNull() -> ionNull()
-        this.isMissing() -> ionNull()
+        this.isMissing -> ionNull().withAnnotations("\$missing")
+        this.isNull -> ionNull()
         else -> {
             when (this.type.code()) {
-                PType.BOOL -> ionBool(this.getBoolean())
-                PType.INTEGER -> ionInt(this.getInt().toLong())
-                PType.BIGINT -> ionInt(this.getLong())
-                PType.STRING -> ionString(this.getString())
-                PType.DECIMAL -> ionDecimal(Decimal.valueOf(this.getBigDecimal()))
-                PType.DOUBLE -> ionFloat(this.getDouble())
-                PType.REAL -> ionFloat(this.getFloat().toDouble())
+                PType.BOOL -> ionBool(this.boolean)
+                PType.INTEGER -> ionInt(this.int.toLong())
+                PType.BIGINT -> ionInt(this.long)
+                PType.STRING -> ionString(this.string)
+                PType.DECIMAL -> ionDecimal(Decimal.valueOf(this.bigDecimal))
+                PType.DOUBLE -> ionFloat(this.double)
+                PType.REAL -> ionFloat(this.float.toDouble())
+                PType.TIMESTAMP -> ionTimestamp(this.localDateTime.toString())
+                PType.DATE -> ionString(this.localDate.toString()).withAnnotations("\$date")
+                PType.TIME -> {
+                    val time = this.localTime
+                    val fields = mutableListOf<StructField>()
+                    fields.add(field("hour", ionInt(time.hour.toLong())))
+                    fields.add(field("minute", ionInt(time.minute.toLong())))
+                    fields.add(field("second", ionDecimal(Decimal.valueOf(time.second.toBigDecimal()))))
+                    ionStructOf(fields).withAnnotations("\$time")
+                }
+                PType.TIMEZ -> {
+                    val offsetTime = this.offsetTime
+                    val fields = mutableListOf<StructField>()
+                    fields.add(field("hour", ionInt(offsetTime.hour.toLong())))
+                    fields.add(field("minute", ionInt(offsetTime.minute.toLong())))
+                    fields.add(field("second", ionDecimal(Decimal.valueOf(offsetTime.second.toBigDecimal()))))
+                    val offset = offsetTime.offset
+                    val totalSeconds = offset.totalSeconds
+                    val timezoneHours = totalSeconds / 3600
+                    val timezoneMinutes = (totalSeconds % 3600) / 60
+                    fields.add(field("timezone_hour", ionInt(timezoneHours.toLong())))
+                    fields.add(field("timezone_minute", ionInt(timezoneMinutes.toLong())))
+                    ionStructOf(fields).withAnnotations("\$time")
+                }
                 PType.ARRAY -> {
                     val elements = mutableListOf<IonElement>()
                     for (element in this) {
@@ -43,9 +68,9 @@ internal fun Datum.toIonElement(): IonElement {
                     }
                     ionListOf(elements).withAnnotations("\$bag")
                 }
-                PType.STRUCT -> {
+                PType.STRUCT, PType.ROW -> {
                     val fields = mutableListOf<StructField>()
-                    val fieldIterator = this.getFields()
+                    val fieldIterator = this.fields
                     while (fieldIterator.hasNext()) {
                         val field = fieldIterator.next()
                         fields.add(field(field.name, field.value.toIonElement()))
