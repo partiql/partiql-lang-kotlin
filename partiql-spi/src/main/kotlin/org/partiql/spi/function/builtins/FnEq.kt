@@ -16,7 +16,7 @@ import org.partiql.spi.value.Datum
  * > Equality never fails in the type-checking mode and never returns MISSING in the permissive mode. Instead, it can
  * compare values of any two types, according to the rules of the PartiQL type system. For example, 5 = 'a' is false.
  *
- * For the existing conformance tests, when an operand is NULL, the output is NULL. When an operand is MISSING, 
+ * For the existing conformance tests, when an operand is NULL, the output is NULL. When an operand is MISSING,
  * the output is MISSING (missing value propagation). This implementation follows the existing conformance tests.
  *
  * TODO: The PartiQL Specification needs to clearly define the semantics of MISSING. That being said, this implementation
