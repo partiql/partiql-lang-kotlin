@@ -34,10 +34,13 @@ class ParserChanges {
 
         val result: PartiQLParser.Result = parser.parse(query)
 
-        // The Source property of the result object is removed.
-        // A list of ASTs is returned in the result object to support multiple statement parsing
-        // and AST classes are refactoring to different classes
-        // Tag is an integer type instead of String
+        // The result object has the following properties.
+        // 1. 'Statements' property contains the list of parsed ASTs as v1 supports multiple statement parsing
+        // 2. 'Locations' property stores the locations of the parsed elements in the ASTs.
+        // Other changes:
+        // 1. AST classes are refactored to different classes
+        // 2. Tag is an Integer type instead of String
+        // 3. The 'Source' property is removed since v1
         assertNotNull(result)
         assertTrue(result.statements[0] is CreateTable)
         assertNotNull(result.locations.get(result.statements[0].tag))
@@ -50,10 +53,6 @@ class ParserChanges {
 
         val result: PartiQLParser.Result = parser.parse(query)
 
-        // The Source property of the result object is removed.
-        // A list of ASTs is returned in the result object to support multiple statement parsing
-        // and AST classes are refactoring to different classes
-        // Tag is an integer type instead of String
         assertNotNull(result)
         assertTrue(result.statements[0] is Insert)
         assertNotNull(result.locations.get(result.statements[0].tag))
@@ -66,10 +65,6 @@ class ParserChanges {
 
         val result: PartiQLParser.Result = parser.parse(query)
 
-        // The Source property of the result object is removed.
-        // A list of ASTs is returned in the result object to support multiple statement parsing
-        // and AST classes are refactoring to different classes
-        // Tag is an integer type instead of String
         assertNotNull(result)
         assertTrue(result.statements[0] is Query)
         assertNotNull(result.locations.get(result.statements[0].tag))
@@ -79,7 +74,7 @@ class ParserChanges {
     fun `Parse multiple statements`() {
 
         // Parsing multiple statements in one call is not supported before v1
-        // A list of statement is returned in the result object after parsing ,u
+        // A list of statements is returned in the result object after parsing.
         val parser = PartiQLParser.standard()
         val query = """
             CREATE TABLE myTable;
@@ -100,8 +95,9 @@ class ParserChanges {
     fun `Parser error handling`() {
         val parser = PartiQLParser.standard()
 
+        // The PRuntimeException is expected to throw when .parse called on a PartiQL query with invalid syntax.
         val exception = assertThrows<PRuntimeException> {
-            // an invalid single quote is added before Table name foo
+            // An invalid single quote is added before Table name foo
             parser.parse("CREATE TABLE 'foo")
         }
 
@@ -145,7 +141,7 @@ class ParserChanges {
             throw ex
         }
 
-        // process your listener
+        // Process your listener now as the errors are not thrown in this example.
         val exception = listener.errorCollection[0]
 
         assertEquals(PError.UNEXPECTED_TOKEN, exception.code())
