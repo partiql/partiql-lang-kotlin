@@ -139,8 +139,7 @@ internal object FunctionUtils {
     }
 
     internal fun logicalNot(a: Datum): Datum {
-        if (a.isMissing) return Datum.missing(PType.bool())
-        if (a.isNull) return Datum.nullValue(PType.bool())
+        if (isUnknown(a)) return Datum.nullValue(PType.bool())
         return Datum.bool(!a.boolean)
     }
 }

@@ -1152,7 +1152,7 @@ public interface Datum extends Iterable<Datum> {
      * operations.
      * </p>
      * @param nullsFirst if true, nulls are ordered before non-null values, otherwise after.
-     * @return the default comparator for {@link Datum}. By default, distinguishNullMissing is set to false.
+     * @return the default comparator for {@link Datum}. By default, null and missing are treated as equivalent.
      * @see Datum
      * @see java.util.TreeSet
      * @see java.util.TreeMap

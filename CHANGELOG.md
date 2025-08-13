@@ -39,6 +39,7 @@ rewritten to their query representation
 - `ABS` function support on `INTERVAL` values
 - Support for `OVERLAPS` predicate
 - Add cli option -e to load PartiQL literal data as default catalog data
+- Add optional `distinguishNullMissing` parameter to `Datum.comparator()` to control whether `null` and `missing` are treated as equivalent or distinct in comparisons
 
 ### Changed
 
