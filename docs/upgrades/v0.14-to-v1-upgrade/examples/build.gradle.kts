@@ -17,14 +17,5 @@ plugins {
 }
 
 dependencies {
-    testImplementation("org.partiql:partiql-lang-kotlin:0.7.0")
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-}
-
-tasks.compileTestKotlin {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+    testImplementation("org.partiql:partiql-lang-kotlin:0.14.9")
 }

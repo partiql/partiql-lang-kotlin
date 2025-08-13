@@ -61,4 +61,12 @@ final class DatumTimestampz implements Datum {
     public OffsetDateTime getOffsetDateTime() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "DatumTimestampz{" +
+                "_type=" + type +
+                ", _value=" + value +
+                '}';
+    }
 }

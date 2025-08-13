@@ -30,4 +30,12 @@ class DatumString implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        return "DatumString{" +
+                "_type=" + _type +
+                ", _value=" + _value +
+                '}';
+    }
 }

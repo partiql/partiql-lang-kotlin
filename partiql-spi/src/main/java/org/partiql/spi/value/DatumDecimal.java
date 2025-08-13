@@ -54,8 +54,8 @@ class DatumDecimal implements Datum {
     @Override
     public String toString() {
         return "DatumDecimal{" +
-                "_value=" + _value +
-                ", _type=" + _type +
+                "_type=" + _type +
+                ", _value=" + _value +
                 '}';
     }
 }
