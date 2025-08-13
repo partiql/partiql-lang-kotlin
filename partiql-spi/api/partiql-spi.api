@@ -593,6 +593,7 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun clob ([BI)Lorg/partiql/spi/value/Datum;
 	public static fun comparator ()Ljava/util/Comparator;
 	public static fun comparator (Z)Ljava/util/Comparator;
+	public static fun comparator (ZZ)Ljava/util/Comparator;
 	public static fun date (Ljava/time/LocalDate;)Lorg/partiql/spi/value/Datum;
 	public static fun decimal (Ljava/math/BigDecimal;)Lorg/partiql/spi/value/Datum;
 	public static fun decimal (Ljava/math/BigDecimal;II)Lorg/partiql/spi/value/Datum;
