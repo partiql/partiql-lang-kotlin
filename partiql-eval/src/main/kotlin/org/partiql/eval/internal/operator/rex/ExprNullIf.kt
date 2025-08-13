@@ -15,7 +15,7 @@ internal class ExprNullIf(
         val value = valueExpr.eval(env)
         val nullifier = nullifierExpr.eval(env)
         return when (comparator.compare(value, nullifier)) {
-            0 -> Datum.nullValue()
+            0 -> if (value.isMissing || nullifier.isMissing) Datum.missing() else Datum.nullValue()
             else -> value
         }
     }

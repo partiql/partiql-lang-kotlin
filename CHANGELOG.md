@@ -40,6 +40,7 @@ rewritten to their query representation
 - Support for `OVERLAPS` predicate
 - Add cli option -e to load PartiQL literal data as default catalog data
 - Add toString() support for all datum types
+- Add optional `distinguishNullMissing` parameter to `Datum.comparator()` to control whether `null` and `missing` are treated as equivalent or distinct in comparisons
 
 ### Changed
 
@@ -53,6 +54,7 @@ rewritten to their query representation
 - Display of `Ion` in PartiQL CLI output
 - Support `INTERVAL` times and divide with numerics
 - Prioritize `missing` propagation when both `null` and `missing` exist in function args
+- Return `missing` instead of `null` for `NULLIF(MISSING, MISSING)`
 
 ### Removed
 
