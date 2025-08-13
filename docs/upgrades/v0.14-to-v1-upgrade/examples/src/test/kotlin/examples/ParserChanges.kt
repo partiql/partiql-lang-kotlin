@@ -4,6 +4,7 @@ import org.junit.jupiter.api.assertThrows
 import org.partiql.ast.Statement
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
+import org.partiql.parser.SourceLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -11,16 +12,15 @@ import kotlin.test.assertTrue
 
 class ParserChanges {
     @Test
-    fun `Parser initialization`() {
+    fun `PartiQLParser initialization`() {
         val parserDefault = PartiQLParser.default()
-        val parserWithBuilder = PartiQLParser.builder().build()
 
-        assertNotNull(parserDefault)
-        assertNotNull(parserWithBuilder)
+        // Builder returns the default for now and no additional options present
+        val parserWithBuilder = PartiQLParser.builder().build()
     }
 
     @Test
-    fun `Parse a create table statement`() {
+    fun `Parse the 'CREATE TABLE' statement`() {
         val parser = PartiQLParser.default()
         val query = "CREATE TABLE myTable"
 
@@ -33,7 +33,7 @@ class ParserChanges {
     }
 
     @Test
-    fun `Parse a insert into table statement`() {
+    fun `Parse the 'INSERT INTO' statement`() {
         val parser = PartiQLParser.default()
         val query = "INSERT INTO tbl VALUES (1, 2, 3)"
 
@@ -46,7 +46,7 @@ class ParserChanges {
     }
 
     @Test
-    fun `Parse a select table statement`() {
+    fun `Parse the 'SELECT FROM' statement`() {
         val parser = PartiQLParser.default()
         val query = "SELECT * FROM tbl WHERE id = 123"
 
@@ -62,10 +62,10 @@ class ParserChanges {
     fun `Parser error handling`() {
         val parser = PartiQLParser.default()
         val exception = assertThrows<PartiQLParserException> {
-            val ast = parser.parse("CREATE TABLE 'foo asd")
+            val ast = parser.parse("CREATE TABLE 'foo")
         }
 
         assertTrue { exception.message.contains("extraneous input '''") }
-        assertNotNull(exception.location)
+        assertEquals(SourceLocation(1, 14, 62, 1), exception.location)
     }
 }
