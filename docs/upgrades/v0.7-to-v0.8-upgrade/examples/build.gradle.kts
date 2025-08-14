@@ -24,3 +24,7 @@ java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 }
+
+tasks.compileTestKotlin {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+}

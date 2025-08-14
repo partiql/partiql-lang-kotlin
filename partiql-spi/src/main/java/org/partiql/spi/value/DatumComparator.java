@@ -55,6 +55,12 @@ abstract class DatumComparator implements Comparator<Datum> {
 
     private static final int GREATER = 1;
 
+    private final boolean distinguishNullMissing;
+
+    protected DatumComparator(boolean distinguishNullMissing) {
+        this.distinguishNullMissing = distinguishNullMissing;
+    }
+
     @NotNull
     private static final int[] TYPE_KINDS = PType.codes();
 
@@ -134,6 +140,15 @@ abstract class DatumComparator implements Comparator<Datum> {
         boolean lhsIsUnknown = lhs.isNull() || lhs.isMissing();
         boolean rhsIsUnknown = rhs.isNull() || rhs.isMissing();
         if (lhsIsUnknown && rhsIsUnknown) {
+            if (distinguishNullMissing) {
+                // Distinguish between null and missing: missing >  null
+                if (lhs.isNull() && rhs.isMissing()) {
+                    return LESS;
+                }
+                if (lhs.isMissing() && rhs.isNull()) {
+                    return GREATER;
+                }
+            }
             return EQUAL;
         }
         if (lhsIsUnknown) {
@@ -153,6 +168,10 @@ abstract class DatumComparator implements Comparator<Datum> {
      */
     static class NullsFirst extends DatumComparator {
 
+        NullsFirst(boolean distinguishNullMissing) {
+            super(distinguishNullMissing);
+        }
+
         @Override
         int lhsUnknown() {
             return LESS;
@@ -171,6 +190,10 @@ abstract class DatumComparator implements Comparator<Datum> {
      * with NULL/MISSING values last.
      */
     static class NullsLast extends DatumComparator {
+
+        NullsLast(boolean distinguishNullMissing) {
+            super(distinguishNullMissing);
+        }
 
         @Override
         int lhsUnknown() {

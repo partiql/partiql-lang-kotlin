@@ -42,6 +42,9 @@ final class DatumTimez implements Datum {
 
     @Override
     public String toString() {
-        return value.toString();
+        return "DatumTimez{" +
+                "_type=" + type +
+                ", _value=" + value +
+                '}';
     }
 }

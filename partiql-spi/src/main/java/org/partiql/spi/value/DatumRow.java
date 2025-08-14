@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * This shall always be package-private (internal).
  */
@@ -98,15 +99,9 @@ class DatumRow implements Datum {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("row::{ ");
-        for (Map.Entry<String, List<Datum>> entry : _delegate.entrySet()) {
-            sb.append(entry.getKey());
-            sb.append(": ");
-            sb.append(entry.getValue().toString());
-            sb.append(", ");
-        }
-        sb.append(" }");
-        return sb.toString();
+        return "DatumRow{" +
+                "_type=" + _type +
+                ", _value=" + DatumUtils.formatFieldsToString(_delegate) +
+                '}';
     }
 }

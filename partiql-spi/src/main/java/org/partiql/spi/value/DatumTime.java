@@ -43,6 +43,9 @@ final class DatumTime implements Datum {
 
     @Override
     public String toString() {
-        return this.value.toString();
+        return "DatumTime{" +
+                "_type=" + type +
+                ", _value=" + value +
+                '}';
     }
 }

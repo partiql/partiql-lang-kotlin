@@ -115,10 +115,13 @@ internal object FunctionUtils {
         val aIsUnknown = isUnknown(a)
         val bIsUnknown = isUnknown(b)
         return when {
+            // If either operand is false, result is false
+            (!aIsUnknown && !a.boolean) || (!bIsUnknown && !b.boolean) -> Datum.bool(false)
+            // If both are unknown, return null
             aIsUnknown && bIsUnknown -> Datum.nullValue(PType.bool())
-            !aIsUnknown && a.boolean && bIsUnknown -> Datum.nullValue(PType.bool())
-            !bIsUnknown && b.boolean && aIsUnknown -> Datum.nullValue(PType.bool())
-            !a.boolean || !b.boolean -> Datum.bool(false)
+            // If one is true and the other is unknown, return null
+            (!aIsUnknown && a.boolean && bIsUnknown) || (!bIsUnknown && b.boolean && aIsUnknown) -> Datum.nullValue(PType.bool())
+            // Both are true
             else -> Datum.bool(true)
         }
     }

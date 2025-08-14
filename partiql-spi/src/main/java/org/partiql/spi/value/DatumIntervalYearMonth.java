@@ -58,8 +58,10 @@ class DatumIntervalYearMonth implements Datum {
         return _months;
     }
 
-    @Override
     public String toString() {
-        return "INTERVAL '" + _years + "-" + _months + "' " + getType();
+        return "DatumIntervalYearMonth{" +
+                "_type=" + getType() +
+                ", _value=" + "INTERVAL '" + _years + "-" + _months + "'" +
+                '}';
     }
 }

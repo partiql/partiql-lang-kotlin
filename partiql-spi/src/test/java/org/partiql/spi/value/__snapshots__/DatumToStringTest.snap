@@ -1,0 +1,228 @@
+org.partiql.spi.value.DatumToStringTest.testDatumBagToString[datumWithMixedType]=[
+DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumBagToString[datumWithNestedType]=[
+DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumInt{_type=INTEGER, _value=2}, DatumInt{_type=INTEGER, _value=3}]}, DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}]}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumBagToString[datumWithSingleType]=[
+DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumInt{_type=INTEGER, _value=2}, DatumInt{_type=INTEGER, _value=3}]}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumBooleanToString[datumFalse]=[
+DatumBoolean{_type=BOOL, _value=false}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumBooleanToString[datumTrue]=[
+DatumBoolean{_type=BOOL, _value=true}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumByteToString[datum]=[
+DatumByte{_type=TINYINT, _value=42}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumBytesToString[datum]=[
+DatumBytes{_type=BLOB(2147483647), _value=[10, 50, 100, 127]}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumCharsToString[datum]=[
+DatumString{_type=CHAR(10), _value=test      }
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumCollectionToString[datumWithMixedType]=[
+DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumCollectionToString[datumWithNestedType]=[
+DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumInt{_type=INTEGER, _value=2}, DatumInt{_type=INTEGER, _value=3}]}, DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}]}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumCollectionToString[datumWithSingleType]=[
+DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumInt{_type=INTEGER, _value=2}, DatumInt{_type=INTEGER, _value=3}]}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumDateToString[datum]=[
+DatumDate{_type=DATE, _value=2023-12-25}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumDecimalToString[datum]=[
+DatumDecimal{_type=DECIMAL(5, 2), _value=123.45}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumDoubleToString[datum]=[
+DatumDouble{_type=DOUBLE, _value=2.718}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumFloatToString[datum]=[
+DatumFloat{_type=REAL, _value=3.14}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntToString[datum]=[
+DatumInt{_type=INTEGER, _value=42}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumDayHour]=[
+DatumIntervalDayTime{_type=DAY (2) TO HOUR, _value=INTERVAL '3 12:0:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumDayMinute]=[
+DatumIntervalDayTime{_type=DAY (2) TO MINUTE, _value=INTERVAL '2 8:45:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumDaySecond]=[
+DatumIntervalDayTime{_type=DAY (2) TO SECOND (6), _value=INTERVAL '1 2:30:45.500000000'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumDay]=[
+DatumIntervalDayTime{_type=DAY (2), _value=INTERVAL '10 0:0:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumHourMinute]=[
+DatumIntervalDayTime{_type=HOUR (2) TO MINUTE, _value=INTERVAL '0 14:30:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumHourSecond]=[
+DatumIntervalDayTime{_type=HOUR (2) TO SECOND (6), _value=INTERVAL '0 6:15:20.750000000'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumHour]=[
+DatumIntervalDayTime{_type=HOUR (2), _value=INTERVAL '0 5:0:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumMinuteSecond]=[
+DatumIntervalDayTime{_type=MINUTE (2) TO SECOND (6), _value=INTERVAL '0 0:25:30.250000000'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumMinute]=[
+DatumIntervalDayTime{_type=MINUTE (2), _value=INTERVAL '0 0:30:0.0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalDayTimeToString[datumSecond]=[
+DatumIntervalDayTime{_type=SECOND (2, 6), _value=INTERVAL '0 0:0:45.500000000'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalYearMonthToString[datumMonth]=[
+DatumIntervalYearMonth{_type=MONTH (2), _value=INTERVAL '0-15'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalYearMonthToString[datumYearMonth]=[
+DatumIntervalYearMonth{_type=YEAR (2) TO MONTH, _value=INTERVAL '2-6'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumIntervalYearMonthToString[datumYear]=[
+DatumIntervalYearMonth{_type=YEAR (2), _value=INTERVAL '15-0'}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumLongToString[datum]=[
+DatumLong{_type=BIGINT, _value=123456789}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumMissingToString[datum]=[
+DatumMissing{_type=UNKNOWN}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumMissingWithTypeToString[datum]=[
+DatumMissing{_type=INTEGER}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumNullToString[datum]=[
+DatumNull{_type=UNKNOWN}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumNullWithTypeToString[datum]=[
+DatumNull{_type=STRING}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumRowToString[datumWithDuplicateKey]=[
+DatumRow{_type=ROW(col1: STRING, col1: INTEGER), _value={col1: [DatumString{_type=STRING, _value=John}, DatumInt{_type=INTEGER, _value=30}]}}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumRowToString[datumWithNested]=[
+DatumRow{_type=ROW(col1: STRING, col2: BAG(DYNAMIC)), _value={col2: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}], col1: [DatumString{_type=STRING, _value=John}]}}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumRowToString[datum]=[
+DatumRow{_type=ROW(col1: STRING, col2: INTEGER), _value={col2: [DatumInt{_type=INTEGER, _value=30}], col1: [DatumString{_type=STRING, _value=John}]}}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumShortToString[datum]=[
+DatumShort{_type=SMALLINT, _value=1234}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumStringToString[datum]=[
+DatumString{_type=STRING, _value=hello world}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumStructToString[datumWithDuplicateKey]=[
+DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value=John}, DatumInt{_type=INTEGER, _value=30}]}}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumStructToString[datumWithNested]=[
+DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value=John}], property: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}]}}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumStructToString[datum]=[
+DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value=John}], age: [DatumInt{_type=INTEGER, _value=30}]}}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumTimeToString[datum]=[
+DatumTime{_type=TIME(0), _value=14:30:45}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumTimestampToString[datum]=[
+DatumTimestamp{_type=TIMESTAMP(0), _value=2023-12-25T14:30:45}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumTimestampzToString[datum]=[
+DatumTimestampz{_type=TIMESTAMPZ(0), _value=2023-12-25T14:30:45Z}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumTimezToString[datum]=[
+DatumTimez{_type=TIMEZ(0), _value=14:30:45Z}
+]
