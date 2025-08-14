@@ -28,7 +28,7 @@ public abstract class UpdateTargetStep extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Element extends UpdateTargetStep {
-        // TODO: Should we explicitly have an ElementInt and ElementString? Especially now that PartiQLValue is removed.
+        // TODO: Should we explicitly have an ElementInt and ElementString? Especially once PartiQLValue is removed.
 
         @NotNull
         private final Literal key;
