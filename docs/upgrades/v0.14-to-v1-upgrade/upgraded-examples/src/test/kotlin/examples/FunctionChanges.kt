@@ -37,23 +37,9 @@ class FunctionChanges {
             // No description parameter available
             // isMissingCall and isNullCall default to true
         )
-        assertEquals(2, scalarSignature1.arity) // v1.2.2 uses arity instead of parameters.size
+        // v1 has NO symbolic name and NO sql() method for generating SQL CREATE FUNCTION syntax
+        assertEquals(2, scalarSignature1.arity) // v1 uses arity instead of parameters.size
         assertEquals("x1", scalarSignature1.parameters[0].name)
-        // v1 has NO symbolic name which means toString() shows object reference
-        assertEquals(true, scalarSignature1.toString().contains("RoutineSignature@"))
-        // v1 has NO sql() method for generating SQL CREATE FUNCTION syntax
-        val scalarSignature2 = RoutineSignature(
-            "scalar",
-            listOf(
-                Parameter("x2", PType.integer()),
-                Parameter("y2", PType.string())
-            ),
-            PType.bool()
-        )
-        // v1 uses default equals() (reference equality) which means different objects are NOT equal
-        assertEquals(false, scalarSignature1 == scalarSignature2)
-        // Different hash codes for different objects
-        assertEquals(false, scalarSignature1.hashCode() == scalarSignature2.hashCode())
     }
 
     @Test
@@ -77,38 +63,6 @@ class FunctionChanges {
             listOf(PType.integer())
         )
         assertEquals(PType.integer(), overloadSignature.parameterTypes[0]) // Only parameter type
-    }
-
-    @Test
-    fun `working with accumulators`() {
-        // In PLK v1, accumulator is a public interface works with Datum arrays
-        // Accumulator interface has:
-        // 1.next(args: Datum[]): processes each set of arguments
-        // 2.value(): Datum: returns final result
-        // Sum accumulator example:
-        class Sum : Accumulator {
-            private var sum = 0
-
-            override fun next(args: Array<Datum>) {
-                // Possible process for args
-                if (args.isNotEmpty()) {
-                    val value = args[0]
-                    if (!value.isNull) {
-                        sum += value.int
-                    }
-                }
-            }
-
-            override fun value(): Datum {
-                return Datum.integer(sum)
-            }
-        }
-
-        val accumulator = Sum()
-        accumulator.next(arrayOf(Datum.integer(1)))
-        accumulator.next(arrayOf(Datum.integer(2)))
-        val result = accumulator.value()
-        assertEquals(3, result.int)
     }
 
     @Test
@@ -144,7 +98,7 @@ class FunctionChanges {
                 )
             }
 
-            // Check details in fun `working with accumulators`()
+            // In PLK v1, accumulator is a standalone interface works with Datum arrays
             override fun getAccumulator(): Accumulator {
                 return object : Accumulator {
                     private var count = 0

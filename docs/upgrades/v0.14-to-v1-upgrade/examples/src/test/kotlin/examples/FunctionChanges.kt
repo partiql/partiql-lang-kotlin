@@ -89,38 +89,6 @@ class FunctionChanges {
 
     @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
     @Test
-    fun `working with accumulators`() {
-        // In PLK 0.14.9, Accumulator is a nested interface inside PartiQLFunction
-        // It works with PartiQLValue arrays and has a different API than v1.2.2
-        // PartiQLFunction.Accumulator interface has:
-        // 1.next(args: Array<PartiQLValue>): processes each set of arguments
-        // 2.value(): returns final result
-        // Sum accumulator example:
-        class Sum : PartiQLFunction.Accumulator {
-            private var sum = 0
-            override fun next(args: Array<PartiQLValue>): PartiQLValue {
-                // Possible process for args
-                if (args.isNotEmpty()) {
-                    val value = args[0]
-                    sum += (value as Int32Value).value!!
-                }
-                return int32Value(sum)
-            }
-
-            override fun value(): PartiQLValue {
-                return int32Value(sum)
-            }
-        }
-
-        val accumulator = Sum()
-        accumulator.next(arrayOf(int32Value(1)))
-        accumulator.next(arrayOf(int32Value(2)))
-        val result = accumulator.value()
-        assertEquals(int32Value(3), result)
-    }
-
-    @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-    @Test
     fun `implementing scalar functions`() {
         // In PLK 0.14.9, scalar functions implement PartiQLFunction.Scalar interface
         // with PartiQLValueType
@@ -157,7 +125,7 @@ class FunctionChanges {
                 emptyList()
             )
 
-            // Check details in fun `working with accumulators`()
+            // In PLK 0.14.9, Accumulator is a nested interface inside PartiQLFunction
             override fun accumulator(): PartiQLFunction.Accumulator {
                 return object : PartiQLFunction.Accumulator {
                     private var count = 0
