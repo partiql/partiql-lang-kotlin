@@ -1863,10 +1863,9 @@ class PartiQLEvaluatorTest {
 
     // PartiQL Specification Section 8
     @Test
-    @Disabled("Currently, .check(<Datum>) is failing for MISSING. This needs to be resolved.")
     fun missingAndTrueStrict() = SuccessTestCase(
         input = "MISSING AND TRUE;",
-        expected = Datum.nullValue(PType.bool()), // TODO: Is this right?
+        expected = Datum.nullValue(PType.bool()),
         mode = Mode.STRICT()
     ).run()
 
@@ -1892,7 +1891,6 @@ class PartiQLEvaluatorTest {
         ).run()
 
     @Test
-    @Disabled("This broke in its introduction to the codebase on merge. See 5fb9a1ccbc7e630b0df62aa8b161d319c763c1f6.")
     // TODO: Add to conformance tests
     fun wildCard() =
         SuccessTestCase(
@@ -1934,7 +1932,6 @@ class PartiQLEvaluatorTest {
         ).run()
 
     @Test
-    @Disabled("This broke in its introduction to the codebase on merge. See 5fb9a1ccbc7e630b0df62aa8b161d319c763c1f6.")
     // TODO: add to conformance tests
     // Note that the existing pipeline produced identical result when supplying with
     // SELECT VALUE v2.name FROM e as v0, v0.books as v1, unpivot v1.authors as v2;
