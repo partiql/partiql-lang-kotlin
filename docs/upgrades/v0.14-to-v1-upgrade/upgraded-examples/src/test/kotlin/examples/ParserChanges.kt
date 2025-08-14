@@ -114,10 +114,10 @@ class ParserChanges {
 
             override fun report(error: PError) {
                 when (error.severity.code()) {
-                    // You may consider a customizing error message and throw the error, or you can record the error and then throw when it reaches maximum count
+                    // You may choose to customize the error message and then throw the error, or you can record the error and then throw when it reaches maximum count
                     // In this case, we record only without throwing
                     Severity.ERROR -> errorCollection.add(error)
-                    // You may consider a customizing error message, treat warning as an error and then throw, or you can suppress all warnings.
+                    // You may choose to customize the error message, treat warning as an error and then throw, or you can suppress all warnings.
                     // In this case, we record only without throwing
                     Severity.WARNING -> errorCollection.add(error)
                     else -> error("This shouldn't have occurred.")
@@ -132,7 +132,7 @@ class ParserChanges {
         val parser = PartiQLParser.standard()
         val parseResult: PartiQLParser.Result
         try {
-            // an invalid single quote is added before Table name foo
+            // An invalid single quote is added before Table name foo
             parseResult = parser.parse("CREATE TABLE 'foo", context)
         } catch (ex: PRuntimeException) {
             // Since we register custom error handler to record all errors instead of throwing, these exceptions were likely unexpected.
