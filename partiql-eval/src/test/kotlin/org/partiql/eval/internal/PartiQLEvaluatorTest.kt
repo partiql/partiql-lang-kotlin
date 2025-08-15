@@ -1685,7 +1685,6 @@ class PartiQLEvaluatorTest {
     }
 
     @Test
-    // @Disabled
     fun developmentTest() {
         val tc =
             SuccessTestCase(
@@ -1854,7 +1853,6 @@ class PartiQLEvaluatorTest {
 
     // PartiQL Specification Section 8
     @Test
-    @Disabled("Currently, .check(<Datum>) is failing for MISSING. This needs to be resolved.")
     fun missingAndTruePermissive() =
         SuccessTestCase(
             input = "MISSING AND TRUE;",
