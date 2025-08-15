@@ -11,6 +11,8 @@ import java.io.PrintWriter
 import java.io.Writer
 
 object ErrorMessageFormatter {
+    private const val SYSTEM_PREFIX_INTERNAL: String = "\uFDEF"
+
     private val errorCodeStringValues = ErrorCodeString.entries.toTypedArray()
     fun message(error: PError): String {
         val errorCode = errorCodeStringValues.find { it.code == error.code() }
@@ -198,7 +200,7 @@ object ErrorMessageFormatter {
         val functionName = error.getOrNull("FN_ID", Identifier::class.java)
         val candidates = error.getListOrNull("CANDIDATES", FnOverload::class.java)
         val args = error.getListOrNull("ARG_TYPES", PType::class.java)
-        val fnNameStr = prepare(functionName.toString(), " ", "")
+        val fnNameStr = prepare(unHideFunctionName(functionName), " ", "")
         val fnStr = when {
             functionName != null && args != null -> fnNameStr + args.joinToString(", ", "(", ")") { it.toString() }
             functionName != null && args == null -> fnNameStr
@@ -207,6 +209,14 @@ object ErrorMessageFormatter {
         return buildString {
             append("Undefined function$fnStr.")
         }
+    }
+
+    private fun unHideFunctionName(functionName: Identifier?): String {
+        val name = functionName?.toString() ?: ""
+
+        // The function name is prefixed with non-characters, we should remove it when displaying.
+        // When Identifier.toString() is called, the function name may be enclosed with double quote, so removePrefix() will not work.
+        return name.replace(SYSTEM_PREFIX_INTERNAL, "")
     }
 
     private fun unrecognizedToken(error: PError): String {

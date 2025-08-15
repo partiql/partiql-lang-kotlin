@@ -41,6 +41,7 @@ rewritten to their query representation
 - Add cli option -e to load PartiQL literal data as default catalog data
 - Add toString() support for all datum types
 - Add optional `distinguishNullMissing` parameter to `Datum.comparator()` to control whether `null` and `missing` are treated as equivalent or distinct in comparisons
+- Remove the extra non-character Unicode in the function name when displaying cli errors 
 
 ### Changed
 
