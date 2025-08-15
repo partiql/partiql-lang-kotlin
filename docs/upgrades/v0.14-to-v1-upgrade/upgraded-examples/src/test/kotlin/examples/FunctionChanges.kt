@@ -9,6 +9,7 @@ import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.RoutineSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.InvalidOperationException
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,9 +26,9 @@ class FunctionChanges {
     }
 
     @Test
-    fun `creating function signatures`() {
-        // In PLK v1, function signatures use RoutineSignature for both scalar and aggregation functions
-        val scalarSignature1 = RoutineSignature(
+    fun `creating scalar function signatures`() {
+        // In PLK v1, scalar function signatures use RoutineSignature
+        val scalarSignature = RoutineSignature(
             "scalar",
             listOf(
                 Parameter("x1", PType.integer()),
@@ -38,8 +39,20 @@ class FunctionChanges {
             // isMissingCall and isNullCall default to true
         )
         // v1 has NO symbolic name and NO sql() method for generating SQL CREATE FUNCTION syntax
-        assertEquals(2, scalarSignature1.arity) // v1 uses arity instead of parameters.size
-        assertEquals("x1", scalarSignature1.parameters[0].name)
+        assertEquals(2, scalarSignature.arity) // v1 uses arity instead of parameters.size
+        assertEquals("x1", scalarSignature.parameters[0].name)
+    }
+
+    @Test
+    fun `creating aggregation function signatures`() {
+        // In PLK v1, aggregation function signatures also use RoutineSignature
+        val aggregationSignature = RoutineSignature(
+            "count",
+            emptyList(),
+            PType.integer()
+        )
+        assertEquals(0, aggregationSignature.arity)
+        assertEquals(PType.integer(), aggregationSignature.returns)
     }
 
     @Test
@@ -53,7 +66,7 @@ class FunctionChanges {
         // RoutineSignature: Full signature with everything
         val fullSignature = RoutineSignature(
             "func",
-            listOf(Parameter("x", PType.integer())), // With parameter name
+            listOf(Parameter("x", PType.integer())), // With parameter name and its type
             PType.string() // With return type
         )
         assertEquals(true, fullSignature.isNullCall)
@@ -156,5 +169,23 @@ class FunctionChanges {
         val doubleResult = absDoubleFn!!.invoke(arrayOf(Datum.doublePrecision(-3.14)))
         assertEquals(5, intResult.int)
         assertEquals(3.14, doubleResult.double)
+        // Try to get an overload that doesn't exist (abs with string)
+        // Note: The current FnOverload.Builder implementation always returns the same instance
+        // regardless of argument types, so this will NOT return null. The parameter types passed
+        // to getInstance() currently have no meaning - they're ignored by the implementation.
+        // This is a limitation: getInstance() should validate argument types and return null
+        // for non-matching signatures, but the current implementation is a simple wrapper
+        // that doesn't perform proper overload resolution.
+        // You would typically pass all FnOverload(s) to your catalog and handle this at
+        // the catalog/registry level by checking signatures
+        val absStringFn = absOverloads[0].getInstance(arrayOf(PType.string()))
+        assertEquals(absIntFn, absStringFn) // Same instance returned regardless of argument types
+        // Calling the integer abs function with a string argument will throw an exception
+        try {
+            absStringFn!!.invoke(arrayOf(Datum.string("hello")))
+            assert(false) { "Should have thrown an exception" }
+        } catch (e: InvalidOperationException) {
+            assertEquals(true, e.message!!.contains("Operation \"getInt\" is not valid for type STRING"))
+        }
     }
 }

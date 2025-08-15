@@ -30,10 +30,9 @@ class FunctionChanges {
 
     @OptIn(PartiQLValueExperimental::class)
     @Test
-    fun `creating function signatures`() {
-        // In PLK 0.14.9, function signatures use FunctionSignature.Scalar for a PartiQL scalar function
-        // and FunctionSignature.Aggregation for a PartiQL aggregation function.
-        val sig1 = FunctionSignature.Scalar(
+    fun `creating scalar function signatures`() {
+        // In PLK 0.14.9, scalar function signatures use FunctionSignature.Scalar
+        val scalarSig = FunctionSignature.Scalar(
             name = "scalar",
             returns = PartiQLValueType.BOOL,
             parameters = listOf(
@@ -45,16 +44,16 @@ class FunctionChanges {
             // v0.14.9 specific property
             isDeterministic = true // Flag indicating this function always produces the same output given the same input
         )
-        assertEquals(2, sig1.parameters.size)
-        assertEquals("x1", sig1.parameters[0].name)
+        assertEquals(2, scalarSig.parameters.size)
+        assertEquals("x1", scalarSig.parameters[0].name)
         // v0.14.9 has symbolic name for debugging/identification
-        assertEquals("SCALAR__INT_STRING__BOOL", sig1.specific)
+        assertEquals("SCALAR__INT_STRING__BOOL", scalarSig.specific)
         // toString() uses specific
-        assertEquals("SCALAR__INT_STRING__BOOL", sig1.toString())
+        assertEquals("SCALAR__INT_STRING__BOOL", scalarSig.toString())
         // In v0.14.9, Scalar signatures can generate SQL CREATE FUNCTION syntax
-        val sql = sig1.sql()
+        val sql = scalarSig.sql()
         assertEquals(true, sql.contains("CREATE FUNCTION"))
-        val sig2 = FunctionSignature.Scalar(
+        val scalarSig2 = FunctionSignature.Scalar(
             name = "scalar",
             returns = PartiQLValueType.BOOL,
             parameters = listOf(
@@ -64,10 +63,28 @@ class FunctionChanges {
             isNullCall = false,
             isDeterministic = true
         )
-        // v0.14.9 has custom equals() ignoring param names and description
-        assertEquals(true, sig1 == sig2)
-        // hashCode() does not ignores description
-        assertEquals(false, sig1.hashCode() == sig2.hashCode())
+        // v0.14.9 has a custom equals() implementation ignoring param names and description
+        assertEquals(true, scalarSig == scalarSig2)
+        // hashCode() does not ignore the description
+        assertEquals(false, scalarSig.hashCode() == scalarSig2.hashCode())
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun `creating aggregation function signatures`() {
+        // In PLK 0.14.9, aggregation function signatures use FunctionSignature.Aggregation
+        val aggregationSig = FunctionSignature.Aggregation(
+            name = "count",
+            returns = PartiQLValueType.INT,
+            parameters = emptyList(),
+            description = "this is an aggregation function",
+            // v0.14.9 specific property
+            isDecomposable = true // Flag indicating this aggregation can be decomposed
+        )
+        assertEquals(0, aggregationSig.parameters.size)
+        assertEquals(PartiQLValueType.INT, aggregationSig.returns)
+        // v0.14.9 has NO symbolic name and NO sql() method for aggregation function signatures
+        // It has similar custom equals() and hashCode() supports
     }
 
     @OptIn(PartiQLValueExperimental::class)
@@ -188,5 +205,8 @@ class FunctionChanges {
         val doubleResult = absDoubleOverload.invoke(arrayOf(float64Value(-3.14)))
         assertEquals(int32Value(5), intResult)
         assertEquals(float64Value(3.14), doubleResult)
+        // Example: In v0.14.9, you would need to manually check if an overload exists
+        // There's no built-in mechanism that returns null
+        // You would typically handle this at the catalog/registry level by checking signatures
     }
 }
