@@ -12,17 +12,6 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
-import org.partiql.value.PartiQLValue
-import org.partiql.value.bagValue
-import org.partiql.value.boolValue
-import org.partiql.value.decimalValue
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.listValue
-import org.partiql.value.missingValue
-import org.partiql.value.nullValue
-import org.partiql.value.stringValue
-import org.partiql.value.structValue
 import java.math.BigDecimal
 
 /**
@@ -78,49 +67,51 @@ class PartiQLEvaluatorTest {
                 input = """
                     CAST(20 AS DECIMAL(10, 5));
                 """.trimIndent(),
-                expected = decimalValue(BigDecimal.valueOf(2000000, 5))
+                expected = Datum.decimal(BigDecimal.valueOf(2000000, 5))
             ),
             SuccessTestCase(
                 input = """
                     CAST(20 AS DECIMAL(10, 3));
                 """.trimIndent(),
-                expected = decimalValue(BigDecimal.valueOf(20000, 3))
+                expected = Datum.decimal(BigDecimal.valueOf(20000, 3))
             ),
             SuccessTestCase(
                 input = """
                     CAST(20 AS DECIMAL(2, 0));
                 """.trimIndent(),
-                expected = decimalValue(BigDecimal.valueOf(20, 0))
+                expected = Datum.decimal(BigDecimal.valueOf(20, 0))
             ),
             SuccessTestCase(
                 input = """
                     CAST(20 AS DECIMAL(1, 0));
                 """.trimIndent(),
-                expected = missingValue(),
+                expected = Datum.missing(),
                 mode = Mode.PERMISSIVE()
             ),
             SuccessTestCase(
                 input = """
                     1 + 2.0
                 """.trimIndent(),
-                expected = decimalValue(BigDecimal.valueOf(30, 1))
+                expected = Datum.decimal(BigDecimal.valueOf(30, 1))
             ),
             SuccessTestCase(
                 input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
-                expected = bagValue(
-                    int32Value(0),
-                    int32Value(100),
-                    decimalValue(BigDecimal.valueOf(2000, 1)),
-                    decimalValue(BigDecimal.valueOf(3000, 1)),
+                expected = Datum.bagVararg(
+                    Datum.integer(0),
+                    Datum.integer(100),
+                    Datum.decimal(BigDecimal.valueOf(2000, 1)),
+                    Datum.decimal(BigDecimal.valueOf(3000, 1)),
                 )
             ),
-            // TODO: Use Datum for assertions. Currently, PartiQLValue doesn't support parameterized CHAR/VARCHAR
-//            SuccessTestCase(
-//                input = """
-//                    CAST(20 AS CHAR(2));
-//                """.trimIndent(),
-//                expected = charValue("20"),
-//            ),
+            SuccessTestCase(
+                input = """
+                    CAST(20 AS CHAR(2));
+                """.trimIndent(),
+                expected = Datum.character(
+                    "20".toString(),
+                    2
+                ),
+            ),
         )
 
         @JvmStatic
@@ -130,9 +121,9 @@ class PartiQLEvaluatorTest {
                     SELECT VALUE t.a
                     FROM t;
                 """.trimIndent(),
-                expected = bagValue(
-                    int64Value(1),
-                    int64Value(2),
+                expected = Datum.bagVararg(
+                    Datum.bigint(1),
+                    Datum.bigint(2)
                 ),
                 globals = listOf(
                     Global(
@@ -151,11 +142,11 @@ class PartiQLEvaluatorTest {
                     SELECT VALUE t1.a
                     FROM t AS t1, t AS t2;
                 """.trimIndent(),
-                expected = bagValue(
-                    int64Value(1),
-                    int64Value(1),
-                    int64Value(2),
-                    int64Value(2),
+                expected = Datum.bagVararg(
+                    Datum.bigint(1),
+                    Datum.bigint(1),
+                    Datum.bigint(2),
+                    Datum.bigint(2)
                 ),
                 globals = listOf(
                     Global(
@@ -175,14 +166,23 @@ class PartiQLEvaluatorTest {
                         (SELECT c.name FROM customers c WHERE c.id=o.custId) AS customerName
                     FROM orders o
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "orderName" to stringValue("foo")
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of(
+                            "orderName",
+                            Datum.string("foo")
+                        )
                     ),
-                    structValue(
-                        "orderName" to stringValue("bar"),
-                        "customerName" to stringValue("Helen")
-                    ),
+                    Datum.struct(
+                        Field.of(
+                            "orderName",
+                            Datum.string("bar")
+                        ),
+                        Field.of(
+                            "customerName",
+                            Datum.string("Helen")
+                        )
+                    )
                 ),
                 globals = listOf(
                     Global(
@@ -216,10 +216,25 @@ class PartiQLEvaluatorTest {
                     LEFT OUTER JOIN << 0, 2, 3 >> rhs
                     ON lhs = rhs
                 """.trimIndent(),
-                expected = bagValue(
-                    listValue(int32Value(0), int32Value(0)),
-                    listValue(int32Value(1), int32Value(null)),
-                    listValue(int32Value(2), int32Value(2)),
+                expected = Datum.bagVararg(
+                    Datum.array(
+                        listOf(
+                            Datum.integer(0),
+                            Datum.integer(0)
+                        )
+                    ),
+                    Datum.array(
+                        listOf(
+                            Datum.integer(1),
+                            Datum.nullValue(PType.integer())
+                        )
+                    ),
+                    Datum.array(
+                        listOf(
+                            Datum.integer(2),
+                            Datum.integer(2)
+                        )
+                    )
                 )
             ),
             // LEFT OUTER JOIN -- RHS Empty
@@ -235,10 +250,10 @@ class PartiQLEvaluatorTest {
                     ) rhs
                     ON lhs = rhs
                 """.trimIndent(),
-                expected = bagValue(
-                    listValue(int32Value(0), int32Value(null)),
-                    listValue(int32Value(1), int32Value(null)),
-                    listValue(int32Value(2), int32Value(null)),
+                expected = Datum.bagVararg(
+                    Datum.array(listOf(Datum.integer(0), Datum.nullValue(PType.integer()))),
+                    Datum.array(listOf(Datum.integer(1), Datum.nullValue(PType.integer()))),
+                    Datum.array(listOf(Datum.integer(2), Datum.nullValue(PType.integer()))),
                 )
             ),
             // LEFT OUTER JOIN -- LHS Empty
@@ -249,7 +264,7 @@ class PartiQLEvaluatorTest {
                     LEFT OUTER JOIN << 0, 2, 3>> rhs
                     ON lhs = rhs
                 """.trimIndent(),
-                expected = bagValue<PartiQLValue>()
+                expected = Datum.bag(emptyList())
             ),
             // LEFT OUTER JOIN -- No Matches
             SuccessTestCase(
@@ -259,10 +274,25 @@ class PartiQLEvaluatorTest {
                     LEFT OUTER JOIN << 3, 4, 5 >> rhs
                     ON lhs = rhs
                 """.trimIndent(),
-                expected = bagValue(
-                    listValue(int32Value(0), int32Value(null)),
-                    listValue(int32Value(1), int32Value(null)),
-                    listValue(int32Value(2), int32Value(null)),
+                expected = Datum.bagVararg(
+                    Datum.array(
+                        listOf(
+                            Datum.integer(0),
+                            Datum.nullValue(PType.integer())
+                        )
+                    ),
+                    Datum.array(
+                        listOf(
+                            Datum.integer(1),
+                            Datum.nullValue(PType.integer())
+                        )
+                    ),
+                    Datum.array(
+                        listOf(
+                            Datum.integer(2),
+                            Datum.nullValue(PType.integer())
+                        )
+                    )
                 )
             ),
             // RIGHT OUTER JOIN -- Easy
@@ -273,10 +303,10 @@ class PartiQLEvaluatorTest {
                     RIGHT OUTER JOIN << 0, 2, 3 >> rhs
                     ON lhs = rhs
                 """.trimIndent(),
-                expected = bagValue(
-                    listValue(int32Value(0), int32Value(0)),
-                    listValue(int32Value(2), int32Value(2)),
-                    listValue(int32Value(null), int32Value(3)),
+                expected = Datum.bagVararg(
+                    Datum.array(listOf(Datum.integer(0), Datum.integer(0))),
+                    Datum.array(listOf(Datum.integer(2), Datum.integer(2))),
+                    Datum.array(listOf(Datum.nullValue(PType.integer()), Datum.integer(3))),
                 )
             ),
             // RIGHT OUTER JOIN -- RHS Empty
@@ -287,7 +317,7 @@ class PartiQLEvaluatorTest {
                     RIGHT OUTER JOIN <<>> rhs
                     ON lhs = rhs
                 """.trimIndent(),
-                expected = bagValue<PartiQLValue>()
+                expected = Datum.bag(emptyList())
             ),
             // RIGHT OUTER JOIN -- LHS Empty
             SuccessTestCase(
@@ -301,10 +331,10 @@ class PartiQLEvaluatorTest {
                         << 0, 2, 3>> rhs
                     ON lhs = rhs
                 """.trimIndent(),
-                expected = bagValue<PartiQLValue>(
-                    listValue(int32Value(null), int32Value(0)),
-                    listValue(int32Value(null), int32Value(2)),
-                    listValue(int32Value(null), int32Value(3)),
+                expected = Datum.bagVararg(
+                    Datum.array(listOf(Datum.nullValue(PType.integer()), Datum.integer(0))),
+                    Datum.array(listOf(Datum.nullValue(PType.integer()), Datum.integer(2))),
+                    Datum.array(listOf(Datum.nullValue(PType.integer()), Datum.integer(3))),
                 )
             ),
             // RIGHT OUTER JOIN -- No Matches
@@ -315,10 +345,10 @@ class PartiQLEvaluatorTest {
                     RIGHT OUTER JOIN << 3, 4, 5 >> rhs
                     ON lhs = rhs
                 """.trimIndent(),
-                expected = bagValue(
-                    listValue(int32Value(null), int32Value(3)),
-                    listValue(int32Value(null), int32Value(4)),
-                    listValue(int32Value(null), int32Value(5)),
+                expected = Datum.bagVararg(
+                    Datum.array(listOf(Datum.nullValue(PType.integer()), Datum.integer(3))),
+                    Datum.array(listOf(Datum.nullValue(PType.integer()), Datum.integer(4))),
+                    Datum.array(listOf(Datum.nullValue(PType.integer()), Datum.integer(5))),
                 )
             ),
             // LEFT OUTER JOIN -- LATERAL
@@ -329,10 +359,10 @@ class PartiQLEvaluatorTest {
                     LEFT OUTER JOIN lhs AS rhs
                     ON lhs[2] = rhs
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(2),
-                    int32Value(12),
-                    int32Value(22),
+                expected = Datum.bagVararg(
+                    Datum.integer(2),
+                    Datum.integer(12),
+                    Datum.integer(22),
                 )
             ),
             // INNER JOIN -- LATERAL
@@ -343,10 +373,10 @@ class PartiQLEvaluatorTest {
                     INNER JOIN lhs AS rhs
                     ON lhs[2] = rhs
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(2),
-                    int32Value(12),
-                    int32Value(22),
+                expected = Datum.bagVararg(
+                    Datum.integer(2),
+                    Datum.integer(12),
+                    Datum.integer(22),
                 )
             ),
         )
@@ -360,9 +390,9 @@ class PartiQLEvaluatorTest {
                         FROM <<5, 6>> AS t2
                     ) FROM <<0, 10>> AS t1;
                 """.trimIndent(),
-                expected = bagValue(
-                    bagValue(int32Value(5), int32Value(6)),
-                    bagValue(int32Value(15), int32Value(16))
+                expected = Datum.bagVararg(
+                    Datum.bagVararg(Datum.integer(5), Datum.integer(6)),
+                    Datum.bagVararg(Datum.integer(15), Datum.integer(16))
                 )
             ),
             SuccessTestCase(
@@ -372,7 +402,7 @@ class PartiQLEvaluatorTest {
                         FROM <<5>> AS t2
                     ) FROM <<0, 10>> AS t1;
                 """.trimIndent(),
-                expected = bagValue(int32Value(5), int32Value(15))
+                expected = Datum.bagVararg(Datum.integer(5), Datum.integer(15))
             ),
             SuccessTestCase(
                 input = """
@@ -382,9 +412,9 @@ class PartiQLEvaluatorTest {
                     ) AS t1_plus_t2
                     FROM <<0, 10>> AS t1;
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue("t1_plus_t2" to bagValue(int32Value(5))),
-                    structValue("t1_plus_t2" to bagValue(int32Value(15)))
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("t1_plus_t2", Datum.bagVararg(Datum.integer(5)))),
+                    Datum.struct(Field.of("t1_plus_t2", Datum.bagVararg(Datum.integer(15))))
                 )
             ),
             SuccessTestCase(
@@ -399,29 +429,29 @@ class PartiQLEvaluatorTest {
                         ) AS t1_plus_t2
                     FROM <<0, 10>> AS t1;
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue("t1_plus_t2" to int32Value(60)),
-                    structValue("t1_plus_t2" to int32Value(330))
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("t1_plus_t2", Datum.integer(60))),
+                    Datum.struct(Field.of("t1_plus_t2", Datum.integer(330)))
                 )
             ),
             SuccessTestCase(
                 input = """
                     1 + (SELECT t.a FROM << { 'a': 3 } >> AS t)
                 """.trimIndent(),
-                expected = int32Value(4)
+                expected = Datum.integer(4)
             ),
             SuccessTestCase(
                 input = """
                     SELECT VALUE element
                     FROM << { 'a': [0, 1, 2] }, { 'a': [3, 4, 5] } >> AS t, t.a AS element
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(0),
-                    int32Value(1),
-                    int32Value(2),
-                    int32Value(3),
-                    int32Value(4),
-                    int32Value(5),
+                expected = Datum.bagVararg(
+                    Datum.integer(0),
+                    Datum.integer(1),
+                    Datum.integer(2),
+                    Datum.integer(3),
+                    Datum.integer(4),
+                    Datum.integer(5),
                 )
             ),
             SuccessTestCase(
@@ -429,13 +459,13 @@ class PartiQLEvaluatorTest {
                     SELECT VALUE element
                     FROM << { 'a': { 'c': [0, 1, 2] } }, { 'a': { 'c': [3, 4, 5] } } >> AS t, t.a AS b, b.c AS element
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(0),
-                    int32Value(1),
-                    int32Value(2),
-                    int32Value(3),
-                    int32Value(4),
-                    int32Value(5),
+                expected = Datum.bagVararg(
+                    Datum.integer(0),
+                    Datum.integer(1),
+                    Datum.integer(2),
+                    Datum.integer(3),
+                    Datum.integer(4),
+                    Datum.integer(5),
                 )
             ),
             SuccessTestCase(
@@ -444,19 +474,19 @@ class PartiQLEvaluatorTest {
                     FROM << { 'a': { 'b': [100, 200], 'c': [0, 1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4, 5] } } >>
                         AS t, t.a AS t_a, t_a.b AS t_a_b, t_a.c AS t_a_c
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(100),
-                    int32Value(101),
-                    int32Value(102),
-                    int32Value(200),
-                    int32Value(201),
-                    int32Value(202),
-                    int32Value(303),
-                    int32Value(304),
-                    int32Value(305),
-                    int32Value(403),
-                    int32Value(404),
-                    int32Value(405),
+                expected = Datum.bagVararg(
+                    Datum.integer(100),
+                    Datum.integer(101),
+                    Datum.integer(102),
+                    Datum.integer(200),
+                    Datum.integer(201),
+                    Datum.integer(202),
+                    Datum.integer(303),
+                    Datum.integer(304),
+                    Datum.integer(305),
+                    Datum.integer(403),
+                    Datum.integer(404),
+                    Datum.integer(405),
                 )
             ),
             SuccessTestCase(
@@ -465,23 +495,23 @@ class PartiQLEvaluatorTest {
                     FROM << { 'a': { 'b': [100, 200], 'c': [1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4] } } >>
                         AS t, t.a AS t_a, t_a.b AS t_a_b, t_a.c AS t_a_c, t.a.c AS t_a_c_original
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(102),
-                    int32Value(103),
-                    int32Value(103),
-                    int32Value(104),
-                    int32Value(202),
-                    int32Value(203),
-                    int32Value(203),
-                    int32Value(204),
-                    int32Value(306),
-                    int32Value(307),
-                    int32Value(307),
-                    int32Value(308),
-                    int32Value(406),
-                    int32Value(407),
-                    int32Value(407),
-                    int32Value(408),
+                expected = Datum.bagVararg(
+                    Datum.integer(102),
+                    Datum.integer(103),
+                    Datum.integer(103),
+                    Datum.integer(104),
+                    Datum.integer(202),
+                    Datum.integer(203),
+                    Datum.integer(203),
+                    Datum.integer(204),
+                    Datum.integer(306),
+                    Datum.integer(307),
+                    Datum.integer(307),
+                    Datum.integer(308),
+                    Datum.integer(406),
+                    Datum.integer(407),
+                    Datum.integer(407),
+                    Datum.integer(408),
                 )
             ),
             SuccessTestCase(
@@ -490,23 +520,23 @@ class PartiQLEvaluatorTest {
                     FROM << { 'a': { 'b': [100, 200], 'c': [1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4] } } >>
                         AS t, t.a AS t_a, t_a.b AS t_a_b, t_a.c AS t_a_c, (SELECT VALUE d FROM t.a.c AS d) AS t_a_c_original
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(102),
-                    int32Value(103),
-                    int32Value(103),
-                    int32Value(104),
-                    int32Value(202),
-                    int32Value(203),
-                    int32Value(203),
-                    int32Value(204),
-                    int32Value(306),
-                    int32Value(307),
-                    int32Value(307),
-                    int32Value(308),
-                    int32Value(406),
-                    int32Value(407),
-                    int32Value(407),
-                    int32Value(408),
+                expected = Datum.bagVararg(
+                    Datum.integer(102),
+                    Datum.integer(103),
+                    Datum.integer(103),
+                    Datum.integer(104),
+                    Datum.integer(202),
+                    Datum.integer(203),
+                    Datum.integer(203),
+                    Datum.integer(204),
+                    Datum.integer(306),
+                    Datum.integer(307),
+                    Datum.integer(307),
+                    Datum.integer(308),
+                    Datum.integer(406),
+                    Datum.integer(407),
+                    Datum.integer(407),
+                    Datum.integer(408),
                 )
             ),
             SuccessTestCase(
@@ -519,23 +549,23 @@ class PartiQLEvaluatorTest {
                         t_a.c AS t_a_c,
                         (SELECT VALUE d + (SELECT b_og FROM t.a.b AS b_og WHERE b_og = 200 OR b_og = 400) FROM t.a.c AS d) AS t_a_c_original
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(302),
-                    int32Value(303),
-                    int32Value(303),
-                    int32Value(304),
-                    int32Value(402),
-                    int32Value(403),
-                    int32Value(403),
-                    int32Value(404),
-                    int32Value(706),
-                    int32Value(707),
-                    int32Value(707),
-                    int32Value(708),
-                    int32Value(806),
-                    int32Value(807),
-                    int32Value(807),
-                    int32Value(808),
+                expected = Datum.bagVararg(
+                    Datum.integer(302),
+                    Datum.integer(303),
+                    Datum.integer(303),
+                    Datum.integer(304),
+                    Datum.integer(402),
+                    Datum.integer(403),
+                    Datum.integer(403),
+                    Datum.integer(404),
+                    Datum.integer(706),
+                    Datum.integer(707),
+                    Datum.integer(707),
+                    Datum.integer(708),
+                    Datum.integer(806),
+                    Datum.integer(807),
+                    Datum.integer(807),
+                    Datum.integer(808),
                 )
             ),
             SuccessTestCase(
@@ -553,23 +583,23 @@ class PartiQLEvaluatorTest {
                         t_a.c AS t_a_c,
                         (SELECT VALUE d + (SELECT b_og FROM t.a.b AS b_og WHERE b_og = 200 OR b_og = 400) FROM t.a.c AS d) AS t_a_c_original
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(304),
-                    int32Value(305),
-                    int32Value(305),
-                    int32Value(306),
-                    int32Value(404),
-                    int32Value(405),
-                    int32Value(405),
-                    int32Value(406),
-                    int32Value(710),
-                    int32Value(711),
-                    int32Value(711),
-                    int32Value(712),
-                    int32Value(810),
-                    int32Value(811),
-                    int32Value(811),
-                    int32Value(812),
+                expected = Datum.bagVararg(
+                    Datum.integer(304),
+                    Datum.integer(305),
+                    Datum.integer(305),
+                    Datum.integer(306),
+                    Datum.integer(404),
+                    Datum.integer(405),
+                    Datum.integer(405),
+                    Datum.integer(406),
+                    Datum.integer(710),
+                    Datum.integer(711),
+                    Datum.integer(711),
+                    Datum.integer(712),
+                    Datum.integer(810),
+                    Datum.integer(811),
+                    Datum.integer(811),
+                    Datum.integer(812),
                 )
             ),
             SuccessTestCase(
@@ -587,23 +617,23 @@ class PartiQLEvaluatorTest {
                         t_a.c AS t_a_c,
                         (SELECT VALUE d + (SELECT b_og + t_a_c FROM t.a.b AS b_og WHERE b_og = 200 OR b_og = 400) FROM t.a.c AS d) AS t_a_c_original
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(306),
-                    int32Value(307),
-                    int32Value(309),
-                    int32Value(310),
-                    int32Value(406),
-                    int32Value(407),
-                    int32Value(409),
-                    int32Value(410),
-                    int32Value(716),
-                    int32Value(717),
-                    int32Value(719),
-                    int32Value(720),
-                    int32Value(816),
-                    int32Value(817),
-                    int32Value(819),
-                    int32Value(820),
+                expected = Datum.bagVararg(
+                    Datum.integer(306),
+                    Datum.integer(307),
+                    Datum.integer(309),
+                    Datum.integer(310),
+                    Datum.integer(406),
+                    Datum.integer(407),
+                    Datum.integer(409),
+                    Datum.integer(410),
+                    Datum.integer(716),
+                    Datum.integer(717),
+                    Datum.integer(719),
+                    Datum.integer(720),
+                    Datum.integer(816),
+                    Datum.integer(817),
+                    Datum.integer(819),
+                    Datum.integer(820),
                 )
             )
         )
@@ -618,18 +648,24 @@ class PartiQLEvaluatorTest {
                     FROM [{'sensor':1, 'co':0.4}, {'sensor':1, 'co':0.2}, {'sensor':2, 'co':0.3}] AS l
                     GROUP BY l.sensor AS sensor GROUP AS g
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "sensor" to int32Value(1),
-                        "readings" to bagValue(
-                            decimalValue(0.4.toBigDecimal()),
-                            decimalValue(0.2.toBigDecimal())
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("sensor", Datum.integer(1)),
+                        Field.of(
+                            "readings",
+                            Datum.bagVararg(
+                                Datum.decimal(0.4.toBigDecimal()),
+                                Datum.decimal(0.2.toBigDecimal())
+                            )
                         )
                     ),
-                    structValue(
-                        "sensor" to int32Value(2),
-                        "readings" to bagValue(
-                            decimalValue(0.3.toBigDecimal())
+                    Datum.struct(
+                        Field.of("sensor", Datum.integer(2)),
+                        Field.of(
+                            "readings",
+                            Datum.bagVararg(
+                                Datum.decimal(0.3.toBigDecimal())
+                            )
                         )
                     ),
                 )
@@ -640,16 +676,19 @@ class PartiQLEvaluatorTest {
                     FROM [{ 'col1':1 }, { 'col1':1 }] simple_1_col_1_group
                     GROUP BY col1 GROUP AS g
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "col1" to int32Value(1),
-                        "g" to bagValue(
-                            structValue(
-                                "simple_1_col_1_group" to structValue("col1" to int32Value(1))
-                            ),
-                            structValue(
-                                "simple_1_col_1_group" to structValue("col1" to int32Value(1))
-                            ),
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("col1", Datum.integer(1)),
+                        Field.of(
+                            "g",
+                            Datum.bagVararg(
+                                Datum.struct(
+                                    Field.of("simple_1_col_1_group", Datum.struct(Field.of("col1", Datum.integer(1))))
+                                ),
+                                Datum.struct(
+                                    Field.of("simple_1_col_1_group", Datum.struct(Field.of("col1", Datum.integer(1))))
+                                ),
+                            )
                         )
                     ),
                 )
@@ -663,9 +702,9 @@ class PartiQLEvaluatorTest {
                     ] AS p
                     GROUP BY p.supplierId_mixed
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "supplierId_mixed" to nullValue(),
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("supplierId_mixed", Datum.nullValue()),
                     ),
                 )
             ),
@@ -675,16 +714,22 @@ class PartiQLEvaluatorTest {
                     FROM << { 'a': 1, 'b': 2 } >> AS t
                     GROUP BY a, b, a + b GROUP AS g
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "a" to int32Value(1),
-                        "b" to int32Value(2),
-                        "_3" to int32Value(3),
-                        "g" to bagValue(
-                            structValue(
-                                "t" to structValue(
-                                    "a" to int32Value(1),
-                                    "b" to int32Value(2),
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1)),
+                        Field.of("b", Datum.integer(2)),
+                        Field.of("_3", Datum.integer(3)),
+                        Field.of(
+                            "g",
+                            Datum.bagVararg(
+                                Datum.struct(
+                                    Field.of(
+                                        "t",
+                                        Datum.struct(
+                                            Field.of("a", Datum.integer(1)),
+                                            Field.of("b", Datum.integer(2)),
+                                        )
+                                    )
                                 )
                             )
                         ),
@@ -697,36 +742,36 @@ class PartiQLEvaluatorTest {
         fun sanityTestsCases() = listOf(
             SuccessTestCase(
                 input = "SELECT VALUE 1 FROM <<0, 1>>;",
-                expected = bagValue(int32Value(1), int32Value(1))
+                expected = Datum.bagVararg(Datum.integer(1), Datum.integer(1))
             ),
             SuccessTestCase(
                 input = "SELECT VALUE t FROM <<10, 20, 30>> AS t;",
-                expected = bagValue(int32Value(10), int32Value(20), int32Value(30))
+                expected = Datum.bagVararg(Datum.integer(10), Datum.integer(20), Datum.integer(30))
             ),
             SuccessTestCase(
                 input = "SELECT VALUE t FROM <<true, false, true, false, false, false>> AS t WHERE t;",
-                expected = bagValue(boolValue(true), boolValue(true))
+                expected = Datum.bagVararg(Datum.bool(true), Datum.bool(true))
             ),
             SuccessTestCase(
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t, << { 'b': 2 } >> s;",
-                expected = bagValue(structValue("a" to int32Value(1), "b" to int32Value(2)))
+                expected = Datum.bagVararg(Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2))))
             ),
             SuccessTestCase(
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t LEFT JOIN << { 'b': 2 } >> s ON false;",
-                expected = bagValue(structValue("a" to int32Value(1), "b" to nullValue())),
+                expected = Datum.bagVararg(Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.nullValue()))),
                 mode = Mode.STRICT()
             ),
             SuccessTestCase(
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;",
-                expected = bagValue(
-                    structValue(
-                        "a" to int32Value(1),
-                        "b" to nullValue()
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1)),
+                        Field.of("b", Datum.nullValue())
                     ),
-                    structValue(
-                        "a" to nullValue(),
-                        "b" to int32Value(2)
-                    ),
+                    Datum.struct(
+                        Field.of("a", Datum.nullValue()),
+                        Field.of("b", Datum.integer(2))
+                    )
                 )
             ),
             SuccessTestCase(
@@ -737,10 +782,10 @@ class PartiQLEvaluatorTest {
                         { 'c': 'hello' }
                     );
                 """.trimIndent(),
-                expected = structValue(
-                    "a" to int32Value(1),
-                    "b" to boolValue(true),
-                    "c" to stringValue("hello")
+                expected = Datum.struct(
+                    Field.of("a", Datum.integer(1)),
+                    Field.of("b", Datum.bool(true)),
+                    Field.of("c", Datum.string("hello"))
                 )
             ),
             SuccessTestCase(
@@ -753,15 +798,15 @@ class PartiQLEvaluatorTest {
                     END
                     ;
                 """.trimIndent(),
-                expected = stringValue("isTrue")
+                expected = Datum.string("isTrue")
             ),
             SuccessTestCase(
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON TRUE;",
-                expected = bagValue(
-                    structValue(
-                        "a" to int32Value(1),
-                        "b" to int32Value(2)
-                    ),
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1)),
+                        Field.of("b", Datum.integer(2))
+                    )
                 )
             ),
             SuccessTestCase(
@@ -772,7 +817,7 @@ class PartiQLEvaluatorTest {
                         { 'c': 'hello' }
                     );
                 """.trimIndent(),
-                expected = structValue<PartiQLValue>(null)
+                expected = Datum.nullValue(PType.struct())
             ),
             SuccessTestCase(
                 input = """
@@ -783,7 +828,7 @@ class PartiQLEvaluatorTest {
                     END
                     ;
                 """.trimIndent(),
-                expected = stringValue(null)
+                expected = Datum.nullValue(PType.string())
             ),
             SuccessTestCase(
                 input = """
@@ -793,7 +838,7 @@ class PartiQLEvaluatorTest {
                         { 'c': 'hello' }
                     );
                 """.trimIndent(),
-                expected = missingValue()
+                expected = Datum.missing()
             ),
             SuccessTestCase(
                 input = """
@@ -803,11 +848,11 @@ class PartiQLEvaluatorTest {
                         { 'c': 'hello' }
                     );
                 """.trimIndent(),
-                expected = structValue(
-                    "a" to int32Value(1),
-                    "b" to boolValue(false),
-                    "b" to boolValue(true),
-                    "c" to stringValue("hello")
+                expected = Datum.struct(
+                    Field.of("a", Datum.integer(1)),
+                    Field.of("b", Datum.bool(false)),
+                    Field.of("b", Datum.bool(true)),
+                    Field.of("c", Datum.string("hello"))
                 )
             ),
             SuccessTestCase(
@@ -820,11 +865,11 @@ class PartiQLEvaluatorTest {
                         { 'b': TRUE }
                     >> AS s
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "a" to int32Value(1),
-                        "b" to boolValue(false),
-                        "b" to boolValue(true)
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1)),
+                        Field.of("b", Datum.bool(false)),
+                        Field.of("b", Datum.bool(true))
                     )
                 )
             ),
@@ -839,43 +884,43 @@ class PartiQLEvaluatorTest {
                         { 'c': 'hello', 'd': 'world' }
                     >> AS t
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "a" to int32Value(1),
-                        "b" to nullValue(),
-                        "hello" to stringValue("world")
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1)),
+                        Field.of("b", Datum.nullValue()),
+                        Field.of("hello", Datum.string("world"))
                     )
                 )
             ),
             SuccessTestCase(
                 input = "SELECT v, i FROM << 'a', 'b', 'c' >> AS v AT i",
-                expected = bagValue(
-                    structValue(
-                        "v" to stringValue("a"),
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("v", Datum.string("a"))
                     ),
-                    structValue(
-                        "v" to stringValue("b"),
+                    Datum.struct(
+                        Field.of("v", Datum.string("b"))
                     ),
-                    structValue(
-                        "v" to stringValue("c"),
-                    ),
+                    Datum.struct(
+                        Field.of("v", Datum.string("c"))
+                    )
                 )
             ),
             SuccessTestCase(
                 input = "SELECT DISTINCT VALUE t FROM <<true, false, true, false, false, false>> AS t;",
-                expected = bagValue(boolValue(true), boolValue(false))
+                expected = Datum.bagVararg(Datum.bool(true), Datum.bool(false))
             ),
             SuccessTestCase(
                 input = "SELECT DISTINCT VALUE t FROM <<true, false, true, false, false, false>> AS t WHERE t = TRUE;",
-                expected = bagValue(boolValue(true))
+                expected = Datum.bagVararg(Datum.bool(true))
             ),
             SuccessTestCase(
                 input = "100 + 50;",
-                expected = int32Value(150)
+                expected = Datum.integer(150)
             ),
             SuccessTestCase(
                 input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2, 3>> AS t;",
-                expected = bagValue(int32Value(0), int32Value(100), int32Value(200), int32Value(300))
+                expected = Datum.bagVararg(Datum.integer(0), Datum.integer(100), Datum.integer(200), Datum.integer(300))
             ),
             SuccessTestCase(
                 input = """
@@ -885,10 +930,10 @@ class PartiQLEvaluatorTest {
                         { 'k': 'c', 'v': 'z' }
                     >> AS x
                 """.trimIndent(),
-                expected = structValue(
-                    "a" to stringValue("x"),
-                    "b" to stringValue("y"),
-                    "c" to stringValue("z"),
+                expected = Datum.struct(
+                    Field.of("a", Datum.string("x")),
+                    Field.of("b", Datum.string("y")),
+                    Field.of("c", Datum.string("z"))
                 )
             ),
             SuccessTestCase(
@@ -899,16 +944,17 @@ class PartiQLEvaluatorTest {
                         {'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}
                     >> AS t
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "t" to structValue(
-                            "a" to structValue<PartiQLValue>(
-                                // field `b` excluded
-                            ),
-                            "foo" to stringValue("bar"),
-                            "foo2" to stringValue("bar2")
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of(
+                            "t",
+                            Datum.struct(
+                                Field.of("a", Datum.struct()),
+                                Field.of("foo", Datum.string("bar")),
+                                Field.of("foo2", Datum.string("bar2"))
+                            )
                         )
-                    ),
+                    )
                 )
             ),
             SuccessTestCase(
@@ -937,19 +983,30 @@ class PartiQLEvaluatorTest {
                         }
                     }] AS t
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "a" to structValue(
-                            "b" to structValue(
-                                "c" to listValue(
-                                    structValue(
-                                        "field_y" to int32Value(0)
-                                    ),
-                                    structValue(
-                                        "field_y" to int32Value(1)
-                                    ),
-                                    structValue(
-                                        "field_y" to int32Value(2)
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of(
+                            "a",
+                            Datum.struct(
+                                Field.of(
+                                    "b",
+                                    Datum.struct(
+                                        Field.of(
+                                            "c",
+                                            Datum.array(
+                                                listOf(
+                                                    Datum.struct(
+                                                        Field.of("field_y", Datum.integer(0))
+                                                    ),
+                                                    Datum.struct(
+                                                        Field.of("field_y", Datum.integer(1))
+                                                    ),
+                                                    Datum.struct(
+                                                        Field.of("field_y", Datum.integer(2))
+                                                    )
+                                                )
+                                            )
+                                        )
                                     )
                                 )
                             )
@@ -966,7 +1023,7 @@ class PartiQLEvaluatorTest {
                     END
                     ;
                 """.trimIndent(),
-                expected = stringValue(null)
+                expected = Datum.nullValue(PType.string())
             ),
             SuccessTestCase(
                 input = """
@@ -978,13 +1035,13 @@ class PartiQLEvaluatorTest {
                     END
                     ;
                 """.trimIndent(),
-                expected = stringValue("isOne")
+                expected = Datum.string("isOne")
             ),
             SuccessTestCase(
                 input = """
                     `null.bool` IS NULL
                 """.trimIndent(),
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             // SELECT * without nested coercion
             SuccessTestCase(
@@ -995,10 +1052,10 @@ class PartiQLEvaluatorTest {
                         FROM << { 'a': 3, 'b': 5 } >> AS t
                     );
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "first" to int32Value(3),
-                        "second" to int32Value(5)
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("first", Datum.integer(3)),
+                        Field.of("second", Datum.integer(5))
                     )
                 )
             ),
@@ -1011,10 +1068,10 @@ class PartiQLEvaluatorTest {
                         FROM << { 'a': 3, 'b': 5 } >> AS t
                     );
                 """.trimIndent(),
-                expected = bagValue(
-                    structValue(
-                        "first" to int32Value(3),
-                        "second" to int32Value(5)
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("first", Datum.integer(3)),
+                        Field.of("second", Datum.integer(5))
                     )
                 )
             ),
@@ -1027,27 +1084,27 @@ class PartiQLEvaluatorTest {
                         FROM << { 'a': 3, 'b': 5 } >> AS t
                     );
                 """.trimIndent(),
-                expected = bagValue(
-                    int32Value(3),
+                expected = Datum.bagVararg(
+                    Datum.integer(3)
                 )
             ),
             // TODO port `IS <boolean value>` tests to conformance tests
             // IS TRUE
             SuccessTestCase(
                 input = "TRUE IS TRUE;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "FALSE IS TRUE;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "NULL IS TRUE;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "MISSING IS TRUE;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "'foo' IS TRUE",
@@ -1057,19 +1114,19 @@ class PartiQLEvaluatorTest {
             // IS NOT TRUE
             SuccessTestCase(
                 input = "TRUE IS NOT TRUE;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "FALSE IS NOT TRUE;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "NULL IS NOT TRUE;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "MISSING IS NOT TRUE;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "'foo' IS NOT TRUE",
@@ -1079,19 +1136,19 @@ class PartiQLEvaluatorTest {
             // IS FALSE
             SuccessTestCase(
                 input = "TRUE IS FALSE;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "FALSE IS FALSE;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "NULL IS FALSE;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "MISSING IS FALSE;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "'foo' IS FALSE",
@@ -1101,19 +1158,19 @@ class PartiQLEvaluatorTest {
             // IS NOT FALSE
             SuccessTestCase(
                 input = "TRUE IS NOT FALSE;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "FALSE IS NOT FALSE;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "NULL IS NOT FALSE;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "MISSING IS NOT FALSE;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "'foo' IS NOT FALSE",
@@ -1123,19 +1180,19 @@ class PartiQLEvaluatorTest {
             // IS UNKNOWN
             SuccessTestCase(
                 input = "TRUE IS UNKNOWN;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "FALSE IS UNKNOWN;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "NULL IS UNKNOWN;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "MISSING IS UNKNOWN;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "'foo' IS UNKNOWN",
@@ -1145,19 +1202,19 @@ class PartiQLEvaluatorTest {
             // IS NOT UNKNOWN
             SuccessTestCase(
                 input = "TRUE IS NOT UNKNOWN;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "FALSE IS NOT UNKNOWN;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "NULL IS NOT UNKNOWN;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "MISSING IS NOT UNKNOWN;",
-                expected = boolValue(false)
+                expected = Datum.bool(false)
             ),
             SuccessTestCase(
                 input = "'foo' IS NOT UNKNOWN",
@@ -1166,91 +1223,105 @@ class PartiQLEvaluatorTest {
             ),
             SuccessTestCase(
                 input = "MISSING IS MISSING;",
-                expected = boolValue(true)
+                expected = Datum.bool(true)
             ),
             SuccessTestCase(
                 input = "MISSING IS MISSING;",
-                expected = boolValue(true),
+                expected = Datum.bool(true),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 input = "SELECT VALUE t.a IS MISSING FROM << { 'b': 1 }, { 'a': 2 } >> AS t;",
-                expected = bagValue(boolValue(true), boolValue(false))
+                expected = Datum.bagVararg(Datum.bool(true), Datum.bool(false))
             ),
             // PartiQL Specification Section 7.1.1 -- Equality
             SuccessTestCase(
                 input = "5 = 'a';",
-                expected = boolValue(false),
+                expected = Datum.bool(false),
             ),
             // PartiQL Specification Section 7.1.1 -- Equality
             SuccessTestCase(
                 input = "5 = 'a';",
-                expected = boolValue(false), // TODO: Is this correct?
+                expected = Datum.bool(false), // TODO: Is this correct?
                 mode = Mode.STRICT(),
             ),
             // PartiQL Specification Section 8
             SuccessTestCase(
                 input = "NULL IS MISSING;",
-                expected = boolValue(false),
+                expected = Datum.bool(false),
             ),
             // PartiQL Specification Section 8
             SuccessTestCase(
                 input = "NULL IS MISSING;",
-                expected = boolValue(false),
+                expected = Datum.bool(false),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 input = "SELECT * FROM <<{'a': 10, 'b': 1}, {'a': 1, 'b': 2}>> AS t ORDER BY t.a;",
-                expected = listValue(
-                    structValue("a" to int32Value(1), "b" to int32Value(2)),
-                    structValue("a" to int32Value(10), "b" to int32Value(1))
+                expected = Datum.array(
+                    listOf(
+                        Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2))),
+                        Datum.struct(Field.of("a", Datum.integer(10)), Field.of("b", Datum.integer(1)))
+                    )
                 )
             ),
             SuccessTestCase(
                 input = "SELECT * FROM <<{'a': 10, 'b': 1}, {'a': 1, 'b': 2}>> AS t ORDER BY t.a DESC;",
-                expected = listValue(
-                    structValue("a" to int32Value(10), "b" to int32Value(1)),
-                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                expected = Datum.array(
+                    listOf(
+                        Datum.struct(Field.of("a", Datum.integer(10)), Field.of("b", Datum.integer(1))),
+                        Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2)))
+                    )
                 )
             ),
             SuccessTestCase(
                 input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a NULLS LAST;",
-                expected = listValue(
-                    structValue("a" to int32Value(1), "b" to int32Value(2)),
-                    structValue("a" to int32Value(3), "b" to int32Value(4)),
-                    structValue("a" to nullValue(), "b" to int32Value(1))
+                expected = Datum.array(
+                    listOf(
+                        Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2))),
+                        Datum.struct(Field.of("a", Datum.integer(3)), Field.of("b", Datum.integer(4))),
+                        Datum.struct(Field.of("a", Datum.nullValue()), Field.of("b", Datum.integer(1)))
+                    )
                 )
             ),
             SuccessTestCase(
                 input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a NULLS FIRST;",
-                expected = listValue(
-                    structValue("a" to nullValue(), "b" to int32Value(1)),
-                    structValue("a" to int32Value(1), "b" to int32Value(2)),
-                    structValue("a" to int32Value(3), "b" to int32Value(4))
+                expected = Datum.array(
+                    listOf(
+                        Datum.struct(Field.of("a", Datum.nullValue()), Field.of("b", Datum.integer(1))),
+                        Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2))),
+                        Datum.struct(Field.of("a", Datum.integer(3)), Field.of("b", Datum.integer(4)))
+                    )
                 )
             ),
             SuccessTestCase(
                 input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a DESC NULLS LAST;",
-                expected = listValue(
-                    structValue("a" to int32Value(3), "b" to int32Value(4)),
-                    structValue("a" to int32Value(1), "b" to int32Value(2)),
-                    structValue("a" to nullValue(), "b" to int32Value(1))
+                expected = Datum.array(
+                    listOf(
+                        Datum.struct(Field.of("a", Datum.integer(3)), Field.of("b", Datum.integer(4))),
+                        Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2))),
+                        Datum.struct(Field.of("a", Datum.nullValue()), Field.of("b", Datum.integer(1)))
+                    )
                 )
             ),
             SuccessTestCase(
                 input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a DESC NULLS FIRST;",
-                expected = listValue(
-                    structValue("a" to nullValue(), "b" to int32Value(1)),
-                    structValue("a" to int32Value(3), "b" to int32Value(4)),
-                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                expected = Datum.array(
+                    listOf(
+                        Datum.struct(Field.of("a", Datum.nullValue()), Field.of("b", Datum.integer(1))),
+                        Datum.struct(Field.of("a", Datum.integer(3)), Field.of("b", Datum.integer(4))),
+                        Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2)))
+                    )
                 )
             ),
             SuccessTestCase( // use multiple sort specs
                 input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 1, 'b': 4}>> AS t ORDER BY t.a DESC NULLS FIRST, t.b DESC;",
-                expected = listValue(
-                    structValue("a" to nullValue(), "b" to int32Value(1)),
-                    structValue("a" to int32Value(1), "b" to int32Value(4)),
-                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                expected = Datum.array(
+                    listOf(
+                        Datum.struct(Field.of("a", Datum.nullValue()), Field.of("b", Datum.integer(1))),
+                        Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(4))),
+                        Datum.struct(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2)))
+                    )
                 )
             ),
             // PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (1)
@@ -1258,13 +1329,13 @@ class PartiQLEvaluatorTest {
             //  the parameters is missing.
             SuccessTestCase(
                 input = "SELECT VALUE 5 + v FROM <<1, MISSING>> AS v;",
-                expected = bagValue(int32Value(6), missingValue())
+                expected = Datum.bagVararg(Datum.integer(6), Datum.missing())
             ),
             // PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (1)
             // See https://github.com/partiql/partiql-tests/pull/118 for more information.
             SuccessTestCase(
                 input = "SELECT VALUE 5 + v FROM <<1, MISSING>> AS v;",
-                expected = bagValue(int32Value(6), missingValue()),
+                expected = Datum.bagVararg(Datum.integer(6), Datum.missing()),
                 mode = Mode.STRICT(),
             ),
         )
@@ -1274,129 +1345,129 @@ class PartiQLEvaluatorTest {
             TypingTestCase(
                 name = "Expected missing value in collection",
                 input = "SELECT VALUE t.a FROM << { 'a': 1 }, { 'b': 2 } >> AS t;",
-                expectedPermissive = bagValue(int32Value(1), missingValue())
+                expectedPermissive = Datum.bagVararg(Datum.integer(1), Datum.missing())
             ),
             TypingTestCase(
                 name = "Expected missing value in tuple in collection",
                 input = "SELECT t.a AS \"a\" FROM << { 'a': 1 }, { 'b': 2 } >> AS t;",
-                expectedPermissive = bagValue(
-                    structValue(
-                        "a" to int32Value(1),
+                expectedPermissive = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1))
                     ),
-                    structValue(),
+                    Datum.struct()
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 4.2 -- index negative",
                 input = "[1,2,3][-1];",
-                expectedPermissive = missingValue()
+                expectedPermissive = Datum.missing()
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 4.2 -- out of bounds",
                 input = "[1,2,3][3];",
-                expectedPermissive = missingValue()
+                expectedPermissive = Datum.missing()
             ),
             TypingTestCase(
                 name = "PartiQL Spec Section 5.1.1 -- Position variable on bags",
                 input = "SELECT v, p FROM << 5 >> AS v AT p;",
-                expectedPermissive = bagValue(
-                    structValue(
-                        "v" to int32Value(5)
+                expectedPermissive = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("v", Datum.integer(5))
                     )
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 5.1.1 -- Iteration over a scalar value",
                 input = "SELECT v FROM 0 AS v;",
-                expectedPermissive = bagValue(
-                    structValue(
-                        "v" to int32Value(0)
+                expectedPermissive = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("v", Datum.integer(0))
                     )
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 5.1.1 -- Iteration over a scalar value (with at)",
                 input = "SELECT v, p FROM 0 AS v AT p;",
-                expectedPermissive = bagValue(
-                    structValue(
-                        "v" to int32Value(0)
+                expectedPermissive = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("v", Datum.integer(0))
                     )
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 5.1.1 -- Iteration over a tuple value",
                 input = "SELECT v.a AS a FROM { 'a': 1 } AS v;",
-                expectedPermissive = bagValue(
-                    structValue(
-                        "a" to int32Value(1)
+                expectedPermissive = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1))
                     )
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 5.1.1 -- Iteration over an absent value (missing)",
                 input = "SELECT v AS v FROM MISSING AS v;",
-                expectedPermissive = bagValue(structValue<PartiQLValue>())
+                expectedPermissive = Datum.bagVararg(Datum.struct())
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 5.1.1 -- Iteration over an absent value (null)",
                 input = "SELECT v AS v FROM NULL AS v;",
-                expectedPermissive = bagValue(
-                    structValue(
-                        "v" to nullValue()
+                expectedPermissive = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("v", Datum.nullValue())
                     )
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 6.1.4 -- when constructing tuples",
                 input = "SELECT VALUE {'a':v.a, 'b':v.b} FROM [{'a':1, 'b':1}, {'a':2}] AS v;",
-                expectedPermissive = bagValue(
-                    structValue(
-                        "a" to int32Value(1),
-                        "b" to int32Value(1),
+                expectedPermissive = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.integer(1)),
+                        Field.of("b", Datum.integer(1))
                     ),
-                    structValue(
-                        "a" to int32Value(2),
+                    Datum.struct(
+                        Field.of("a", Datum.integer(2))
                     )
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 6.1.4 -- when constructing bags (1)",
                 input = "SELECT VALUE v.b FROM [{'a':1, 'b':1}, {'a':2}] AS v;",
-                expectedPermissive = bagValue(
-                    int32Value(1),
-                    missingValue()
+                expectedPermissive = Datum.bagVararg(
+                    Datum.integer(1),
+                    Datum.missing()
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 6.1.4 -- when constructing bags (2)",
                 input = "SELECT VALUE <<v.a, v.b>> FROM [{'a':1, 'b':1}, {'a':2}] AS v;",
-                expectedPermissive = bagValue(
-                    bagValue(
-                        int32Value(1),
-                        int32Value(1),
+                expectedPermissive = Datum.bagVararg(
+                    Datum.bagVararg(
+                        Datum.integer(1),
+                        Datum.integer(1)
                     ),
-                    bagValue(
-                        int32Value(2),
-                        missingValue()
+                    Datum.bagVararg(
+                        Datum.integer(2),
+                        Datum.missing()
                     )
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 6.2 -- Pivoting a Collection into a Variable-Width Tuple",
                 input = "PIVOT t.price AT t.\"symbol\" FROM [{'symbol':25, 'price':31.52}, {'symbol':'amzn', 'price':840.05}] AS t;",
-                expectedPermissive = structValue(
-                    "amzn" to decimalValue(BigDecimal.valueOf(840.05))
+                expectedPermissive = Datum.struct(
+                    Field.of("amzn", Datum.decimal(BigDecimal.valueOf(840.05)))
                 )
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (3)",
                 input = "SELECT VALUE NOT v FROM << false, {'a':1} >> AS v;",
-                expectedPermissive = bagValue(boolValue(true), missingValue())
+                expectedPermissive = Datum.bagVararg(Datum.bool(true), Datum.missing())
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (2)",
                 input = "SELECT VALUE 5 > v FROM <<1, 'a'>> AS v;",
-                expectedPermissive = bagValue(boolValue(true), missingValue())
+                expectedPermissive = Datum.bagVararg(Datum.bool(true), Datum.missing())
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 9.1",
@@ -1406,9 +1477,9 @@ class PartiQLEvaluatorTest {
                         (SELECT c.name FROM << { 'name': 'John', 'id': 1 }, { 'name': 'Alan', 'id': 1 } >> c WHERE c.id=o.custId) AS customerName
                         FROM << { 'name': 'apples', 'custId': 1 } >> o
                 """.trimIndent(),
-                expectedPermissive = bagValue(
-                    structValue(
-                        "orderName" to stringValue("apples")
+                expectedPermissive = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("orderName", Datum.string("apples"))
                     )
                 )
             )
@@ -1614,7 +1685,6 @@ class PartiQLEvaluatorTest {
     }
 
     @Test
-    // @Disabled
     fun developmentTest() {
         val tc =
             SuccessTestCase(
@@ -1631,9 +1701,9 @@ class PartiQLEvaluatorTest {
     fun testTypingOfPositionVariable() = TypingTestCase(
         name = "PartiQL Spec Section 5.1.1 -- Position variable on bags",
         input = "SELECT v, p FROM << 5 >> AS v AT p;",
-        expectedPermissive = bagValue(
-            structValue(
-                "v" to int32Value(5)
+        expectedPermissive = Datum.bagVararg(
+            Datum.struct(
+                Field.of("v", Datum.integer(5))
             )
         )
     ).run()
@@ -1646,7 +1716,7 @@ class PartiQLEvaluatorTest {
             input = """
                     PLACEHOLDER FOR THE EXAMPLE IN THE RELEVANT SECTION. GROUPING NOT YET SUPPORTED.
             """.trimIndent(),
-            expectedPermissive = missingValue()
+            expectedPermissive = Datum.missing()
         ).run()
 
     @Test
@@ -1655,10 +1725,10 @@ class PartiQLEvaluatorTest {
         TypingTestCase(
             name = "PartiQL Specification Section 5.2.1 -- Mistyping Cases",
             input = "SELECT v, n FROM UNPIVOT 1 AS v AT n;",
-            expectedPermissive = bagValue(
-                structValue(
-                    "v" to int32Value(1),
-                    "n" to stringValue("_1")
+            expectedPermissive = Datum.bagVararg(
+                Datum.struct(
+                    Field.of("v", Datum.integer(1)),
+                    Field.of("n", Datum.string("_1"))
                 )
             )
         ).run()
@@ -1669,14 +1739,18 @@ class PartiQLEvaluatorTest {
         TypingTestCase(
             name = "PartiQL Specification Section 6.1.4 -- when constructing arrays",
             input = "SELECT VALUE [v.a, v.b] FROM [{'a':1, 'b':1}, {'a':2}] AS v;",
-            expectedPermissive = bagValue(
-                listValue(
-                    int32Value(1),
-                    int32Value(1),
+            expectedPermissive = Datum.bagVararg(
+                Datum.array(
+                    listOf(
+                        Datum.integer(1),
+                        Datum.integer(1)
+                    )
                 ),
-                listValue(
-                    int32Value(2),
-                    missingValue()
+                Datum.array(
+                    listOf(
+                        Datum.integer(2),
+                        Datum.missing()
+                    )
                 )
             )
         ).run()
@@ -1687,7 +1761,7 @@ class PartiQLEvaluatorTest {
         TypingTestCase(
             name = "PartiQL Specification Section 4.2 -- non integer index",
             input = "SELECT VALUE [1,2,3][v] FROM <<1, 1.0>> AS v;",
-            expectedPermissive = bagValue(int32Value(2), missingValue())
+            expectedPermissive = Datum.bagVararg(Datum.integer(2), Datum.missing())
         ).run()
 
     @Test
@@ -1696,14 +1770,14 @@ class PartiQLEvaluatorTest {
         TypingTestCase(
             name = "PartiQL Specification Section 7.1 -- Inputs with wrong types Example 27",
             input = "SELECT VALUE {'a':3*v.a, 'b':3*(CAST (v.b AS INTEGER))} FROM [{'a':1, 'b':'1'}, {'a':2}] v;",
-            expectedPermissive = bagValue(
-                structValue(
-                    "a" to int32Value(3),
-                    "b" to int32Value(3),
+            expectedPermissive = Datum.bagVararg(
+                Datum.struct(
+                    Field.of("a", Datum.integer(3)),
+                    Field.of("b", Datum.integer(3))
                 ),
-                structValue(
-                    "a" to int32Value(6),
-                ),
+                Datum.struct(
+                    Field.of("a", Datum.integer(6))
+                )
             )
         ).run()
 
@@ -1712,19 +1786,19 @@ class PartiQLEvaluatorTest {
     fun test10() =
         SuccessTestCase(
             input = "SELECT v, i FROM [ 'a', 'b', 'c' ] AS v AT i",
-            expected = bagValue(
-                structValue(
-                    "v" to stringValue("a"),
-                    "i" to int64Value(0),
+            expected = Datum.bagVararg(
+                Datum.struct(
+                    Field.of("v", Datum.string("a")),
+                    Field.of("i", Datum.bigint(0))
                 ),
-                structValue(
-                    "v" to stringValue("b"),
-                    "i" to int64Value(1),
+                Datum.struct(
+                    Field.of("v", Datum.string("b")),
+                    Field.of("i", Datum.bigint(1))
                 ),
-                structValue(
-                    "v" to stringValue("c"),
-                    "i" to int64Value(2),
-                ),
+                Datum.struct(
+                    Field.of("v", Datum.string("c")),
+                    Field.of("i", Datum.bigint(2))
+                )
             )
         ).run()
 
@@ -1752,46 +1826,44 @@ class PartiQLEvaluatorTest {
                 { 'b': 4, 'c': NULL }
             >> AS t GROUP BY t.b AS gk_0;
         """.trimIndent(),
-        expected = bagValue(
-            structValue(
-                "gk_0" to int32Value(1),
-                "t_c_sum" to int32Value(3)
+        expected = Datum.bagVararg(
+            Datum.struct(
+                Field.of("gk_0", Datum.integer(1)),
+                Field.of("t_c_sum", Datum.integer(3))
             ),
-            structValue(
-                "gk_0" to int32Value(2),
-                "t_c_sum" to int32Value(2)
+            Datum.struct(
+                Field.of("gk_0", Datum.integer(2)),
+                Field.of("t_c_sum", Datum.integer(2))
             ),
-            structValue(
-                "gk_0" to int32Value(3),
-                "t_c_sum" to int32Value(2)
+            Datum.struct(
+                Field.of("gk_0", Datum.integer(3)),
+                Field.of("t_c_sum", Datum.integer(2))
             ),
-            structValue(
-                "gk_0" to int32Value(4),
-                "t_c_sum" to int32Value(null)
+            Datum.struct(
+                Field.of("gk_0", Datum.integer(4)),
+                Field.of("t_c_sum", Datum.nullValue(PType.integer()))
             ),
-            structValue(
-                "gk_0" to nullValue(),
-                "t_c_sum" to int32Value(3)
-            ),
+            Datum.struct(
+                Field.of("gk_0", Datum.nullValue()),
+                Field.of("t_c_sum", Datum.integer(3))
+            )
         ),
         mode = Mode.PERMISSIVE()
     ).run()
 
     // PartiQL Specification Section 8
     @Test
-    @Disabled("Currently, .check(<PartiQLValue>) is failing for MISSING. This will be resolved by Datum.")
     fun missingAndTruePermissive() =
         SuccessTestCase(
             input = "MISSING AND TRUE;",
-            expected = boolValue(null),
+            expected = Datum.nullValue(PType.bool()),
         ).run()
 
     // PartiQL Specification Section 8
     @Test
-    @Disabled("Currently, .check(<PartiQLValue>) is failing for MISSING. This will be resolved by Datum.")
     fun missingAndTrueStrict() = SuccessTestCase(
         input = "MISSING AND TRUE;",
-        expected = boolValue(null), // TODO: Is this right?
+        expected = Datum.nullValue(PType.bool()),
         mode = Mode.STRICT()
     ).run()
 
@@ -1803,7 +1875,7 @@ class PartiQLEvaluatorTest {
             input = """
                 (4, 5) < (SELECT VALUE t.a FROM << { 'a': 3 }, { 'a': 4 } >> AS t ORDER BY t.a)
             """.trimIndent(),
-            expected = boolValue(false)
+            expected = Datum.bool(false)
         ).run()
 
     @Test
@@ -1813,11 +1885,10 @@ class PartiQLEvaluatorTest {
             input = """
                 (4, 5) < (SELECT t.a, t.a FROM << { 'a': 3 } >> AS t)
             """.trimIndent(),
-            expected = boolValue(false)
+            expected = Datum.bool(false)
         ).run()
 
     @Test
-    @Disabled("This broke in its introduction to the codebase on merge. See 5fb9a1ccbc7e630b0df62aa8b161d319c763c1f6.")
     // TODO: Add to conformance tests
     fun wildCard() =
         SuccessTestCase(
@@ -1852,16 +1923,13 @@ class PartiQLEvaluatorTest {
                }
              ][*].books[*].authors[*].name
             """.trimIndent(),
-            expected = bagValue(
-                listOf(
-                    stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill"),
-                    stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill")
-                )
+            expected = Datum.bagVararg(
+                Datum.string("John"), Datum.string("Doe"), Datum.string("Zoe"), Datum.string("Bill"),
+                Datum.string("John"), Datum.string("Doe"), Datum.string("Zoe"), Datum.string("Bill")
             )
         ).run()
 
     @Test
-    @Disabled("This broke in its introduction to the codebase on merge. See 5fb9a1ccbc7e630b0df62aa8b161d319c763c1f6.")
     // TODO: add to conformance tests
     // Note that the existing pipeline produced identical result when supplying with
     // SELECT VALUE v2.name FROM e as v0, v0.books as v1, unpivot v1.authors as v2;
@@ -1915,11 +1983,9 @@ class PartiQLEvaluatorTest {
                }
              ][*].books[*].authors.*.name
             """.trimIndent(),
-            expected = bagValue(
-                listOf(
-                    stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill"),
-                    stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill")
-                )
+            expected = Datum.bagVararg(
+                Datum.string("John"), Datum.string("Doe"), Datum.string("Zoe"), Datum.string("Bill"),
+                Datum.string("John"), Datum.string("Doe"), Datum.string("Zoe"), Datum.string("Bill")
             )
         ).run()
 }

@@ -10,17 +10,13 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.spi.value.ValueUtils
-import org.partiql.spi.value.io.PartiQLValueIonWriterBuilder
-import org.partiql.value.PartiQLValue
-import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 public class TypingTestCase(
     val name: String,
     val input: String,
-    val expectedPermissive: PartiQLValue,
+    val expectedPermissive: Datum,
 ) : PTestCase {
 
     private val compiler = PartiQLCompiler.standard()
@@ -29,9 +25,8 @@ public class TypingTestCase(
 
     override fun run() {
         val (permissiveResult, plan) = run(mode = Mode.PERMISSIVE())
-        val permissiveResultPValue = ValueUtils.newPartiQLValue(permissiveResult)
         val assertionCondition = try {
-            expectedPermissive == permissiveResultPValue // TODO: Assert using Datum
+            Datum.comparator().compare(expectedPermissive, permissiveResult) == 0
         } catch (t: Throwable) {
             val str = buildString {
                 appendLine("Test Name: $name")
@@ -41,7 +36,7 @@ public class TypingTestCase(
             throw RuntimeException(str, t)
         }
         assert(assertionCondition) {
-            comparisonString(expectedPermissive, permissiveResultPValue, plan)
+            comparisonString(expectedPermissive, permissiveResult, plan)
         }
         var error: Throwable? = null
         try {
@@ -70,17 +65,12 @@ public class TypingTestCase(
         return result to plan
     }
 
-    private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: Plan): String {
-        val expectedBuffer = ByteArrayOutputStream()
-        val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
-        expectedWriter.append(expected)
+    private fun comparisonString(expected: Datum, actual: Datum, plan: Plan): String {
         return buildString {
             // TODO pretty-print V1 plans!
             appendLine(plan)
-            appendLine("Expected : $expectedBuffer")
-            expectedBuffer.reset()
-            expectedWriter.append(actual)
-            appendLine("Actual   : $expectedBuffer")
+            appendLine("Expected : $expected")
+            appendLine("Actual   : $actual")
         }
     }
 

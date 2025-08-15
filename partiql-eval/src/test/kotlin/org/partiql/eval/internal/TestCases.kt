@@ -13,10 +13,8 @@ import org.partiql.spi.catalog.Table
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
-import org.partiql.spi.value.ValueUtils
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
-import org.partiql.value.PartiQLValue
 import kotlin.test.assertEquals
 
 /**
@@ -50,13 +48,6 @@ public class SuccessTestCase(
         globals: List<Global> = emptyList(),
         jvmEquality: Boolean = false
     ) : this("no_name", input, expected, mode, globals, jvmEquality)
-
-    constructor(
-        input: String,
-        expected: PartiQLValue,
-        mode: Mode = Mode.PERMISSIVE(),
-        globals: List<Global> = emptyList(),
-    ) : this(input, ValueUtils.newDatum(expected), mode, globals)
 
     private val compiler = PartiQLCompiler.standard()
     private val parser = PartiQLParser.standard()

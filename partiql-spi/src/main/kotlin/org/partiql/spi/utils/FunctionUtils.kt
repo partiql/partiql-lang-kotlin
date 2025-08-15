@@ -67,7 +67,7 @@ internal object FunctionUtils {
     internal fun Datum.booleanValue(): Boolean = when (this.type.code()) {
         PType.VARIANT -> this.lower().booleanValue()
         PType.BOOL -> this.boolean
-        else -> error("Cannot convert PartiQLValue ($this) to boolean.")
+        else -> error("Cannot convert Datum ($this) to boolean.")
     }
 
     /**

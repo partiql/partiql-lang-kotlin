@@ -958,7 +958,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         /**
-         * In this context, Boolean means PartiQLValueType Bool, which can be nullable.
+         * In this context, Boolean means PType Bool, which can be nullable.
          * Hence, we permit Static Type BOOL, Static Type NULL, Static Type Missing here.
          */
         private fun canBeBoolean(type: CompilerType): Boolean {

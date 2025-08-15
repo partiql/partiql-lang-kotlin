@@ -16,7 +16,6 @@ import org.partiql.spi.value.Datum.bag
 import org.partiql.spi.value.Datum.bool
 import org.partiql.spi.value.Datum.integer
 import org.partiql.spi.value.Datum.string
-import org.partiql.value.PartiQLValueType
 
 class ExprCallDynamicTest {
 
@@ -44,26 +43,26 @@ class ExprCallDynamicTest {
         companion object {
 
             private val params = listOf(
-                PartiQLValueType.LIST to PartiQLValueType.LIST, // Index 0
-                PartiQLValueType.BAG to PartiQLValueType.BAG, // Index 1
-                PartiQLValueType.INT8 to PartiQLValueType.INT8, // Index 2
-                PartiQLValueType.INT16 to PartiQLValueType.INT16, // Index 3
-                PartiQLValueType.INT32 to PartiQLValueType.INT32, // Index 4
-                PartiQLValueType.INT64 to PartiQLValueType.INT64, // Index 5
-                PartiQLValueType.STRING to PartiQLValueType.STRING, // Index 6
-                PartiQLValueType.ANY to PartiQLValueType.LIST, // Index 7
-                PartiQLValueType.BAG to PartiQLValueType.ANY, // Index 8
-                PartiQLValueType.INT32 to PartiQLValueType.STRING, // Index 9
-                PartiQLValueType.INT64 to PartiQLValueType.STRING, // Index 10
-                PartiQLValueType.LIST to PartiQLValueType.ANY, // Index 11
-                PartiQLValueType.ANY to PartiQLValueType.ANY, // Index 12
+                PType.array() to PType.array(), // Index 0
+                PType.bag() to PType.bag(), // Index 1
+                PType.tinyint() to PType.tinyint(), // Index 2
+                PType.smallint() to PType.smallint(), // Index 3
+                PType.integer() to PType.integer(), // Index 4
+                PType.bigint() to PType.bigint(), // Index 5
+                PType.string() to PType.string(), // Index 6
+                PType.dynamic() to PType.array(), // Index 7
+                PType.bag() to PType.dynamic(), // Index 8
+                PType.integer() to PType.string(), // Index 9
+                PType.bigint() to PType.string(), // Index 10
+                PType.array() to PType.dynamic(), // Index 11
+                PType.dynamic() to PType.dynamic(), // Index 12
             )
             internal val functions: Array<FnOverload> = params.mapIndexed { index, it ->
                 FnOverload.Builder("example")
                     .returns(PType.integer())
                     .addParameters(
-                        Parameter("lhs", it.first.toPType()),
-                        Parameter("rhs", it.second.toPType())
+                        Parameter("lhs", it.first),
+                        Parameter("rhs", it.second)
                     )
                     .body { integer(index) }
                     .build()
