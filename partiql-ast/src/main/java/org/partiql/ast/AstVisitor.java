@@ -401,7 +401,17 @@ public abstract class AstVisitor<R, C> {
      * @param ctx TODO
      * @return TODO
      */
-    public R visitWindowFunctionTypeLagOrLead(WindowFunctionType.LeadOrLag node, C ctx) {
+    public R visitWindowFunctionTypeLead(WindowFunctionType.Lead node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     */
+    public R visitWindowFunctionTypeLag(WindowFunctionType.Lag node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

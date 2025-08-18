@@ -120,86 +120,90 @@ public abstract class WindowFunctionType extends AstNode {
     /**
      * Represents either the LAG or LEAD window function.
      * @see ExprWindowFunction#getFunctionType()
+     * @see Lead
+     * @see Lag
      */
-    @Builder(builderClassName = "Builder")
-    @EqualsAndHashCode(callSuper = false)
-    public static final class LeadOrLag extends WindowFunctionType {
-        private final boolean isLead;
-        private final Expr extent;
-        private final Long offset;
-        private final Expr defaultValue;
-        private final WindowFunctionNullTreatment nullTreatment;
-
-        /**
-         * Constructs a new LEAD or LAG window function type.
-         * @param isLead whether this is a LEAD or LAG window function
-         * @param extent the extent of the window function
-         * @param offset the offset of the window function
-         * @param defaultValue the default value of the window function
-         * @param nullTreatment the null treatment of the window function
-         */
-        public LeadOrLag(
-                boolean isLead,
-                @NotNull Expr extent,
-                @Nullable Long offset,
-                @Nullable Expr defaultValue,
-                @Nullable WindowFunctionNullTreatment nullTreatment
-        ) {
-            this.isLead = isLead;
-            this.extent = extent;
-            this.offset = offset;
-            this.defaultValue = defaultValue;
-            this.nullTreatment = nullTreatment;
-        }
-
-        /**
-         * Returns whether this is a LEAD or LAG window function.
-         * @return whether this is a LEAD or LAG window function
-         */
-        public boolean isLead() {
-            return this.isLead;
-        }
-
-        /**
-         * Returns whether this is a LEAD or LAG window function.
-         * @return whether this is a LEAD or LAG window function
-         */
-        public boolean isLag() {
-            return !this.isLead;
-        }
-
+    public interface LeadOrLag {
         /**
          * Returns the extent of the window function.
          * @return the extent of the window function
          */
         @NotNull
-        public Expr getExtent() {
-            return this.extent;
-        }
+        Expr getExtent();
 
         /**
          * Returns the offset of the window function.
          * @return the offset of the window function
          */
         @Nullable
-        public Long getOffset() {
-            return this.offset;
-        }
+        Long getOffset();
 
         /**
          * Returns the default value of the window function.
          * @return the default value of the window function
          */
         @Nullable
-        public Expr getDefaultValue() {
-            return this.defaultValue;
-        }
+        Expr getDefaultValue();
 
         /**
          * Returns the null treatment of the window function.
          * @return the null treatment of the window function
          */
         @Nullable
+        WindowFunctionNullTreatment getNullTreatment();
+    }
+
+    /**
+     * Represents the LEAD window function.
+     * @see ExprWindowFunction#getFunctionType()
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    public static final class Lead extends WindowFunctionType implements LeadOrLag {
+        private final Expr extent;
+        private final Long offset;
+        private final Expr defaultValue;
+        private final WindowFunctionNullTreatment nullTreatment;
+        /**
+         * Constructs a new LEAD window function type.
+         * @param extent the extent of the window function
+         * @param offset the offset of the window function
+         * @param defaultValue the default value of the window function
+         * @param nullTreatment the null treatment of the window function
+         */
+        public Lead(
+                @NotNull Expr extent,
+                @Nullable Long offset,
+                @Nullable Expr defaultValue,
+                @Nullable WindowFunctionNullTreatment nullTreatment
+        ) {
+            super();
+            this.extent = extent;
+            this.offset = offset;
+            this.defaultValue = defaultValue;
+            this.nullTreatment = nullTreatment;
+        }
+
+        @NotNull
+        @Override
+        public Expr getExtent() {
+            return this.extent;
+        }
+
+        @Nullable
+        @Override
+        public Long getOffset() {
+            return this.offset;
+        }
+
+        @Nullable
+        @Override
+        public Expr getDefaultValue() {
+            return this.defaultValue;
+        }
+
+        @Nullable
+        @Override
         public WindowFunctionNullTreatment getNullTreatment() {
             return this.nullTreatment;
         }
@@ -215,7 +219,77 @@ public abstract class WindowFunctionType extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitWindowFunctionTypeLagOrLead(this, ctx);
+            return visitor.visitWindowFunctionTypeLead(this, ctx);
+        }
+    }
+
+    /**
+     * Represents the LAG window function.
+     * @see ExprWindowFunction#getFunctionType()
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    public static final class Lag extends WindowFunctionType implements LeadOrLag {
+        private final Expr extent;
+        private final Long offset;
+        private final Expr defaultValue;
+        private final WindowFunctionNullTreatment nullTreatment;
+        /**
+         * Constructs a new LAG window function type.
+         * @param extent the extent of the window function
+         * @param offset the offset of the window function
+         * @param defaultValue the default value of the window function
+         * @param nullTreatment the null treatment of the window function
+         */
+        public Lag(
+                @NotNull Expr extent,
+                @Nullable Long offset,
+                @Nullable Expr defaultValue,
+                @Nullable WindowFunctionNullTreatment nullTreatment
+        ) {
+            super();
+            this.extent = extent;
+            this.offset = offset;
+            this.defaultValue = defaultValue;
+            this.nullTreatment = nullTreatment;
+        }
+
+        @NotNull
+        @Override
+        public Expr getExtent() {
+            return this.extent;
+        }
+
+        @Nullable
+        @Override
+        public Long getOffset() {
+            return this.offset;
+        }
+
+        @Nullable
+        @Override
+        public Expr getDefaultValue() {
+            return this.defaultValue;
+        }
+
+        @Nullable
+        @Override
+        public WindowFunctionNullTreatment getNullTreatment() {
+            return this.nullTreatment;
+        }
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(extent);
+            kids.add(defaultValue);
+            return kids;
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeLag(this, ctx);
         }
     }
 }

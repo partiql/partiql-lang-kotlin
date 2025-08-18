@@ -2038,7 +2038,10 @@ internal class PartiQLParserDefault : PartiQLParser {
             val offset = ctx.offset?.text?.toLong()
             val default = ctx.default_?.let { visitExpr(it) }
             val nullTreatment = ctx.windowFunctionNullTreatment()?.let { visitWindowFunctionNullTreatment(it) }
-            WindowFunctionType.LeadOrLag(isLead, extent, offset, default, nullTreatment)
+            when (isLead) {
+                true -> WindowFunctionType.Lead(extent, offset, default, nullTreatment)
+                false -> WindowFunctionType.Lag(extent, offset, default, nullTreatment)
+            }
         }
 
         override fun visitWindowPartitionColumnReference(ctx: GeneratedParser.WindowPartitionColumnReferenceContext) = translate(ctx) {
