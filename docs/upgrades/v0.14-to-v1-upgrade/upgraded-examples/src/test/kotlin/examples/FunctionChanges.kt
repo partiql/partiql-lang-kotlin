@@ -13,6 +13,7 @@ import org.partiql.spi.value.InvalidOperationException
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class FunctionChanges {
     @Test
@@ -176,16 +177,13 @@ class FunctionChanges {
         // This is a limitation: getInstance() should validate argument types and return null
         // for non-matching signatures, but the current implementation is a simple wrapper
         // that doesn't perform proper overload resolution.
+        // See issue: https://github.com/partiql/partiql-lang-kotlin/issues/1814
         // You would typically pass all FnOverload(s) to your catalog and handle this at
         // the catalog/registry level by checking signatures
         val absStringFn = absOverloads[0].getInstance(arrayOf(PType.string()))
         assertEquals(absIntFn, absStringFn) // Same instance returned regardless of argument types
         // Calling the integer abs function with a string argument will throw an exception
-        try {
-            absStringFn!!.invoke(arrayOf(Datum.string("hello")))
-            assert(false) { "Should have thrown an exception" }
-        } catch (e: InvalidOperationException) {
-            assertEquals(true, e.message!!.contains("Operation \"getInt\" is not valid for type STRING"))
-        }
+        val exception = assertFailsWith<InvalidOperationException> { absStringFn!!.invoke(arrayOf(Datum.string("hello"))) }
+        assertEquals(true, exception.message!!.contains("Operation \"getInt\" is not valid for type STRING"))
     }
 }
