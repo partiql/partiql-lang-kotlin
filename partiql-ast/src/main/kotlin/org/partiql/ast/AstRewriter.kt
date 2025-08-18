@@ -831,11 +831,21 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
-    override fun visitWindowFunctionTypeLagOrLead(node: WindowFunctionType.LeadOrLag, ctx: C): AstNode {
+    override fun visitWindowFunctionTypeLag(node: WindowFunctionType.Lag, ctx: C): AstNode {
         val extent = visitExpr(node.extent, ctx) as Expr
         val default = node.defaultValue?.let { visitExpr(it, ctx) as Expr }
         return if (extent !== node.extent || default !== node.defaultValue) {
-            WindowFunctionType.LeadOrLag(node.isLead, extent, node.offset, default, node.nullTreatment)
+            WindowFunctionType.Lag(extent, node.offset, default, node.nullTreatment)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeLead(node: WindowFunctionType.Lead, ctx: C): AstNode {
+        val extent = visitExpr(node.extent, ctx) as Expr
+        val default = node.defaultValue?.let { visitExpr(it, ctx) as Expr }
+        return if (extent !== node.extent || default !== node.defaultValue) {
+            WindowFunctionType.Lead(extent, node.offset, default, node.nullTreatment)
         } else {
             node
         }

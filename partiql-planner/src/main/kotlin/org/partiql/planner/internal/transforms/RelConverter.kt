@@ -48,6 +48,8 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
+import org.partiql.ast.WindowFunctionType.Lag
+import org.partiql.ast.WindowFunctionType.Lead
 import org.partiql.ast.WindowPartition
 import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
@@ -677,9 +679,10 @@ internal object RelConverter {
                     relOpWindowWindowFunction("row_number", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
                 }
                 is WindowFunctionType.LeadOrLag -> {
-                    val name = when (windowType.isLag) {
-                        true -> "lag"
-                        false -> "lead"
+                    val name = when (windowType) {
+                        is Lag -> "lag"
+                        is Lead -> "lead"
+                        else -> error("Unsupported Lead/Lag type: ${windowType.javaClass.simpleName}.")
                     }
                     val isIgnoreNulls = when (windowType.nullTreatment?.code()) {
                         WindowFunctionNullTreatment.RESPECT_NULLS, null -> false
