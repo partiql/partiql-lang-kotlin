@@ -23,7 +23,9 @@ import java.util.List;
  *     <li>the window functions' outputs</li>
  * </ul>
  * </p>
+ * @deprecated This feature is experimental and is subject to change.
  */
+@Deprecated
 public abstract class RelWindow extends RelBase {
 
     /**

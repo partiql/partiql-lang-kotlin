@@ -303,6 +303,7 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field CARDINALITY_VIOLATION I
 	public static final field DEGREE_VIOLATION_SCALAR_SUBQUERY I
 	public static final field DIVISION_BY_ZERO I
+	public static final field EXPERIMENTAL I
 	public static final field FEATURE_NOT_SUPPORTED I
 	public static final field FUNCTION_NOT_FOUND I
 	public static final field FUNCTION_TYPE_MISMATCH I

@@ -12,16 +12,20 @@ import java.util.List;
 
 /**
  * Represents a window function type.
- * @see ExprWindowFunction#getFunctionType() 
+ * @see ExprWindowFunction#getFunctionType()
+ * @deprecated This feature is experimental and is subject to change.
  */
+@Deprecated
 public abstract class WindowFunctionType extends AstNode {
 
     /**
      * The RANK window function.
      * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
+    @Deprecated
     public static final class Rank extends WindowFunctionType {
         private int _type;
 
@@ -71,9 +75,11 @@ public abstract class WindowFunctionType extends AstNode {
     /**
      * The CUME_DIST window function.
      * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
+    @Deprecated
     public static final class CumeDist extends WindowFunctionType {
         /**
          * Constructs a CUME_DIST window function.
@@ -95,9 +101,11 @@ public abstract class WindowFunctionType extends AstNode {
     /**
      * The ROW_NUMBER window function.
      * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
+    @Deprecated
     public static final class RowNumber extends WindowFunctionType {
 
         /**
@@ -122,7 +130,9 @@ public abstract class WindowFunctionType extends AstNode {
      * @see ExprWindowFunction#getFunctionType()
      * @see Lead
      * @see Lag
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     public interface LeadOrLag {
         /**
          * Returns the extent of the window function.
@@ -156,9 +166,11 @@ public abstract class WindowFunctionType extends AstNode {
     /**
      * Represents the LEAD window function.
      * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
+    @Deprecated
     public static final class Lead extends WindowFunctionType implements LeadOrLag {
         private final Expr extent;
         private final Long offset;
@@ -226,9 +238,11 @@ public abstract class WindowFunctionType extends AstNode {
     /**
      * Represents the LAG window function.
      * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
+    @Deprecated
     public static final class Lag extends WindowFunctionType implements LeadOrLag {
         private final Expr extent;
         private final Long offset;

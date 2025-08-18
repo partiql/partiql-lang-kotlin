@@ -287,7 +287,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             else -> throw IllegalArgumentException("Unsupported parser mode: $mode")
         }
         val tree = parser.statements()
-        return Visitor.translate(tokens, tree)
+        return Visitor.translate(tokens, tree, listener)
     }
 
     private fun createTokenStream(source: String, listener: PErrorListener): CountingTokenStream {
@@ -391,6 +391,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         private val tokens: CommonTokenStream,
         private val locations: MutableMap<Int, SourceLocation>,
         private val parameters: Map<Int, Int> = mapOf(),
+        private val listener: PErrorListener
     ) : PartiQLParserBaseVisitor<AstNode>() {
         // Counter to store unique AstNode tags
         private var counter = 0
@@ -415,9 +416,10 @@ internal class PartiQLParserDefault : PartiQLParser {
             fun translate(
                 tokens: CountingTokenStream,
                 tree: GeneratedParser.StatementsContext,
+                listener: PErrorListener
             ): PartiQLParser.Result {
                 val locations = mutableMapOf<Int, SourceLocation>()
-                val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
+                val visitor = Visitor(tokens, locations, tokens.parameterIndexes, listener)
                 val statements = tree.statement().map { statementCtx ->
                     visitor.visit(statementCtx) as Statement
                 }
@@ -1080,6 +1082,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitWindowClause(ctx: GeneratedParser.WindowClauseContext) = translate(ctx) {
+            listener.report(PErrors.experimental("Window Clause", ctx))
             val definitions = visitOrEmpty<WindowClause.WindowDefinition>(ctx.windowDefinition())
             WindowClause(definitions)
         }
@@ -2000,6 +2003,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          * Window Functions
          */
         override fun visitWindowFunction(ctx: GeneratedParser.WindowFunctionContext) = translate(ctx) {
+            listener.report(PErrors.experimental("Window Function", ctx))
             val type = visitAs<WindowFunctionType>(ctx.windowFunctionType())
             val ref = visit(ctx.windowNameOrSpecification()) as WindowSpecification
             ExprWindowFunction(type, ref)

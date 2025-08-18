@@ -229,6 +229,16 @@ internal object PErrors {
         )
     }
 
+    internal fun experimental(feature: String, location: SourceLocation? = null): PError {
+        return PError(
+            PError.EXPERIMENTAL,
+            Severity.WARNING(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("FEATURE" to feature),
+        )
+    }
+
     internal fun degreeViolationScalarSubquery(actual: Int, location: SourceLocation? = null): PError {
         return PError(
             PError.DEGREE_VIOLATION_SCALAR_SUBQUERY,

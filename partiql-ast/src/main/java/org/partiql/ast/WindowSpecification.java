@@ -11,9 +11,11 @@ import java.util.List;
 /**
  * Represents a window specification or a window reference.
  * @see WindowClause.WindowDefinition#getSpecification()
+ * @deprecated This feature is experimental and is subject to change.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
+@Deprecated
 public final class WindowSpecification extends AstNode {
     // TODO: In the future: @Nullable private final WindowFrameClause frameClause;
 

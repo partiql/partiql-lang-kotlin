@@ -11,9 +11,11 @@ import java.util.List;
  * Represents a PartiQL WINDOW clause.
  * @see WindowDefinition
  * @see org.partiql.ast.expr.ExprWindowFunction
+ * @deprecated This feature is experimental and is subject to change.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
+@Deprecated
 public final class WindowClause extends AstNode {
 
     @NotNull

@@ -11,14 +11,18 @@ import java.util.List;
  * Represents a partition specified by a window specification.
  * @see Name
  * @see WindowSpecification#getPartitionClause()
+ * @deprecated This feature is experimental and is subject to change.
  */
+@Deprecated
 public abstract class WindowPartition extends AstNode {
     /**
      * Represents a partition specified by a name.
      * @see WindowSpecification#getPartitionClause()
+     * @deprecated This feature is experimental and is subject to change.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
+    @Deprecated
     public static final class Name extends WindowPartition {
         private final Identifier columnReference;
 

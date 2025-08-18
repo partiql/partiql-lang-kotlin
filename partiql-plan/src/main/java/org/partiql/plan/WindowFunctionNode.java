@@ -8,7 +8,9 @@ import java.util.List;
 /**
  * Represents a window function node.
  * @see WindowFunctionSignature
+ * @deprecated This feature is experimental and is subject to change.
  */
+@Deprecated
 public final class WindowFunctionNode {
 
     private final WindowFunctionSignature signature;
