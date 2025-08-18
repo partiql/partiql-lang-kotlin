@@ -563,4 +563,21 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int DEGREE_VIOLATION_SCALAR_SUBQUERY = 20;
+
+    /**
+     * <p>
+     * This is a runtime/compilation/planning warning indicating that the particular feature is experimental, and the
+     * result/api is subject to change.
+     * </p>
+     * <p>
+     * Potentially  available properties:
+     * <ul>
+     * <li><b>FEATURE</b> ({@link String}): The name of the feature that is experimental.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Feature ([feature]) is experimental and is subject to change.</code>
+     * </p>
+     */
+    public static final int EXPERIMENTAL = 21;
 }

@@ -228,6 +228,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         override fun visitRelOpWindow(node: Rel.Op.Window, ctx: Rel.Type?): Rel {
+            env.listener.report(PErrors.experimental("Window Clause"))
             val input = visitRel(node.input, ctx)
             val functions = node.functions.map { visitRelOpWindowWindowFunction(it, input.type) }
             val partitions = node.partitions.map { it.type(input.type.schema, outer) }
