@@ -1,5 +1,6 @@
 package org.partiql.parser.internal
 
+import org.antlr.v4.runtime.ParserRuleContext
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
@@ -50,5 +51,34 @@ internal object PErrors {
                 "CONTENT" to content
             )
         )
+    }
+
+    /**
+     * @return an error representing [PError.EXPERIMENTAL]
+     */
+    internal fun experimental(
+        feature: String,
+        ctx: ParserRuleContext,
+    ): PError {
+        val location = ctxToLocation(ctx)
+        return PError(
+            PError.EXPERIMENTAL,
+            Severity.WARNING(),
+            PErrorKind.SYNTAX(),
+            location,
+            mapOf(
+                "FEATURE" to feature
+            )
+        )
+    }
+
+    private fun ctxToLocation(ctx: ParserRuleContext): SourceLocation? {
+        val start = ctx.start
+        val stop = ctx.stop
+        if (start == null || stop == null) {
+            return null
+        }
+        val length = ctx.sourceInterval.length()
+        return SourceLocation(start.line.toLong(), start.charPositionInLine + 1L, length.toLong())
     }
 }

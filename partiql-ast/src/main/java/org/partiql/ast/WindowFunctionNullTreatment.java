@@ -9,8 +9,10 @@ import java.util.List;
 /**
  * The null treatment for window functions.
  * @see WindowFunctionType.LeadOrLag#getNullTreatment()
+ * @deprecated This feature is experimental and is subject to change.
  */
 @EqualsAndHashCode(callSuper = false)
+@Deprecated
 public final class WindowFunctionNullTreatment extends AstEnum {
     /**
      * The RESPECT NULLS variant of the null treatment.
