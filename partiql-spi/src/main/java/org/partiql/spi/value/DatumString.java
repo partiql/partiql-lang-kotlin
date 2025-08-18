@@ -35,7 +35,7 @@ class DatumString implements Datum {
     public String toString() {
         return "DatumString{" +
                 "_type=" + _type +
-                ", _value=" + _value +
+                ", _value='" + _value + '\'' +
                 '}';
     }
 }
