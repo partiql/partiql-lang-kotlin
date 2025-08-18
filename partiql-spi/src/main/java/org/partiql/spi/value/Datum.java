@@ -281,6 +281,42 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <p>
+     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * </p>
+     * <p>
+     * Returns the total amount of months for this year-month interval.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_YM}.
+     * </p>
+     * @return the total number of months.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_YM}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default long getTotalMonths() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getTotalMonths");
+    }
+
+    /**
+     * <p>
+     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * </p>
+     * <p>
+     * Returns the total amount of whole seconds for this day-time interval.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_DT}.
+     * </p>
+     * @return the total number of whole seconds.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default long getTotalSeconds() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getTotalSeconds");
+    }
+
+    /**
+     * <p>
      * Returns the days field of the interval type.
      * </p>
      * <p>

@@ -10,14 +10,18 @@ import org.partiql.spi.types.PType;
  */
 class DatumIntervalYearMonth implements Datum {
 
-    private final int _years;
-    private final int _months;
+    private final long _months;
     private final int precision;
     private final int intervalCode;
     private PType _type;
 
     DatumIntervalYearMonth(int years, int months, int precision, int intervalCode) {
-        _years = years;
+        _months = years * 12L + months;
+        this.precision = precision;
+        this.intervalCode = intervalCode;
+    }
+
+    DatumIntervalYearMonth(int months, int precision, int intervalCode) {
         _months = months;
         this.precision = precision;
         this.intervalCode = intervalCode;
@@ -50,18 +54,27 @@ class DatumIntervalYearMonth implements Datum {
 
     @Override
     public int getYears() throws InvalidOperationException, NullPointerException {
-        return _years;
+        return (int) (_months / 12);
     }
 
     @Override
     public int getMonths() throws InvalidOperationException, NullPointerException {
+        return (int) (_months % 12);
+    }
+
+    @Override
+    public long getTotalMonths() throws InvalidOperationException, NullPointerException {
         return _months;
     }
 
     public String toString() {
+        String sign = "";
+        if (getTotalMonths() < 0) {
+            sign = "-";
+        }
         return "DatumIntervalYearMonth{" +
                 "_type=" + getType() +
-                ", _value=" + "INTERVAL '" + _years + "-" + _months + "'" +
+                ", _value=" + "INTERVAL '" + sign + Math.abs(getYears()) + "-" + Math.abs(getMonths()) + "'" +
                 '}';
     }
 }

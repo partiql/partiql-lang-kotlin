@@ -9,9 +9,11 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.IntervalUtils.INTERVAL_MAX_PRECISION
 import org.partiql.spi.utils.NumberUtils.byteOverflows
 import org.partiql.spi.utils.NumberUtils.shortOverflows
 import org.partiql.spi.value.Datum
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -199,54 +201,50 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
 
     private fun localDateTimePlusIntervalInstance(interval: PType): ((LocalDateTime, Datum) -> LocalDateTime)? {
         return when (interval.intervalCode) {
-            IntervalCode.YEAR -> { time, i -> time.plusYears(i.years.toLong()) }
-            IntervalCode.MONTH -> { time, i -> time.plusMonths(i.months.toLong()) }
-            IntervalCode.DAY -> { time, i -> time.plusDays(i.days.toLong()) }
-            IntervalCode.HOUR -> { time, i -> time.plusHours(i.hours.toLong()) }
-            IntervalCode.MINUTE -> { time, i -> time.plusMinutes(i.minutes.toLong()) }
-            IntervalCode.SECOND -> { time, i -> time.plusSeconds(i.seconds.toLong()).plusNanos(i.nanos.toLong()) }
-            IntervalCode.YEAR_MONTH -> { time, i -> time.plusYears(i.years.toLong()).plusMonths(i.months.toLong()) }
-            IntervalCode.DAY_HOUR -> { time, i -> time.plusDays(i.days.toLong()).plusHours(i.hours.toLong()) }
-            IntervalCode.DAY_MINUTE -> { time, i -> time.plusDays(i.days.toLong()).plusHours(i.hours.toLong()).plusMinutes(i.minutes.toLong()) }
-            IntervalCode.DAY_SECOND -> { time, i -> time.plusDays(i.days.toLong()).plusHours(i.hours.toLong()).plusMinutes(i.minutes.toLong()).plusSeconds(i.seconds.toLong()).plusNanos(i.nanos.toLong()) }
-            IntervalCode.HOUR_MINUTE -> { time, i -> time.plusHours(i.hours.toLong()).plusMinutes(i.minutes.toLong()) }
-            IntervalCode.HOUR_SECOND -> { time, i -> time.plusHours(i.hours.toLong()).plusMinutes(i.minutes.toLong()).plusSeconds(i.seconds.toLong()).plusNanos(i.nanos.toLong()) }
-            IntervalCode.MINUTE_SECOND -> { time, i -> time.plusMinutes(i.minutes.toLong()).plusSeconds(i.seconds.toLong()).plusNanos(i.nanos.toLong()) }
+            IntervalCode.YEAR, IntervalCode.MONTH, IntervalCode.YEAR_MONTH -> { time, i -> time.plusMonths(i.totalMonths) }
+            IntervalCode.DAY,
+            IntervalCode.HOUR,
+            IntervalCode.MINUTE,
+            IntervalCode.SECOND,
+            IntervalCode.DAY_HOUR,
+            IntervalCode.DAY_MINUTE,
+            IntervalCode.DAY_SECOND,
+            IntervalCode.HOUR_MINUTE,
+            IntervalCode.HOUR_SECOND,
+            IntervalCode.MINUTE_SECOND -> { time, i -> time + Duration.ofSeconds(i.totalSeconds, i.nanos.toLong()) }
             else -> return null
         }
     }
 
     private fun localTimePlusIntervalInstance(interval: PType): ((LocalTime, Datum) -> LocalTime)? {
         return when (interval.intervalCode) {
-            IntervalCode.DAY -> { time, _ -> time }
-            IntervalCode.HOUR -> { time, i -> time.plusHours(i.hours.toLong()) }
-            IntervalCode.MINUTE -> { time, i -> time.plusMinutes(i.minutes.toLong()) }
-            IntervalCode.SECOND -> { time, i -> time.plusSeconds(i.seconds.toLong()).plusNanos(i.nanos.toLong()) }
-            IntervalCode.DAY_HOUR -> { time, i -> time.plusHours(i.hours.toLong()) }
-            IntervalCode.DAY_MINUTE -> { time, i -> time.plusHours(i.hours.toLong()).plusMinutes(i.minutes.toLong()) }
-            IntervalCode.DAY_SECOND -> { time, i -> time.plusHours(i.hours.toLong()).plusMinutes(i.minutes.toLong()).plusSeconds(i.seconds.toLong()).plusNanos(i.nanos.toLong()) }
-            IntervalCode.HOUR_MINUTE -> { time, i -> time.plusHours(i.hours.toLong()).plusMinutes(i.minutes.toLong()) }
-            IntervalCode.HOUR_SECOND -> { time, i -> time.plusHours(i.hours.toLong()).plusMinutes(i.minutes.toLong()).plusSeconds(i.seconds.toLong()).plusNanos(i.nanos.toLong()) }
-            IntervalCode.MINUTE_SECOND -> { time, i -> time.plusMinutes(i.minutes.toLong()).plusSeconds(i.seconds.toLong()).plusNanos(i.nanos.toLong()) }
+            IntervalCode.DAY,
+            IntervalCode.HOUR,
+            IntervalCode.MINUTE,
+            IntervalCode.SECOND,
+            IntervalCode.DAY_HOUR,
+            IntervalCode.DAY_MINUTE,
+            IntervalCode.DAY_SECOND,
+            IntervalCode.HOUR_MINUTE,
+            IntervalCode.HOUR_SECOND,
+            IntervalCode.MINUTE_SECOND -> { time, i -> time + Duration.ofSeconds(i.totalSeconds, i.nanos.toLong()) }
             else -> return null
         }
     }
 
     private fun localDatePlusIntervalInstance(interval: PType): ((LocalDate, Datum) -> LocalDate)? {
         return when (interval.intervalCode) {
-            IntervalCode.YEAR -> { date, i -> date.plusYears(i.years.toLong()) }
-            IntervalCode.MONTH -> { date, i -> date.plusMonths(i.months.toLong()) }
-            IntervalCode.DAY -> { date, i -> date.plusDays(i.days.toLong()) }
-            IntervalCode.HOUR -> { date, i -> date.plusDays(i.hours.toLong() / 24L) }
-            IntervalCode.MINUTE -> { date, i -> date.plusDays(i.minutes.toLong() / (24L * 60L)) }
-            IntervalCode.SECOND -> { date, i -> date.plusDays(i.seconds.toLong() / (24L * 60L * 60L)) }
-            IntervalCode.YEAR_MONTH -> { date, i -> date.plusYears(i.years.toLong()).plusMonths(i.months.toLong()) }
-            IntervalCode.DAY_HOUR -> { date, i -> date.plusDays(i.days.toLong()).plusDays(i.hours.toLong() / 24L) }
-            IntervalCode.DAY_MINUTE -> { date, i -> date.plusDays(i.days.toLong()).plusDays(i.hours.toLong() / 24L).plusDays(i.minutes.toLong() / (24L * 60L)) }
-            IntervalCode.DAY_SECOND -> { date, i -> date.plusDays(i.days.toLong()).plusDays(i.hours.toLong() / 24L).plusDays(i.minutes.toLong() / (24L * 60L)).plusDays(i.seconds.toLong() / (24L * 60L * 60L)) }
-            IntervalCode.HOUR_MINUTE -> { date, i -> date.plusDays(i.hours.toLong() / 24L).plusDays(i.minutes.toLong() / (24L * 60L)) }
-            IntervalCode.HOUR_SECOND -> { date, i -> date.plusDays(i.hours.toLong() / 24L).plusDays(i.minutes.toLong() / (24L * 60L)).plusDays(i.seconds.toLong() / (24L * 60L * 60L)) }
-            IntervalCode.MINUTE_SECOND -> { date, i -> date.plusDays(i.minutes.toLong() / (24L * 60L)).plusDays(i.seconds.toLong() / (24L * 60L * 60L)) }
+            IntervalCode.YEAR, IntervalCode.MONTH, IntervalCode.YEAR_MONTH -> { date, i -> date.plusMonths(i.totalMonths) }
+            IntervalCode.DAY,
+            IntervalCode.HOUR,
+            IntervalCode.MINUTE,
+            IntervalCode.SECOND,
+            IntervalCode.DAY_HOUR,
+            IntervalCode.DAY_MINUTE,
+            IntervalCode.DAY_SECOND,
+            IntervalCode.HOUR_MINUTE,
+            IntervalCode.HOUR_SECOND,
+            IntervalCode.MINUTE_SECOND -> { date, i -> date.plusDays(i.days.toLong()) }
             else -> return null
         }
     }
@@ -259,17 +257,29 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
                 val p: Int = lhs.precision // TODO: Do we need to calculate a new precision?
                 val s: Int = 6 // TODO: Do we need to calculate a new fractional precision?
                 basic(PType.intervalDaySecond(p, s)) { args ->
-                    val interval0 = args[0]
-                    val interval1 = args[1]
-                    addIntervalDayTimes(interval0, interval1, p, s)
+                    val i1 = args[0]
+                    val i2 = args[1]
+                    Datum.intervalDaySecond(
+                        i1.days + i2.days,
+                        i1.hours + i2.hours,
+                        i1.minutes + i2.minutes,
+                        i1.seconds + i2.seconds,
+                        i1.nanos + i2.nanos,
+                        p,
+                        s
+                    )
                 }
             }
             isYearMonthInterval(lhsCode) && isYearMonthInterval(rhsCode) -> {
-                val p: Int = lhs.precision // TODO: Do we need to calculate a new precision?
+                val p = INTERVAL_MAX_PRECISION // Based on SQL2023 6.44 SR 2)c), precision is implementation-defined. Set to max
                 basic(PType.intervalYearMonth(p)) { args ->
-                    val interval0 = args[0]
-                    val interval1 = args[1]
-                    addIntervalYearMonths(interval0, interval1, p)
+                    val i1 = args[0]
+                    val i2 = args[1]
+                    Datum.intervalYearMonth(
+                        i1.years + i2.years,
+                        i1.months + i2.months,
+                        p
+                    )
                 }
             }
             else -> null
@@ -299,21 +309,6 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             IntervalCode.MINUTE_SECOND -> true
             else -> false
         }
-    }
-
-    private fun addIntervalYearMonths(lhs: Datum, rhs: Datum, precision: Int): Datum {
-        val (months, yearsRemainder) = getRemainder(lhs.months + rhs.months, 12)
-        val years = lhs.years + rhs.years + yearsRemainder
-        return Datum.intervalYearMonth(years, months, precision)
-    }
-
-    private fun addIntervalDayTimes(lhs: Datum, rhs: Datum, precision: Int, scale: Int): Datum {
-        val (nanos, secondsRemainder) = getRemainder(lhs.nanos + rhs.nanos, 1_000_000_000)
-        val (seconds, minutesRemainder) = getRemainder(lhs.seconds + rhs.seconds + secondsRemainder, 60)
-        val (minutes, hoursRemainder) = getRemainder(lhs.minutes + rhs.minutes + minutesRemainder, 60)
-        val (hours, daysRemainder) = getRemainder(lhs.hours + rhs.hours + hoursRemainder, 12)
-        val days = lhs.days + rhs.days + daysRemainder
-        return Datum.intervalDaySecond(days, hours, minutes, seconds, nanos, precision, scale)
     }
 
     private fun getRemainder(value: Int, divisor: Int): Pair<Int, Int> {

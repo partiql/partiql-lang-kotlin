@@ -4,17 +4,20 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.IntervalCode;
 import org.partiql.spi.types.PType;
 
+import java.time.Duration;
+
+import static org.partiql.spi.utils.IntervalUtils.NANOS_PER_SECOND;
+import static org.partiql.spi.utils.IntervalUtils.SECONDS_PER_DAY;
+import static org.partiql.spi.utils.IntervalUtils.SECONDS_PER_HOUR;
+import static org.partiql.spi.utils.IntervalUtils.SECONDS_PER_MINUTE;
+
 /**
  * This shall always be package-private (internal). This class does NOT normalize any of the interval's values. We
  * expect that all values have been normalized and checked already. This also lazily creates its type.
  */
 class DatumIntervalDayTime implements Datum {
 
-    private final int days;
-    private final int hours;
-    private final int minutes;
-    private final int seconds;
-    private final int nanos;
+    private final Duration _duration;
     private final int precision;
     private final int fractionalPrecision;
     private final int intervalCode;
@@ -23,11 +26,9 @@ class DatumIntervalDayTime implements Datum {
     private PType _type;
 
     DatumIntervalDayTime(int days, int hours, int minutes, int seconds, int nanos, int precision, int fractionalPrecision, int intervalCode) {
-        this.days = days;
-        this.hours = hours;
-        this.minutes = minutes;
-        this.seconds = seconds;
-        this.nanos = coerceNanos(nanos, fractionalPrecision);
+        long totalWholeSeconds = days * SECONDS_PER_DAY + hours * SECONDS_PER_HOUR + minutes * SECONDS_PER_MINUTE + seconds;
+        long totalNanos = coerceNanos(nanos, fractionalPrecision);
+        this._duration = Duration.ofSeconds(totalWholeSeconds, totalNanos);
         this.precision = precision;
         this.fractionalPrecision = fractionalPrecision;
         this.intervalCode = intervalCode;
@@ -46,8 +47,7 @@ class DatumIntervalDayTime implements Datum {
      * @return the coerced nanos
      */
     private static int coerceNanos(int nanos, int fractionalPrecision) {
-        int change = (int) Math.pow(10, 9 - fractionalPrecision);
-        return (nanos / change) * change;
+        return DatumIntervalHelpers.coerceNanos(nanos, fractionalPrecision);
     }
 
     @NotNull
@@ -98,34 +98,58 @@ class DatumIntervalDayTime implements Datum {
 
     @Override
     public int getDays() throws InvalidOperationException, NullPointerException {
-        return days;
+        return Math.toIntExact(_duration.toDaysPart());
     }
 
     @Override
     public int getHours() {
-        return hours;
+        return _duration.toHoursPart();
     }
 
     @Override
     public int getMinutes() throws InvalidOperationException, NullPointerException {
-        return minutes;
+        return _duration.toMinutesPart();
     }
 
     @Override
     public int getSeconds() throws InvalidOperationException, NullPointerException {
-        return this.seconds;
+        if (_duration.isNegative()) {
+            return Math.toIntExact((_duration.toSecondsPart() * NANOS_PER_SECOND + _duration.getNano()) / NANOS_PER_SECOND);
+        }
+        else {
+            return _duration.toSecondsPart();
+        }
     }
 
     @Override
     public int getNanos() {
-        return this.nanos;
+        if (_duration.isNegative() && _duration.getNano() != 0) {
+            return _duration.toNanosPart() - (int) NANOS_PER_SECOND;
+        }
+        else {
+            return _duration.toNanosPart();
+        }
+    }
+
+    @Override
+    public long getTotalSeconds() {
+        if (_duration.isNegative() && _duration.getNano() > 0) {
+            return _duration.getSeconds() + 1;
+        }
+        else {
+            return _duration.getSeconds();
+        }
     }
 
     @Override
     public String toString() {
+        String sign = "";
+        if (getTotalSeconds() == 0 && getNanos() < 0) {
+            sign = "-";
+        }
         return "DatumIntervalDayTime{" +
                 "_type=" + getType() +
-                ", _value=" + "INTERVAL '" + days + " " + hours + ":" + minutes + ":" + seconds + "." + nanos + "'" +
+                ", _value=" + "INTERVAL '" + sign + Math.abs(getDays()) + " " + Math.abs(getHours()) + ":" + Math.abs(getMinutes()) + ":" + Math.abs(getSeconds()) + "." + Math.abs(getNanos()) + "'" +
                 '}';
     }
 }
