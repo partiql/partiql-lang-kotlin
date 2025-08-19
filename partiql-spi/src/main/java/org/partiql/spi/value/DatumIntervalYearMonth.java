@@ -53,17 +53,17 @@ class DatumIntervalYearMonth implements Datum {
     }
 
     @Override
-    public int getYears() throws InvalidOperationException, NullPointerException {
+    public int getYears() {
         return (int) (_months / 12);
     }
 
     @Override
-    public int getMonths() throws InvalidOperationException, NullPointerException {
+    public int getMonths() {
         return (int) (_months % 12);
     }
 
     @Override
-    public long getTotalMonths() throws InvalidOperationException, NullPointerException {
+    public long getTotalMonths() {
         return _months;
     }
 

@@ -97,7 +97,7 @@ class DatumIntervalDayTime implements Datum {
     }
 
     @Override
-    public int getDays() throws InvalidOperationException, NullPointerException {
+    public int getDays() {
         return Math.toIntExact(_duration.toDaysPart());
     }
 
@@ -107,12 +107,12 @@ class DatumIntervalDayTime implements Datum {
     }
 
     @Override
-    public int getMinutes() throws InvalidOperationException, NullPointerException {
+    public int getMinutes() {
         return _duration.toMinutesPart();
     }
 
     @Override
-    public int getSeconds() throws InvalidOperationException, NullPointerException {
+    public int getSeconds() {
         if (_duration.isNegative()) {
             return Math.toIntExact((_duration.toSecondsPart() * NANOS_PER_SECOND + _duration.getNano()) / NANOS_PER_SECOND);
         }
@@ -144,7 +144,7 @@ class DatumIntervalDayTime implements Datum {
     @Override
     public String toString() {
         String sign = "";
-        if (getTotalSeconds() == 0 && getNanos() < 0) {
+        if (getTotalSeconds() < 0 || (getTotalSeconds() == 0 && getNanos() < 0)) {
             sign = "-";
         }
         return "DatumIntervalDayTime{" +

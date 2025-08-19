@@ -17,6 +17,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import kotlin.math.max
 
 internal object FnPlus : DiadicArithmeticOperator("plus") {
 
@@ -254,8 +255,8 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
         val rhsCode = rhs.intervalCode
         return when {
             isDayTimeInterval(lhsCode) && isDayTimeInterval(rhsCode) -> {
-                val p: Int = lhs.precision // TODO: Do we need to calculate a new precision?
-                val s: Int = 6 // TODO: Do we need to calculate a new fractional precision?
+                val p: Int = INTERVAL_MAX_PRECISION // Based on SQL2023 6.44 SR 2)c), precision is implementation-defined. Set to max
+                val s: Int = max(lhs.fractionalPrecision, rhs.fractionalPrecision) // Based on SQL2023 6.44 SR 2)c), set to max of lhs and rhs
                 basic(PType.intervalDaySecond(p, s)) { args ->
                     val i1 = args[0]
                     val i2 = args[1]
