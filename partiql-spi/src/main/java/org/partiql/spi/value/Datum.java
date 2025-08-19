@@ -287,7 +287,7 @@ public interface Datum extends Iterable<Datum> {
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * </p>
      * <p>
-     * Returns the total amount of months for this year-month interval.
+     * Returns the total amount of months for this year-month INTERVAL.
      * </p>
      * <p>
      * This only applies to {@link PType#INTERVAL_YM}.
@@ -305,7 +305,8 @@ public interface Datum extends Iterable<Datum> {
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * </p>
      * <p>
-     * Returns the total amount of whole seconds for this day-time interval.
+     * Returns the total amount of whole seconds for this day-time INTERVAL. This does not include the nanosecond
+     * component of the day-time INTERVAL. The nanosecond component can be retrieved by calling {@link Datum#getNanos()}.
      * </p>
      * <p>
      * This only applies to {@link PType#INTERVAL_DT}.
