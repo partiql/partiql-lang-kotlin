@@ -144,7 +144,7 @@ class DatumIntervalDayTime implements Datum {
     @Override
     public String toString() {
         String sign = "";
-        if (getTotalSeconds() < 0 || (getTotalSeconds() == 0 && getNanos() < 0)) {
+        if (getTotalSeconds() < 0 || getNanos() < 0) {
             sign = "-";
         }
         return "DatumIntervalDayTime{" +

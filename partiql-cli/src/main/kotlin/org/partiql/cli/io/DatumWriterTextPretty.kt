@@ -1,6 +1,5 @@
 package org.partiql.cli.io
 
-import org.joda.time.DateTimeConstants.SECONDS_PER_DAY
 import org.joda.time.DateTimeConstants.SECONDS_PER_HOUR
 import org.joda.time.DateTimeConstants.SECONDS_PER_MINUTE
 import org.partiql.spi.types.IntervalCode
@@ -252,10 +251,10 @@ class DatumWriterTextPretty(
             }
             IntervalCode.SECOND -> {
                 this.out.print("'")
-                if (datum.totalSeconds < 0) {
+                if (datum.totalSeconds < 0 || datum.nanos < 0) {
                     this.out.print("-")
                 }
-                this.out.print((datum.days * SECONDS_PER_DAY + datum.hours * SECONDS_PER_HOUR + datum.minutes * SECONDS_PER_MINUTE + datum.seconds).absoluteValue)
+                this.out.print(datum.totalSeconds.absoluteValue)
                 this.out.print(fractionalSeconds(datum.nanos.absoluteValue, type.fractionalPrecision))
                 this.out.print("' SECOND (")
                 this.out.print(type.precision)
@@ -303,7 +302,7 @@ class DatumWriterTextPretty(
             }
             IntervalCode.DAY_SECOND -> {
                 this.out.print("'")
-                if (datum.totalSeconds < 0 || (datum.totalSeconds == 0L && datum.nanos < 0)) {
+                if (datum.totalSeconds < 0 || datum.nanos < 0) {
                     this.out.print("-")
                 }
                 this.out.print(datum.days.absoluteValue)
@@ -334,7 +333,7 @@ class DatumWriterTextPretty(
             }
             IntervalCode.HOUR_SECOND -> {
                 this.out.print("'")
-                if (datum.totalSeconds < 0 || (datum.totalSeconds == 0L && datum.nanos < 0)) {
+                if (datum.totalSeconds < 0 || datum.nanos < 0) {
                     this.out.print("-")
                 }
                 this.out.print((datum.totalSeconds / SECONDS_PER_HOUR).absoluteValue)
@@ -351,7 +350,7 @@ class DatumWriterTextPretty(
             }
             IntervalCode.MINUTE_SECOND -> {
                 this.out.print("'")
-                if (datum.totalSeconds < 0 || (datum.totalSeconds == 0L && datum.nanos < 0)) {
+                if (datum.totalSeconds < 0 || datum.nanos < 0) {
                     this.out.print("-")
                 }
                 this.out.print((datum.totalSeconds / SECONDS_PER_MINUTE).absoluteValue)

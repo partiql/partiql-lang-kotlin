@@ -7,6 +7,8 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.IntervalUtils.INTERVAL_MAX_PRECISION
+import org.partiql.spi.utils.IntervalUtils.NANO_MAX_PRECISION
 import org.partiql.spi.value.Datum
 import kotlin.math.absoluteValue
 
@@ -113,8 +115,8 @@ internal val Fn_ABS__FLOAT64__FLOAT64 = Function.overload(
 
 internal val Fn_ABS__INTERVAL_YM__INTERVAL_YM = Function.overload(
     name = "abs",
-    returns = PType.intervalYearMonth(2), // Default precision 2
-    parameters = arrayOf(Parameter("value", PType.intervalYearMonth(2))),
+    returns = PType.intervalYearMonth(INTERVAL_MAX_PRECISION),
+    parameters = arrayOf(Parameter("value", PType.intervalYearMonth(INTERVAL_MAX_PRECISION))),
 ) { args ->
     val interval = args[0]
     Datum.intervalYearMonth(
@@ -126,8 +128,8 @@ internal val Fn_ABS__INTERVAL_YM__INTERVAL_YM = Function.overload(
 
 internal val Fn_ABS__INTERVAL_DT__INTERVAL_DT = Function.overload(
     name = "abs",
-    returns = PType.intervalDaySecond(2, 6), // Default precision 2, fractional precision 6
-    parameters = arrayOf(Parameter("value", PType.intervalDaySecond(2, 6))),
+    returns = PType.intervalDaySecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION),
+    parameters = arrayOf(Parameter("value", PType.intervalDaySecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION))),
 ) { args ->
     val interval = args[0]
     Datum.intervalDaySecond(
