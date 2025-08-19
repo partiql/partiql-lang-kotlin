@@ -129,7 +129,7 @@ DatumIntervalDayTime{_type=SECOND (2, 6), _value=INTERVAL '0 0:0:45.500000000'}
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumIntervalYearMonthToString[datumMonth]=[
-DatumIntervalYearMonth{_type=MONTH (2), _value=INTERVAL '0-15'}
+DatumIntervalYearMonth{_type=MONTH (2), _value=INTERVAL '1-3'}
 ]
 
 

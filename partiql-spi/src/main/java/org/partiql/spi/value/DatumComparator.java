@@ -28,6 +28,7 @@ import static org.partiql.spi.types.PType.INTERVAL_DT;
 import static org.partiql.spi.types.PType.INTERVAL_YM;
 import static org.partiql.spi.types.PType.NUMERIC;
 import static org.partiql.spi.types.PType.REAL;
+import static org.partiql.spi.types.PType.ROW;
 import static org.partiql.spi.types.PType.SMALLINT;
 import static org.partiql.spi.types.PType.STRING;
 import static org.partiql.spi.types.PType.STRUCT;
@@ -38,7 +39,6 @@ import static org.partiql.spi.types.PType.TIMEZ;
 import static org.partiql.spi.types.PType.TINYINT;
 import static org.partiql.spi.types.PType.UNKNOWN;
 import static org.partiql.spi.types.PType.VARCHAR;
-import static org.partiql.spi.types.PType.ROW;
 
 /**
  * This class allows for the comparison between two {@link Datum}s. This is internally implemented by constructing
@@ -558,24 +558,12 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[TIMEZ] = (self, time, comp) -> self.getOffsetTime().compareTo(time.getOffsetTime());
         return comps;
     }
-    
-    private static final long SECONDS_PER_MINUTE = 60;
-    private static final long MINUTES_PER_HOUR = 60;
-    private static final long HOURS_PER_DAY = 24;
-    private static final long SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
-    private static final long SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY;
 
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillIntervalComparator(DatumComparison[] comps) {
-        comps[INTERVAL_YM] = (self, other, comp) -> {
-            long totalMonths = self.getYears() *  (long) 12 + self.getMonths();
-            long otherTotalMonths = other.getYears() * (long) 12 + other.getMonths();
-            return Long.compare(totalMonths, otherTotalMonths);
-        };
+        comps[INTERVAL_YM] = (self, other, comp) -> Long.compare(self.getTotalMonths(), self.getTotalMonths());
         comps[INTERVAL_DT] = (self, other, comp) -> {
-            long totalSeconds = self.getDays() * SECONDS_PER_DAY + self.getHours() * SECONDS_PER_HOUR + self.getMinutes() * SECONDS_PER_MINUTE + self.getSeconds();
-            long otherTotalSeconds = other.getDays() * SECONDS_PER_DAY + other.getHours() * SECONDS_PER_HOUR + other.getMinutes() * SECONDS_PER_MINUTE + other.getSeconds();
-            int comparison = Long.compare(totalSeconds, otherTotalSeconds);
+            int comparison = Long.compare(self.getTotalSeconds(), other.getTotalSeconds());
             if (comparison != 0) {
                 return comparison;
             }

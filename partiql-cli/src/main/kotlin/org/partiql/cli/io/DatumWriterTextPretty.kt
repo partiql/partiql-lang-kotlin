@@ -1,5 +1,7 @@
 package org.partiql.cli.io
 
+import org.joda.time.DateTimeConstants.SECONDS_PER_HOUR
+import org.joda.time.DateTimeConstants.SECONDS_PER_MINUTE
 import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -221,7 +223,7 @@ class DatumWriterTextPretty(
             }
             IntervalCode.MONTH -> {
                 this.out.print("'")
-                this.out.print(datum.months)
+                this.out.print(datum.totalMonths)
                 this.out.print("' MONTH (")
                 this.out.print(type.precision)
                 this.out.print(")")
@@ -235,22 +237,25 @@ class DatumWriterTextPretty(
             }
             IntervalCode.HOUR -> {
                 this.out.print("'")
-                this.out.print(datum.hours)
+                this.out.print(datum.totalSeconds / SECONDS_PER_HOUR)
                 this.out.print("' HOUR (")
                 this.out.print(type.precision)
                 this.out.print(")")
             }
             IntervalCode.MINUTE -> {
                 this.out.print("'")
-                this.out.print(datum.minutes)
+                this.out.print(datum.totalSeconds / SECONDS_PER_MINUTE)
                 this.out.print("' MINUTE (")
                 this.out.print(type.precision)
                 this.out.print(")")
             }
             IntervalCode.SECOND -> {
                 this.out.print("'")
-                this.out.print(datum.seconds)
-                this.out.print(fractionalSeconds(datum.nanos, type.fractionalPrecision))
+                if (datum.totalSeconds < 0 || datum.nanos < 0) {
+                    this.out.print("-")
+                }
+                this.out.print(datum.totalSeconds.absoluteValue)
+                this.out.print(fractionalSeconds(datum.nanos.absoluteValue, type.fractionalPrecision))
                 this.out.print("' SECOND (")
                 this.out.print(type.precision)
                 this.out.print(", ")
@@ -259,7 +264,10 @@ class DatumWriterTextPretty(
             }
             IntervalCode.YEAR_MONTH -> {
                 this.out.print("'")
-                this.out.print(datum.years)
+                if (datum.totalMonths < 0) {
+                    this.out.print("-")
+                }
+                this.out.print(datum.years.absoluteValue)
                 this.out.print("-")
                 this.out.print(datum.months.absoluteValue)
                 this.out.print("' YEAR (")
@@ -268,7 +276,10 @@ class DatumWriterTextPretty(
             }
             IntervalCode.DAY_HOUR -> {
                 this.out.print("'")
-                this.out.print(datum.days)
+                if (datum.totalSeconds < 0) {
+                    this.out.print("-")
+                }
+                this.out.print(datum.days.absoluteValue)
                 this.out.print(" ")
                 this.out.print(datum.hours.absoluteValue)
                 this.out.print("' DAY (")
@@ -277,7 +288,10 @@ class DatumWriterTextPretty(
             }
             IntervalCode.DAY_MINUTE -> {
                 this.out.print("'")
-                this.out.print(datum.days)
+                if (datum.totalSeconds < 0) {
+                    this.out.print("-")
+                }
+                this.out.print(datum.days.absoluteValue)
                 this.out.print(" ")
                 this.out.print(datum.hours.absoluteValue)
                 this.out.print(":")
@@ -288,7 +302,10 @@ class DatumWriterTextPretty(
             }
             IntervalCode.DAY_SECOND -> {
                 this.out.print("'")
-                this.out.print(datum.days)
+                if (datum.totalSeconds < 0 || datum.nanos < 0) {
+                    this.out.print("-")
+                }
+                this.out.print(datum.days.absoluteValue)
                 this.out.print(" ")
                 this.out.print(datum.hours.absoluteValue)
                 this.out.print(":")
@@ -304,7 +321,10 @@ class DatumWriterTextPretty(
             }
             IntervalCode.HOUR_MINUTE -> {
                 this.out.print("'")
-                this.out.print(datum.hours)
+                if (datum.totalSeconds < 0) {
+                    this.out.print("-")
+                }
+                this.out.print((datum.totalSeconds / SECONDS_PER_HOUR).absoluteValue)
                 this.out.print(":")
                 this.out.print(datum.minutes.absoluteValue)
                 this.out.print("' HOUR (")
@@ -313,7 +333,10 @@ class DatumWriterTextPretty(
             }
             IntervalCode.HOUR_SECOND -> {
                 this.out.print("'")
-                this.out.print(datum.hours)
+                if (datum.totalSeconds < 0 || datum.nanos < 0) {
+                    this.out.print("-")
+                }
+                this.out.print((datum.totalSeconds / SECONDS_PER_HOUR).absoluteValue)
                 this.out.print(":")
                 this.out.print(datum.minutes.absoluteValue)
                 this.out.print(":")
@@ -327,7 +350,10 @@ class DatumWriterTextPretty(
             }
             IntervalCode.MINUTE_SECOND -> {
                 this.out.print("'")
-                this.out.print(datum.minutes)
+                if (datum.totalSeconds < 0 || datum.nanos < 0) {
+                    this.out.print("-")
+                }
+                this.out.print((datum.totalSeconds / SECONDS_PER_MINUTE).absoluteValue)
                 this.out.print(":")
                 this.out.print(datum.seconds.absoluteValue)
                 this.out.print(fractionalSeconds(datum.nanos.absoluteValue, type.fractionalPrecision))

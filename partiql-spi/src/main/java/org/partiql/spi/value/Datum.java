@@ -251,12 +251,13 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <p>
-     * Returns the years field of the interval type.
+     * Returns the normalized years field of the year-month INTERVAL.
      * </p>
      * <p>
-     * This only applies to {@link PType#INTERVAL_YM}.
+     * This only applies to {@link PType#INTERVAL_YM}. For example, an `INTERVAL '15' MONTH` will be normalized to
+     * an `INTERVAL '1-3' YEAR TO MONTH` value. This function will return the value `1`.
      * </p>
-     * @return the years field of the interval type.
+     * @return the normalized years field of the interval type.
      * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_YM}.
      * @throws NullPointerException when {@link #isNull()} is true.
      */
@@ -266,12 +267,14 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <p>
-     * Returns the months field of the interval type.
+     * Returns the normalized months field of the year-month INTERVAL.
      * </p>
      * <p>
-     * This only applies to {@link PType#INTERVAL_YM}.
+     * This only applies to {@link PType#INTERVAL_YM}. For example, an `INTERVAL '15' MONTH` will be normalized to
+     * an `INTERVAL '1-3' YEAR TO MONTH` value. This function will return the value `3`. Users can use {@link Datum#getTotalMonths()}
+     * to extract the unnormalized total amount of months.
      * </p>
-     * @return the months field of the interval type.
+     * @return the normalized months field of the interval type.
      * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_YM}.
      * @throws NullPointerException when {@link #isNull()} is true.
      */
@@ -281,12 +284,51 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <p>
-     * Returns the days field of the interval type.
+     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * </p>
+     * <p>
+     * Returns the total amount of months for this year-month INTERVAL.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_YM}.
+     * </p>
+     * @return the total number of months.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_YM}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default long getTotalMonths() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getTotalMonths");
+    }
+
+    /**
+     * <p>
+     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * </p>
+     * <p>
+     * Returns the total amount of whole seconds for this day-time INTERVAL. This does not include the nanosecond
+     * component of the day-time INTERVAL. The nanosecond component can be retrieved by calling {@link Datum#getNanos()}.
      * </p>
      * <p>
      * This only applies to {@link PType#INTERVAL_DT}.
      * </p>
-     * @return the days field of the interval type.
+     * @return the total number of whole seconds.
+     * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
+     * @throws NullPointerException when {@link #isNull()} is true.
+     */
+    default long getTotalSeconds() throws InvalidOperationException, NullPointerException {
+        throw new InvalidOperationException(getType(), "getTotalSeconds");
+    }
+
+    /**
+     * <p>
+     * Returns the normalized days field of the day-time INTERVAL.
+     * </p>
+     * <p>
+     * This only applies to {@link PType#INTERVAL_DT}. For example, an `INTERVAL '30' HOURS` will be normalized to
+     * an `INTERVAL '1 6:0:0' DAY TO SECOND` value. This function will return the value `1`. Users can use {@link Datum#getTotalSeconds()}
+     * to extract the unnormalized total amount of days.
+     * </p>
+     * @return the normalized days field of the interval type.
      * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
      * @throws NullPointerException when {@link #isNull()} is true.
      */
@@ -296,12 +338,14 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <p>
-     * Returns the hours field of the interval type.
+     * Returns the hours field of the day-time INTERVAL.
      * </p>
      * <p>
-     * This only applies to {@link PType#INTERVAL_DT}.
+     * This only applies to {@link PType#INTERVAL_DT}. For example, an `INTERVAL '90' MINUTES` will be normalized to
+     * an `INTERVAL '0 1:30:0' DAY TO SECOND` value. This function will return the value `1`. Users can use {@link Datum#getTotalSeconds()}
+     * to extract the unnormalized total amount of hours.
      * </p>
-     * @return the hours field of the interval type.
+     * @return the normalized hours field of the interval type.
      * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
      * @throws NullPointerException when {@link #isNull()} is true.
      */
@@ -311,12 +355,14 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <p>
-     * Returns the minutes field of the interval type.
+     * Returns the normalized minutes field of the day-time INTERVAL.
      * </p>
      * <p>
-     * This only applies to {@link PType#INTERVAL_DT}.
+     * This only applies to {@link PType#INTERVAL_DT}. For example, an `INTERVAL '90' MINUTE` will be normalized to
+     * an `INTERVAL '0 1:30:0' DAY TO SECOND` value. This function will return the value `30`. Users can use {@link Datum#getTotalSeconds()}
+     * to extract the unnormalized total amount of minutes.
      * </p>
-     * @return the minutes field of the interval type.
+     * @return the normalized minutes field of the interval type.
      * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
      * @throws NullPointerException when {@link #isNull()} is true.
      */
@@ -326,12 +372,14 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <p>
-     * Returns the seconds field of the interval type.
+     * Returns the normalized seconds field of the day-time INTERVAL.
      * </p>
      * <p>
-     * This only applies to {@link PType#INTERVAL_DT}.
+     * This only applies to {@link PType#INTERVAL_DT}. For example, an `INTERVAL '90' SECOND` will be normalized to
+     * an `INTERVAL '0 0:1:30' DAY TO SECOND` value. This function will return the value `30`. Users can use {@link Datum#getTotalSeconds()}
+     * to extract the unnormalized total amount of seconds.
      * </p>
-     * @return the seconds field of the interval type.
+     * @return the normalized seconds field of the interval type.
      * @throws InvalidOperationException when the type is not {@link PType#INTERVAL_DT}.
      * @throws NullPointerException when {@link #isNull()} is true.
      */

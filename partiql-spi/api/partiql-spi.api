@@ -622,6 +622,8 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun getSeconds ()I
 	public fun getShort ()S
 	public fun getString ()Ljava/lang/String;
+	public fun getTotalMonths ()J
+	public fun getTotalSeconds ()J
 	public abstract fun getType ()Lorg/partiql/spi/types/PType;
 	public fun getYears ()I
 	public static fun integer (I)Lorg/partiql/spi/value/Datum;

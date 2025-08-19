@@ -11,16 +11,16 @@ internal object IntervalUtils {
     // According to SQL1992, whether to truncate or round in the least significant
     // field of the result is implementation-defined. We implemented as truncation for Interval as most database systems do.
     private val INTERVAL_ROUNDING_MODE = RoundingMode.DOWN
-
+    internal const val INTERVAL_MAX_PRECISION = 9
     private const val INTERVAL_DEFAULT_FRACTIONAL_PRECISION = 6
-    private const val NANO_MAX_PRECISION = 9
+    internal const val NANO_MAX_PRECISION = 9
     private const val MONTHS_PER_YEAR = 12L
-    private const val SECONDS_PER_MINUTE = 60L
+    internal const val SECONDS_PER_MINUTE = 60L
     private const val MINUTES_PER_HOUR = 60L
     private const val HOURS_PER_DAY = 24L
-    private const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
-    private const val SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY
-    private const val NANOS_PER_SECOND = 1_000_000_000L
+    internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
+    internal const val SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY
+    internal const val NANOS_PER_SECOND = 1_000_000_000L
 
     /**
      * Divides an interval by a numeric value.
@@ -34,7 +34,7 @@ internal object IntervalUtils {
             IntervalCode.MONTH,
             IntervalCode.YEAR_MONTH -> { i, number ->
                 // get total months from the interval as Long Type as it can hold the interval with max precision = 9.
-                val totalMonths: Long = i.years * MONTHS_PER_YEAR + i.months
+                val totalMonths: Long = i.totalMonths
                 // For approximate number type, it will introduce inaccuracy when converting to BigDecimal,
                 // so we keep it as approximate type for the calculation.
                 // Intermediate result is converted to Long type, which will lead to fractional part truncated
@@ -83,7 +83,7 @@ internal object IntervalUtils {
             IntervalCode.MONTH,
             IntervalCode.YEAR_MONTH -> { i, number ->
                 // get total months from the interval as Long Type as it can hold the interval with max precision = 9.
-                val totalMonths: Long = i.years * MONTHS_PER_YEAR + i.months
+                val totalMonths = i.totalMonths
                 // For approximate number type, it will introduce inaccuracy when converting to BigDecimal,
                 // so we keep it as approximate type for the calculation.
                 // Intermediate result is converted to Long type, which will lead to fractional part truncated
@@ -121,11 +121,7 @@ internal object IntervalUtils {
 
     private fun toSeconds(i: Datum): BigDecimal {
         if (i.type.code() == PType.INTERVAL_DT) {
-            val daysInSeconds = i.days * SECONDS_PER_DAY
-            val hoursInSeconds = i.hours * SECONDS_PER_HOUR
-            val minutesInSeconds = i.minutes * SECONDS_PER_MINUTE
-            val totalSeconds = daysInSeconds + hoursInSeconds + minutesInSeconds + i.seconds
-            return BigDecimal.valueOf(totalSeconds).add(BigDecimal.valueOf(i.nanos.toLong(), NANO_MAX_PRECISION))
+            return BigDecimal.valueOf(i.totalSeconds).add(BigDecimal.valueOf(i.nanos.toLong(), NANO_MAX_PRECISION))
         } else {
             throw UnsupportedOperationException("Unable to convert non-INTERVAL_DT type to seconds")
         }

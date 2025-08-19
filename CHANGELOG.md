@@ -42,6 +42,8 @@ rewritten to their query representation
 - Add toString() support for all datum types
 - Add optional `distinguishNullMissing` parameter to `Datum.comparator()` to control whether `null` and `missing` are treated as equivalent or distinct in comparisons
 - Remove the extra non-character Unicode in the function name when displaying cli errors 
+- **EXPERIMENTAL** Add `Datum.getTotalMonths` to retrieve the total number of months from a year-month `Datum`
+- **EXPERIMENTAL** Add `Datum.getTotalSeconds` to retrieve the total number of seconds from a day-time `Datum`
 
 ### Changed
 
@@ -56,6 +58,7 @@ rewritten to their query representation
 - Support `INTERVAL` times and divide with numerics
 - Prioritize `missing` propagation when both `null` and `missing` exist in function args
 - Return `missing` instead of `null` for `NULLIF(MISSING, MISSING)`
+- CLI printing of mixed sign literals
 
 ### Removed
 
