@@ -24,7 +24,7 @@ class ErrorHandlingChanges {
             try {
                 val parseResult = parser.parse("Create Table 'mytable")
             } catch (e: PartiQLParserException) {
-                // rethrow for exception validation in test
+                // Rethrow for validating the exception in test
                 throw e
             }
         }
@@ -55,7 +55,7 @@ class ErrorHandlingChanges {
                 val parseResult = parser.parse("Create Table mytable")
                 val planResult = planner.plan(parseResult.root, session)
             } catch (e: Exception) {
-                // PartiQLParserException will be thrown during PartiQL process the query in the major PartiQL components
+                // Rethrow for validating the exception in test
                 throw e
             }
         }

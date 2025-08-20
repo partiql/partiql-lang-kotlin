@@ -43,8 +43,8 @@ class ErrorHandlingChanges {
                 val plan = planner.plan(parseResult.statements[0], session).plan
                 val result = compiler.prepare(plan, Mode.STRICT())
             } catch (e: PRuntimeException) {
-                // The exception should have been thrown from PartiQL. You can add your handling here.
-                // Rethrow in test for exception validation.
+                // The exception should have been thrown from PartiQL components. You can add your handling here.
+                // Rethrow for validating the exception in test
                 throw e
             }
         }
@@ -150,6 +150,7 @@ class ErrorHandlingChanges {
                 statement.execute()
             } catch (e: PRuntimeException) {
                 // A DIVISION_BY_ZERO will throw during the execution
+                // Rethrow for validating the exception in test
                 throw e
             }
         }
