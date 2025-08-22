@@ -32,7 +32,6 @@ class DatumIonReader(
     private val sourceDataFormat: DatumIonReaderBuilder.SourceDataFormat
 ) : AutoCloseable {
     private val INTERVAL_MAX_PRECISION = 9
-    
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
