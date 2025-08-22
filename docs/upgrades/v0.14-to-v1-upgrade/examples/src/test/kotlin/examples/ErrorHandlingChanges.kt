@@ -17,8 +17,8 @@ import kotlin.test.assertTrue
 
 class ErrorHandlingChanges {
     /**
-     * The example shows the error handling when using [PartiQLParser] to parse a string statement,
-     * When an error occurs, the parser will stop the parsing process by throwing the [PartiQLParserException].
+     * The example shows error handling when using [PartiQLParser] to parse a string statement,
+     * When an error occurs, the parser will stop the parsing process by throwing [PartiQLParserException].
      */
     @Test
     fun `PartiQLParser default error handling`() {
@@ -29,12 +29,12 @@ class ErrorHandlingChanges {
                 // Extra single quote is added
                 val parseResult = parser.parse("SELECT * FROM 'mytable")
             } catch (e: PartiQLParserException) {
-                // Rethrow for validating the exception in test
+                // Rethrow for validating the exception in the test
                 throw e
             }
         }
 
-        // This is a pain point with using the v0.14.9 parser. There's no proper way to extract out error information
+        // This is a pain point when using the v0.14.9 parser. There's no proper way to extract error information
         // other than looking at the error message string.
         assertTrue { exception.message.contains("extraneous input") }
         assertEquals("UNRECOGNIZED", exception.tokenType)
@@ -43,11 +43,11 @@ class ErrorHandlingChanges {
 
     /**
      *  [PartiQLPlanner] transforms an Abstract Syntax Tree (AST) from the parser into a logical query plan.
-     *  The planner does not throw for most errors. If errors occur, planner will collect multiple errors during the
+     *  The planner does not throw for most errors. If errors occur, the planner will collect multiple errors during the
      * planning phase. The planner provides an optional callback for you to handle those errors.
      *
-     * But the planner may still throw exception in certain circumstances.
-     * This example shows the error handling behavior when making a plan from a valid AST using the [PartiQLPlanner]
+     * However, the planner may still throw exception in certain circumstances.
+     * This example shows the error handling behavior when making a plan from a valid AST using [PartiQLPlanner]
      */
     @Test
     fun `PartiQLPlanner default error handling`() {
@@ -60,13 +60,13 @@ class ErrorHandlingChanges {
             catalogs = mapOf()
         )
 
-        // CREATE TABLE is not supported by planner currently
+        // The planner does not support CREATE TABLE currently
         val parseResult = parser.parse("CREATE TABLE mytable")
         val exception = assertThrows<Exception> {
             try {
                 val planResult = planner.plan(parseResult.root, session)
             } catch (e: Exception) {
-                // Rethrow for validating the exception in test
+                // Rethrow for validating the exception in the test
                 throw e
             }
         }
@@ -105,7 +105,7 @@ class ErrorHandlingChanges {
     }
 
     /**
-     * This example shows the error handling behavior of PartiQL evaluation phase.
+     * This example shows the error handling behavior of the PartiQL evaluation phase.
      */
     @Test
     fun `PartiQL evaluation phase default error handling`() {
