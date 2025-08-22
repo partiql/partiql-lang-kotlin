@@ -32,6 +32,7 @@ class DatumIonReader(
     private val sourceDataFormat: DatumIonReaderBuilder.SourceDataFormat
 ) : AutoCloseable {
     private val INTERVAL_MAX_PRECISION = 9
+    private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
@@ -184,7 +185,7 @@ class DatumIonReader(
                 PARTIQL_ANNOTATION.TIME_ANNOTATION -> Datum.nullValue(PType.time(6))
                 PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> Datum.nullValue(PType.timestamp(6))
                 PARTIQL_ANNOTATION.INTERVAL_YM_ANNOTATION -> Datum.nullValue(PType.intervalYearMonth(INTERVAL_MAX_PRECISION))
-                PARTIQL_ANNOTATION.INTERVAL_DT_ANNOTATION -> Datum.nullValue(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, INTERVAL_MAX_PRECISION))
+                PARTIQL_ANNOTATION.INTERVAL_DT_ANNOTATION -> Datum.nullValue(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, INTERVAL_MAX_FRACTIONAL_PRECISION))
                 PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Graph not yet implemented")
                 null -> Datum.nullValue()
             }
@@ -354,7 +355,7 @@ class DatumIonReader(
                             signMultiplier * seconds,
                             signMultiplier * nanos,
                             INTERVAL_MAX_PRECISION,
-                            INTERVAL_MAX_PRECISION,
+                            INTERVAL_MAX_FRACTIONAL_PRECISION,
                         )
                     }
                     null -> fromIonGeneric(reader)
