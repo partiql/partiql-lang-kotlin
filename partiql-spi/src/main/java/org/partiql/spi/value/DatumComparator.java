@@ -561,7 +561,7 @@ abstract class DatumComparator implements Comparator<Datum> {
 
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillIntervalComparator(DatumComparison[] comps) {
-        comps[INTERVAL_YM] = (self, other, comp) -> Long.compare(self.getTotalMonths(), self.getTotalMonths());
+        comps[INTERVAL_YM] = (self, other, comp) -> Long.compare(self.getTotalMonths(), other.getTotalMonths());
         comps[INTERVAL_DT] = (self, other, comp) -> {
             int comparison = Long.compare(self.getTotalSeconds(), other.getTotalSeconds());
             if (comparison != 0) {

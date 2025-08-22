@@ -31,12 +31,16 @@ class DatumIonReader(
     private val ionReader: IonReader,
     private val sourceDataFormat: DatumIonReaderBuilder.SourceDataFormat
 ) : AutoCloseable {
+    private val INTERVAL_MAX_PRECISION = 9
+    private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
         DATE_ANNOTATION("\$date"),
         TIME_ANNOTATION("\$time"),
         TIMESTAMP_ANNOTATION("\$timestamp"),
+        INTERVAL_YM_ANNOTATION("\$interval_ym"),
+        INTERVAL_DT_ANNOTATION("\$interval_dt"),
         GRAPH_ANNOTATION("\$graph")
     }
 
@@ -158,6 +162,8 @@ class DatumIonReader(
             PARTIQL_ANNOTATION.DATE_ANNOTATION -> assert(type == IonType.STRUCT)
             PARTIQL_ANNOTATION.TIME_ANNOTATION -> assert(type == IonType.STRUCT)
             PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> assert(type == IonType.STRUCT)
+            PARTIQL_ANNOTATION.INTERVAL_YM_ANNOTATION -> assert(type == IonType.STRUCT)
+            PARTIQL_ANNOTATION.INTERVAL_DT_ANNOTATION -> assert(type == IonType.STRUCT)
             PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> assert(type == IonType.STRUCT)
         }
     }
@@ -178,6 +184,8 @@ class DatumIonReader(
                 PARTIQL_ANNOTATION.DATE_ANNOTATION -> Datum.nullValue(PType.date())
                 PARTIQL_ANNOTATION.TIME_ANNOTATION -> Datum.nullValue(PType.time(6))
                 PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> Datum.nullValue(PType.timestamp(6))
+                PARTIQL_ANNOTATION.INTERVAL_YM_ANNOTATION -> Datum.nullValue(PType.intervalYearMonth(INTERVAL_MAX_PRECISION))
+                PARTIQL_ANNOTATION.INTERVAL_DT_ANNOTATION -> Datum.nullValue(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, INTERVAL_MAX_FRACTIONAL_PRECISION))
                 PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Graph not yet implemented")
                 null -> Datum.nullValue()
             }
@@ -290,6 +298,65 @@ class DatumIonReader(
                         val date = LocalDate.of(year.int, month.int, day.int)
                         val time = LocalTime.of(hour.int, minute.int, seconds, nanoOfSecond)
                         Datum.timestampz(OffsetDateTime.of(date, time, offsetTz), 9)
+                    }
+                    PARTIQL_ANNOTATION.INTERVAL_YM_ANNOTATION -> {
+                        reader.stepIn()
+                        var sign: String? = null
+                        var years = 0
+                        var months = 0
+                        while (reader.next() != null) {
+                            when (reader.fieldName) {
+                                "sign" -> sign = reader.stringValue()
+                                "years" -> years = reader.intValue()
+                                "months" -> months = reader.intValue()
+                                else -> throw IllegalArgumentException("unexpected field: ${reader.fieldName}")
+                            }
+                        }
+                        reader.stepOut()
+                        val signMultiplier = if (sign == "-") -1 else 1
+                        when {
+                            years < 0 -> throw IllegalArgumentException("years must be non-negative, got: $years")
+                            months < 0 -> throw IllegalArgumentException("months must be non-negative, got: $months")
+                        }
+                        Datum.intervalYearMonth(signMultiplier * years, signMultiplier * months, INTERVAL_MAX_PRECISION)
+                    }
+                    PARTIQL_ANNOTATION.INTERVAL_DT_ANNOTATION -> {
+                        reader.stepIn()
+                        var sign: String? = null
+                        var days = 0
+                        var hours = 0
+                        var minutes = 0
+                        var seconds = 0
+                        var nanos = 0
+                        while (reader.next() != null) {
+                            when (reader.fieldName) {
+                                "sign" -> sign = reader.stringValue()
+                                "days" -> days = reader.intValue()
+                                "hours" -> hours = reader.intValue()
+                                "minutes" -> minutes = reader.intValue()
+                                "seconds" -> seconds = reader.intValue()
+                                "nanos" -> nanos = reader.intValue()
+                                else -> throw IllegalArgumentException("unexpected field: ${reader.fieldName}")
+                            }
+                        }
+                        reader.stepOut()
+                        val signMultiplier = if (sign == "-") -1 else 1
+                        when {
+                            days < 0 -> throw IllegalArgumentException("days must be non-negative, got: $days")
+                            hours < 0 -> throw IllegalArgumentException("hours must be non-negative, got: $hours")
+                            minutes < 0 -> throw IllegalArgumentException("minutes must be non-negative, got: $minutes")
+                            seconds < 0 -> throw IllegalArgumentException("seconds must be non-negative, got: $seconds")
+                            nanos < 0 -> throw IllegalArgumentException("nanos must be non-negative, got: $nanos")
+                        }
+                        Datum.intervalDaySecond(
+                            signMultiplier * days,
+                            signMultiplier * hours,
+                            signMultiplier * minutes,
+                            signMultiplier * seconds,
+                            signMultiplier * nanos,
+                            INTERVAL_MAX_PRECISION,
+                            INTERVAL_MAX_FRACTIONAL_PRECISION,
+                        )
                     }
                     null -> fromIonGeneric(reader)
                     else -> error("Unsupported annotation.")

@@ -15,6 +15,7 @@ import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.ionTimestamp
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import kotlin.math.abs
 
 // For error display only
 internal fun Datum.toIonElement(): IonElement {
@@ -53,6 +54,33 @@ internal fun Datum.toIonElement(): IonElement {
                     fields.add(field("timezone_hour", ionInt(timezoneHours.toLong())))
                     fields.add(field("timezone_minute", ionInt(timezoneMinutes.toLong())))
                     ionStructOf(fields).withAnnotations("\$time")
+                }
+                PType.INTERVAL_YM -> {
+                    val fields = mutableListOf<StructField>()
+                    val totalMonths = this.totalMonths
+                    if (totalMonths < 0) {
+                        fields.add(field("sign", ionString("-")))
+                    } else {
+                        fields.add(field("sign", ionString("+")))
+                    }
+                    fields.add(field("years", ionInt(abs(this.years).toLong())))
+                    fields.add(field("months", ionInt(abs(this.months).toLong())))
+                    ionStructOf(fields).withAnnotations("\$interval_ym")
+                }
+                PType.INTERVAL_DT -> {
+                    val fields = mutableListOf<StructField>()
+                    val totalSeconds = this.totalSeconds
+                    if (totalSeconds < 0 || this.nanos < 0) {
+                        fields.add(field("sign", ionString("-")))
+                    } else {
+                        fields.add(field("sign", ionString("+")))
+                    }
+                    fields.add(field("days", ionInt(abs(this.days).toLong())))
+                    fields.add(field("hours", ionInt(abs(this.hours).toLong())))
+                    fields.add(field("minutes", ionInt(abs(this.minutes).toLong())))
+                    fields.add(field("seconds", ionInt(abs(this.seconds).toLong())))
+                    fields.add(field("nanos", ionInt(abs(this.nanos).toLong())))
+                    ionStructOf(fields).withAnnotations("\$interval_dt")
                 }
                 PType.ARRAY -> {
                     val elements = mutableListOf<IonElement>()
