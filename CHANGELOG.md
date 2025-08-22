@@ -44,8 +44,6 @@ rewritten to their query representation
 - Remove the extra non-character Unicode in the function name when displaying cli errors 
 - **EXPERIMENTAL** Add `Datum.getTotalMonths` to retrieve the total number of months from a year-month `Datum`
 - **EXPERIMENTAL** Add `Datum.getTotalSeconds` to retrieve the total number of seconds from a day-time `Datum`
-- `ion` representation for `INTERVAL` in conformance tests
-- Support `INTERVAL` in `partiql-tests-runner`
 
 ### Changed
 

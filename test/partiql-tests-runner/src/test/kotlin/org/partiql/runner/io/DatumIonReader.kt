@@ -31,6 +31,8 @@ class DatumIonReader(
     private val ionReader: IonReader,
     private val sourceDataFormat: DatumIonReaderBuilder.SourceDataFormat
 ) : AutoCloseable {
+    private val INTERVAL_MAX_PRECISION = 9
+    
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
@@ -182,8 +184,8 @@ class DatumIonReader(
                 PARTIQL_ANNOTATION.DATE_ANNOTATION -> Datum.nullValue(PType.date())
                 PARTIQL_ANNOTATION.TIME_ANNOTATION -> Datum.nullValue(PType.time(6))
                 PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> Datum.nullValue(PType.timestamp(6))
-                PARTIQL_ANNOTATION.INTERVAL_YM_ANNOTATION -> Datum.nullValue(PType.intervalYearMonth(9))
-                PARTIQL_ANNOTATION.INTERVAL_DT_ANNOTATION -> Datum.nullValue(PType.intervalDaySecond(9, 6))
+                PARTIQL_ANNOTATION.INTERVAL_YM_ANNOTATION -> Datum.nullValue(PType.intervalYearMonth(INTERVAL_MAX_PRECISION))
+                PARTIQL_ANNOTATION.INTERVAL_DT_ANNOTATION -> Datum.nullValue(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, INTERVAL_MAX_PRECISION))
                 PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Graph not yet implemented")
                 null -> Datum.nullValue()
             }
@@ -300,8 +302,8 @@ class DatumIonReader(
                     PARTIQL_ANNOTATION.INTERVAL_YM_ANNOTATION -> {
                         reader.stepIn()
                         var sign: String? = null
-                        var years: Int = 0
-                        var months: Int = 0
+                        var years = 0
+                        var months = 0
                         while (reader.next() != null) {
                             when (reader.fieldName) {
                                 "sign" -> sign = reader.stringValue()
@@ -312,17 +314,20 @@ class DatumIonReader(
                         }
                         reader.stepOut()
                         val signMultiplier = if (sign == "-") -1 else 1
-                        if (years < 0 || months < 0) throw IllegalArgumentException("years and months must be non-negative")
-                        Datum.intervalYearMonth(signMultiplier * years, signMultiplier * months, 9)
+                        when {
+                            years < 0 -> throw IllegalArgumentException("years must be non-negative, got: $years")
+                            months < 0 -> throw IllegalArgumentException("months must be non-negative, got: $months")
+                        }
+                        Datum.intervalYearMonth(signMultiplier * years, signMultiplier * months, INTERVAL_MAX_PRECISION)
                     }
                     PARTIQL_ANNOTATION.INTERVAL_DT_ANNOTATION -> {
                         reader.stepIn()
                         var sign: String? = null
-                        var days: Int = 0
-                        var hours: Int = 0
-                        var minutes: Int = 0
-                        var seconds: Int = 0
-                        var nanos: Int = 0
+                        var days = 0
+                        var hours = 0
+                        var minutes = 0
+                        var seconds = 0
+                        var nanos = 0
                         while (reader.next() != null) {
                             when (reader.fieldName) {
                                 "sign" -> sign = reader.stringValue()
@@ -336,8 +341,12 @@ class DatumIonReader(
                         }
                         reader.stepOut()
                         val signMultiplier = if (sign == "-") -1 else 1
-                        if (days < 0 || hours < 0 || minutes < 0 || seconds < 0 || nanos < 0) {
-                            throw IllegalArgumentException("days, hours, minutes, seconds and nanos must be non-negative")
+                        when {
+                            days < 0 -> throw IllegalArgumentException("days must be non-negative, got: $days")
+                            hours < 0 -> throw IllegalArgumentException("hours must be non-negative, got: $hours")
+                            minutes < 0 -> throw IllegalArgumentException("minutes must be non-negative, got: $minutes")
+                            seconds < 0 -> throw IllegalArgumentException("seconds must be non-negative, got: $seconds")
+                            nanos < 0 -> throw IllegalArgumentException("nanos must be non-negative, got: $nanos")
                         }
                         Datum.intervalDaySecond(
                             signMultiplier * days,
@@ -345,8 +354,8 @@ class DatumIonReader(
                             signMultiplier * minutes,
                             signMultiplier * seconds,
                             signMultiplier * nanos,
-                            9,
-                            6,
+                            INTERVAL_MAX_PRECISION,
+                            INTERVAL_MAX_PRECISION,
                         )
                     }
                     null -> fromIonGeneric(reader)

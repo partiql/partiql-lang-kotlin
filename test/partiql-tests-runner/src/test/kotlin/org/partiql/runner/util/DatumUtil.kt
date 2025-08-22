@@ -70,7 +70,11 @@ internal fun Datum.toIonElement(): IonElement {
                 PType.INTERVAL_DT -> {
                     val fields = mutableListOf<StructField>()
                     val totalSeconds = this.totalSeconds
-                    if (totalSeconds < 0 || this.nanos < 0) fields.add(field("sign", ionString("-")))
+                    if (totalSeconds < 0 || this.nanos < 0) {
+                        fields.add(field("sign", ionString("-")))
+                    } else {
+                        fields.add(field("sign", ionString("+")))
+                    }
                     fields.add(field("days", ionInt(abs(this.days).toLong())))
                     fields.add(field("hours", ionInt(abs(this.hours).toLong())))
                     fields.add(field("minutes", ionInt(abs(this.minutes).toLong())))
