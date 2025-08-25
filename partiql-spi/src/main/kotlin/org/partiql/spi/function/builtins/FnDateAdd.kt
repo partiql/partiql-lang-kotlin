@@ -17,9 +17,9 @@ internal val Fn_DATE_ADD__STRING_INT32_DATE__DATE = FunctionUtils.hidden(
         Parameter("datetime", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
 
-    IntervalUtils.dateAddHelper(args[0].string, args[1].int, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
 }
 
 internal val Fn_DATE_ADD__STRING_INT64_DATE__DATE = FunctionUtils.hidden(
@@ -31,13 +31,9 @@ internal val Fn_DATE_ADD__STRING_INT64_DATE__DATE = FunctionUtils.hidden(
         Parameter("datetime", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
 
-    val intervalValueInLong = args[1].long
-    require(intervalValueInLong in Int.MIN_VALUE..Int.MAX_VALUE) { "Value $intervalValueInLong overflows Int" }
-    val intervalValue = intervalValueInLong.toInt()
-
-    IntervalUtils.dateAddHelper(args[0].string, intervalValue, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
 }
 
 internal val Fn_DATE_ADD__STRING_INT32_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
@@ -49,12 +45,12 @@ internal val Fn_DATE_ADD__STRING_INT32_TIMESTAMP__TIMESTAMP = FunctionUtils.hidd
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
 
-    IntervalUtils.dateAddHelper(args[0].string, args[1].int, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
 }
 
-internal val Fn_DATE_ADD__STRING_INT64_TIMESTAMP__TIMESTAMP= FunctionUtils.hidden(
+internal val Fn_DATE_ADD__STRING_INT64_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
     name = "date_add",
     returns = PType.date(),
     parameters = arrayOf(
@@ -63,13 +59,9 @@ internal val Fn_DATE_ADD__STRING_INT64_TIMESTAMP__TIMESTAMP= FunctionUtils.hidde
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
 
-    val intervalValueInLong = args[1].long
-    require(intervalValueInLong in Int.MIN_VALUE..Int.MAX_VALUE) { "Value $intervalValueInLong overflows Int" }
-    val intervalValue = intervalValueInLong.toInt()
-
-    IntervalUtils.dateAddHelper(args[0].string, intervalValue, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
 }
 
 internal val Fn_DATE_ADD__STRING_INT32_TIME__TIME = FunctionUtils.hidden(
@@ -81,12 +73,12 @@ internal val Fn_DATE_ADD__STRING_INT32_TIME__TIME = FunctionUtils.hidden(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
 
-    IntervalUtils.dateAddHelper(args[0].string, args[1].int, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
 }
 
-internal val Fn_DATE_ADD__STRING_INT64_TIME__TIME= FunctionUtils.hidden(
+internal val Fn_DATE_ADD__STRING_INT64_TIME__TIME = FunctionUtils.hidden(
     name = "date_add",
     returns = PType.date(),
     parameters = arrayOf(
@@ -95,11 +87,7 @@ internal val Fn_DATE_ADD__STRING_INT64_TIME__TIME= FunctionUtils.hidden(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
 
-    val intervalValueInLong = args[1].long
-    require(intervalValueInLong in Int.MIN_VALUE..Int.MAX_VALUE) { "Value $intervalValueInLong overflows Int" }
-    val intervalValue = intervalValueInLong.toInt()
-
-    IntervalUtils.dateAddHelper(args[0].string, intervalValue, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
 }
