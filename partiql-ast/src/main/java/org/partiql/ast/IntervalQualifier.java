@@ -16,8 +16,8 @@ import java.util.Set;
  */
 public abstract class IntervalQualifier extends AstNode {
 
-    // TODO: Determine what the maximum precision is for PartiQL
-    private static final int MAX_PRECISION = 6;
+    // The maximum precision is 9 for PartiQL INTERVAL
+    private static final int MAX_PRECISION = 9;
 
     /**
      * <p>
