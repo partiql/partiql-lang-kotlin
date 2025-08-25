@@ -169,9 +169,9 @@ class ErrorHandlingChanges {
         val planner = PartiQLPlanner.standard()
         val session = Session.empty()
 
-        // There are two warnings in when .plan is called on planner
+        // There are two warnings when calling the planner on the following query:
         // 1. Invalid expression adding number and string
-        // 2. `mytable` reference is not found
+        // 2. The reference of table `mytable` is not found
         val parseResult = parser.parse("SELECT 1 + 'string' FROM mytable")
         assertDoesNotThrow {
             val plan = planner.plan(parseResult.statements[0], session).plan
