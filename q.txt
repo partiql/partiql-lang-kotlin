@@ -1,1 +1,0 @@
-DATE_ADD(DAY, -30, UTCNOW())
