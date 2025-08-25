@@ -19,7 +19,7 @@ internal val Fn_DATE_ADD__STRING_INT32_DATE__DATE = FunctionUtils.hidden(
 
 ) { args ->
 
-    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].int, args[2])
 }
 
 internal val Fn_DATE_ADD__STRING_INT64_DATE__DATE = FunctionUtils.hidden(
@@ -47,7 +47,7 @@ internal val Fn_DATE_ADD__STRING_INT32_TIMESTAMP__TIMESTAMP = FunctionUtils.hidd
 
 ) { args ->
 
-    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].int, args[2])
 }
 
 internal val Fn_DATE_ADD__STRING_INT64_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
@@ -75,7 +75,7 @@ internal val Fn_DATE_ADD__STRING_INT32_TIME__TIME = FunctionUtils.hidden(
 
 ) { args ->
 
-    IntervalUtils.dateAddHelper(args[0].string, args[1].long, args[2])
+    IntervalUtils.dateAddHelper(args[0].string, args[1].int, args[2])
 }
 
 internal val Fn_DATE_ADD__STRING_INT64_TIME__TIME = FunctionUtils.hidden(

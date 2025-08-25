@@ -125,6 +125,22 @@ internal object IntervalUtils {
         }
     }
 
+    fun dateAddHelper(intervalField: String, intervalValue: Int, datetime: Datum): Datum {
+        val interval = when (intervalField.lowercase()) {
+            "day" -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
+            "hour" -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
+            "minute" -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
+            "second" -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
+            "year" -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
+            "month" -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
+            else -> throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported interval type: $intervalField"))
+        }
+
+        val plusFn = FnPlus.getInstance(arrayOf(datetime.type, interval.type))
+            ?: throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported DATE_ADD parameters: String, Int, ${datetime.type}"))
+        return plusFn.invoke(arrayOf(datetime, interval))
+    }
+
     fun dateAddHelper(intervalField: String, intervalValue: Long, datetime: Datum): Datum {
         val intervalValueInInt = if (intervalValue in Int.MIN_VALUE..Int.MAX_VALUE) {
             intervalValue.toInt()
@@ -132,19 +148,7 @@ internal object IntervalUtils {
             throw PErrors.internalErrorException(IllegalArgumentException("Interval value is not in permitted range[${Int.MIN_VALUE}..${Int.MAX_VALUE}]"))
         }
 
-        val interval = when (intervalField.lowercase()) {
-            "day" -> Datum.intervalDay(intervalValueInInt, INTERVAL_MAX_PRECISION)
-            "hour" -> Datum.intervalHour(intervalValueInInt, INTERVAL_MAX_PRECISION)
-            "minute" -> Datum.intervalMinute(intervalValueInInt, INTERVAL_MAX_PRECISION)
-            "second" -> Datum.intervalSecond(intervalValueInInt, 0, INTERVAL_MAX_PRECISION, 0)
-            "year" -> Datum.intervalYear(intervalValueInInt, INTERVAL_MAX_PRECISION)
-            "month" -> Datum.intervalMonth(intervalValueInInt, INTERVAL_MAX_PRECISION)
-            else -> throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported interval type: $intervalField"))
-        }
-
-        val plusFn = FnPlus.getInstance(arrayOf(datetime.type, interval.type))
-            ?: throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported DATE_ADD parameters: String, Int, ${datetime.type}"))
-        return plusFn.invoke(arrayOf(datetime, interval))
+        return IntervalUtils.dateAddHelper(intervalField, intervalValueInInt, datetime)
     }
 
     fun dateDiffHelper(intervalField: String, datetime1: Datum, datetime2: Datum): Datum {
