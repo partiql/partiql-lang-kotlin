@@ -35,7 +35,8 @@ class PErrorCodeTests {
             "NUMERIC_VALUE_OUT_OF_RANGE" to 17,
             "INVALID_CHAR_VALUE_FOR_CAST" to 18,
             "DIVISION_BY_ZERO" to 19,
-            "DEGREE_VIOLATION_SCALAR_SUBQUERY" to 20
+            "DEGREE_VIOLATION_SCALAR_SUBQUERY" to 20,
+            "EXPERIMENTAL" to 21,
         )
 
         // Preparation

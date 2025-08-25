@@ -8,6 +8,7 @@ import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.refAgg
 import org.partiql.planner.internal.ir.refFn
 import org.partiql.planner.internal.ir.relOpAggregateCallResolved
+import org.partiql.planner.internal.ir.relOpWindowWindowFunction
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCastResolved
@@ -15,6 +16,7 @@ import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
+import org.partiql.planner.internal.window.WindowFunctionSignatureProvider
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Catalogs
 import org.partiql.spi.catalog.Identifier
@@ -76,11 +78,15 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
         }
     }
 
-    fun getCandidates(identifier: Identifier, args: List<Rex>): List<FnOverload> = getCandidates(identifier, args.size)
+    fun resolveWindowFn(name: String, args: List<Rex>, isIgnoreNulls: Boolean = false): Rel.Op.Window.WindowFunction? {
+        val sig = WindowFunctionSignatureProvider.get(name, args, isIgnoreNulls) ?: return null
+        val paramTypes = sig.parameterTypes.map { it.toCType() }
+        return relOpWindowWindowFunction(sig.name, args, sig.isIgnoreNulls, paramTypes, sig.returnType.toCType())
+    }
 
-    fun getCandidates(identifier: Identifier, arity: Int): List<FnOverload> {
+    fun getCandidates(identifier: Identifier, args: List<Rex>): List<FnOverload> {
         return findFirstInCatalog { catalog ->
-            getCandidates(identifier, arity, catalog)
+            getCandidates(identifier, args.size, catalog)
         } ?: emptyList()
     }
 
