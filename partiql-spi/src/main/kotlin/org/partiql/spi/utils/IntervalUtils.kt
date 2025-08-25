@@ -9,6 +9,7 @@ import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import kotlin.ranges.contains
 
 internal object IntervalUtils {
     // According to SQL1992, whether to truncate or round in the least significant
@@ -23,6 +24,8 @@ internal object IntervalUtils {
     private const val HOURS_PER_DAY = 24L
     internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
     internal const val SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY
+    internal const val SECONDS_PER_MONTH = SECONDS_PER_DAY * 30
+    internal const val SECONDS_PER_YEAR = SECONDS_PER_MONTH * 365
     internal const val NANOS_PER_SECOND = 1_000_000_000L
 
     /**
@@ -122,14 +125,20 @@ internal object IntervalUtils {
         }
     }
 
-    fun dateAddHelper(intervalField: String, intervalValue: Int, datetime: Datum): Datum {
-        val interval = when (intervalField.toLowerCase()) {
-            "day" -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
-            "hour" -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
-            "minute" -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
-            "second" -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
-            "year" -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
-            "month" -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
+    fun dateAddHelper(intervalField: String, intervalValue: Long, datetime: Datum): Datum {
+        val intervalValueInInt = if (intervalValue in Int.MIN_VALUE..Int.MAX_VALUE) {
+            intervalValue.toInt()
+        } else {
+            throw PErrors.internalErrorException(IllegalArgumentException("Interval value is not in permitted range[${Int.MIN_VALUE}..${Int.MAX_VALUE}]"))
+        }
+
+        val interval = when (intervalField.lowercase()) {
+            "day" -> Datum.intervalDay(intervalValueInInt, INTERVAL_MAX_PRECISION)
+            "hour" -> Datum.intervalHour(intervalValueInInt, INTERVAL_MAX_PRECISION)
+            "minute" -> Datum.intervalMinute(intervalValueInInt, INTERVAL_MAX_PRECISION)
+            "second" -> Datum.intervalSecond(intervalValueInInt, 0, INTERVAL_MAX_PRECISION, 0)
+            "year" -> Datum.intervalYear(intervalValueInInt, INTERVAL_MAX_PRECISION)
+            "month" -> Datum.intervalMonth(intervalValueInInt, INTERVAL_MAX_PRECISION)
             else -> throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported interval type: $intervalField"))
         }
 
@@ -138,22 +147,23 @@ internal object IntervalUtils {
         return plusFn.invoke(arrayOf(datetime, interval))
     }
 
-    fun dateDiffHelper(intervalField: String, intervalValue: Int, datetime: Datum): Datum {
-        val interval = when (intervalField) {
-            "day" -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
-            "hour" -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
-            "minute" -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
-            "second" -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
-            "year" -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
-            "month" -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
+    fun dateDiffHelper(intervalField: String, datetime1: Datum, datetime2: Datum): Datum {
+        val minusFn = FnMinus.getInstance(arrayOf(datetime1.type, datetime2.type))
+            ?: throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported DATE_DIFF parameters: String, ${datetime1.type}, ${datetime2.type}"))
+
+        val result = minusFn.invoke(arrayOf(datetime1, datetime2))
+        val totalSeconds = result.totalSeconds
+
+        return when (intervalField.lowercase()) {
+            "day" -> Datum.bigint(totalSeconds / SECONDS_PER_DAY)
+            "hour" -> Datum.bigint(totalSeconds / SECONDS_PER_HOUR)
+            "minute" -> Datum.bigint(totalSeconds / SECONDS_PER_MINUTE)
+            "second" -> Datum.bigint(totalSeconds)
+            "year" -> Datum.bigint(totalSeconds / (SECONDS_PER_YEAR))
+            "month" -> Datum.bigint(totalSeconds / MONTHS_PER_YEAR)
             else -> throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported interval type: $intervalField"))
         }
-
-        val minusFn = FnMinus.getInstance(arrayOf(datetime.type, interval.type))
-            ?: throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported DATE_DIFF parameters: String, Int, ${datetime.type}"))
-        return minusFn.invoke(arrayOf(datetime, interval))
     }
-
 
     private fun toSeconds(i: Datum): BigDecimal {
         if (i.type.code() == PType.INTERVAL_DT) {
