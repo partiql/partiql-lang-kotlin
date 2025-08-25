@@ -1,5 +1,8 @@
 package org.partiql.spi.utils
 
+import org.partiql.spi.function.builtins.FnMinus
+import org.partiql.spi.function.builtins.FnPlus
+import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -119,6 +122,39 @@ internal object IntervalUtils {
         }
     }
 
+    fun dateAddHelper(intervalField: String, intervalValue: Int, datetime: Datum): Datum {
+        val interval = when (intervalField.toLowerCase()) {
+            "day" -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
+            "hour" -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
+            "minute" -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
+            "second" -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
+            "year" -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
+            "month" -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
+            else -> throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported interval type: $intervalField"))
+        }
+
+        val plusFn = FnPlus.getInstance(arrayOf(datetime.type, interval.type))
+            ?: throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported DATE_ADD parameters: String, Int, ${datetime.type}"))
+        return plusFn.invoke(arrayOf(datetime, interval))
+    }
+
+    fun dateDiffHelper(intervalField: String, intervalValue: Int, datetime: Datum): Datum {
+        val interval = when (intervalField) {
+            "day" -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
+            "hour" -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
+            "minute" -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
+            "second" -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
+            "year" -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
+            "month" -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
+            else -> throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported interval type: $intervalField"))
+        }
+
+        val minusFn = FnMinus.getInstance(arrayOf(datetime.type, interval.type))
+            ?: throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported DATE_DIFF parameters: String, Int, ${datetime.type}"))
+        return minusFn.invoke(arrayOf(datetime, interval))
+    }
+
+
     private fun toSeconds(i: Datum): BigDecimal {
         if (i.type.code() == PType.INTERVAL_DT) {
             return BigDecimal.valueOf(i.totalSeconds).add(BigDecimal.valueOf(i.nanos.toLong(), NANO_MAX_PRECISION))
@@ -158,12 +194,14 @@ internal object IntervalUtils {
             IntervalCode.MINUTE_SECOND,
             IntervalCode.HOUR_SECOND,
             IntervalCode.DAY_SECOND -> interval.fractionalPrecision
+
             IntervalCode.DAY,
             IntervalCode.DAY_HOUR,
             IntervalCode.DAY_MINUTE,
             IntervalCode.HOUR,
             IntervalCode.HOUR_MINUTE,
             IntervalCode.MINUTE -> INTERVAL_DEFAULT_FRACTIONAL_PRECISION
+
             else -> throw IllegalArgumentException("Cannot get fractional precision for non-INTERVAL_DT type")
         }
     }
