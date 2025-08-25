@@ -1878,11 +1878,12 @@ internal class PartiQLParserDefault : PartiQLParser {
             val lhs = visitExpr(ctx.expr(0))
             val rhs = visitExpr(ctx.expr(1))
             val fieldLit = ctx.dt.text.lowercase()
+            val datetimeField = exprLit(Literal.string(fieldLit))
             // TODO error on invalid datetime fields like TIMEZONE_HOUR and TIMEZONE_MINUTE
             // TODO: This should (maybe) be parsed into its own node. We could convert this into an operator. See https://github.com/partiql/partiql-lang-kotlin/issues/1690.
             when {
-                ctx.DATE_ADD() != null -> exprCall(regular("${SYSTEM_PREFIX_INTERNAL}date_add_$fieldLit"), listOf(lhs, rhs), null)
-                ctx.DATE_DIFF() != null -> exprCall(regular("${SYSTEM_PREFIX_INTERNAL}date_diff_$fieldLit"), listOf(lhs, rhs), null)
+                ctx.DATE_ADD() != null -> exprCall(regular("${SYSTEM_PREFIX_INTERNAL}date_add"), listOf(datetimeField, lhs, rhs), null)
+                ctx.DATE_DIFF() != null -> exprCall(regular("${SYSTEM_PREFIX_INTERNAL}date_diff"), listOf(datetimeField, lhs, rhs), null)
                 else -> throw error(ctx, "Expected DATE_ADD or DATE_DIFF")
             }
         }
