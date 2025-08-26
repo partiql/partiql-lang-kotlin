@@ -59,7 +59,7 @@ rewritten to their query representation
 - Prioritize `missing` propagation when both `null` and `missing` exist in function args
 - Return `missing` instead of `null` for `NULLIF(MISSING, MISSING)`
 - CLI printing of mixed sign literals
-- Parsing `TIMESTAMP` and `TIME` with timezone
+- Parsing of `TIMESTAMP` and `TIME` literals with timezone offsets
 
 ### Removed
 
