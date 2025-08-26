@@ -2073,26 +2073,31 @@ internal class PartiQLParserDefault : PartiQLParser {
             val pattern = ctx.LITERAL_STRING().symbol
             val timeString = ctx.LITERAL_STRING().getStringValue()
             if (GENERIC_TIME_REGEX.matches(timeString).not()) {
-                throw error(pattern, "Expected TIME string to be of the format HH:mm:ss[.SSS]")
+                throw error(pattern, "Expected TIME string to be of the format HH:mm:ss[.SSS][+HH:MM]")
             }
             val precision = ctx.LITERAL_INTEGER()?.let {
                 val p = it.text.toBigInteger().toInt()
                 if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds [0,9]")
                 p
             }
-            val type = when (ctx.ZONE()) {
-                null -> {
-                    if (precision == null) {
-                        DataType.TIME()
-                    } else {
-                        DataType.TIME(precision)
-                    }
-                }
-                else -> {
+            val hasTimezoneLiteral = timeString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
+            if (ctx.ZONE() != null && !hasTimezoneLiteral) {
+                throw error(pattern, "TIME WITH TIME ZONE specified without a timezone offset in the literal string")
+            }
+            val hasTimezone = hasTimezoneLiteral || ctx.ZONE() != null
+            val type = when (hasTimezone) {
+                true -> {
                     if (precision == null) {
                         DataType.TIME_WITH_TIME_ZONE()
                     } else {
                         DataType.TIME_WITH_TIME_ZONE(precision)
+                    }
+                }
+                false -> {
+                    if (precision == null) {
+                        DataType.TIME()
+                    } else {
+                        DataType.TIME(precision)
                     }
                 }
             }
@@ -2103,26 +2108,31 @@ internal class PartiQLParserDefault : PartiQLParser {
             val pattern = ctx.LITERAL_STRING().symbol
             val timestampString = ctx.LITERAL_STRING().getStringValue()
             if (GENERIC_TIMESTAMP_REGEX.matches(timestampString).not()) {
-                throw error(pattern, "Expected TIMESTAMP string to be of the format yyyy-MM-dd HH:mm:ss[.SSS]")
+                throw error(pattern, "Expected TIMESTAMP string to be of the format yyyy-MM-dd HH:mm:ss[.SSS][+HH:MM]")
             }
             val precision = ctx.LITERAL_INTEGER()?.let {
                 val p = it.text.toBigInteger().toInt()
                 if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds")
                 p
             }
-            val type = when (ctx.ZONE()) {
-                null -> {
-                    if (precision == null) {
-                        DataType.TIMESTAMP()
-                    } else {
-                        DataType.TIMESTAMP(precision)
-                    }
-                }
-                else -> {
+            val hasTimezoneLiteral = timestampString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
+            if (ctx.ZONE() != null && !hasTimezoneLiteral) {
+                throw error(pattern, "TIMESTAMP WITH TIME ZONE specified without a timezone offset in the literal string")
+            }
+            val hasTimezone = hasTimezoneLiteral || ctx.ZONE() != null
+            val type = when (hasTimezone) {
+                true -> {
                     if (precision == null) {
                         DataType.TIMESTAMP_WITH_TIME_ZONE()
                     } else {
                         DataType.TIMESTAMP_WITH_TIME_ZONE(precision)
+                    }
+                }
+                false -> {
+                    if (precision == null) {
+                        DataType.TIMESTAMP()
+                    } else {
+                        DataType.TIMESTAMP(precision)
                     }
                 }
             }
