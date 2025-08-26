@@ -4,12 +4,17 @@ import org.partiql.ast.DatetimeField
 import org.partiql.ast.IntervalQualifier
 import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedFractionalPrecisionMeta
 import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedPrecisionMeta
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import kotlin.ranges.contains
 
 internal object IntervalUtils {
+
+    private const val INTERVAL_MAX_PRECISION = 9
 
     /**
      * Parses an interval string into a [Datum] object, given a [qualifier].
@@ -23,6 +28,31 @@ internal object IntervalUtils {
             is IntervalQualifier.Single -> parseIntervalSingle(input, qualifier)
             is IntervalQualifier.Range -> parseIntervalRange(input, qualifier)
             else -> error("Unexpected IntervalQualifier JVM class: ${qualifier.javaClass.simpleName}")
+        }
+    }
+
+    internal fun convertDateFunctionArgToInterval(id: Identifier, intervalDatum: Datum): Datum {
+        val intervalValue = when (intervalDatum.type.code()) {
+            PType.INTEGER -> intervalDatum.int
+            PType.BIGINT -> {
+                val value = intervalDatum.long
+                if (value in Int.MIN_VALUE..Int.MAX_VALUE) {
+                    value.toInt()
+                } else {
+                    error("The interval value [$value] is out of the allowed range: [${Int.MIN_VALUE}..${Int.MAX_VALUE}]")
+                }
+            }
+            else -> error("Unexpected intervalDatum type: $intervalDatum")
+        }
+
+        return when (id.getIdentifier().getText()) {
+            FunctionUtils.FN_DATE_ADD_DAY -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
+            FunctionUtils.FN_DATE_ADD_HOUR -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
+            FunctionUtils.FN_DATE_ADD_MINUTE -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
+            FunctionUtils.FN_DATE_ADD_SECOND -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
+            FunctionUtils.FN_DATE_ADD_YEAR -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
+            FunctionUtils.FN_DATE_ADD_MONTH -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
+            else -> error("Unexpected date_add function name: ${id.getIdentifier().getText()}")
         }
     }
 

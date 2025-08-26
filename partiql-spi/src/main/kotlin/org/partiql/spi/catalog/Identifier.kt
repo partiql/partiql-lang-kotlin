@@ -87,6 +87,13 @@ public class Identifier private constructor(
     }
 
     /**
+     * Compares this identifier to a list of strings, possibly ignoring case.
+     */
+    public fun matches(others: List<String>, ignoreCase: Boolean = false): Boolean {
+        return others.any { matches(it, ignoreCase) }
+    }
+
+    /**
      * Compares the case-preserved text of two identifiers — that is case-sensitive equality.
      */
     public override fun equals(other: Any?): Boolean {
