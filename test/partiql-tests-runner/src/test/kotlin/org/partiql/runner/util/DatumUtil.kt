@@ -32,7 +32,7 @@ internal fun Datum.toIonElement(): IonElement {
                 PType.DOUBLE -> ionFloat(this.double)
                 PType.REAL -> ionFloat(this.float.toDouble())
                 PType.TIMESTAMP -> ionTimestamp(this.localDateTime.toString() + "Z")
-                PType.TIMESTAMPZ -> ionTimestamp(this.localDateTime.toString())
+                PType.TIMESTAMPZ -> ionTimestamp(this.offsetDateTime.toString())
                 PType.DATE -> ionString(this.localDate.toString()).withAnnotations("\$date")
                 PType.TIME -> {
                     val time = this.localTime
