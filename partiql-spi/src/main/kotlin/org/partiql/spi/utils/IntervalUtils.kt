@@ -1,7 +1,6 @@
 package org.partiql.spi.utils
 
 import org.partiql.spi.function.builtins.FnMinus
-import org.partiql.spi.function.builtins.FnPlus
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
@@ -9,7 +8,6 @@ import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import kotlin.ranges.contains
 
 internal object IntervalUtils {
     // According to SQL1992, whether to truncate or round in the least significant

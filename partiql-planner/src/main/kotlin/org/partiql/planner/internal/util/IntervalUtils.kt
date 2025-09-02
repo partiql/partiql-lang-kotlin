@@ -4,7 +4,7 @@ import org.partiql.ast.DatetimeField
 import org.partiql.ast.IntervalQualifier
 import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedFractionalPrecisionMeta
 import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedPrecisionMeta
-import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
@@ -31,7 +31,11 @@ internal object IntervalUtils {
         }
     }
 
-    internal fun convertDateFunctionArgToInterval(id: Identifier, intervalDatum: Datum): Datum {
+    internal fun convertDateFunctionArgToInterval(field: DatetimeField, intervalDatum: Datum): Datum {
+        if(intervalDatum.type.code() == PType.UNKNOWN) {
+            return intervalDatum
+        }
+
         val intervalValue = when (intervalDatum.type.code()) {
             PType.INTEGER -> intervalDatum.int
             PType.BIGINT -> {
@@ -45,14 +49,14 @@ internal object IntervalUtils {
             else -> error("Unexpected intervalDatum type: $intervalDatum")
         }
 
-        return when (id.getIdentifier().getText()) {
-            FunctionUtils.FN_DATE_ADD_DAY -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
-            FunctionUtils.FN_DATE_ADD_HOUR -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
-            FunctionUtils.FN_DATE_ADD_MINUTE -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
-            FunctionUtils.FN_DATE_ADD_SECOND -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
-            FunctionUtils.FN_DATE_ADD_YEAR -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
-            FunctionUtils.FN_DATE_ADD_MONTH -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
-            else -> error("Unexpected date_add function name: ${id.getIdentifier().getText()}")
+        return when (field.code()) {
+            DatetimeField.DAY -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
+            DatetimeField.HOUR -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
+            DatetimeField.MINUTE -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
+            DatetimeField.SECOND -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
+            DatetimeField.YEAR -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
+            DatetimeField.MONTH -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
+            else -> error("Unexpected DatetimeField: ${field.name()}")
         }
     }
 
