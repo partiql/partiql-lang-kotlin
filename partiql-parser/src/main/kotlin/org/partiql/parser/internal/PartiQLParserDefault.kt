@@ -1871,7 +1871,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitDateFunction(ctx: GeneratedParser.DateFunctionContext) = translate(ctx) {
             try {
-                DatetimeField.parse(ctx.dt.text)
+                DatetimeField.parse(ctx.dt.text.uppercase())
             } catch (ex: IllegalArgumentException) {
                 throw error(ctx.dt, "Expected one of: ${DatetimeField.codes().joinToString()}", ex)
             }
