@@ -31,6 +31,7 @@ class DatumIonReader(
     private val ionReader: IonReader,
     private val sourceDataFormat: DatumIonReaderBuilder.SourceDataFormat
 ) : AutoCloseable {
+    private val MINUTES_PER_HOUR = 60
     private val INTERVAL_MAX_PRECISION = 9
     private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
@@ -116,7 +117,11 @@ class DatumIonReader(
                 val ts = reader.timestampValue()
                 val tz = when (ts.localOffset) {
                     null -> ZoneOffset.UTC
-                    else -> ZoneOffset.ofHoursMinutes(ts.zHour, ts.zMinute)
+                    else -> {
+                        val offsetHour: Int = ts.localOffset / MINUTES_PER_HOUR
+                        val offsetMinute: Int = ts.localOffset % MINUTES_PER_HOUR
+                        ZoneOffset.ofHoursMinutes(offsetHour, offsetMinute)
+                    }
                 }
                 // [0-59].000_000_000
                 val ds = ts.decimalSecond
@@ -262,7 +267,7 @@ class DatumIonReader(
                         reader.stepOut()
                         val offsetTz = when {
                             offset == null || offset.isNull -> ZoneOffset.UTC
-                            else -> ZoneOffset.ofHoursMinutes(offset.int / 60, offset.int % 60)
+                            else -> ZoneOffset.ofHoursMinutes(offset.int / MINUTES_PER_HOUR, offset.int % MINUTES_PER_HOUR)
                         }
                         // calculate second/nanos
                         val ds = second.bigDecimal
@@ -288,7 +293,7 @@ class DatumIonReader(
                         reader.stepOut()
                         val offsetTz = when {
                             offset == null || offset.isNull -> ZoneOffset.UTC
-                            else -> ZoneOffset.ofHoursMinutes(offset.int / 60, offset.int % 60)
+                            else -> ZoneOffset.ofHoursMinutes(offset.int / MINUTES_PER_HOUR, offset.int % MINUTES_PER_HOUR)
                         }
                         // calculate second/nanos
                         val ds = second.bigDecimal
