@@ -44,6 +44,8 @@ rewritten to their query representation
 - Remove the extra non-character Unicode in the function name when displaying cli errors 
 - **EXPERIMENTAL** Add `Datum.getTotalMonths` to retrieve the total number of months from a year-month `Datum`
 - **EXPERIMENTAL** Add `Datum.getTotalSeconds` to retrieve the total number of seconds from a day-time `Datum`
+- fix the parsing of DATE_ADD/DATE_DIFF with an uncapitalized datetime field argument.
+- fix that wrong offset is set when parsing Ion timestamp with time zone into Datum.
 
 ### Changed
 
