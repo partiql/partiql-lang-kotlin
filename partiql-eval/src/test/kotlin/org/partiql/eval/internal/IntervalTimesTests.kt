@@ -191,8 +191,8 @@ class IntervalTimesTests {
             Input(INTERVAL_S, "NULL", Datum.nullValue()),
             Input(INTERVAL_DTS, "NULL", Datum.nullValue())
         ).map { case ->
-            SuccessTestCase("${case.arg0} / ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg0} / ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
         }
 
         @JvmStatic
