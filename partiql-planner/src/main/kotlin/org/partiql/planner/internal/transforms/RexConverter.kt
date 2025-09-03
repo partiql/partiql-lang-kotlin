@@ -639,7 +639,7 @@ internal object RexConverter {
                 return visitExprCallExists(node, context)
             }
 
-            // date_add is converted to fnplus(datetime + interval) and date_diff is converted fnextract(intervalType, fnminus(dt1, dt2))
+            // date_add is converted to fnplus(datetime + interval)
             if (isDateFunction(id)) {
                 return visitExprCallDateFunction(id, node, context)
             }
@@ -728,13 +728,7 @@ internal object RexConverter {
                         FunctionUtils.FN_DATE_ADD_MINUTE,
                         FunctionUtils.FN_DATE_ADD_SECOND,
                         FunctionUtils.FN_DATE_ADD_YEAR,
-                        FunctionUtils.FN_DATE_ADD_MONTH,
-                        FunctionUtils.FN_DATE_DIFF_DAY,
-                        FunctionUtils.FN_DATE_DIFF_HOUR,
-                        FunctionUtils.FN_DATE_DIFF_MINUTE,
-                        FunctionUtils.FN_DATE_DIFF_SECOND,
-                        FunctionUtils.FN_DATE_DIFF_YEAR,
-                        FunctionUtils.FN_DATE_DIFF_MONTH,
+                        FunctionUtils.FN_DATE_ADD_MONTH
                     ),
                     ignoreCase = true
                 )
@@ -760,52 +754,10 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        /**
-         * Converts DATE_ADD_* function calls to plus operations with intervals.
-         *
-         * Transforms DATE_ADD(interval_Type, interval_value, datetime) into datetime + interval in planner
-         *
-         * @param node The ExprCall node representing the DATE_ADD function call
-         * @param context The planning environment context
-         * @return Rex node representing the equivalent plus operation, or falls back to unresolved call if invalid
-         */
-        private fun visitExprCallDateDiff(field: DatetimeField, node: ExprCall, context: Env): Rex {
-            val typeAny = (ANY)
-
-            val datetime1 = visitExpr(node.args[0], context)
-            val datetime2 = visitExpr(node.args[1], context)
-            val opMinus = call(FunctionUtils.OP_MINUS, datetime2, datetime1)
-
-            val opExtract = call(FunctionUtils.opExtract(DatetimeField.parse(field.name())), rex(typeAny, opMinus))
-            val typeCast = (INT8)
-            return rex(ANY, rexOpCastUnresolved(typeCast, rex(typeAny, opExtract)))
-        }
-
         private fun visitExprCallDateFunction(id: Identifier, node: ExprCall, context: Env): Rex {
-            return if (id.matches(FunctionUtils.FN_DATE_ADD_DAY)) {
-                visitExprCallDateAdd(DatetimeField.DAY(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_ADD_HOUR)) {
-                visitExprCallDateAdd(DatetimeField.HOUR(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_ADD_MINUTE)) {
-                visitExprCallDateAdd(DatetimeField.MINUTE(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_ADD_SECOND)) {
-                visitExprCallDateAdd(DatetimeField.SECOND(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_ADD_YEAR)) {
-                visitExprCallDateAdd(DatetimeField.YEAR(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_ADD_MONTH)) {
-                visitExprCallDateAdd(DatetimeField.MONTH(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_DIFF_DAY)) { // Date_Diff
-                visitExprCallDateDiff(DatetimeField.DAY(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_DIFF_HOUR)) {
-                visitExprCallDateDiff(DatetimeField.HOUR(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_DIFF_MINUTE)) {
-                visitExprCallDateDiff(DatetimeField.MINUTE(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_DIFF_SECOND)) {
-                visitExprCallDateDiff(DatetimeField.SECOND(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_DIFF_YEAR)) {
-                visitExprCallDateDiff(DatetimeField.YEAR(), node, context)
-            } else if (id.matches(FunctionUtils.FN_DATE_DIFF_MONTH)) {
-                visitExprCallDateDiff(DatetimeField.MONTH(), node, context)
+            return if (id.matchesPrefix(FunctionUtils.FN_DATE_ADD_PREFIX)){
+                val type = DatetimeField.parse(id.getIdentifier().getText().substring(FunctionUtils.FN_DATE_ADD_PREFIX.length))
+                visitExprCallDateAdd(type, node, context)
             } else {
                 error("Unexpected argument $id.")
             }
