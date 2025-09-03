@@ -23,6 +23,7 @@ plugins {
     id(Plugins.library)
     id(Plugins.testFixtures)
     id(Plugins.publish)
+    id(Plugins.shadowPlugin)
     id(Plugins.kotlinLombok) version Versions.kotlinLombok
 }
 
@@ -44,6 +45,20 @@ dependencies {
 
 tasks.shadowJar {
     configurations = listOf(project.configurations.shadow.get())
+    
+    // Set classifier to distinguish shadowed artifacts
+    archiveClassifier.set("shadow")
+    
+    // Relocate org.partiql packages to shadow.org.partiql
+    relocate(Namespace.orgPartiql, Namespace.shadowOrgPartiql)
+    
+    // Merge service files to avoid conflicts
+    mergeServiceFiles()
+}
+
+// Ensure shadow JAR is built with the main build
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
 }
 
 // Workaround for https://github.com/johnrengelman/shadow/issues/651
@@ -94,7 +109,7 @@ tasks.compileTestFixturesKotlin {
 }
 
 publish {
-    artifactId = "partiql-planner"
+    artifactId = "partiql-planner-shadow"
     name = "PartiQL Planner"
     description = "PartiQL's Planner."
 }

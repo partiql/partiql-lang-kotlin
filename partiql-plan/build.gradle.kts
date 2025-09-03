@@ -20,6 +20,7 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
     id(Plugins.library)
+    id(Plugins.shadowPlugin)
 }
 
 dependencies {
@@ -28,6 +29,20 @@ dependencies {
 
 tasks.shadowJar {
     configurations = listOf(project.configurations.shadow.get())
+
+    // Set classifier to distinguish shadowed artifacts
+    archiveClassifier.set("shadow")
+
+    // Relocate org.partiql packages to shadow.org.partiql
+    relocate(Namespace.orgPartiql, Namespace.shadowOrgPartiql)
+
+    // Merge service files to avoid conflicts
+    mergeServiceFiles()
+}
+
+// Ensure shadow JAR is built with the main build
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
 }
 
 tasks.withType<Javadoc> {
@@ -50,7 +65,7 @@ kotlin {
 }
 
 publish {
-    artifactId = "partiql-plan"
+    artifactId = "partiql-plan-shadow"
     name = "PartiQL Plan"
     description = "PartiQL logical plan data structures"
 }

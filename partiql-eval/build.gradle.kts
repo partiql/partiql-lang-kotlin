@@ -20,6 +20,7 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.library)
     id(Plugins.publish)
+    id(Plugins.shadowPlugin)
     id(Plugins.kotlinLombok) version Versions.kotlinLombok
 }
 
@@ -44,6 +45,20 @@ kotlin {
 
 tasks.shadowJar {
     configurations = listOf(project.configurations.shadow.get())
+
+    // Set classifier to distinguish shadowed artifacts
+    archiveClassifier.set("shadow")
+
+    // Relocate org.partiql packages to shadow.org.partiql
+    relocate(Namespace.orgPartiql, Namespace.shadowOrgPartiql)
+
+    // Merge service files to avoid conflicts
+    mergeServiceFiles()
+}
+
+// Ensure shadow JAR is bilt with the main build
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
 }
 
 // TODO: Figure out why this is needed.
@@ -59,7 +74,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
 }
 
 publish {
-    artifactId = "partiql-eval"
+    artifactId = "partiql-eval-shadow"
     name = "PartiQL Lang Kotlin Evaluator"
     description = "The PartiQL reference implementation evaluator."
 }

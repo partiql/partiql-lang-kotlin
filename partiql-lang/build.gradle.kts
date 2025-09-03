@@ -50,7 +50,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
 }
 
 publish {
-    artifactId = "partiql-lang"
+    artifactId = "partiql-lang-shadow"
     name = "PartiQL JVM"
     description = "An implementation of PartiQL for the JVM."
 }

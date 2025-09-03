@@ -17,6 +17,7 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
     id(Plugins.testFixtures)
+    id(Plugins.shadowPlugin)
 }
 
 dependencies {
@@ -25,8 +26,21 @@ dependencies {
     testImplementation(Deps.kasechange)
 }
 
+// Configure shadow JAR
 tasks.shadowJar {
-    configurations = listOf(project.configurations.shadow.get())
+    // Set classifier to distinguish shadowed artifacts
+    archiveClassifier.set("shadow")
+
+    // Relocate all org.partiql packages to shadow.org.partiql
+    relocate(Namespace.orgPartiql, Namespace.shadowOrgPartiql)
+
+    // Merge service files to avoid conflicts
+    mergeServiceFiles()
+}
+
+// Ensure shadow JAR is built with the main build
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
 }
 
 // Workaround for https://github.com/johnrengelman/shadow/issues/651
@@ -47,17 +61,6 @@ tasks.withType<Jar> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-tasks.shadowJar {
-    configurations = listOf(project.configurations.shadow.get())
-}
-
-// Workaround for https://github.com/johnrengelman/shadow/issues/651
-components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
-    c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
-        skip()
-    }
-}
-
 tasks.compileTestFixturesKotlin {
     kotlinOptions.jvmTarget = Versions.jvmTarget
     kotlinOptions.apiVersion = Versions.kotlinApi
@@ -65,7 +68,7 @@ tasks.compileTestFixturesKotlin {
 }
 
 publish {
-    artifactId = "partiql-spi"
+    artifactId = "partiql-spi-shadow"
     name = "PartiQL SPI"
     description = "Pluggable interfaces to allow for custom logic within the PartiQL library."
 }

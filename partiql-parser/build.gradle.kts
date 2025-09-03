@@ -16,6 +16,7 @@ plugins {
     id(Plugins.antlr)
     id(Plugins.conventions)
     id(Plugins.publish)
+    id(Plugins.shadowPlugin)
     id(Plugins.kotlinLombok) version Versions.kotlinLombok
 }
 
@@ -36,9 +37,25 @@ val relocations = mapOf(
 tasks.shadowJar {
     dependsOn(tasks.named("generateGrammarSource"))
     configurations = listOf(project.configurations.shadow.get())
+
+    // Set classifier to distinguish shadowed artifacts
+    archiveClassifier.set("shadow")
+
+    // Relocate org.partiql packages to shadow.org.partiql
+    relocate(Namespace.orgPartiql, Namespace.shadowOrgPartiql)
+
+    // Apply existing relocations for third-party dependencies
     for ((from, to) in relocations) {
         relocate(from, to)
     }
+
+    // Merge service files to avoid conflicts
+    mergeServiceFiles()
+}
+
+// Ensure shadow JAR is built with the main build
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
 }
 
 // Workaround for https://github.com/johnrengelman/shadow/issues/651
@@ -99,7 +116,7 @@ tasks.processResources {
 }
 
 publish {
-    artifactId = "partiql-parser"
+    artifactId = "partiql-parser-shadow"
     name = "PartiQL Parser"
     description = "PartiQL's Parser"
     // `antlr` dependency configuration adds the ANTLR API configuration (and Maven `compile` dependency scope on

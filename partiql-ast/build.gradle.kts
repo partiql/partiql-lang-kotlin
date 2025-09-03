@@ -16,6 +16,7 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
+    id(Plugins.shadowPlugin)
     // Need the Kotlin lombok plugin to allow for Kotlin code in partiql-ast to understand Java Lombok annotations.
     // https://kotlinlang.org/docs/lombok.html
     id(Plugins.kotlinLombok) version Versions.kotlinLombok
@@ -33,7 +34,19 @@ tasks.withType<Jar> {
 }
 
 tasks.shadowJar {
-    configurations = listOf(project.configurations.shadow.get())
+    // Set classifier to distinguish shadowed artifacts
+    archiveClassifier.set("shadow")
+
+    // Relocate all org.partiql packages to shadow.org.partiql
+    relocate(Namespace.orgPartiql, Namespace.shadowOrgPartiql)
+
+    // Merge service files to avoid conflicts
+    mergeServiceFiles()
+}
+
+// Ensure shadow JAR is built with the main build
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
 }
 
 // Workaround for https://github.com/johnrengelman/shadow/issues/651
@@ -44,7 +57,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
 }
 
 publish {
-    artifactId = "partiql-ast"
+    artifactId = "partiql-ast-shadow"
     name = "PartiQL AST"
     description = "PartiQL's Abstract Syntax Tree"
 }

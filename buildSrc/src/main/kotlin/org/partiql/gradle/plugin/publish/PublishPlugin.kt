@@ -150,7 +150,12 @@ abstract class PublishPlugin : Plugin<Project> {
                                 apiDeps.forEach { dependency ->
                                     val dependencyNode = dependenciesNode.appendNode("dependency")
                                     dependencyNode.appendNode("groupId", dependency.group)
-                                    dependencyNode.appendNode("artifactId", dependency.name)
+                                    if (dependency.name.startsWith("partiql-")) {
+                                        dependencyNode.appendNode("artifactId", dependency.name + "-shadow")
+                                    }
+                                    else {
+                                        dependencyNode.appendNode("artifactId", dependency.name)
+                                    }
                                     dependencyNode.appendNode("version", dependency.version)
                                     dependencyNode.appendNode("scope", "compile")
                                 }
@@ -158,7 +163,12 @@ abstract class PublishPlugin : Plugin<Project> {
                                 implDeps.forEach { dependency ->
                                     val dependencyNode = dependenciesNode.appendNode("dependency")
                                     dependencyNode.appendNode("groupId", dependency.group)
-                                    dependencyNode.appendNode("artifactId", dependency.name)
+                                    if (dependency.name.startsWith("partiql-")) {
+                                        dependencyNode.appendNode("artifactId", dependency.name + "-shadow")
+                                    }
+                                    else {
+                                        dependencyNode.appendNode("artifactId", dependency.name)
+                                    }
                                     dependencyNode.appendNode("version", dependency.version)
                                     dependencyNode.appendNode("scope", "runtime")
                                 }
