@@ -765,8 +765,14 @@ internal object RexConverter {
                     ignoreCase = true
                 )
             ) {
-                val type = DatetimeField.parse(id.getIdentifier().getText().substring(FunctionUtils.FN_DATE_ADD_PREFIX.length).uppercase())
-                visitExprCallDateAdd(type, node, context)
+                val datetimeField = DatetimeField
+                    .parse(
+                        id.getIdentifier()
+                            .getText()
+                            .substring(FunctionUtils.FN_DATE_ADD_PREFIX.length)
+                            .uppercase()
+                    )
+                visitExprCallDateAdd(datetimeField, node, context)
             } else {
                 error("Unexpected date function name $id.")
             }
