@@ -6,7 +6,6 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
-import org.partiql.spi.utils.IntervalUtils
 
 internal val Fn_DATE_DIFF_MINUTE__TIME_TIME__INT64 = FunctionUtils.hidden(
 
@@ -18,7 +17,7 @@ internal val Fn_DATE_DIFF_MINUTE__TIME_TIME__INT64 = FunctionUtils.hidden(
     ),
 
 ) { args ->
-    IntervalUtils.dateDiffHelper("minute", args[0], args[1])
+    TODO("Function date_diff_minute not implemented")
 }
 
 internal val Fn_DATE_DIFF_MINUTE__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidden(
@@ -31,5 +30,5 @@ internal val Fn_DATE_DIFF_MINUTE__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hid
     ),
 
 ) { args ->
-    IntervalUtils.dateDiffHelper("minute", args[0], args[1])
+    TODO("Function date_diff_minute not implemented")
 }
