@@ -439,34 +439,6 @@ internal abstract class DiadicOperator(
         fillTable(PType.INTERVAL_DT, PType.DOUBLE) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
         fillTable(PType.DOUBLE, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
         fillTable(PType.DOUBLE, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-
-        // DATE
-        fillTable(PType.INTERVAL_YM, PType.DATE) { lhs, rhs -> getIntervalDateInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.DATE) { lhs, rhs -> getIntervalDateInstance(lhs, rhs) }
-        fillTable(PType.DATE, PType.INTERVAL_YM) { lhs, rhs -> getDateIntervalInstance(lhs, rhs) }
-        fillTable(PType.DATE, PType.INTERVAL_DT) { lhs, rhs -> getDateIntervalInstance(lhs, rhs) }
-
-        // TIME
-        fillTable(PType.INTERVAL_DT, PType.TIME) { lhs, rhs -> getIntervalTimeInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_YM, PType.TIME) { lhs, rhs -> getIntervalTimeInstance(lhs, rhs) }
-        fillTable(PType.TIME, PType.INTERVAL_YM) { lhs, rhs -> getTimeIntervalInstance(lhs, rhs) }
-        fillTable(PType.TIME, PType.INTERVAL_DT) { lhs, rhs -> getTimeIntervalInstance(lhs, rhs) }
-
-        // TIMEZ
-        fillTable(PType.INTERVAL_DT, PType.TIMEZ) { lhs, rhs -> getIntervalTimeInstance(lhs, rhs) } // TODO: Create a specific timezone impl
-        fillTable(PType.TIMEZ, PType.INTERVAL_DT) { lhs, rhs -> getTimeIntervalInstance(lhs, rhs) } // TODO: Create a specific timezone impl
-
-        // TIMESTAMP
-        fillTable(PType.INTERVAL_YM, PType.TIMESTAMP) { lhs, rhs -> getIntervalTimestampInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.TIMESTAMP) { lhs, rhs -> getIntervalTimestampInstance(lhs, rhs) }
-        fillTable(PType.TIMESTAMP, PType.INTERVAL_YM) { lhs, rhs -> getTimestampIntervalInstance(lhs, rhs) }
-        fillTable(PType.TIMESTAMP, PType.INTERVAL_DT) { lhs, rhs -> getTimestampIntervalInstance(lhs, rhs) }
-
-        // TIMESTAMPZ
-        fillTable(PType.INTERVAL_YM, PType.TIMESTAMPZ) { lhs, rhs -> getIntervalTimestampInstance(lhs, rhs) } // TODO: Create a specific timezone impl
-        fillTable(PType.INTERVAL_DT, PType.TIMESTAMPZ) { lhs, rhs -> getIntervalTimestampInstance(lhs, rhs) } // TODO: Create a specific timezone impl
-        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_YM) { lhs, rhs -> getTimestampIntervalInstance(lhs, rhs) } // TODO: Create a specific timezone impl
-        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_DT) { lhs, rhs -> getTimestampIntervalInstance(lhs, rhs) } // TODO: Create a specific timezone impl
     }
 
     private fun fillBlobTable(instance: (PType, PType) -> Fn?) {
@@ -543,6 +515,25 @@ internal abstract class DiadicOperator(
         fillDateTable(::getDateInstance)
         fillIntervalTable()
         fillIntervalTable(::getIntervalInstance)
+        fillTable(PType.DATE, PType.INTERVAL_YM, ::getDateIntervalInstance)
+        fillTable(PType.DATE, PType.INTERVAL_DT, ::getDateIntervalInstance)
+        fillTable(PType.TIME, PType.INTERVAL_YM, ::getTimeIntervalInstance)
+        fillTable(PType.TIME, PType.INTERVAL_DT, ::getTimeIntervalInstance)
+        fillTable(PType.TIMEZ, PType.INTERVAL_DT, ::getTimeIntervalInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.TIMESTAMP, PType.INTERVAL_YM, ::getTimestampIntervalInstance)
+        fillTable(PType.TIMESTAMP, PType.INTERVAL_DT, ::getTimestampIntervalInstance)
+        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_YM, ::getTimestampIntervalInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_DT, ::getTimestampIntervalInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.INTERVAL_YM, PType.DATE, ::getIntervalDateInstance)
+        fillTable(PType.INTERVAL_DT, PType.DATE, ::getIntervalDateInstance)
+        fillTable(PType.INTERVAL_YM, PType.TIME, ::getIntervalTimeInstance)
+        fillTable(PType.INTERVAL_DT, PType.TIME, ::getIntervalTimeInstance)
+        fillTable(PType.INTERVAL_DT, PType.TIMEZ, ::getIntervalTimeInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.INTERVAL_YM, PType.TIMESTAMP, ::getIntervalTimestampInstance)
+        fillTable(PType.INTERVAL_DT, PType.TIMESTAMP, ::getIntervalTimestampInstance)
+        fillTable(PType.INTERVAL_YM, PType.TIMESTAMPZ, ::getIntervalTimestampInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.INTERVAL_DT, PType.TIMESTAMPZ, ::getIntervalTimestampInstance) // TODO: Create a specific timezone impl
+
         fillBlobTable(::getBlobInstance)
         fillTimestampTable(::getTimestampInstance)
         fillCharacterStringTable(PType.STRING, ::getStringInstance)
