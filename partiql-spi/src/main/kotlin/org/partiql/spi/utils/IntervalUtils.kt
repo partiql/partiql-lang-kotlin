@@ -1,7 +1,5 @@
 package org.partiql.spi.utils
 
-import org.partiql.spi.function.builtins.FnMinus
-import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -22,7 +20,6 @@ internal object IntervalUtils {
     private const val HOURS_PER_DAY = 24L
     internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
     internal const val SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY
-    internal const val SECONDS_PER_YEAR = SECONDS_PER_DAY * 365
     internal const val NANOS_PER_SECOND = 1_000_000_000L
 
     /**
@@ -122,24 +119,6 @@ internal object IntervalUtils {
         }
     }
 
-    fun dateDiffHelper(intervalField: String, datetime1: Datum, datetime2: Datum): Datum {
-        val minusFn = FnMinus.getInstance(arrayOf(datetime1.type, datetime2.type))
-            ?: throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported DATE_DIFF parameters: String, ${datetime1.type}, ${datetime2.type}"))
-
-        val result = minusFn.invoke(arrayOf(datetime1, datetime2))
-        val totalSeconds = result.totalSeconds
-
-        return when (intervalField.lowercase()) {
-            "day" -> Datum.bigint(totalSeconds / SECONDS_PER_DAY)
-            "hour" -> Datum.bigint(totalSeconds / SECONDS_PER_HOUR)
-            "minute" -> Datum.bigint(totalSeconds / SECONDS_PER_MINUTE)
-            "second" -> Datum.bigint(totalSeconds)
-            "year" -> Datum.bigint(totalSeconds / (SECONDS_PER_YEAR))
-            "month" -> Datum.bigint((totalSeconds / SECONDS_PER_YEAR.toDouble() * MONTHS_PER_YEAR).toLong())
-            else -> throw PErrors.internalErrorException(UnsupportedOperationException("Unsupported interval type: $intervalField"))
-        }
-    }
-
     private fun toSeconds(i: Datum): BigDecimal {
         if (i.type.code() == PType.INTERVAL_DT) {
             return BigDecimal.valueOf(i.totalSeconds).add(BigDecimal.valueOf(i.nanos.toLong(), NANO_MAX_PRECISION))
@@ -179,14 +158,12 @@ internal object IntervalUtils {
             IntervalCode.MINUTE_SECOND,
             IntervalCode.HOUR_SECOND,
             IntervalCode.DAY_SECOND -> interval.fractionalPrecision
-
             IntervalCode.DAY,
             IntervalCode.DAY_HOUR,
             IntervalCode.DAY_MINUTE,
             IntervalCode.HOUR,
             IntervalCode.HOUR_MINUTE,
             IntervalCode.MINUTE -> INTERVAL_DEFAULT_FRACTIONAL_PRECISION
-
             else -> throw IllegalArgumentException("Cannot get fractional precision for non-INTERVAL_DT type")
         }
     }
