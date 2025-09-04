@@ -637,6 +637,11 @@ internal object RexConverter {
             if (id.matches("EXISTS", ignoreCase = true)) {
                 return visitExprCallExists(node, context)
             }
+
+            if (isDateFunction(id)) {
+                return visitExprCallDateFunction(id, node, context)
+            }
+
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
 
@@ -711,6 +716,66 @@ internal object RexConverter {
             val arg = visitExpr(node.args[0], context)
             val op = rexOpCallUnresolved(AstToPlan.convert(node.function), listOf(arg))
             return rex(type, op)
+        }
+
+        private fun isDateFunction(id: Identifier): Boolean {
+            return id.matches(
+                listOf(
+                    FunctionUtils.FN_DATE_ADD_DAY,
+                    FunctionUtils.FN_DATE_ADD_HOUR,
+                    FunctionUtils.FN_DATE_ADD_MINUTE,
+                    FunctionUtils.FN_DATE_ADD_SECOND,
+                    FunctionUtils.FN_DATE_ADD_YEAR,
+                    FunctionUtils.FN_DATE_ADD_MONTH
+                ),
+                ignoreCase = true
+            )
+        }
+
+        /**
+         * Converts DATE_ADD_* function calls to plus operations with intervals.
+         *
+         * Transforms DATE_ADD(interval_Type, interval_value, datetime) into datetime + interval in planner
+         *
+         * @param node The ExprCall node representing the DATE_ADD function call
+         * @param context The planning environment context
+         * @return Rex node representing the equivalent plus operation, or falls back to unresolved call if invalid
+         */
+        private fun visitExprCallDateAdd(field: DatetimeField, node: ExprCall, context: Env): Rex {
+            val type = (ANY)
+            val intervalRex = visitExpr(node.args[0], context)
+            val intervalDatum = IntervalUtils.convertDateFunctionArgToInterval(field, (intervalRex.op as Rex.Op.Lit).value)
+            val interval = rex(type, rexOpLit(intervalDatum))
+            val datetime = visitExpr(node.args[1], context)
+            val op = call(FunctionUtils.OP_PLUS, interval, datetime)
+
+            return rex(type, op)
+        }
+
+        private fun visitExprCallDateFunction(id: Identifier, node: ExprCall, context: Env): Rex {
+            return if (id.matches(
+                    listOf(
+                            FunctionUtils.FN_DATE_ADD_DAY,
+                            FunctionUtils.FN_DATE_ADD_HOUR,
+                            FunctionUtils.FN_DATE_ADD_MINUTE,
+                            FunctionUtils.FN_DATE_ADD_SECOND,
+                            FunctionUtils.FN_DATE_ADD_YEAR,
+                            FunctionUtils.FN_DATE_ADD_MONTH
+                        ),
+                    ignoreCase = true
+                )
+            ) {
+                val datetimeField = DatetimeField
+                    .parse(
+                        id.getIdentifier()
+                            .getText()
+                            .substring(FunctionUtils.FN_DATE_ADD_PREFIX.length)
+                            .uppercase()
+                    )
+                visitExprCallDateAdd(datetimeField, node, context)
+            } else {
+                error("Unexpected date function name $id.")
+            }
         }
 
         override fun visitExprCase(node: ExprCase, context: Env) = plan {

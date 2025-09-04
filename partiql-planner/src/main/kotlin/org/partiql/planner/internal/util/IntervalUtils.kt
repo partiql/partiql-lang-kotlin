@@ -4,12 +4,16 @@ import org.partiql.ast.DatetimeField
 import org.partiql.ast.IntervalQualifier
 import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedFractionalPrecisionMeta
 import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedPrecisionMeta
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import kotlin.ranges.contains
 
 internal object IntervalUtils {
+
+    private const val INTERVAL_MAX_PRECISION = 9
 
     /**
      * Parses an interval string into a [Datum] object, given a [qualifier].
@@ -23,6 +27,35 @@ internal object IntervalUtils {
             is IntervalQualifier.Single -> parseIntervalSingle(input, qualifier)
             is IntervalQualifier.Range -> parseIntervalRange(input, qualifier)
             else -> error("Unexpected IntervalQualifier JVM class: ${qualifier.javaClass.simpleName}")
+        }
+    }
+
+    internal fun convertDateFunctionArgToInterval(field: DatetimeField, interval: Datum): Datum {
+        if (interval.type.code() == PType.UNKNOWN) {
+            return interval
+        }
+
+        val intervalValue = when (interval.type.code()) {
+            PType.INTEGER -> interval.int
+            PType.BIGINT -> {
+                val value = interval.long
+                if (value in Int.MIN_VALUE..Int.MAX_VALUE) {
+                    value.toInt()
+                } else {
+                    error("The interval value [$value] is out of the allowed range: [${Int.MIN_VALUE}..${Int.MAX_VALUE}]")
+                }
+            }
+            else -> error("Unexpected interval type: $interval")
+        }
+
+        return when (field.code()) {
+            DatetimeField.DAY -> Datum.intervalDay(intervalValue, INTERVAL_MAX_PRECISION)
+            DatetimeField.HOUR -> Datum.intervalHour(intervalValue, INTERVAL_MAX_PRECISION)
+            DatetimeField.MINUTE -> Datum.intervalMinute(intervalValue, INTERVAL_MAX_PRECISION)
+            DatetimeField.SECOND -> Datum.intervalSecond(intervalValue, 0, INTERVAL_MAX_PRECISION, 0)
+            DatetimeField.YEAR -> Datum.intervalYear(intervalValue, INTERVAL_MAX_PRECISION)
+            DatetimeField.MONTH -> Datum.intervalMonth(intervalValue, INTERVAL_MAX_PRECISION)
+            else -> error("Unexpected DatetimeField: ${field.name()}")
         }
     }
 
