@@ -119,7 +119,7 @@ public final class DatetimeField extends AstEnum {
 
     @NotNull
     public static DatetimeField parse(@NotNull String value) {
-        switch (value.toUpperCase()) {
+        switch (value) {
             case "YEAR": return YEAR();
             case "MONTH": return MONTH();
             case "DAY": return DAY();

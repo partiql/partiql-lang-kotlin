@@ -6,7 +6,6 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
-import org.partiql.spi.utils.IntervalUtils
 
 internal val Fn_DATE_DIFF_MONTH__DATE_DATE__INT64 = FunctionUtils.hidden(
 
@@ -18,7 +17,7 @@ internal val Fn_DATE_DIFF_MONTH__DATE_DATE__INT64 = FunctionUtils.hidden(
     ),
 
 ) { args ->
-    IntervalUtils.dateDiffHelper("month", args[0], args[1])
+    TODO("Function date_diff_month not implemented")
 }
 
 internal val Fn_DATE_DIFF_MONTH__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidden(
@@ -31,5 +30,5 @@ internal val Fn_DATE_DIFF_MONTH__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidd
     ),
 
 ) { args ->
-    IntervalUtils.dateDiffHelper("month", args[0], args[1])
+    TODO("Function date_diff_month not implemented")
 }
