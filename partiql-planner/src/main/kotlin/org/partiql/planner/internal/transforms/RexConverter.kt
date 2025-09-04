@@ -96,7 +96,6 @@ import org.partiql.planner.internal.util.DateTimeUtils
 import org.partiql.planner.internal.util.FunctionUtils
 import org.partiql.planner.internal.util.IntervalUtils
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
@@ -639,7 +638,6 @@ internal object RexConverter {
                 return visitExprCallExists(node, context)
             }
 
-            // date_add is converted to fnplus(datetime + interval)
             if (isDateFunction(id)) {
                 return visitExprCallDateFunction(id, node, context)
             }
@@ -722,16 +720,16 @@ internal object RexConverter {
 
         private fun isDateFunction(id: Identifier): Boolean {
             return id.matches(
-                    listOf(
-                        FunctionUtils.FN_DATE_ADD_DAY,
-                        FunctionUtils.FN_DATE_ADD_HOUR,
-                        FunctionUtils.FN_DATE_ADD_MINUTE,
-                        FunctionUtils.FN_DATE_ADD_SECOND,
-                        FunctionUtils.FN_DATE_ADD_YEAR,
-                        FunctionUtils.FN_DATE_ADD_MONTH
-                    ),
-                    ignoreCase = true
-                )
+                listOf(
+                    FunctionUtils.FN_DATE_ADD_DAY,
+                    FunctionUtils.FN_DATE_ADD_HOUR,
+                    FunctionUtils.FN_DATE_ADD_MINUTE,
+                    FunctionUtils.FN_DATE_ADD_SECOND,
+                    FunctionUtils.FN_DATE_ADD_YEAR,
+                    FunctionUtils.FN_DATE_ADD_MONTH
+                ),
+                ignoreCase = true
+            )
         }
 
         /**
@@ -755,11 +753,22 @@ internal object RexConverter {
         }
 
         private fun visitExprCallDateFunction(id: Identifier, node: ExprCall, context: Env): Rex {
-            return if (id.matchesPrefix(FunctionUtils.FN_DATE_ADD_PREFIX)){
-                val type = DatetimeField.parse(id.getIdentifier().getText().substring(FunctionUtils.FN_DATE_ADD_PREFIX.length))
+            return if (id.matches(
+                    listOf(
+                            FunctionUtils.FN_DATE_ADD_DAY,
+                            FunctionUtils.FN_DATE_ADD_HOUR,
+                            FunctionUtils.FN_DATE_ADD_MINUTE,
+                            FunctionUtils.FN_DATE_ADD_SECOND,
+                            FunctionUtils.FN_DATE_ADD_YEAR,
+                            FunctionUtils.FN_DATE_ADD_MONTH
+                        ),
+                    ignoreCase = true
+                )
+            ) {
+                val type = DatetimeField.parse(id.getIdentifier().getText().substring(FunctionUtils.FN_DATE_ADD_PREFIX.length).uppercase())
                 visitExprCallDateAdd(type, node, context)
             } else {
-                error("Unexpected argument $id.")
+                error("Unexpected date function name $id.")
             }
         }
 
@@ -1395,7 +1404,6 @@ internal object RexConverter {
         private val LIST: CompilerType = CompilerType(PType.array())
         private val INT: CompilerType = CompilerType(PType.numeric(38, 0))
         private val INT4: CompilerType = CompilerType(PType.integer())
-        private val INT8: CompilerType = CompilerType(PType.bigint())
         private val TIMESTAMP: CompilerType = CompilerType(PType.timestamp(6))
     }
 }
