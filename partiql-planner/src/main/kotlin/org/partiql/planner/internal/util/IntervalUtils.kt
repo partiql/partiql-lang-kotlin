@@ -31,7 +31,7 @@ internal object IntervalUtils {
     }
 
     internal fun convertDateFunctionArgToInterval(field: DatetimeField, interval: Datum): Datum {
-        if(interval.type.code() == PType.UNKNOWN) {
+        if (interval.type.code() == PType.UNKNOWN) {
             return interval
         }
 
