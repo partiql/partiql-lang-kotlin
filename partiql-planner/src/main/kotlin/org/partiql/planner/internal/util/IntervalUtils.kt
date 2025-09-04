@@ -4,7 +4,6 @@ import org.partiql.ast.DatetimeField
 import org.partiql.ast.IntervalQualifier
 import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedFractionalPrecisionMeta
 import org.partiql.planner.internal.transforms.RexConverter.setUnspecifiedPrecisionMeta
-import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
@@ -31,22 +30,22 @@ internal object IntervalUtils {
         }
     }
 
-    internal fun convertDateFunctionArgToInterval(field: DatetimeField, intervalDatum: Datum): Datum {
-        if(intervalDatum.type.code() == PType.UNKNOWN) {
-            return intervalDatum
+    internal fun convertDateFunctionArgToInterval(field: DatetimeField, interval: Datum): Datum {
+        if(interval.type.code() == PType.UNKNOWN) {
+            return interval
         }
 
-        val intervalValue = when (intervalDatum.type.code()) {
-            PType.INTEGER -> intervalDatum.int
+        val intervalValue = when (interval.type.code()) {
+            PType.INTEGER -> interval.int
             PType.BIGINT -> {
-                val value = intervalDatum.long
+                val value = interval.long
                 if (value in Int.MIN_VALUE..Int.MAX_VALUE) {
                     value.toInt()
                 } else {
                     error("The interval value [$value] is out of the allowed range: [${Int.MIN_VALUE}..${Int.MAX_VALUE}]")
                 }
             }
-            else -> error("Unexpected intervalDatum type: $intervalDatum")
+            else -> error("Unexpected interval type: $interval")
         }
 
         return when (field.code()) {

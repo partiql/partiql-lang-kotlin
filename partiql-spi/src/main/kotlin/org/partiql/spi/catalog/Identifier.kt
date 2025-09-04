@@ -87,20 +87,6 @@ public class Identifier private constructor(
     }
 
     /**
-     * Compares this identifier with prefix, possibly ignoring case.
-     */
-    public fun matchesPrefix(prefix: String, ignoreCase: Boolean = false): Boolean {
-        if (this.hasQualifier()) {
-            return false
-        }
-        return if (ignoreCase) {
-            this.identifier.matchesPrefix(prefix)
-        } else {
-            this.identifier.getText().startsWith(prefix)
-        }
-    }
-
-    /**
      * Compares this identifier to a list of strings, possibly ignoring case.
      */
     public fun matches(others: List<String>, ignoreCase: Boolean = false): Boolean {
@@ -168,13 +154,6 @@ public class Identifier private constructor(
          */
         public fun matches(other: String): Boolean {
             return this.text.equals(other, ignoreCase = this.regular)
-        }
-
-        /**
-         * Compares this identifier part with prefix
-         */
-        public fun matchesPrefix(prefix: String): Boolean {
-            return this.text.startsWith(prefix, ignoreCase = this.regular)
         }
 
         /**
