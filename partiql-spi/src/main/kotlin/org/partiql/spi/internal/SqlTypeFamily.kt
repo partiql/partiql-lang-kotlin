@@ -99,5 +99,8 @@ internal class SqlTypeFamily private constructor(
                 PType.TIMESTAMPZ,
             )
         )
+
+        @JvmStatic
+        val DATE = SqlTypeFamily(PType.date(), setOf(PType.DATE))
     }
 }

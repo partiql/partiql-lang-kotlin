@@ -93,9 +93,11 @@ class IntervalTimesTests {
             Input(INTERVAL_MIN, "20", Datum.intervalDaySecond(0, 1, 40, 0, 0, 2, 6)),
             Input(INTERVAL_S, "20", Datum.intervalDaySecond(0, 0, 3, 30, 0, 2, 6)),
             Input(INTERVAL_DTS, "20", Datum.intervalDaySecond(43, 9, 43, 30, 0, 2, 6)),
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        ).flatMap { case ->
+            listOf(
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
+                SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+            )
         }
 
         @JvmStatic
@@ -109,9 +111,11 @@ class IntervalTimesTests {
             Input(INTERVAL_MIN, "0", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
             Input(INTERVAL_S, "0", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6)),
             Input(INTERVAL_DTS, "0", Datum.intervalDaySecond(0, 0, 0, 0, 0, 2, 6))
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        ).flatMap { case ->
+            listOf(
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
+                SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+            )
         }
 
         @JvmStatic
@@ -125,9 +129,11 @@ class IntervalTimesTests {
             Input(INTERVAL_MIN, "-20", Datum.intervalDaySecond(0, -1, -40, 0, 0, 2, 6)),
             Input(INTERVAL_S, "-20", Datum.intervalDaySecond(0, 0, -3, -30, 0, 2, 6)),
             Input(INTERVAL_DTS, "-20", Datum.intervalDaySecond(-43, -9, -43, -30, 0, 2, 6)),
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        ).flatMap { case ->
+            listOf(
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
+                SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+            )
         }
 
         @JvmStatic
@@ -141,9 +147,11 @@ class IntervalTimesTests {
             Input(INTERVAL_MIN, "2.1", Datum.intervalDaySecond(0, 0, 10, 30, 0, 2, 6)),
             Input(INTERVAL_S, "2.1", Datum.intervalDaySecond(0, 0, 0, 22, (0.05 * NANOS_PER_SECOND).toInt(), 2, 6)),
             Input(INTERVAL_DTS, "2.1", Datum.intervalDaySecond(4, 13, 22, 52, (0.05 * NANOS_PER_SECOND).toInt(), 2, 6)),
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        ).flatMap { case ->
+            listOf(
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
+                SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+            )
         }
 
         @JvmStatic
@@ -157,18 +165,22 @@ class IntervalTimesTests {
             Input(INTERVAL_MIN, "2.25e-1", Datum.intervalDaySecond(0, 0, 1, 7, 500000000, 2, 6)),
             Input(INTERVAL_S, "2.25e-1", Datum.intervalDaySecond(0, 0, 0, 2, 362500000, 2, 6)),
             Input(INTERVAL_DTS, "2.25e-1", Datum.intervalDaySecond(0, 11, 43, 9, 862500000, 2, 6))
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        ).flatMap { case ->
+            listOf(
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
+                SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+            )
         }
 
         @JvmStatic
         fun intervalTimesCalculationOverflow() = listOf(
             Input(INTERVAL_YM_LARGE, "9", Datum.intervalYearMonth(999999, 9, 6)),
             Input(INTERVAL_DTS_LARGE, "9", Datum.intervalDaySecond(999999, 9, 9, 9, 999999000, 6, 6)),
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        ).flatMap { case ->
+            listOf(
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
+                SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+            )
         }
 
         @JvmStatic
@@ -190,9 +202,11 @@ class IntervalTimesTests {
             Input(INTERVAL_MIN, "NULL", Datum.nullValue()),
             Input(INTERVAL_S, "NULL", Datum.nullValue()),
             Input(INTERVAL_DTS, "NULL", Datum.nullValue())
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+        ).flatMap { case ->
+            listOf(
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+            )
         }
 
         @JvmStatic
@@ -206,9 +220,11 @@ class IntervalTimesTests {
             Input(INTERVAL_MIN, "MISSING", Datum.missing()),
             Input(INTERVAL_S, "MISSING", Datum.missing()),
             Input(INTERVAL_DTS, "MISSING", Datum.missing())
-        ).map { case ->
-            SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
-            SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+        ).flatMap { case ->
+            listOf(
+                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
+                SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
+            )
         }
     }
 }
