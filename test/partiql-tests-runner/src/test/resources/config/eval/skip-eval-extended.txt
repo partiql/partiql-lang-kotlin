@@ -1,0 +1,1280 @@
+PERMISSIVE:::cast to int valid cases{value:"`1.5e0`",result:2}
+STRICT:::cast to int valid cases{value:"`1.5e0`",result:2}
+PERMISSIVE:::cast to int valid cases{value:"`1.9e0`",result:2}
+STRICT:::cast to int valid cases{value:"`1.9e0`",result:2}
+PERMISSIVE:::cast to int valid cases{value:"`0.9e0`",result:1}
+STRICT:::cast to int valid cases{value:"`0.9e0`",result:1}
+PERMISSIVE:::cast to int valid cases{value:"`-1.5e0`",result:-2}
+STRICT:::cast to int valid cases{value:"`-1.5e0`",result:-2}
+PERMISSIVE:::cast to int valid cases{value:"`-1.9e0`",result:-2}
+STRICT:::cast to int valid cases{value:"`-1.9e0`",result:-2}
+STRICT:::int overflow and underflow conditions{sql:"9223372036854775808"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"9223372036854775808"}
+STRICT:::int overflow and underflow conditions{sql:"-9223372036854775809"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"-9223372036854775809"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"max_int + 1"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"min_int + -1"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"min_int - 1"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"max_int - -1"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"one_tenth_of_max_int * 11"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"one_tenth_of_min_int * -11"}
+PERMISSIVE:::int overflow and underflow conditions{sql:"min_int / - 1"}
+PERMISSIVE:::cast to int overflow / underflow{value:"`2e100`",target:"FLOAT"}
+PERMISSIVE:::cast to int overflow / underflow{value:"`-2e100`",target:"FLOAT"}
+PERMISSIVE:::cast to int overflow / underflow{value:"2e100",target:"DECIMAL"}
+PERMISSIVE:::cast to int overflow / underflow{value:"-2e100",target:"DECIMAL"}
+PERMISSIVE:::cast to int overflow / underflow{value:"'92233720368547758070'",target:"STRING"}
+PERMISSIVE:::cast to int overflow / underflow{value:"'-92233720368547758070'",target:"STRING"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0001T",pattern:"y",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0001T",pattern:"y",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"9999T",pattern:"y",result:"9999"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"9999T",pattern:"y",result:"9999"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"y",result:"986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"y",result:"986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0001T",pattern:"yy",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0001T",pattern:"yy",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"9999T",pattern:"yy",result:"99"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"9999T",pattern:"yy",result:"99"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986T",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986T",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01T",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01T",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01Z",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01Z",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01+01:00",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01+01:00",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01:55Z",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01:55Z",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01:55+01:00",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01:55+01:00",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01:55.004Z",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01:55.004Z",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01:55.004+01:00",pattern:"yy",result:"86"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"1986-01-02T10:01:55.004+01:00",pattern:"yy",result:"86"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"yyyy",result:"0986"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"yyyy",result:"0986"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"M",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"M",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"M",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"M",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02-02T",pattern:"M",result:"2"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02-02T",pattern:"M",result:"2"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03-02T10:01Z",pattern:"M",result:"3"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03-02T10:01Z",pattern:"M",result:"3"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04-02T10:01+01:00",pattern:"M",result:"4"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04-02T10:01+01:00",pattern:"M",result:"4"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05-02T10:01:55Z",pattern:"M",result:"5"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05-02T10:01:55Z",pattern:"M",result:"5"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06-02T10:01:55+01:00",pattern:"M",result:"6"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06-02T10:01:55+01:00",pattern:"M",result:"6"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07-02T10:01:55.004Z",pattern:"M",result:"7"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07-02T10:01:55.004Z",pattern:"M",result:"7"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10-02T10:01:55.004+01:00",pattern:"M",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10-02T10:01:55.004+01:00",pattern:"M",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"MM",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"MM",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"MM",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"MM",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02-02T",pattern:"MM",result:"02"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02-02T",pattern:"MM",result:"02"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03-02T10:01Z",pattern:"MM",result:"03"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03-02T10:01Z",pattern:"MM",result:"03"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04-02T10:01+01:00",pattern:"MM",result:"04"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04-02T10:01+01:00",pattern:"MM",result:"04"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05-02T10:01:55Z",pattern:"MM",result:"05"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05-02T10:01:55Z",pattern:"MM",result:"05"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06-02T10:01:55+01:00",pattern:"MM",result:"06"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06-02T10:01:55+01:00",pattern:"MM",result:"06"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07-02T10:01:55.004Z",pattern:"MM",result:"07"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07-02T10:01:55.004Z",pattern:"MM",result:"07"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10-02T10:01:55.004+01:00",pattern:"MM",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10-02T10:01:55.004+01:00",pattern:"MM",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"MMM",result:"Jan"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"MMM",result:"Jan"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02T",pattern:"MMM",result:"Feb"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02T",pattern:"MMM",result:"Feb"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03T",pattern:"MMM",result:"Mar"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03T",pattern:"MMM",result:"Mar"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04T",pattern:"MMM",result:"Apr"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04T",pattern:"MMM",result:"Apr"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05T",pattern:"MMM",result:"May"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05T",pattern:"MMM",result:"May"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06T",pattern:"MMM",result:"Jun"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06T",pattern:"MMM",result:"Jun"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07T",pattern:"MMM",result:"Jul"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07T",pattern:"MMM",result:"Jul"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-08T",pattern:"MMM",result:"Aug"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-08T",pattern:"MMM",result:"Aug"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-09T",pattern:"MMM",result:"Sep"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-09T",pattern:"MMM",result:"Sep"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10T",pattern:"MMM",result:"Oct"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10T",pattern:"MMM",result:"Oct"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-11T",pattern:"MMM",result:"Nov"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-11T",pattern:"MMM",result:"Nov"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-12T",pattern:"MMM",result:"Dec"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-12T",pattern:"MMM",result:"Dec"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"MMMM",result:"January"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"MMMM",result:"January"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02T",pattern:"MMMM",result:"February"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02T",pattern:"MMMM",result:"February"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03T",pattern:"MMMM",result:"March"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03T",pattern:"MMMM",result:"March"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04T",pattern:"MMMM",result:"April"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04T",pattern:"MMMM",result:"April"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05T",pattern:"MMMM",result:"May"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05T",pattern:"MMMM",result:"May"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06T",pattern:"MMMM",result:"June"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06T",pattern:"MMMM",result:"June"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07T",pattern:"MMMM",result:"July"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07T",pattern:"MMMM",result:"July"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-08T",pattern:"MMMM",result:"August"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-08T",pattern:"MMMM",result:"August"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-09T",pattern:"MMMM",result:"September"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-09T",pattern:"MMMM",result:"September"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10T",pattern:"MMMM",result:"October"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10T",pattern:"MMMM",result:"October"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-11T",pattern:"MMMM",result:"November"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-11T",pattern:"MMMM",result:"November"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-12T",pattern:"MMMM",result:"December"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-12T",pattern:"MMMM",result:"December"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01+01:00",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55Z",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55+01:00",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02T",pattern:"MMMMM",result:"F"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-02T",pattern:"MMMMM",result:"F"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03T",pattern:"MMMMM",result:"M"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-03T",pattern:"MMMMM",result:"M"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04T",pattern:"MMMMM",result:"A"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-04T",pattern:"MMMMM",result:"A"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05T",pattern:"MMMMM",result:"M"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-05T",pattern:"MMMMM",result:"M"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06T",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-06T",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07T",pattern:"MMMMM",result:"J"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-07T",pattern:"MMMMM",result:"J"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-08T",pattern:"MMMMM",result:"A"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-08T",pattern:"MMMMM",result:"A"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-09T",pattern:"MMMMM",result:"S"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-09T",pattern:"MMMMM",result:"S"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10T",pattern:"MMMMM",result:"O"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-10T",pattern:"MMMMM",result:"O"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-11T",pattern:"MMMMM",result:"N"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-11T",pattern:"MMMMM",result:"N"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-12T",pattern:"MMMMM",result:"D"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-12T",pattern:"MMMMM",result:"D"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"d",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"d",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"d",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"d",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"d",result:"2"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"d",result:"2"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"d",result:"2"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"d",result:"2"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"d",result:"12"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"d",result:"12"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"d",result:"20"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"d",result:"20"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T10:01:55+01:00",pattern:"d",result:"31"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T10:01:55+01:00",pattern:"d",result:"31"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"d",result:"2"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"d",result:"2"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"d",result:"2"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"d",result:"2"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"dd",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"dd",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"dd",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"dd",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"dd",result:"02"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"dd",result:"02"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"dd",result:"02"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"dd",result:"02"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"dd",result:"12"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"dd",result:"12"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"dd",result:"20"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"dd",result:"20"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T10:01:55+01:00",pattern:"dd",result:"31"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T10:01:55+01:00",pattern:"dd",result:"31"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"dd",result:"02"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004Z",pattern:"dd",result:"02"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"dd",result:"02"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01:55.004+01:00",pattern:"dd",result:"02"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"a",result:"AM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"a",result:"AM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"a",result:"AM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"a",result:"AM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"a",result:"AM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"a",result:"AM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"a",result:"AM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"a",result:"AM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"a",result:"AM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"a",result:"AM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"a",result:"AM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"a",result:"AM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T10:01:55+01:00",pattern:"a",result:"AM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T10:01:55+01:00",pattern:"a",result:"AM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"a",result:"PM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"a",result:"PM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"a",result:"PM"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"a",result:"PM"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"h",result:"12"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"h",result:"12"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"h",result:"12"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"h",result:"12"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"h",result:"12"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"h",result:"12"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"h",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"h",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"h",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"h",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"h",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"h",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:01:55+01:00",pattern:"h",result:"5"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:01:55+01:00",pattern:"h",result:"5"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"h",result:"8"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"h",result:"8"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"h",result:"6"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"h",result:"6"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"hh",result:"12"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"hh",result:"12"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"hh",result:"12"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"hh",result:"12"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"hh",result:"12"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"hh",result:"12"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"hh",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"hh",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"hh",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"hh",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"hh",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"hh",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:01:55+01:00",pattern:"hh",result:"05"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:01:55+01:00",pattern:"hh",result:"05"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"hh",result:"08"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"hh",result:"08"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"hh",result:"06"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"hh",result:"06"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"H",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"H",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"H",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"H",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"H",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"H",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"H",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"H",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"H",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"H",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"H",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"H",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:01:55+01:00",pattern:"H",result:"5"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:01:55+01:00",pattern:"H",result:"5"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"H",result:"20"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"H",result:"20"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"H",result:"18"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"H",result:"18"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"HH",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"HH",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"HH",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"HH",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"HH",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"HH",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"HH",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"HH",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"HH",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"HH",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"HH",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:01:55Z",pattern:"HH",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:01:55+01:00",pattern:"HH",result:"05"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:01:55+01:00",pattern:"HH",result:"05"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"HH",result:"20"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"HH",result:"20"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"HH",result:"18"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"HH",result:"18"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"m",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"m",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"m",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"m",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"m",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"m",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"m",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"m",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"m",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"m",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"m",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"m",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:55+01:00",pattern:"m",result:"5"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:55+01:00",pattern:"m",result:"5"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"m",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"m",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"m",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"m",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"mm",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"mm",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"mm",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"mm",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"mm",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"mm",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"mm",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"mm",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"mm",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"mm",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"mm",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"mm",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:55+01:00",pattern:"mm",result:"05"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:55+01:00",pattern:"mm",result:"05"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"mm",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"mm",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"mm",result:"01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"mm",result:"01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"s",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"s",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"s",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"s",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"s",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"s",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"s",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"s",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"s",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"s",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"s",result:"55"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"s",result:"55"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"s",result:"5"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"s",result:"5"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"s",result:"55"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"s",result:"55"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"s",result:"55"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"s",result:"55"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"ss",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"ss",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"ss",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"ss",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"ss",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"ss",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"ss",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"ss",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"ss",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"ss",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"ss",result:"55"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"ss",result:"55"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"ss",result:"05"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"ss",result:"05"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"ss",result:"55"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"ss",result:"55"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"ss",result:"55"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"ss",result:"55"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"S",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"S",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"S",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"S",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"S",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"S",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"S",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"S",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"S",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"S",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"S",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"S",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"S",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"S",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.100Z",pattern:"S",result:"1"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.100Z",pattern:"S",result:"1"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.100+01:00",pattern:"SS",result:"10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.100+01:00",pattern:"SS",result:"10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"SS",result:"00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"SS",result:"00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"SSS",result:"004"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"SSS",result:"004"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"n",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"n",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"n",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"n",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"n",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"n",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"n",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"n",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"n",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"n",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"n",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"n",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"n",result:"0"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"n",result:"0"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"n",result:"4000000"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"n",result:"4000000"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"n",result:"4000000"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"n",result:"4000000"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"X",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"X",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"X",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"X",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"X",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"X",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"X",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"X",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"X",result:"+01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"X",result:"+01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"X",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"X",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"X",result:"+01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"X",result:"+01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"X",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"X",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"X",result:"+01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"X",result:"+01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"XX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"XX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"XX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"XX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"XX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"XX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"XX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"XX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"XXXX",result:"+0100"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"XXXX",result:"+0100"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"XX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"XX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"XX",result:"+0100"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"XX",result:"+0100"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"XX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"XX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:10",pattern:"XX",result:"+0110"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:10",pattern:"XX",result:"+0110"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"XXX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"XXX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"XXX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"XXX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"XXX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"XXX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"XXX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"XXX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"XXXXX",result:"+01:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"XXXXX",result:"+01:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"XXX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"XXX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"XXX",result:"+01:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"XXX",result:"+01:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"XXX",result:"Z"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"XXX",result:"Z"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:10",pattern:"XXX",result:"+01:10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:10",pattern:"XXX",result:"+01:10"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"x",result:"+00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"x",result:"+00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"x",result:"+00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"x",result:"+00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"x",result:"+00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"x",result:"+00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"x",result:"+00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"x",result:"+00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"x",result:"+01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"x",result:"+01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"x",result:"+00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"x",result:"+00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"x",result:"+01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"x",result:"+01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"x",result:"+00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"x",result:"+00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"x",result:"+01"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:00",pattern:"x",result:"+01"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"xx",result:"+0000"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"xx",result:"+0000"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"xx",result:"+0000"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"xx",result:"+0000"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"xx",result:"+0000"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"xx",result:"+0000"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"xx",result:"+0000"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"xx",result:"+0000"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"xxxx",result:"+0100"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"xxxx",result:"+0100"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"xx",result:"+0000"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"xx",result:"+0000"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"xx",result:"+0100"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"xx",result:"+0100"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"xx",result:"+0000"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"xx",result:"+0000"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:10",pattern:"xx",result:"+0110"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:10",pattern:"xx",result:"+0110"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"xxx",result:"+00:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986T",pattern:"xxx",result:"+00:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"xxx",result:"+00:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01T",pattern:"xxx",result:"+00:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"xxx",result:"+00:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T",pattern:"xxx",result:"+00:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"xxx",result:"+00:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T10:01Z",pattern:"xxx",result:"+00:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"xxxxx",result:"+01:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-12T10:01+01:00",pattern:"xxxxx",result:"+01:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"xxx",result:"+00:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-20T10:10:55Z",pattern:"xxx",result:"+00:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"xxx",result:"+01:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-31T05:05:05+01:00",pattern:"xxx",result:"+01:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"xxx",result:"+00:00"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T20:01:55.004Z",pattern:"xxx",result:"+00:00"}
+PERMISSIVE:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:10",pattern:"xxx",result:"+01:10"}
+STRICT:::to_string valid valid cases for each individual supported pattern{timestamp:"0986-01-02T18:01:55.004+01:10",pattern:"xxx",result:"+01:10"}
+PERMISSIVE:::to_string null and missing propagation{timestamp:"null",pattern:"'y'",result:null}
+STRICT:::to_string null and missing propagation{timestamp:"null",pattern:"'y'",result:null}
+PERMISSIVE:::to_string null and missing propagation{timestamp:"`2000T`",pattern:"null",result:null}
+STRICT:::to_string null and missing propagation{timestamp:"`2000T`",pattern:"null",result:null}
+PERMISSIVE:::to_string null and missing propagation{timestamp:"null",pattern:"null",result:null}
+STRICT:::to_string null and missing propagation{timestamp:"null",pattern:"null",result:null}
+PERMISSIVE:::to_string null and missing propagation{timestamp:"missing",pattern:"null",result:null}
+STRICT:::to_string null and missing propagation{timestamp:"missing",pattern:"null",result:null}
+PERMISSIVE:::to_string null and missing propagation{timestamp:"null",pattern:"missing",result:null}
+STRICT:::to_string null and missing propagation{timestamp:"null",pattern:"missing",result:null}
+PERMISSIVE:::to_string null and missing propagation{timestamp:"missing",pattern:"'y'",result:null}
+STRICT:::to_string null and missing propagation{timestamp:"missing",pattern:"'y'",result:null}
+PERMISSIVE:::to_string null and missing propagation{timestamp:"`2000T`",pattern:"missing",result:null}
+STRICT:::to_string null and missing propagation{timestamp:"`2000T`",pattern:"missing",result:null}
+PERMISSIVE:::to_string null and missing propagation{timestamp:"missing",pattern:"missing",result:null}
+STRICT:::to_string null and missing propagation{timestamp:"missing",pattern:"missing",result:null}
+PERMISSIVE:::to_string multiple symbols{timestamp:"0500-03-09",pattern:"MM/dd/yyyy",result:"03/09/0500"}
+STRICT:::to_string multiple symbols{timestamp:"0500-03-09",pattern:"MM/dd/yyyy",result:"03/09/0500"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"0500-03-09",pattern:"M/d/y",result:"3/9/500"}
+STRICT:::to_string multiple symbols{timestamp:"0500-03-09",pattern:"M/d/y",result:"3/9/500"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"0001-03-09",pattern:"MM/dd/yyyy",result:"03/09/0001"}
+STRICT:::to_string multiple symbols{timestamp:"0001-03-09",pattern:"MM/dd/yyyy",result:"03/09/0001"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"0001-03-09",pattern:"M/d/y",result:"3/9/1"}
+STRICT:::to_string multiple symbols{timestamp:"0001-03-09",pattern:"M/d/y",result:"3/9/1"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"9999-03-09",pattern:"MM/dd/yyyy",result:"03/09/9999"}
+STRICT:::to_string multiple symbols{timestamp:"9999-03-09",pattern:"MM/dd/yyyy",result:"03/09/9999"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"9999-03-09",pattern:"M/d/y",result:"3/9/9999"}
+STRICT:::to_string multiple symbols{timestamp:"9999-03-09",pattern:"M/d/y",result:"3/9/9999"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"MMMM d, y",result:"July 20, 1969"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"MMMM d, y",result:"July 20, 1969"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"MMM d, yyyy",result:"Jul 20, 1969"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"MMM d, yyyy",result:"Jul 20, 1969"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"M-d-yy",result:"7-20-69"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"M-d-yy",result:"7-20-69"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"MM-d-y",result:"07-20-1969"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"MM-d-y",result:"07-20-1969"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"MMMM d, y h:m a",result:"July 20, 1969 8:18 PM"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"MMMM d, y h:m a",result:"July 20, 1969 8:18 PM"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"y-MM-dd''T''H:m:ssX",result:"1969-07-20T20:18:00Z"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18Z",pattern:"y-MM-dd''T''H:m:ssX",result:"1969-07-20T20:18:00Z"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18+08:00",pattern:"y-MM-dd''T''H:m:ssX",result:"1969-07-20T20:18:00+08"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18+08:00",pattern:"y-MM-dd''T''H:m:ssX",result:"1969-07-20T20:18:00+08"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18+08:00",pattern:"y-MM-dd''T''H:m:ssXXXX",result:"1969-07-20T20:18:00+0800"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18+08:00",pattern:"y-MM-dd''T''H:m:ssXXXX",result:"1969-07-20T20:18:00+0800"}
+PERMISSIVE:::to_string multiple symbols{timestamp:"1969-07-20T20:18+08:00",pattern:"y-MM-dd''T''H:m:ssXXXXX",result:"1969-07-20T20:18:00+08:00"}
+STRICT:::to_string multiple symbols{timestamp:"1969-07-20T20:18+08:00",pattern:"y-MM-dd''T''H:m:ssXXXXX",result:"1969-07-20T20:18:00+08:00"}
+PERMISSIVE:::text_replace('abcdefabcdef', 'cd', 'XX')
+STRICT:::text_replace('abcdefabcdef', 'cd', 'XX')
+PERMISSIVE:::text_replace('abcdefabcdef', 'xyz', 'XX')
+STRICT:::text_replace('abcdefabcdef', 'xyz', 'XX')
+PERMISSIVE:::text_replace('abcdefabcdef', 'defab', '')
+STRICT:::text_replace('abcdefabcdef', 'defab', '')
+PERMISSIVE:::text_replace('abcabcabcdef', 'abcabc', 'XXX')
+STRICT:::text_replace('abcabcabcdef', 'abcabc', 'XXX')
+PERMISSIVE:::text_replace('abcabcabcdef', '', 'X')
+STRICT:::text_replace('abcabcabcdef', '', 'X')
+PERMISSIVE:::text_replace('', 'abc', 'XX')
+STRICT:::text_replace('', 'abc', 'XX')
+PERMISSIVE:::text_replace('', '', 'XX')
+STRICT:::text_replace('', '', 'XX')
+PERMISSIVE:::text_replace('abcdefabcdef', 'def', '😁😞')
+STRICT:::text_replace('abcdefabcdef', 'def', '😁😞')
+PERMISSIVE:::text_replace('abc😁😞abc😁😞', '😁😞', 'def')
+STRICT:::text_replace('abc😁😞abc😁😞', '😁😞', 'def')
+PERMISSIVE:::text_replace('abcdefabcdef', 'def', 'd😁😞')
+STRICT:::text_replace('abcdefabcdef', 'def', 'd😁😞')
+PERMISSIVE:::text_replace('abcdefabcdef', 'def', 'deࠫf')
+STRICT:::text_replace('abcdefabcdef', 'def', 'deࠫf')
+PERMISSIVE:::text_replace('abcdeࠫfabcdeࠫf', 'def', 'XX')
+STRICT:::text_replace('abcdeࠫfabcdeࠫf', 'def', 'XX')
+PERMISSIVE:::text_replace('abcdeࠫfabcdeࠫf', 'deࠫf', 'XX')
+STRICT:::text_replace('abcdeࠫfabcdeࠫf', 'deࠫf', 'XX')
+PERMISSIVE:::text_replace NULL first arg
+STRICT:::text_replace NULL first arg
+PERMISSIVE:::text_replace NULL second arg
+STRICT:::text_replace NULL second arg
+PERMISSIVE:::text_replace NULL third arg
+STRICT:::text_replace NULL third arg
+PERMISSIVE:::text_replace MISSING first arg
+STRICT:::text_replace MISSING first arg
+PERMISSIVE:::text_replace MISSING second arg
+STRICT:::text_replace MISSING second arg
+PERMISSIVE:::text_replace MISSING third arg
+STRICT:::text_replace MISSING third arg
+PERMISSIVE:::text_replace NULL and MISSING arg
+STRICT:::text_replace NULL and MISSING arg
+PERMISSIVE:::text_replace mistyped first argument
+PERMISSIVE:::text_replace mistyped second argument
+PERMISSIVE:::text_replace mistyped third argument
+PERMISSIVE:::to_timestamp valid cases{string:"1",pattern:"y",result:0001T}
+STRICT:::to_timestamp valid cases{string:"1",pattern:"y",result:0001T}
+PERMISSIVE:::to_timestamp valid cases{string:"10",pattern:"y",result:0010T}
+STRICT:::to_timestamp valid cases{string:"10",pattern:"y",result:0010T}
+PERMISSIVE:::to_timestamp valid cases{string:"100",pattern:"y",result:0100T}
+STRICT:::to_timestamp valid cases{string:"100",pattern:"y",result:0100T}
+PERMISSIVE:::to_timestamp valid cases{string:"1000",pattern:"y",result:1000T}
+STRICT:::to_timestamp valid cases{string:"1000",pattern:"y",result:1000T}
+PERMISSIVE:::to_timestamp valid cases{string:"9999",pattern:"y",result:9999T}
+STRICT:::to_timestamp valid cases{string:"9999",pattern:"y",result:9999T}
+PERMISSIVE:::to_timestamp valid cases{string:"01",pattern:"yy",result:2001T}
+STRICT:::to_timestamp valid cases{string:"01",pattern:"yy",result:2001T}
+PERMISSIVE:::to_timestamp valid cases{string:"10",pattern:"yy",result:2010T}
+STRICT:::to_timestamp valid cases{string:"10",pattern:"yy",result:2010T}
+PERMISSIVE:::to_timestamp valid cases{string:"69",pattern:"yy",result:2069T}
+STRICT:::to_timestamp valid cases{string:"69",pattern:"yy",result:2069T}
+PERMISSIVE:::to_timestamp valid cases{string:"70",pattern:"yy",result:1970T}
+STRICT:::to_timestamp valid cases{string:"70",pattern:"yy",result:1970T}
+PERMISSIVE:::to_timestamp valid cases{string:"99",pattern:"yy",result:1999T}
+STRICT:::to_timestamp valid cases{string:"99",pattern:"yy",result:1999T}
+PERMISSIVE:::to_timestamp valid cases{string:"0001",pattern:"yyyy",result:0001T}
+STRICT:::to_timestamp valid cases{string:"0001",pattern:"yyyy",result:0001T}
+PERMISSIVE:::to_timestamp valid cases{string:"0010",pattern:"yyyy",result:0010T}
+STRICT:::to_timestamp valid cases{string:"0010",pattern:"yyyy",result:0010T}
+PERMISSIVE:::to_timestamp valid cases{string:"0069",pattern:"yyyy",result:0069T}
+STRICT:::to_timestamp valid cases{string:"0069",pattern:"yyyy",result:0069T}
+PERMISSIVE:::to_timestamp valid cases{string:"1970",pattern:"yyyy",result:1970T}
+STRICT:::to_timestamp valid cases{string:"1970",pattern:"yyyy",result:1970T}
+PERMISSIVE:::to_timestamp valid cases{string:"1999",pattern:"yyyy",result:1999T}
+STRICT:::to_timestamp valid cases{string:"1999",pattern:"yyyy",result:1999T}
+PERMISSIVE:::to_timestamp valid cases{string:"9999",pattern:"yyyy",result:9999T}
+STRICT:::to_timestamp valid cases{string:"9999",pattern:"yyyy",result:9999T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1",pattern:"y M",result:0001-01T}
+STRICT:::to_timestamp valid cases{string:"1 1",pattern:"y M",result:0001-01T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 01",pattern:"y M",result:0001-01T}
+STRICT:::to_timestamp valid cases{string:"1 01",pattern:"y M",result:0001-01T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 10",pattern:"y M",result:0001-10T}
+STRICT:::to_timestamp valid cases{string:"1 10",pattern:"y M",result:0001-10T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 12",pattern:"y M",result:0001-12T}
+STRICT:::to_timestamp valid cases{string:"1 12",pattern:"y M",result:0001-12T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 01",pattern:"y MM",result:0001-01T}
+STRICT:::to_timestamp valid cases{string:"1 01",pattern:"y MM",result:0001-01T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 10",pattern:"y MM",result:0001-10T}
+STRICT:::to_timestamp valid cases{string:"1 10",pattern:"y MM",result:0001-10T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 12",pattern:"y MM",result:0001-12T}
+STRICT:::to_timestamp valid cases{string:"1 12",pattern:"y MM",result:0001-12T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Jan",pattern:"y MMM",result:0001-01T}
+STRICT:::to_timestamp valid cases{string:"1 Jan",pattern:"y MMM",result:0001-01T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Feb",pattern:"y MMM",result:0001-02T}
+STRICT:::to_timestamp valid cases{string:"1 Feb",pattern:"y MMM",result:0001-02T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Mar",pattern:"y MMM",result:0001-03T}
+STRICT:::to_timestamp valid cases{string:"1 Mar",pattern:"y MMM",result:0001-03T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Apr",pattern:"y MMM",result:0001-04T}
+STRICT:::to_timestamp valid cases{string:"1 Apr",pattern:"y MMM",result:0001-04T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 May",pattern:"y MMM",result:0001-05T}
+STRICT:::to_timestamp valid cases{string:"1 May",pattern:"y MMM",result:0001-05T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Jun",pattern:"y MMM",result:0001-06T}
+STRICT:::to_timestamp valid cases{string:"1 Jun",pattern:"y MMM",result:0001-06T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Jul",pattern:"y MMM",result:0001-07T}
+STRICT:::to_timestamp valid cases{string:"1 Jul",pattern:"y MMM",result:0001-07T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Aug",pattern:"y MMM",result:0001-08T}
+STRICT:::to_timestamp valid cases{string:"1 Aug",pattern:"y MMM",result:0001-08T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Sep",pattern:"y MMM",result:0001-09T}
+STRICT:::to_timestamp valid cases{string:"1 Sep",pattern:"y MMM",result:0001-09T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Oct",pattern:"y MMM",result:0001-10T}
+STRICT:::to_timestamp valid cases{string:"1 Oct",pattern:"y MMM",result:0001-10T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Nov",pattern:"y MMM",result:0001-11T}
+STRICT:::to_timestamp valid cases{string:"1 Nov",pattern:"y MMM",result:0001-11T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 Dec",pattern:"y MMM",result:0001-12T}
+STRICT:::to_timestamp valid cases{string:"1 Dec",pattern:"y MMM",result:0001-12T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 January",pattern:"y MMMM",result:0001-01T}
+STRICT:::to_timestamp valid cases{string:"1 January",pattern:"y MMMM",result:0001-01T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 February",pattern:"y MMMM",result:0001-02T}
+STRICT:::to_timestamp valid cases{string:"1 February",pattern:"y MMMM",result:0001-02T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 March",pattern:"y MMMM",result:0001-03T}
+STRICT:::to_timestamp valid cases{string:"1 March",pattern:"y MMMM",result:0001-03T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 April",pattern:"y MMMM",result:0001-04T}
+STRICT:::to_timestamp valid cases{string:"1 April",pattern:"y MMMM",result:0001-04T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 May",pattern:"y MMMM",result:0001-05T}
+STRICT:::to_timestamp valid cases{string:"1 May",pattern:"y MMMM",result:0001-05T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 June",pattern:"y MMMM",result:0001-06T}
+STRICT:::to_timestamp valid cases{string:"1 June",pattern:"y MMMM",result:0001-06T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 July",pattern:"y MMMM",result:0001-07T}
+STRICT:::to_timestamp valid cases{string:"1 July",pattern:"y MMMM",result:0001-07T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 August",pattern:"y MMMM",result:0001-08T}
+STRICT:::to_timestamp valid cases{string:"1 August",pattern:"y MMMM",result:0001-08T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 September",pattern:"y MMMM",result:0001-09T}
+STRICT:::to_timestamp valid cases{string:"1 September",pattern:"y MMMM",result:0001-09T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 October",pattern:"y MMMM",result:0001-10T}
+STRICT:::to_timestamp valid cases{string:"1 October",pattern:"y MMMM",result:0001-10T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 November",pattern:"y MMMM",result:0001-11T}
+STRICT:::to_timestamp valid cases{string:"1 November",pattern:"y MMMM",result:0001-11T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 December",pattern:"y MMMM",result:0001-12T}
+STRICT:::to_timestamp valid cases{string:"1 December",pattern:"y MMMM",result:0001-12T}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1",pattern:"y M d",result:0001-01-01}
+STRICT:::to_timestamp valid cases{string:"1 1 1",pattern:"y M d",result:0001-01-01}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 01",pattern:"y M d",result:0001-01-01}
+STRICT:::to_timestamp valid cases{string:"1 1 01",pattern:"y M d",result:0001-01-01}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 31",pattern:"y M d",result:0001-01-31}
+STRICT:::to_timestamp valid cases{string:"1 1 31",pattern:"y M d",result:0001-01-31}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 01",pattern:"y M dd",result:0001-01-01}
+STRICT:::to_timestamp valid cases{string:"1 1 01",pattern:"y M dd",result:0001-01-01}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 31",pattern:"y M dd",result:0001-01-31}
+STRICT:::to_timestamp valid cases{string:"1 1 31",pattern:"y M dd",result:0001-01-31}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0",pattern:"y M d H m",result:0001-01-01T00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0",pattern:"y M d H m",result:0001-01-01T00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 00 00",pattern:"y M d H m",result:0001-01-01T00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 00 00",pattern:"y M d H m",result:0001-01-01T00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 23 59",pattern:"y M d H m",result:0001-01-01T23:59-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 23 59",pattern:"y M d H m",result:0001-01-01T23:59-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0",pattern:"y M d H",result:0001-01-01T00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0",pattern:"y M d H",result:0001-01-01T00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 00",pattern:"y M d H",result:0001-01-01T00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 00",pattern:"y M d H",result:0001-01-01T00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 23",pattern:"y M d H",result:0001-01-01T23:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 23",pattern:"y M d H",result:0001-01-01T23:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 00 0",pattern:"y M d HH m",result:0001-01-01T00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 00 0",pattern:"y M d HH m",result:0001-01-01T00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 23 59",pattern:"y M d HH m",result:0001-01-01T23:59-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 23 59",pattern:"y M d HH m",result:0001-01-01T23:59-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 00",pattern:"y M d H mm",result:0001-01-01T00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 00",pattern:"y M d H mm",result:0001-01-01T00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 23 59",pattern:"y M d H mm",result:0001-01-01T23:59-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 23 59",pattern:"y M d H mm",result:0001-01-01T23:59-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 1 0 AM",pattern:"y M d h m a",result:0001-01-01T01:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 1 0 AM",pattern:"y M d h m a",result:0001-01-01T01:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 01 00 AM",pattern:"y M d h m a",result:0001-01-01T01:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 01 00 AM",pattern:"y M d h m a",result:0001-01-01T01:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 11 59 PM",pattern:"y M d h m a",result:0001-01-01T23:59-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 11 59 PM",pattern:"y M d h m a",result:0001-01-01T23:59-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 01 0 AM",pattern:"y M d hh m a",result:0001-01-01T01:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 01 0 AM",pattern:"y M d hh m a",result:0001-01-01T01:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 11 59 PM",pattern:"y M d hh m a",result:0001-01-01T23:59-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 11 59 PM",pattern:"y M d hh m a",result:0001-01-01T23:59-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0",pattern:"y M d H m s",result:0001-01-01T00:00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0",pattern:"y M d H m s",result:0001-01-01T00:00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 1",pattern:"y M d H m s",result:0001-01-01T00:00:01-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 1",pattern:"y M d H m s",result:0001-01-01T00:00:01-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 01",pattern:"y M d H m s",result:0001-01-01T00:00:01-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 01",pattern:"y M d H m s",result:0001-01-01T00:00:01-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 59",pattern:"y M d H m s",result:0001-01-01T00:00:59-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 59",pattern:"y M d H m s",result:0001-01-01T00:00:59-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 00",pattern:"y M d H m ss",result:0001-01-01T00:00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 00",pattern:"y M d H m ss",result:0001-01-01T00:00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 01",pattern:"y M d H m ss",result:0001-01-01T00:00:01-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 01",pattern:"y M d H m ss",result:0001-01-01T00:00:01-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 59",pattern:"y M d H m ss",result:0001-01-01T00:00:59-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 59",pattern:"y M d H m ss",result:0001-01-01T00:00:59-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 0",pattern:"y M d H m s S",result:0001-01-01T00:00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 0",pattern:"y M d H m s S",result:0001-01-01T00:00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 1",pattern:"y M d H m s S",result:0001-01-01T00:00:00.1-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 1",pattern:"y M d H m s S",result:0001-01-01T00:00:00.1-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 9",pattern:"y M d H m s S",result:0001-01-01T00:00:00.9-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 9",pattern:"y M d H m s S",result:0001-01-01T00:00:00.9-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 00",pattern:"y M d H m s SS",result:0001-01-01T00:00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 00",pattern:"y M d H m s SS",result:0001-01-01T00:00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 01",pattern:"y M d H m s SS",result:0001-01-01T00:00:00.01-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 01",pattern:"y M d H m s SS",result:0001-01-01T00:00:00.01-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 10",pattern:"y M d H m s SS",result:0001-01-01T00:00:00.1-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 10",pattern:"y M d H m s SS",result:0001-01-01T00:00:00.1-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 99",pattern:"y M d H m s SS",result:0001-01-01T00:00:00.99-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 99",pattern:"y M d H m s SS",result:0001-01-01T00:00:00.99-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 0",pattern:"y M d H m s n",result:0001-01-01T00:00:00-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 0",pattern:"y M d H m s n",result:0001-01-01T00:00:00-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 1",pattern:"y M d H m s n",result:0001-01-01T00:00:00.000000001-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 1",pattern:"y M d H m s n",result:0001-01-01T00:00:00.000000001-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 00000000001",pattern:"y M d H m s n",result:0001-01-01T00:00:00.000000001-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 00000000001",pattern:"y M d H m s n",result:0001-01-01T00:00:00.000000001-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"1 1 1 0 0 0 999999999",pattern:"y M d H m s n",result:0001-01-01T00:00:00.999999999-00:00}
+STRICT:::to_timestamp valid cases{string:"1 1 1 0 0 0 999999999",pattern:"y M d H m s n",result:0001-01-01T00:00:00.999999999-00:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 Z",pattern:"y M d H m X",result:0002-01-01T00:00Z}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 Z",pattern:"y M d H m X",result:0002-01-01T00:00Z}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +01",pattern:"y M d H m X",result:0002-01-01T00:00+01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +01",pattern:"y M d H m X",result:0002-01-01T00:00+01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -01",pattern:"y M d H m X",result:0002-01-01T00:00-01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -01",pattern:"y M d H m X",result:0002-01-01T00:00-01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +10",pattern:"y M d H m X",result:0002-01-01T00:00+10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +10",pattern:"y M d H m X",result:0002-01-01T00:00+10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -10",pattern:"y M d H m X",result:0002-01-01T00:00-10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -10",pattern:"y M d H m X",result:0002-01-01T00:00-10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 Z",pattern:"y M d H m XX",result:0002-01-01T00:00Z}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 Z",pattern:"y M d H m XX",result:0002-01-01T00:00Z}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +0100",pattern:"y M d H m XX",result:0002-01-01T00:00+01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +0100",pattern:"y M d H m XX",result:0002-01-01T00:00+01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -0100",pattern:"y M d H m XX",result:0002-01-01T00:00-01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -0100",pattern:"y M d H m XX",result:0002-01-01T00:00-01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +0159",pattern:"y M d H m XX",result:0002-01-01T00:00+01:59}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +0159",pattern:"y M d H m XX",result:0002-01-01T00:00+01:59}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -0159",pattern:"y M d H m XX",result:0002-01-01T00:00-01:59}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -0159",pattern:"y M d H m XX",result:0002-01-01T00:00-01:59}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +1000",pattern:"y M d H m XX",result:0002-01-01T00:00+10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +1000",pattern:"y M d H m XX",result:0002-01-01T00:00+10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -1000",pattern:"y M d H m XX",result:0002-01-01T00:00-10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -1000",pattern:"y M d H m XX",result:0002-01-01T00:00-10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 Z",pattern:"y M d H m XXX",result:0002-01-01T00:00Z}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 Z",pattern:"y M d H m XXX",result:0002-01-01T00:00Z}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +01:00",pattern:"y M d H m XXX",result:0002-01-01T00:00+01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +01:00",pattern:"y M d H m XXX",result:0002-01-01T00:00+01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -01:00",pattern:"y M d H m XXX",result:0002-01-01T00:00-01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -01:00",pattern:"y M d H m XXX",result:0002-01-01T00:00-01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +01:59",pattern:"y M d H m XXX",result:0002-01-01T00:00+01:59}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +01:59",pattern:"y M d H m XXX",result:0002-01-01T00:00+01:59}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -01:59",pattern:"y M d H m XXX",result:0002-01-01T00:00-01:59}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -01:59",pattern:"y M d H m XXX",result:0002-01-01T00:00-01:59}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +10:00",pattern:"y M d H m XXX",result:0002-01-01T00:00+10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +10:00",pattern:"y M d H m XXX",result:0002-01-01T00:00+10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -10:00",pattern:"y M d H m XXX",result:0002-01-01T00:00-10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -10:00",pattern:"y M d H m XXX",result:0002-01-01T00:00-10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +01",pattern:"y M d H m x",result:0002-01-01T00:00+01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +01",pattern:"y M d H m x",result:0002-01-01T00:00+01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -01",pattern:"y M d H m x",result:0002-01-01T00:00-01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -01",pattern:"y M d H m x",result:0002-01-01T00:00-01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +10",pattern:"y M d H m x",result:0002-01-01T00:00+10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +10",pattern:"y M d H m x",result:0002-01-01T00:00+10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -10",pattern:"y M d H m x",result:0002-01-01T00:00-10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -10",pattern:"y M d H m x",result:0002-01-01T00:00-10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +0100",pattern:"y M d H m xx",result:0002-01-01T00:00+01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +0100",pattern:"y M d H m xx",result:0002-01-01T00:00+01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -0100",pattern:"y M d H m xx",result:0002-01-01T00:00-01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -0100",pattern:"y M d H m xx",result:0002-01-01T00:00-01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +0159",pattern:"y M d H m xx",result:0002-01-01T00:00+01:59}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +0159",pattern:"y M d H m xx",result:0002-01-01T00:00+01:59}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -0159",pattern:"y M d H m xx",result:0002-01-01T00:00-01:59}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -0159",pattern:"y M d H m xx",result:0002-01-01T00:00-01:59}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +1000",pattern:"y M d H m xx",result:0002-01-01T00:00+10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +1000",pattern:"y M d H m xx",result:0002-01-01T00:00+10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -1000",pattern:"y M d H m xx",result:0002-01-01T00:00-10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -1000",pattern:"y M d H m xx",result:0002-01-01T00:00-10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +01:00",pattern:"y M d H m xxx",result:0002-01-01T00:00+01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +01:00",pattern:"y M d H m xxx",result:0002-01-01T00:00+01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -01:00",pattern:"y M d H m xxx",result:0002-01-01T00:00-01:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -01:00",pattern:"y M d H m xxx",result:0002-01-01T00:00-01:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +01:59",pattern:"y M d H m xxx",result:0002-01-01T00:00+01:59}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +01:59",pattern:"y M d H m xxx",result:0002-01-01T00:00+01:59}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -01:59",pattern:"y M d H m xxx",result:0002-01-01T00:00-01:59}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -01:59",pattern:"y M d H m xxx",result:0002-01-01T00:00-01:59}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 +10:00",pattern:"y M d H m xxx",result:0002-01-01T00:00+10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 +10:00",pattern:"y M d H m xxx",result:0002-01-01T00:00+10:00}
+PERMISSIVE:::to_timestamp valid cases{string:"2 1 1 0 0 -10:00",pattern:"y M d H m xxx",result:0002-01-01T00:00-10:00}
+STRICT:::to_timestamp valid cases{string:"2 1 1 0 0 -10:00",pattern:"y M d H m xxx",result:0002-01-01T00:00-10:00}
+PERMISSIVE:::to_timestamp single argument null propagation
+STRICT:::to_timestamp single argument null propagation
+PERMISSIVE:::to_timestamp single argument missing propagation
+STRICT:::to_timestamp single argument missing propagation
+PERMISSIVE:::to_timestamp null and missing propagation{string:"null",pattern:"'y'"}
+STRICT:::to_timestamp null and missing propagation{string:"null",pattern:"'y'"}
+PERMISSIVE:::to_timestamp null and missing propagation{string:"''",pattern:"null"}
+STRICT:::to_timestamp null and missing propagation{string:"''",pattern:"null"}
+PERMISSIVE:::to_timestamp null and missing propagation{string:"null",pattern:"null"}
+STRICT:::to_timestamp null and missing propagation{string:"null",pattern:"null"}
+PERMISSIVE:::to_timestamp null and missing propagation{string:"missing",pattern:"'y'"}
+STRICT:::to_timestamp null and missing propagation{string:"missing",pattern:"'y'"}
+PERMISSIVE:::to_timestamp null and missing propagation{string:"''",pattern:"missing"}
+STRICT:::to_timestamp null and missing propagation{string:"''",pattern:"missing"}
+PERMISSIVE:::to_timestamp null and missing propagation{string:"missing",pattern:"missing"}
+STRICT:::to_timestamp null and missing propagation{string:"missing",pattern:"missing"}
+PERMISSIVE:::to_timestamp null and missing propagation{string:"null",pattern:"missing"}
+STRICT:::to_timestamp null and missing propagation{string:"null",pattern:"missing"}
+PERMISSIVE:::to_timestamp null and missing propagation{string:"missing",pattern:"null"}
+STRICT:::to_timestamp null and missing propagation{string:"missing",pattern:"null"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05.007+08:09",right:"2017-01-02T03:04:05.007+08:09"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"year",left:"2017T",right:"2018T"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"year",left:"2017T",right:"2018T"}
+PERMISSIVE:::date_diff valid cases{result:(success 12),time_part:"month",left:"2017T",right:"2018T"}
+STRICT:::date_diff valid cases{result:(success 12),time_part:"month",left:"2017T",right:"2018T"}
+PERMISSIVE:::date_diff valid cases{result:(success 365),time_part:"day",left:"2017T",right:"2018T"}
+STRICT:::date_diff valid cases{result:(success 365),time_part:"day",left:"2017T",right:"2018T"}
+PERMISSIVE:::date_diff valid cases{result:(success 8760),time_part:"hour",left:"2017T",right:"2018T"}
+STRICT:::date_diff valid cases{result:(success 8760),time_part:"hour",left:"2017T",right:"2018T"}
+PERMISSIVE:::date_diff valid cases{result:(success 525600),time_part:"minute",left:"2017T",right:"2018T"}
+STRICT:::date_diff valid cases{result:(success 525600),time_part:"minute",left:"2017T",right:"2018T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31536000),time_part:"second",left:"2017T",right:"2018T"}
+STRICT:::date_diff valid cases{result:(success 31536000),time_part:"second",left:"2017T",right:"2018T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01T",right:"2017-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01T",right:"2017-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"month",left:"2017-01T",right:"2017-02T"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"month",left:"2017-01T",right:"2017-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-01T",right:"2017-02T"}
+STRICT:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-01T",right:"2017-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 744),time_part:"hour",left:"2017-01T",right:"2017-02T"}
+STRICT:::date_diff valid cases{result:(success 744),time_part:"hour",left:"2017-01T",right:"2017-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 44640),time_part:"minute",left:"2017-01T",right:"2017-02T"}
+STRICT:::date_diff valid cases{result:(success 44640),time_part:"minute",left:"2017-01T",right:"2017-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 2678400),time_part:"second",left:"2017-01T",right:"2017-02T"}
+STRICT:::date_diff valid cases{result:(success 2678400),time_part:"second",left:"2017-01T",right:"2017-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T",right:"2017-01-03T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T",right:"2017-01-03T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T",right:"2017-01-03T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T",right:"2017-01-03T"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"day",left:"2017-01-02T",right:"2017-01-03T"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"day",left:"2017-01-02T",right:"2017-01-03T"}
+PERMISSIVE:::date_diff valid cases{result:(success 24),time_part:"hour",left:"2017-01-02T",right:"2017-01-03T"}
+STRICT:::date_diff valid cases{result:(success 24),time_part:"hour",left:"2017-01-02T",right:"2017-01-03T"}
+PERMISSIVE:::date_diff valid cases{result:(success 1440),time_part:"minute",left:"2017-01-02T",right:"2017-01-03T"}
+STRICT:::date_diff valid cases{result:(success 1440),time_part:"minute",left:"2017-01-02T",right:"2017-01-03T"}
+PERMISSIVE:::date_diff valid cases{result:(success 86400),time_part:"second",left:"2017-01-02T",right:"2017-01-03T"}
+STRICT:::date_diff valid cases{result:(success 86400),time_part:"second",left:"2017-01-02T",right:"2017-01-03T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 60),time_part:"minute",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+STRICT:::date_diff valid cases{result:(success 60),time_part:"minute",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 3600),time_part:"second",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+STRICT:::date_diff valid cases{result:(success 3600),time_part:"second",left:"2017-01-02T03:04Z",right:"2017-01-02T04:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"minute",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"minute",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 60),time_part:"second",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+STRICT:::date_diff valid cases{result:(success 60),time_part:"second",left:"2017-01-02T03:04Z",right:"2017-01-02T03:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017-01-02T03:04:05Z",right:"2017-01-02T03:04:06Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05.007Z",right:"2017-01-02T03:04:05.008Z"}
+PERMISSIVE:::date_diff valid cases{result:(success -1),time_part:"year",left:"2018T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success -1),time_part:"year",left:"2018T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success -12),time_part:"month",left:"2018T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success -12),time_part:"month",left:"2018T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success -365),time_part:"day",left:"2018T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success -365),time_part:"day",left:"2018T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success -8760),time_part:"hour",left:"2018T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success -8760),time_part:"hour",left:"2018T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success -525600),time_part:"minute",left:"2018T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success -525600),time_part:"minute",left:"2018T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success -31536000),time_part:"second",left:"2018T",right:"2017T"}
+STRICT:::date_diff valid cases{result:(success -31536000),time_part:"second",left:"2018T",right:"2017T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-02T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-02T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success -1),time_part:"month",left:"2017-02T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success -1),time_part:"month",left:"2017-02T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success -31),time_part:"day",left:"2017-02T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success -31),time_part:"day",left:"2017-02T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success -744),time_part:"hour",left:"2017-02T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success -744),time_part:"hour",left:"2017-02T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success -44640),time_part:"minute",left:"2017-02T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success -44640),time_part:"minute",left:"2017-02T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success -2678400),time_part:"second",left:"2017-02T",right:"2017-01T"}
+STRICT:::date_diff valid cases{result:(success -2678400),time_part:"second",left:"2017-02T",right:"2017-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-03T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-03T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-03T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-03T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success -1),time_part:"day",left:"2017-01-03T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success -1),time_part:"day",left:"2017-01-03T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success -24),time_part:"hour",left:"2017-01-03T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success -24),time_part:"hour",left:"2017-01-03T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success -1440),time_part:"minute",left:"2017-01-03T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success -1440),time_part:"minute",left:"2017-01-03T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success -86400),time_part:"second",left:"2017-01-03T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success -86400),time_part:"second",left:"2017-01-03T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success -1),time_part:"hour",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success -1),time_part:"hour",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success -60),time_part:"minute",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success -60),time_part:"minute",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success -3600),time_part:"second",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success -3600),time_part:"second",left:"2017-01-02T04:04Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success -1),time_part:"minute",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success -1),time_part:"minute",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success -60),time_part:"second",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+STRICT:::date_diff valid cases{result:(success -60),time_part:"second",left:"2017-01-02T03:05Z",right:"2017-01-02T03:04Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success -1),time_part:"second",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+STRICT:::date_diff valid cases{result:(success -1),time_part:"second",left:"2017-01-02T03:04:06Z",right:"2017-01-02T03:04:05Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"hour",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"minute",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"second",left:"2017-01-02T03:04:05.008Z",right:"2017-01-02T03:04:05.007Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04+01:02",right:"2017-01-02T03:04+00:00"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"year",left:"2017-01-02T03:04+01:02",right:"2017-01-02T03:04+00:00"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04+00:02",right:"2017-01-02T03:04+00:00"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"month",left:"2017-01-02T03:04+00:02",right:"2017-01-02T03:04+00:00"}
+PERMISSIVE:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T01:00+10:00",right:"2017-01-02T01:00+00:00"}
+STRICT:::date_diff valid cases{result:(success 0),time_part:"day",left:"2017-01-02T01:00+10:00",right:"2017-01-02T01:00+00:00"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017-01-02T03:04+01:02",right:"2017-01-02T03:04+00:00"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017-01-02T03:04+01:02",right:"2017-01-02T03:04+00:00"}
+PERMISSIVE:::date_diff valid cases{result:(success 2),time_part:"minute",left:"2017-01-02T03:04+00:02",right:"2017-01-02T03:04+00:00"}
+STRICT:::date_diff valid cases{result:(success 2),time_part:"minute",left:"2017-01-02T03:04+00:02",right:"2017-01-02T03:04+00:00"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"month",left:"2017T",right:"2017-02T"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"month",left:"2017T",right:"2017-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"day",left:"2017T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"day",left:"2017T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017T",right:"2017-01-01T01:00Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017T",right:"2017-01-01T01:00Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"minute",left:"2017T",right:"2017-01-01T00:01Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"minute",left:"2017T",right:"2017-01-01T00:01Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017T",right:"2017-01-01T00:00:01Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017T",right:"2017-01-01T00:00:01Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"day",left:"2017-01T",right:"2017-01-02T"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"day",left:"2017-01T",right:"2017-01-02T"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017-01T",right:"2017-01-01T01:00Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017-01T",right:"2017-01-01T01:00Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"minute",left:"2017-01T",right:"2017-01-01T00:01Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"minute",left:"2017-01T",right:"2017-01-01T00:01Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017-01T",right:"2017-01-01T00:00:01Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017-01T",right:"2017-01-01T00:00:01Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017-01-01T",right:"2017-01-01T01:00Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"hour",left:"2017-01-01T",right:"2017-01-01T01:00Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"minute",left:"2017-01-01T",right:"2017-01-01T00:01Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"minute",left:"2017-01-01T",right:"2017-01-01T00:01Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017-01-01T",right:"2017-01-01T00:00:01Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017-01-01T",right:"2017-01-01T00:00:01Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017-01-01T00:00Z",right:"2017-01-01T00:00:01Z"}
+STRICT:::date_diff valid cases{result:(success 1),time_part:"second",left:"2017-01-01T00:00Z",right:"2017-01-01T00:00:01Z"}
+PERMISSIVE:::date_diff valid cases{result:(success 366),time_part:"day",left:"2016-01-01T",right:"2017-01-01T"}
+STRICT:::date_diff valid cases{result:(success 366),time_part:"day",left:"2016-01-01T",right:"2017-01-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 8784),time_part:"hour",left:"2016-01-01T",right:"2017-01-01T"}
+STRICT:::date_diff valid cases{result:(success 8784),time_part:"hour",left:"2016-01-01T",right:"2017-01-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 527040),time_part:"minute",left:"2016-01-01T",right:"2017-01-01T"}
+STRICT:::date_diff valid cases{result:(success 527040),time_part:"minute",left:"2016-01-01T",right:"2017-01-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31622400),time_part:"second",left:"2016-01-01T",right:"2017-01-01T"}
+STRICT:::date_diff valid cases{result:(success 31622400),time_part:"second",left:"2016-01-01T",right:"2017-01-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-01-01T",right:"2017-02-01T"}
+STRICT:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-01-01T",right:"2017-02-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 28),time_part:"day",left:"2017-02-01T",right:"2017-03-01T"}
+STRICT:::date_diff valid cases{result:(success 28),time_part:"day",left:"2017-02-01T",right:"2017-03-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 29),time_part:"day",left:"2016-02-01T",right:"2016-03-01T"}
+STRICT:::date_diff valid cases{result:(success 29),time_part:"day",left:"2016-02-01T",right:"2016-03-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-03-01T",right:"2017-04-01T"}
+STRICT:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-03-01T",right:"2017-04-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 30),time_part:"day",left:"2017-04-01T",right:"2017-05-01T"}
+STRICT:::date_diff valid cases{result:(success 30),time_part:"day",left:"2017-04-01T",right:"2017-05-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-05-01T",right:"2017-06-01T"}
+STRICT:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-05-01T",right:"2017-06-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 30),time_part:"day",left:"2017-06-01T",right:"2017-07-01T"}
+STRICT:::date_diff valid cases{result:(success 30),time_part:"day",left:"2017-06-01T",right:"2017-07-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-07-01T",right:"2017-08-01T"}
+STRICT:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-07-01T",right:"2017-08-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-08-01T",right:"2017-09-01T"}
+STRICT:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-08-01T",right:"2017-09-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 30),time_part:"day",left:"2017-09-01T",right:"2017-10-01T"}
+STRICT:::date_diff valid cases{result:(success 30),time_part:"day",left:"2017-09-01T",right:"2017-10-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-10-01T",right:"2017-11-01T"}
+STRICT:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-10-01T",right:"2017-11-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 30),time_part:"day",left:"2017-11-01T",right:"2017-12-01T"}
+STRICT:::date_diff valid cases{result:(success 30),time_part:"day",left:"2017-11-01T",right:"2017-12-01T"}
+PERMISSIVE:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-12-01T",right:"2018-01-01T"}
+STRICT:::date_diff valid cases{result:(success 31),time_part:"day",left:"2017-12-01T",right:"2018-01-01T"}
+PERMISSIVE:::function call with mixed StaticType
+STRICT:::function call with mixed StaticType
+PERMISSIVE:::SELECT * FROM simple_1_col_1_group GROUP BY MISSING AS someMissing
+STRICT:::SELECT * FROM simple_1_col_1_group GROUP BY MISSING AS someMissing
+PERMISSIVE:::SELECT * FROM simple_1_col_1_group GROUP BY MISSING AS groupExp
+STRICT:::SELECT * FROM simple_1_col_1_group GROUP BY MISSING AS groupExp
+PERMISSIVE:::SELECT * FROM products_sparse p GROUP BY p.supplierId_missings
+STRICT:::SELECT * FROM products_sparse p GROUP BY p.supplierId_missings
+PERMISSIVE:::SELECT * FROM products_sparse p GROUP BY p.supplierId_mixed
+STRICT:::SELECT * FROM products_sparse p GROUP BY p.supplierId_mixed
+PERMISSIVE:::SELECT * FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings
+STRICT:::SELECT * FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings
+PERMISSIVE:::SELECT * FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed
+STRICT:::SELECT * FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed
+PERMISSIVE:::SELECT * FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g
+STRICT:::SELECT * FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g
+PERMISSIVE:::SELECT * FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g
+STRICT:::SELECT * FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g
