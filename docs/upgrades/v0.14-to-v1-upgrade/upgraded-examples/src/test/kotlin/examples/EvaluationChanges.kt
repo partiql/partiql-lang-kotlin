@@ -46,19 +46,29 @@ class EvaluationChanges {
                 PType.BIGINT -> value.long.toString()
                 PType.SMALLINT -> value.short.toString()
                 PType.STRING -> value.string
-                PType.BOOL -> value.boolean.toString()
+                // ... the rest of scalar types
+                PType.ARRAY -> value.toString()
+                PType.STRUCT -> value.toString()
+                // ... the rest of types
                 else -> throw RuntimeException("Unsupported type: $type")
             }
         }
+        // Test scalar types
         assertEquals("42", getDataAsString(Datum.integer(42)))
         assertEquals("hello", getDataAsString(Datum.string("hello")))
         assertEquals("null", getDataAsString(Datum.nullValue()))
         assertEquals("missing", getDataAsString(Datum.missing()))
+        // Test non-scalar types
+        val arrayValue = Datum.array(listOf(Datum.integer(1), Datum.integer(2), Datum.integer(3)))
+        val structValue = Datum.struct(listOf(Field.of("a", Datum.integer(1)), Field.of("b", Datum.integer(2))))
+        assertEquals(arrayValue.toString(), getDataAsString(arrayValue))
+        assertEquals(structValue.toString(), getDataAsString(structValue))
     }
 
     // Helper functions for orderly materialization test
-    // These helper functions memoize the data after iterating by return a Datum,
+    // These helper functions memoize the data after iterating by returning a Datum,
     // which ensuring that the data is backed by in-memory data structures instead of PartiQL engine.
+    // This behavior is highly recommended to avoid multiple times iterating or data accessing.
     // Dispatches to appropriate materialization function based on data type
     fun materializeInOrder(d: Datum): Datum {
         val type = d.type
@@ -68,6 +78,7 @@ class EvaluationChanges {
             PType.BAG -> materializeBag(d)
             PType.ROW -> materializeRow(d)
             PType.STRUCT -> materializeStruct(d)
+            // ... the rest of types
             else -> materializeScalar(d)
         }
     }
@@ -182,7 +193,7 @@ class EvaluationChanges {
     fun `working with compiler builder and strategies`() {
         // In PLK v1, PartiQLCompiler can be built with custom strategies
         val compiler = PartiQLCompiler.builder()
-            .addStrategy(object : Strategy(
+            .addStrategy(object : Strategy( // custom strategy
                 Pattern(Operator::class.java)
             ) {
                     override fun apply(
@@ -190,14 +201,14 @@ class EvaluationChanges {
                         mode: Mode,
                         callback: Callback
                     ): Expr {
-                        return ExprValue { Datum.string("custom strategy") }
+                        return ExprValue { Datum.string("custom strategy") } // Always returning a string "custom strategy"
                     }
                 }
             )
             .build()
         assertTrue(compiler is PartiQLCompiler)
         // Create a simple plan and statement to test the custom strategy
-        val literal = Literal.string("hello")
+        val literal = Literal.string("hello") // input is "hello"
         val exprLit = ExprLit(literal)
         val query = Query.builder().expr(exprLit).build()
         val planner = PartiQLPlanner.standard()
@@ -206,7 +217,7 @@ class EvaluationChanges {
         val plan = planResult.plan
         val statement = compiler.prepare(plan, Mode.PERMISSIVE())
         val result = statement.execute()
-        assertEquals("custom strategy", result.string)
+        assertEquals("custom strategy", result.string) // returns "custom strategy"
     }
 
     @Test

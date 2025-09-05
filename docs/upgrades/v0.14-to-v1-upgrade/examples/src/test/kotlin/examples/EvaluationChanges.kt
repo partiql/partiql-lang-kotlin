@@ -28,21 +28,29 @@ class EvaluationChanges {
                 ExprValueType.MISSING -> "missing"
                 ExprValueType.INT -> value.scalar.numberValue().toString()
                 ExprValueType.STRING -> value.scalar.stringValue()
-                ExprValueType.BOOL -> value.scalar.booleanValue().toString()
-                ExprValueType.FLOAT -> value.scalar.numberValue().toString()
-                ExprValueType.DECIMAL -> value.scalar.numberValue().toString()
+                // ... the rest of scalar types
+                ExprValueType.LIST -> value.toString()
+                ExprValueType.STRUCT -> value.toString()
+                // ... the rest of types
                 else -> throw RuntimeException("Unsupported type: $type")
             }
         }
+        // Test scalar types
         assertEquals("42", getDataAsString(ExprValue.newInt(42)))
         assertEquals("hello", getDataAsString(ExprValue.newString("hello")))
         assertEquals("null", getDataAsString(ExprValue.nullValue))
         assertEquals("missing", getDataAsString(ExprValue.missingValue))
+        // Test non-scalar types
+        val listValue = ExprValue.newList(listOf(ExprValue.newInt(1), ExprValue.newString("test")))
+        val structValue = ExprValue.newStruct(listOf(ExprValue.newInt(1).namedValue(ExprValue.newString("id"))), org.partiql.lang.eval.StructOrdering.UNORDERED)
+        assertEquals(listValue.toString(), getDataAsString(listValue))
+        assertEquals(structValue.toString(), getDataAsString(structValue))
     }
 
     // Helper functions for orderly materialization test
-    // These helper functions memoize the data after iterating by return an ExprValue,
+    // These helper functions memoize the data after iterating by returning an ExprValue,
     // which ensuring that the data is backed by in-memory data structures instead of PartiQL engine.
+    // This behavior is highly recommended to avoid multiple times iterating or data accessing.
     // Dispatches to appropriate materialization function based on data type
     fun materializeInOrder(value: ExprValue): ExprValue {
         val type = value.type
@@ -51,6 +59,7 @@ class EvaluationChanges {
             ExprValueType.BAG -> materializeBag(value)
             ExprValueType.SEXP -> materializeSexp(value)
             ExprValueType.STRUCT -> materializeStruct(value)
+            // ... the rest of types
             else -> materializeScalar(value)
         }
     }
@@ -171,7 +180,7 @@ class EvaluationChanges {
     fun `working with compiler pipeline builder`() {
         // In PLK 0.14.9, compiler pipeline customization is done through custom functions and procedures
         val pipeline = CompilerPipeline.builder()
-            .addFunction(object : ExprFunction {
+            .addFunction(object : ExprFunction { // custom function
                 override val signature = FunctionSignature(
                     name = "custom_strategy",
                     requiredParameters = listOf(),
@@ -181,7 +190,7 @@ class EvaluationChanges {
                     session: EvaluationSession,
                     required: List<ExprValue>
                 ): ExprValue {
-                    return ExprValue.newString("custom strategy")
+                    return ExprValue.newString("custom strategy") // Always returning a string "custom strategy"
                 }
             })
             .build()
