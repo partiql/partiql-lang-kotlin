@@ -55,9 +55,30 @@ public class PRuntimeException extends RuntimeException {
         return Objects.hashCode(error);
     }
 
+    /**
+     * This will return null.
+     * @see PError#getOrNull(String, Class)
+     * @see PError#INTERNAL_ERROR
+     * @return null
+     */
+    @Override
+    public synchronized Throwable getCause() {
+        // DEVELOPERS: You may TEMPORARILY uncomment the following 4 lines during debugging. Do not commit the lines uncommented.
+        // Throwable t = error.getOrNull("CAUSE", Throwable.class);
+        // if (t != null) {
+        //     return t;
+        // }
+        return null;
+    }
+
+    /**
+     * This intentionally does not fill in the stack trace, as it is extremely expensive, especially in permissive mode.
+     * @return the same, untouched exception.
+     */
     @Override
     public synchronized Throwable fillInStackTrace() {
-        // This method is normally extremely expensive, especially in permissive mode.
+        // DEVELOPERS: You may TEMPORARILY uncomment the following line during debugging. Do not commit the lines uncommented.
+        // return super.fillInStackTrace();
         return this;
     }
 }
