@@ -11,6 +11,7 @@ abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>
     abstract val skipListForEvaluation: Set<Pair<String, CompileType>>
     abstract val skipListForEquivalence: Set<Pair<String, CompileType>>
+    abstract val skipListForEvaluationExtended: Set<Pair<String, CompileType>>
 
     companion object {
         val COERCE_EVAL_MODE_COMPILE_OPTIONS = CompileType.PERMISSIVE
@@ -39,6 +40,17 @@ abstract class ConformanceTestBase<T, V> {
     fun validatePartiQLEvalEquivTestData(tc: TestCase) {
         when (tc) {
             is TestCase.Equiv -> runner.test(tc, skipListForEquivalence)
+            else -> error("Unsupported test case category")
+        }
+    }
+
+    // Tests the eval tests data from extended dataset with the Kotlin implementation
+    @Timeout(value = 500, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @ParameterizedTest(name = "{arguments}")
+    @ArgumentsSource(TestProvider.EvalExtended::class)
+    fun validatePartiQLEvalTestDataExtended(tc: TestCase) {
+        when (tc) {
+            is TestCase.Eval -> runner.test(tc, skipListForEvaluationExtended)
             else -> error("Unsupported test case category")
         }
     }

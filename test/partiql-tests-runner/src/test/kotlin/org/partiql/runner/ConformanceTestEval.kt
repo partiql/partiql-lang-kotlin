@@ -20,4 +20,5 @@ class ConformanceTestEval : ConformanceTestBase<Statement, Datum>() {
     override val skipListForEvaluation: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval.txt")
 
     override val skipListForEquivalence: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval-equiv.txt")
+    override val skipListForEvaluationExtended: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval-extended.txt")
 }

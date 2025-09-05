@@ -7,6 +7,7 @@ import java.util.stream.Stream
 
 private val PARTIQL_EVAL_TEST_DATA_DIR = System.getenv("PARTIQL_EVAL_TESTS_DATA") ?: "../partiql-tests/partiql-tests-data/eval"
 private val PARTIQL_EVAL_EQUIV_TEST_DATA_DIR = System.getenv("PARTIQL_EVAL_EQUIV_TESTS_DATA") ?: "../partiql-tests/partiql-tests-data/eval-equiv"
+private val PARTIQL_EVAL_TEST_DATA_EXTENDED_DIR = System.getenv("PARTIQL_EVAL_TESTS_DATA_EXTENDED") ?: "../partiql-tests/partiql-tests-data-extended/eval"
 
 /**
  * Reduces some of the boilerplate associated with the style of parameterized testing frequently
@@ -35,4 +36,9 @@ sealed class TestProvider(private val root: String) : ArgumentsProvider {
      * Equivalence tests
      */
     class Equiv : TestProvider(PARTIQL_EVAL_EQUIV_TEST_DATA_DIR)
+
+    /**
+     * Extended evaluation tests
+     */
+    class EvalExtended : TestProvider(PARTIQL_EVAL_TEST_DATA_EXTENDED_DIR)
 }
