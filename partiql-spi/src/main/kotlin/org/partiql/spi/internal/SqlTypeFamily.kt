@@ -101,6 +101,6 @@ internal class SqlTypeFamily private constructor(
         )
 
         @JvmStatic
-        val DATE = SqlTypeFamily(PType.date(), setOf(PType.DATE))
+        val DATE = SqlTypeFamily(preferred = PType.date(), members = setOf(PType.DATE))
     }
 }

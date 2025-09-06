@@ -205,7 +205,7 @@ class IntervalTimesTests {
         ).flatMap { case ->
             listOf(
                 SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected),
-                SuccessTestCase("${case.arg0} * ${case.arg1}", case.expected)
+                SuccessTestCase("${case.arg1} * ${case.arg0}", case.expected)
             )
         }
 
