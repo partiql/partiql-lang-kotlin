@@ -48,9 +48,9 @@ class EvaluationChanges {
     }
 
     // Helper functions for orderly materialization test
-    // These helper functions memoize the data after iterating by returning an ExprValue,
-    // which ensuring that the data is backed by in-memory data structures instead of PartiQL engine.
-    // This behavior is highly recommended to avoid multiple times iterating or data accessing.
+    // These helper functions materialize the data by ensuring that the data is backed by
+    // in-memory data structures instead of lazy evaluation from the PartiQL engine.
+    // Callers are recommended to cache the results to avoid repeated materialization.
     // Dispatches to appropriate materialization function based on data type
     fun materializeInOrder(value: ExprValue): ExprValue {
         val type = value.type
@@ -146,11 +146,15 @@ class EvaluationChanges {
             ),
             org.partiql.lang.eval.StructOrdering.UNORDERED
         )
-        // Materialize in order for semi-structured data
-        materializeInOrder(bagValue)
-        materializeInOrder(structValue)
-        assertEquals(2, bagValue.count())
-        assertEquals(2, structValue.count())
+        // Materialize in order for semi-structured data and cache the results
+        val materializedBag = materializeInOrder(bagValue)
+        val materializedStruct = materializeInOrder(structValue)
+        // Reuse the cached results for subsequent operations
+        assertEquals(2, materializedBag.count())
+        assertEquals(2, materializedStruct.count())
+        // Additional operations using the cached results
+        assertEquals(42L, materializedBag.first().scalar.numberValue())
+        assertEquals(42L, materializedStruct.first().scalar.numberValue())
     }
 
     @Test

@@ -66,9 +66,9 @@ class EvaluationChanges {
     }
 
     // Helper functions for orderly materialization test
-    // These helper functions memoize the data after iterating by returning a Datum,
-    // which ensuring that the data is backed by in-memory data structures instead of PartiQL engine.
-    // This behavior is highly recommended to avoid multiple times iterating or data accessing.
+    // These helper functions materialize the data by ensuring that the data is backed by
+    // in-memory data structures instead of lazy evaluation from the PartiQL engine.
+    // Callers are recommended to cache the results to avoid repeated materialization.
     // Dispatches to appropriate materialization function based on data type
     fun materializeInOrder(d: Datum): Datum {
         val type = d.type
@@ -160,11 +160,15 @@ class EvaluationChanges {
             Field.of("id", Datum.integer(42)),
             Field.of("items", Datum.array(listOf(Datum.string("a"), Datum.string("b"))))
         )
-        // Materialize in order for semi-structured data
-        materializeInOrder(bagValue)
-        materializeInOrder(structValue)
+        // Materialize in order for semi-structured data and cache the results
+        val materializedBag = materializeInOrder(bagValue)
+        val materializedStruct = materializeInOrder(structValue)
+        // Reuse the cached results for subsequent operations
         assertEquals(2, bagValue.count())
         assertEquals(2, structValue.fields.asSequence().count())
+        // Additional operations using the cached results
+        assertEquals(42, materializedBag.first().int)
+        assertEquals(42, materializedStruct["id"].int)
     }
 
     @Test
