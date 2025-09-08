@@ -337,6 +337,11 @@ internal abstract class DiadicOperator(
     }
 
     /**
+     * Override this function if operator implementation needs handling the case where one operand is unknown type(null or missing)
+     */
+    open fun fillUnknownTable() {}
+
+    /**
      * This is a lookup table for finding the appropriate instance for the given types. The table is
      * initialized on construction using the get*Instance methods.
      */
@@ -486,13 +491,7 @@ internal abstract class DiadicOperator(
         fillTable(PType.DECIMAL, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(lhs, rhs) }
     }
 
-    private fun fillUnknownTable() {
-        // Register all possible type combinations with the default unknown handling.
-        PType.codes().filter { it != PType.UNKNOWN }.forEach {
-            fillTable(PType.UNKNOWN, it) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
-            fillTable(it, PType.UNKNOWN,) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
-        }
-
+    protected fun fillUnknownUnknownTable() {
         fillTable(PType.UNKNOWN, PType.UNKNOWN) { _, _ -> getUnknownInstance() }
     }
 
@@ -516,6 +515,7 @@ internal abstract class DiadicOperator(
         fillCharacterStringTable(PType.VARCHAR, ::getVarcharInstance)
         fillCharacterStringTable(PType.CLOB, ::getClobInstance)
         fillUnknownTable()
+        fillUnknownUnknownTable()
     }
 
     protected fun basic(returns: PType, lhs: PType, rhs: PType, invocation: (Array<Datum>) -> Datum): Fn {

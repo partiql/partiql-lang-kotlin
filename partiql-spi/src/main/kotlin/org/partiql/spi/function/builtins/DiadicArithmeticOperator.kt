@@ -14,21 +14,18 @@ internal abstract class DiadicArithmeticOperator(name: String, hidesName: Boolea
     PType.doublePrecision(),
     hidesName = hidesName
 ) {
-    override fun getUnknownInstance(lhs: PType, rhs: PType): Fn? {
-        // The base getUnknownInstance applies to all PTypes with unknown combinations.
-        // Override the base to apply to PTypes, which arithmetic operator supports,
+    override fun fillUnknownTable() {
+        // Only register unknown with PTypes which arithmetic operator support,
         // otherwise it will break type mismatch check for unsupported types e.g.
-        // mod('string', null) should give type
+        // mod('string', null) should give type mismatched error instead of returning null.
         val allowPTypes = SqlTypeFamily.NUMBER.members +
                 SqlTypeFamily.DATETIME.members +
-                SqlTypeFamily.INTERVAL.members +
-                setOf(PType.UNKNOWN)
+                SqlTypeFamily.INTERVAL.members
 
-        if (lhs.code() in allowPTypes && rhs.code() in allowPTypes) {
-            return super.getUnknownInstance(lhs, rhs)
+        allowPTypes.forEach {
+            fillTable(PType.UNKNOWN, it) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
+            fillTable(it, PType.UNKNOWN,) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
         }
-
-        return null
     }
 
     override fun getUnknownInstance(): Fn? {
