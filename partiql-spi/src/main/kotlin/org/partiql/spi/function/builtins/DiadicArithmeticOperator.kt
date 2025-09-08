@@ -19,8 +19,8 @@ internal abstract class DiadicArithmeticOperator(name: String, hidesName: Boolea
         // otherwise it will break type mismatch check for unsupported types e.g.
         // mod('string', null) should give type mismatched error instead of returning null.
         val allowPTypes = SqlTypeFamily.NUMBER.members +
-                SqlTypeFamily.DATETIME.members +
-                SqlTypeFamily.INTERVAL.members
+            SqlTypeFamily.DATETIME.members +
+            SqlTypeFamily.INTERVAL.members
 
         allowPTypes.forEach {
             fillTable(PType.UNKNOWN, it) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
