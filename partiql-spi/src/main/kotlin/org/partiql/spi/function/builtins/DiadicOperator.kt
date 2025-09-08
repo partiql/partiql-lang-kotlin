@@ -394,8 +394,8 @@ internal abstract class DiadicOperator(
     private fun fillIntervalTable() {
         SqlTypeFamily.NUMBER.members.forEach { number ->
             listOf(PType.INTERVAL_YM, PType.INTERVAL_DT).forEach { interval ->
-                fillTable(interval, number) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-                fillTable(number, interval) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+                fillTable(interval, number, ::getIntervalNumberInstance)
+                fillTable(number, interval, ::getNumberIntervalInstance)
             }
         }
 
