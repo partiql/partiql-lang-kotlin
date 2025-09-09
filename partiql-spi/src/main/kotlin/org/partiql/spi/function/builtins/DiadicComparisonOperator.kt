@@ -22,6 +22,14 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
         }
     }
 
+    override fun getUnknownPTypeInstance(lhs: PType, rhs: PType): Fn? {
+        return basic(rhs, lhs, rhs) { args -> throw NotImplementedError() }
+    }
+
+    override fun getPTypeUnknownInstance(lhs: PType, rhs: PType): Fn? {
+        return basic(lhs, lhs, rhs) { args -> throw NotImplementedError() }
+    }
+
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Fn? {
         return null
     }

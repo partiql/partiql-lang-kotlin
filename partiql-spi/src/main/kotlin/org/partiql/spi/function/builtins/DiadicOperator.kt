@@ -326,7 +326,7 @@ internal abstract class DiadicOperator(
      * @return an instance of a function
      */
     open fun getUnknownPTypeInstance(lhs: PType, rhs: PType): Fn? {
-        return basic(rhs, lhs, rhs) { args -> throw NotImplementedError() }
+        return null
     }
 
     /**
@@ -350,7 +350,7 @@ internal abstract class DiadicOperator(
      * @return an instance of a function
      */
     open fun getPTypeUnknownInstance(lhs: PType, rhs: PType): Fn? {
-        return basic(lhs, lhs, rhs) { args -> throw NotImplementedError() }
+        return null
     }
 
     /**
@@ -423,7 +423,7 @@ internal abstract class DiadicOperator(
 
     private fun fillIntervalTable() {
         SqlTypeFamily.NUMBER.members.forEach { number ->
-            listOf(PType.INTERVAL_YM, PType.INTERVAL_DT).forEach { interval ->
+            SqlTypeFamily.INTERVAL.members.forEach { interval ->
                 fillTable(interval, number, ::getIntervalNumberInstance)
                 fillTable(number, interval, ::getNumberIntervalInstance)
             }
