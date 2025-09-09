@@ -306,26 +306,51 @@ internal abstract class DiadicOperator(
     }
 
     /**
-     * This is used when one operand is NULL/MISSING.
+     * This is used when left operand is NULL/MISSING.
      * According to SQL spec Section 8.2 for comparison operator,
      * Section 6.26 for numeric value expression,
      * Section 6.28 for datetime value expression,
      * Section 6.29 for interval value expression,
      * if any of the operand is null, the result is null.
      *
+     * The default implementation returns [Function] instance with isMissingCall or isNullCall default set to true.
+     * The framework will check the unknown parameter and handle unknown type properly.
+     * The function body which throws [NotImplementedError] will not be reached.
+     *
+     * Note: Return type needs to be set to non-unknown operand as null may be typed in PartiQL
+     *
+     * The same principle applies to [getPTypeUnknownInstance]
+     *
+     * @param lhs a type of unknown
+     * @param rhs any type from PType
      * @return an instance of a function
      */
-    open fun getUnknownInstance(lhs: PType, rhs: PType): Fn? {
-        // In case of an unknown operand type, basic will return Function.instance with default isMissingCall or isNullCall
-        // And the evaluation will not reach lambda function body and should not throw.
-        if (lhs.code() == PType.UNKNOWN) {
-            // Set non-null operand rhs as return type
-            return basic(rhs, lhs, rhs) { args -> throw NotImplementedError() }
-        } else if (rhs.code() == PType.UNKNOWN) {
-            // Set non-null operand lhs as return type
-            return basic(lhs, lhs, rhs) { args -> throw NotImplementedError() }
-        }
-        return null
+    open fun getUnknownPTypeInstance(lhs: PType, rhs: PType): Fn? {
+        return basic(rhs, lhs, rhs) { args -> throw NotImplementedError() }
+    }
+
+    /**
+     * This is used when right operand is NULL/MISSING.
+     * According to SQL spec Section 8.2 for comparison operator,
+     * Section 6.26 for numeric value expression,
+     * Section 6.28 for datetime value expression,
+     * Section 6.29 for interval value expression,
+     * if any of the operand is null, the result is null.
+     *
+     * The default implementation returns [Function] instance with isMissingCall or isNullCall default set to true.
+     * The framework will check the unknown parameter and handle unknown type properly.
+     * The function body which throws [NotImplementedError] will not be reached.
+
+     * Note: Return type needs to be set to non-unknown operand as null may be typed in PartiQL
+     *
+     * The same principle applies to [getUnknownPTypeInstance]
+     *
+     * @param lhs any type from PType
+     * @param rhs a type of unknown
+     * @return an instance of a function
+     */
+    open fun getPTypeUnknownInstance(lhs: PType, rhs: PType): Fn? {
+        return basic(lhs, lhs, rhs) { args -> throw NotImplementedError() }
     }
 
     /**

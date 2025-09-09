@@ -23,8 +23,8 @@ internal abstract class DiadicArithmeticOperator(name: String, hidesName: Boolea
             SqlTypeFamily.INTERVAL.members
 
         allowPTypes.forEach {
-            fillTable(PType.UNKNOWN, it) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
-            fillTable(it, PType.UNKNOWN,) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
+            fillTable(PType.UNKNOWN, it) { lhs, rhs -> getUnknownPTypeInstance(lhs, rhs) }
+            fillTable(it, PType.UNKNOWN,) { lhs, rhs -> getPTypeUnknownInstance(lhs, rhs) }
         }
     }
 

@@ -17,8 +17,8 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
     override fun fillUnknownTable() {
         // Register all possible type combinations with the default unknown handling.
         PType.codes().filter { it != PType.UNKNOWN }.forEach {
-            fillTable(PType.UNKNOWN, it) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
-            fillTable(it, PType.UNKNOWN,) { lhs, rhs -> getUnknownInstance(lhs, rhs) }
+            fillTable(PType.UNKNOWN, it) { lhs, rhs -> getUnknownPTypeInstance(lhs, rhs) }
+            fillTable(it, PType.UNKNOWN,) { lhs, rhs -> getPTypeUnknownInstance(lhs, rhs) }
         }
     }
 
