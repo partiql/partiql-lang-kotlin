@@ -720,14 +720,14 @@ internal object RexConverter {
         }
 
         private fun isDateAddFunction(id: Identifier): Boolean {
-                return listOf(
-                    FunctionUtils.FN_DATE_ADD_DAY,
-                    FunctionUtils.FN_DATE_ADD_HOUR,
-                    FunctionUtils.FN_DATE_ADD_MINUTE,
-                    FunctionUtils.FN_DATE_ADD_SECOND,
-                    FunctionUtils.FN_DATE_ADD_YEAR,
-                    FunctionUtils.FN_DATE_ADD_MONTH
-                ).any { id.matches(it, ignoreCase = true)}
+            return listOf(
+                FunctionUtils.FN_DATE_ADD_DAY,
+                FunctionUtils.FN_DATE_ADD_HOUR,
+                FunctionUtils.FN_DATE_ADD_MINUTE,
+                FunctionUtils.FN_DATE_ADD_SECOND,
+                FunctionUtils.FN_DATE_ADD_YEAR,
+                FunctionUtils.FN_DATE_ADD_MONTH
+            ).any { id.matches(it, ignoreCase = true) }
         }
 
         /**
@@ -1387,6 +1387,5 @@ internal object RexConverter {
         private val INT: CompilerType = CompilerType(PType.numeric(38, 0))
         private val INT4: CompilerType = CompilerType(PType.integer())
         private val TIMESTAMP: CompilerType = CompilerType(PType.timestamp(6))
-        private val INTERVAL_DS: CompilerType = CompilerType(PType.intervalDaySecond(9 , 9))
     }
 }
