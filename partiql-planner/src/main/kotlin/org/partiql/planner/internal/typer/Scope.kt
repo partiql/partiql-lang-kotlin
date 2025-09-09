@@ -37,9 +37,16 @@ internal data class Scope(
         val path = identifier.toList()
         val head = path.first()
         val tail = path.drop(1)
-        val r = matchRoot(head) ?: return null
-        // Convert any remaining binding names (tail) to an untyped path expression.
-        return if (tail.isEmpty()) r else r.toPath(tail)
+        // Try exact match
+        val r = matchRoot(head)
+        if (r != null) {
+            return if (tail.isEmpty()) r else r.toPath(tail)
+        }
+        // Fallback: for qualified identifiers, try unqualified part for GROUP BY bindings
+        if (path.size == 2) {
+            return matchRoot(path[1])
+        }
+        return null
     }
 
     /**
