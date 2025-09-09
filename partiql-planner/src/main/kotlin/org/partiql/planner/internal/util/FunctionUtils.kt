@@ -19,7 +19,6 @@ internal object FunctionUtils {
     const val FN_CHAR_LENGTH: String = "char_length"
     const val FN_MODULO: String = "mod"
 
-    val FN_DATE_ADD_PREFIX: String = hide("date_add_")
     val FN_DATE_ADD_DAY: String = hide("date_add_day")
     val FN_DATE_ADD_HOUR: String = hide("date_add_hour")
     val FN_DATE_ADD_MINUTE: String = hide("date_add_minute")

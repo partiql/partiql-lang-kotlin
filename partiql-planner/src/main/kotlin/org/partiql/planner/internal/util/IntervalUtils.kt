@@ -30,12 +30,13 @@ internal object IntervalUtils {
         }
     }
 
-    internal fun convertDateFunctionArgToInterval(field: DatetimeField, interval: Datum): Datum {
-        if (interval.type.code() == PType.UNKNOWN) {
-            return interval
-        }
-
+    /**
+     * Convert int/long Datum to interval Datum
+     * Note: Interval takes int only, if long is passed, we currently throw in case if DatetimeFieldValue overflows.
+     */
+    internal fun convertArgToInterval(field: DatetimeField, interval: Datum): Datum {
         val intervalValue = when (interval.type.code()) {
+            PType.UNKNOWN -> return interval // Return unknown directly, as we cannot convert it to an interval
             PType.INTEGER -> interval.int
             PType.BIGINT -> {
                 val value = interval.long
