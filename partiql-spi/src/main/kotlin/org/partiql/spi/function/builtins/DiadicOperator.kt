@@ -306,12 +306,65 @@ internal abstract class DiadicOperator(
     }
 
     /**
+     * This is used when left operand is NULL/MISSING.
+     * According to SQL spec Section 8.2 for comparison operator,
+     * Section 6.26 for numeric value expression,
+     * Section 6.28 for datetime value expression,
+     * Section 6.29 for interval value expression,
+     * if any of the operand is null, the result is null.
+     *
+     * The default implementation returns [Function] instance with isMissingCall or isNullCall default set to true.
+     * The framework will check the unknown parameter and handle unknown type properly.
+     * The function body which throws [NotImplementedError] will not be reached.
+     *
+     * Note: Return type needs to be set to non-unknown operand as null may be typed in PartiQL
+     *
+     * The same principle applies to [getPTypeUnknownInstance]
+     *
+     * @param lhs a type of unknown
+     * @param rhs any type from PType
+     * @return an instance of a function
+     */
+    open fun getUnknownPTypeInstance(lhs: PType, rhs: PType): Fn? {
+        return null
+    }
+
+    /**
+     * This is used when right operand is NULL/MISSING.
+     * According to SQL spec Section 8.2 for comparison operator,
+     * Section 6.26 for numeric value expression,
+     * Section 6.28 for datetime value expression,
+     * Section 6.29 for interval value expression,
+     * if any of the operand is null, the result is null.
+     *
+     * The default implementation returns [Function] instance with isMissingCall or isNullCall default set to true.
+     * The framework will check the unknown parameter and handle unknown type properly.
+     * The function body which throws [NotImplementedError] will not be reached.
+
+     * Note: Return type needs to be set to non-unknown operand as null may be typed in PartiQL
+     *
+     * The same principle applies to [getUnknownPTypeInstance]
+     *
+     * @param lhs any type from PType
+     * @param rhs a type of unknown
+     * @return an instance of a function
+     */
+    open fun getPTypeUnknownInstance(lhs: PType, rhs: PType): Fn? {
+        return null
+    }
+
+    /**
      * This is used when all operands are NULL/MISSING.
      * @return an instance of a function
      */
     open fun getUnknownInstance(): Fn? {
         return null
     }
+
+    /**
+     * Override this function if operator implementation needs handling the case where one operand is unknown type(null or missing)
+     */
+    open fun fillUnknownTable() {}
 
     /**
      * This is a lookup table for finding the appropriate instance for the given types. The table is
@@ -336,7 +389,7 @@ internal abstract class DiadicOperator(
     }
 
     protected fun fillPrioritizedTable(highPrecedence: Int, family: SqlTypeFamily, instance: (PType, PType) -> Fn?) {
-        val members = family.members + setOf(PType.UNKNOWN)
+        val members = family.members
         members.filter {
             (TYPE_PRECEDENCE[highPrecedence]!! > TYPE_PRECEDENCE[it]!!)
         }.forEach {
@@ -348,19 +401,6 @@ internal abstract class DiadicOperator(
 
     private fun fillBooleanTable(instance: (PType, PType) -> Fn?) {
         fillTable(PType.BOOL, PType.BOOL) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.BOOL, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.UNKNOWN, PType.BOOL) { _, rhs -> instance(rhs, rhs) }
-    }
-
-    private fun fillIntervalTable(instance: (PType, PType) -> Fn?) {
-        fillTable(PType.INTERVAL_YM, PType.INTERVAL_YM) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.INTERVAL_YM, PType.INTERVAL_DT) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.INTERVAL_YM, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.INTERVAL_DT, PType.INTERVAL_DT) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.INTERVAL_YM) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.UNKNOWN, PType.INTERVAL_YM) { _, rhs -> instance(rhs, rhs) }
-        fillTable(PType.UNKNOWN, PType.INTERVAL_DT) { _, rhs -> instance(rhs, rhs) }
     }
 
     private fun fillTimestampTable(instance: (PType, PType) -> Fn?) {
@@ -368,10 +408,6 @@ internal abstract class DiadicOperator(
         fillTable(PType.TIMESTAMP, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIMESTAMPZ, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIMESTAMP, PType.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMESTAMP, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.TIMESTAMPZ, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.UNKNOWN, PType.TIMESTAMP) { _, rhs -> instance(rhs, rhs) }
-        fillTable(PType.UNKNOWN, PType.TIMESTAMPZ) { _, rhs -> instance(rhs, rhs) }
     }
 
     private fun fillTimeTable(instance: (PType, PType) -> Fn?) {
@@ -379,85 +415,59 @@ internal abstract class DiadicOperator(
         fillTable(PType.TIME, PType.TIME) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIMEZ, PType.TIME) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIME, PType.TIMEZ) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMEZ, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.TIME, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.UNKNOWN, PType.TIME) { _, rhs -> instance(rhs, rhs) }
-        fillTable(PType.UNKNOWN, PType.TIMEZ) { _, rhs -> instance(rhs, rhs) }
     }
 
     private fun fillDateTable(instance: (PType, PType) -> Fn?) {
         fillTable(PType.DATE, PType.DATE) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.DATE, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.UNKNOWN, PType.DATE) { _, rhs -> instance(rhs, rhs) }
-    }
-
-    private fun fillDatetimeIntervalTable(instance: (PType, PType) -> Fn?) {
-        fillTable(PType.DATE, PType.INTERVAL_YM) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.DATE, PType.INTERVAL_DT) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIME, PType.INTERVAL_YM) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIME, PType.INTERVAL_DT) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMEZ, PType.INTERVAL_YM) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMEZ, PType.INTERVAL_DT) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMESTAMP, PType.INTERVAL_YM) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMESTAMP, PType.INTERVAL_DT) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_YM) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_DT) { lhs, rhs -> instance(lhs, rhs) }
     }
 
     private fun fillIntervalTable() {
-        // TinyInt
-        fillTable(PType.INTERVAL_YM, PType.TINYINT) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.TINYINT) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.TINYINT, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.TINYINT, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+        SqlTypeFamily.NUMBER.members.forEach { number ->
+            SqlTypeFamily.INTERVAL.members.forEach { interval ->
+                fillTable(interval, number, ::getIntervalNumberInstance)
+                fillTable(number, interval, ::getNumberIntervalInstance)
+            }
+        }
 
-        // SmallInt
-        fillTable(PType.INTERVAL_YM, PType.SMALLINT) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.SMALLINT) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.SMALLINT, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.SMALLINT, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+        // DATE
+        fillTable(PType.INTERVAL_YM, PType.DATE, ::getIntervalDateInstance)
+        fillTable(PType.INTERVAL_DT, PType.DATE, ::getIntervalDateInstance)
+        fillTable(PType.DATE, PType.INTERVAL_YM, ::getDateIntervalInstance)
+        fillTable(PType.DATE, PType.INTERVAL_DT, ::getDateIntervalInstance)
 
-        // Integer
-        fillTable(PType.INTERVAL_YM, PType.INTEGER) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.INTEGER) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTEGER, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.INTEGER, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+        // TIME
+        fillTable(PType.INTERVAL_YM, PType.TIME, ::getIntervalTimeInstance)
+        fillTable(PType.INTERVAL_DT, PType.TIME, ::getIntervalTimeInstance)
+        fillTable(PType.TIME, PType.INTERVAL_YM, ::getTimeIntervalInstance)
+        fillTable(PType.TIME, PType.INTERVAL_DT, ::getTimeIntervalInstance)
 
-        // BigInt
-        fillTable(PType.INTERVAL_YM, PType.BIGINT) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.BIGINT) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.BIGINT, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.BIGINT, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+        // TIMEZ
+        fillTable(PType.INTERVAL_DT, PType.TIMEZ, ::getIntervalTimeInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.INTERVAL_YM, PType.TIMEZ, ::getIntervalTimeInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.TIMEZ, PType.INTERVAL_YM, ::getTimeIntervalInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.TIMEZ, PType.INTERVAL_DT, ::getTimeIntervalInstance) // TODO: Create a specific timezone impl
 
-        // Numeric
-        fillTable(PType.INTERVAL_YM, PType.NUMERIC) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.NUMERIC) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.NUMERIC, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.NUMERIC, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+        // TIMESTAMP
+        fillTable(PType.INTERVAL_YM, PType.TIMESTAMP, ::getIntervalTimestampInstance)
+        fillTable(PType.INTERVAL_DT, PType.TIMESTAMP, ::getIntervalTimestampInstance)
+        fillTable(PType.TIMESTAMP, PType.INTERVAL_YM, ::getTimestampIntervalInstance)
+        fillTable(PType.TIMESTAMP, PType.INTERVAL_DT, ::getTimestampIntervalInstance)
 
-        // Decimal
-        fillTable(PType.INTERVAL_YM, PType.DECIMAL) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.DECIMAL) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.DECIMAL, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.DECIMAL, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+        // TIMESTAMPZ
+        fillTable(PType.INTERVAL_YM, PType.TIMESTAMPZ, ::getIntervalTimestampInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.INTERVAL_DT, PType.TIMESTAMPZ, ::getIntervalTimestampInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_YM, ::getTimestampIntervalInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_DT, ::getTimestampIntervalInstance) // TODO: Create a specific timezone impl
 
-        // REAL
-        fillTable(PType.INTERVAL_YM, PType.REAL) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.REAL) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.REAL, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.REAL, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-
-        // DOUBLE
-        fillTable(PType.INTERVAL_YM, PType.DOUBLE) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.INTERVAL_DT, PType.DOUBLE) { lhs, rhs -> getIntervalNumberInstance(lhs, rhs) }
-        fillTable(PType.DOUBLE, PType.INTERVAL_YM) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
-        fillTable(PType.DOUBLE, PType.INTERVAL_DT) { lhs, rhs -> getNumberIntervalInstance(lhs, rhs) }
+        // INTERVAL
+        fillTable(PType.INTERVAL_YM, PType.INTERVAL_YM, ::getIntervalInstance)
+        fillTable(PType.INTERVAL_DT, PType.INTERVAL_YM, ::getIntervalInstance)
+        fillTable(PType.INTERVAL_YM, PType.INTERVAL_DT, ::getIntervalInstance)
+        fillTable(PType.INTERVAL_DT, PType.INTERVAL_DT, ::getIntervalInstance)
     }
 
     private fun fillBlobTable(instance: (PType, PType) -> Fn?) {
         fillTable(PType.BLOB, PType.BLOB) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.BLOB, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.UNKNOWN, PType.BLOB) { _, rhs -> instance(rhs, rhs) }
     }
 
     private fun fillNumericTable() {
@@ -479,8 +489,6 @@ internal abstract class DiadicOperator(
 
         // Numeric
         fillTable(PType.NUMERIC, PType.NUMERIC) { lhs, rhs -> getNumericInstance(lhs, rhs) }
-        fillTable(PType.UNKNOWN, PType.NUMERIC) { lhs, rhs -> getNumericInstance(rhs, rhs) }
-        fillTable(PType.NUMERIC, PType.UNKNOWN) { lhs, rhs -> getNumericInstance(lhs, lhs) }
     }
 
     private fun fillDecimalTable() {
@@ -506,11 +514,9 @@ internal abstract class DiadicOperator(
 
         // Decimal
         fillTable(PType.DECIMAL, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(lhs, rhs) }
-        fillTable(PType.UNKNOWN, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(rhs, rhs) }
-        fillTable(PType.DECIMAL, PType.UNKNOWN) { lhs, rhs -> getDecimalInstance(lhs, lhs) }
     }
 
-    private fun fillUnknownTable() {
+    protected fun fillUnknownUnknownTable() {
         fillTable(PType.UNKNOWN, PType.UNKNOWN) { _, _ -> getUnknownInstance() }
     }
 
@@ -527,25 +533,6 @@ internal abstract class DiadicOperator(
         fillTimeTable(::getTimeInstance)
         fillDateTable(::getDateInstance)
         fillIntervalTable()
-        fillIntervalTable(::getIntervalInstance)
-        fillTable(PType.DATE, PType.INTERVAL_YM, ::getDateIntervalInstance)
-        fillTable(PType.DATE, PType.INTERVAL_DT, ::getDateIntervalInstance)
-        fillTable(PType.TIME, PType.INTERVAL_YM, ::getTimeIntervalInstance)
-        fillTable(PType.TIME, PType.INTERVAL_DT, ::getTimeIntervalInstance)
-        fillTable(PType.TIMEZ, PType.INTERVAL_DT, ::getTimeIntervalInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.TIMESTAMP, PType.INTERVAL_YM, ::getTimestampIntervalInstance)
-        fillTable(PType.TIMESTAMP, PType.INTERVAL_DT, ::getTimestampIntervalInstance)
-        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_YM, ::getTimestampIntervalInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_DT, ::getTimestampIntervalInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.INTERVAL_YM, PType.DATE, ::getIntervalDateInstance)
-        fillTable(PType.INTERVAL_DT, PType.DATE, ::getIntervalDateInstance)
-        fillTable(PType.INTERVAL_DT, PType.TIME, ::getIntervalTimeInstance)
-        fillTable(PType.INTERVAL_DT, PType.TIMEZ, ::getIntervalTimeInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.INTERVAL_YM, PType.TIMESTAMP, ::getIntervalTimestampInstance)
-        fillTable(PType.INTERVAL_DT, PType.TIMESTAMP, ::getIntervalTimestampInstance)
-        fillTable(PType.INTERVAL_YM, PType.TIMESTAMPZ, ::getIntervalTimestampInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.INTERVAL_DT, PType.TIMESTAMPZ, ::getIntervalTimestampInstance) // TODO: Create a specific timezone impl
-
         fillBlobTable(::getBlobInstance)
         fillTimestampTable(::getTimestampInstance)
         fillCharacterStringTable(PType.STRING, ::getStringInstance)
@@ -553,6 +540,7 @@ internal abstract class DiadicOperator(
         fillCharacterStringTable(PType.VARCHAR, ::getVarcharInstance)
         fillCharacterStringTable(PType.CLOB, ::getClobInstance)
         fillUnknownTable()
+        fillUnknownUnknownTable()
     }
 
     protected fun basic(returns: PType, lhs: PType, rhs: PType, invocation: (Array<Datum>) -> Datum): Fn {

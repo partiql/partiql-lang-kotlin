@@ -14,6 +14,21 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
     PType.dynamic(),
     PType.dynamic()
 ) {
+    override fun fillUnknownTable() {
+        // Register all possible type combinations with the default unknown handling.
+        PType.codes().filter { it != PType.UNKNOWN }.forEach {
+            fillTable(PType.UNKNOWN, it) { lhs, rhs -> getUnknownPTypeInstance(lhs, rhs) }
+            fillTable(it, PType.UNKNOWN,) { lhs, rhs -> getPTypeUnknownInstance(lhs, rhs) }
+        }
+    }
+
+    override fun getUnknownPTypeInstance(lhs: PType, rhs: PType): Fn? {
+        return basic(rhs, lhs, rhs) { args -> throw NotImplementedError() }
+    }
+
+    override fun getPTypeUnknownInstance(lhs: PType, rhs: PType): Fn? {
+        return basic(lhs, lhs, rhs) { args -> throw NotImplementedError() }
+    }
 
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Fn? {
         return null

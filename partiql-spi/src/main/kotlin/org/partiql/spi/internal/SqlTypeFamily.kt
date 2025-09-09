@@ -99,5 +99,26 @@ internal class SqlTypeFamily private constructor(
                 PType.TIMESTAMPZ,
             )
         )
+
+        @JvmStatic
+        val DATETIME = SqlTypeFamily(
+            preferred = PType.date(),
+            members = setOf(
+                PType.DATE,
+                PType.TIME,
+                PType.TIMEZ,
+                PType.TIMESTAMP,
+                PType.TIMESTAMPZ
+            )
+        )
+
+        @JvmStatic
+        val INTERVAL = SqlTypeFamily(
+            preferred = PType.date(),
+            members = setOf(
+                PType.INTERVAL_YM,
+                PType.INTERVAL_DT
+            )
+        )
     }
 }
