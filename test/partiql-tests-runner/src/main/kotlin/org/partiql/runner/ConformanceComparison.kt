@@ -30,7 +30,7 @@ fun loadReport(reportContent: String, engine: String, commitId: String): Report 
     val reader: IonReader = IonReaderBuilder.standard().build(reportContent)
     val report = Report(engine, commitId, mutableMapOf())
 
-    if (!reportContent.contains("partiql-extended")){
+    if (!reportContent.contains("partiql-extended")) {
         // Since old report is in old format, we need to read it differently.
         // Read old report to show better view of new report.
         // TODO, remove this after new report in next PR.
