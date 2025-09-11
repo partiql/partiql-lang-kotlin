@@ -37,14 +37,17 @@ internal data class Scope(
         val path = identifier.toList()
         val head = path.first()
         val tail = path.drop(1)
+        // Try qualified match first if we have multiple parts
+        if (path.size >= 2) {
+            val qualifiedMatch = matchQualified(identifier)
+            if (qualifiedMatch != null) {
+                return qualifiedMatch
+            }
+        }
         // Try exact match
         val r = matchRoot(head)
         if (r != null) {
             return if (tail.isEmpty()) r else r.toPath(tail)
-        }
-        // Fallback: for qualified identifiers, try unqualified part for GROUP BY bindings
-        if (path.size == 2) {
-            return matchRoot(path[1])
         }
         return null
     }
@@ -68,6 +71,29 @@ internal data class Scope(
      * @return
      */
     override fun toString(): String = "< " + schema.joinToString { "${it.name}: ${it.type}" } + " >"
+
+    /**
+     * Check if qualified identifier matches a binding with qualifier and name.
+     */
+    private fun matchQualified(identifier: Identifier, depth: Int = 0): Rex? {
+        val path = identifier.toList()
+        val qualifier = path.dropLast(1).joinToString(".") { it.getText() }
+        val bindingName = path.last().getText()
+        for (i in schema.indices) {
+            val local = schema[i]
+            val type = local.type
+            if (local.qualifier != null &&
+                local.qualifier.equals(qualifier, ignoreCase = true) &&
+                local.name.equals(bindingName, ignoreCase = true)
+            ) {
+                return rex(type, rexOpVarLocal(depth, i))
+            }
+        }
+        if (outer.isNotEmpty()) {
+            return outer.last().matchQualified(identifier, depth + 1)
+        }
+        return null
+    }
 
     /**
      * Check if `name` unambiguously matches a local binding name and return its reference; otherwise return null.

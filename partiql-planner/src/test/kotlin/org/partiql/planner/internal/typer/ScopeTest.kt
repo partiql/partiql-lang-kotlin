@@ -45,12 +45,12 @@ internal class ScopeTest {
             ),
             Scope(
                 listOf(
-                    relBinding("A", struct("B" to PType.bool().toCType())),
-                    relBinding("a", struct("b" to PType.bool().toCType())),
-                    relBinding("X", struct(open = true)),
-                    relBinding("x", struct("Y" to PType.bool().toCType(), open = false)), // We currently don't allow for partial schema structs
-                    relBinding("y", struct(open = true)),
-                    relBinding("T", struct("x" to PType.bool().toCType(), "x" to PType.bool().toCType())),
+                    relBinding("A", struct("B" to PType.bool().toCType()), null),
+                    relBinding("a", struct("b" to PType.bool().toCType()), null),
+                    relBinding("X", struct(open = true), null),
+                    relBinding("x", struct("Y" to PType.bool().toCType(), open = false), null), // We currently don't allow for partial schema structs
+                    relBinding("y", struct(open = true), null),
+                    relBinding("T", struct("x" to PType.bool().toCType(), "x" to PType.bool().toCType()), null),
                 ),
                 outer = emptyList()
             )

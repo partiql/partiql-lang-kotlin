@@ -385,6 +385,7 @@ rel::{
     binding::{
       name: string,
       type: static_type,
+      qualifier: optional::string,
     },
   ]
 }
