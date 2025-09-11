@@ -1,5 +1,6 @@
 package org.partiql.runner
 
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -26,6 +27,7 @@ abstract class ConformanceTestBase<T, V> {
     @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @ParameterizedTest(name = "{arguments}")
     @ArgumentsSource(TestProvider.Eval::class)
+    @Tag("report:partiql")
     fun validatePartiQLEvalTestData(tc: TestCase) {
         when (tc) {
             is TestCase.Eval -> runner.test(tc, skipListForEvaluation)
@@ -37,6 +39,7 @@ abstract class ConformanceTestBase<T, V> {
     @Timeout(value = 500, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @ParameterizedTest(name = "{arguments}")
     @ArgumentsSource(TestProvider.Equiv::class)
+    @Tag("report:partiql")
     fun validatePartiQLEvalEquivTestData(tc: TestCase) {
         when (tc) {
             is TestCase.Equiv -> runner.test(tc, skipListForEquivalence)
@@ -48,6 +51,7 @@ abstract class ConformanceTestBase<T, V> {
     @Timeout(value = 500, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @ParameterizedTest(name = "{arguments}")
     @ArgumentsSource(TestProvider.EvalExtended::class)
+    @Tag("report:partiql-extended")
     fun validatePartiQLEvalTestDataExtended(tc: TestCase) {
         when (tc) {
             is TestCase.Eval -> runner.test(tc, skipListForEvaluationExtended)

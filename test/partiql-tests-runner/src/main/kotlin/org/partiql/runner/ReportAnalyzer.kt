@@ -5,6 +5,8 @@ class ReportAnalyzer(
     private val first: Report,
     private val second: Report
 ) {
+    private val PARTIQL_TAG = "partiql"
+    private val PARTIQL_EXTENDED_TAG = "partiql-extended"
 
     companion object {
         fun build(title: String, first: Report, second: Report): ReportAnalyzer {
@@ -19,54 +21,75 @@ class ReportAnalyzer(
         const val TARGET = "TARGET"
     }
 
-    private val passingInBoth = first.passingSet.intersect(second.passingSet)
-    private val failingInBoth = first.failingSet.intersect(second.failingSet)
-    private val ignoredInBoth = first.ignoredSet.intersect(second.ignoredSet)
-    private val passingFirstFailingSecond = first.passingSet.intersect(second.failingSet)
-    private val passingFirstIgnoredSecond = first.passingSet.intersect(second.ignoredSet)
-    private val failureFirstPassingSecond = first.failingSet.intersect(second.passingSet)
-    private val ignoredFirstPassingSecond = first.ignoredSet.intersect(second.passingSet)
-    private val firstPassingSize = first.passingSet.size
-    private val firstFailingSize = first.failingSet.size
-    private val firstIgnoreSize = first.ignoredSet.size
-    private val secondPassingSize = second.passingSet.size
-    private val secondFailingSize = second.failingSet.size
-    private val secondIgnoreSize = second.ignoredSet.size
+    data class ComparisonResult(val firstReport: Report, val secondReport: Report, val tag:String) {
+        private val first = firstReport.testsResults[tag]?: Report.TestResult()
+        private val second = secondReport.testsResults[tag]?: Report.TestResult()
 
-    private val firstTotalSize = firstPassingSize + firstFailingSize + firstIgnoreSize
-    private val secondTotalSize = secondPassingSize + secondFailingSize + secondIgnoreSize
+        val passingInBoth = first.passingSet.intersect(second.passingSet)
+        val failingInBoth = first.failingSet.intersect(second.failingSet)
+        val ignoredInBoth = first.ignoredSet.intersect(second.ignoredSet)
+        val passingFirstFailingSecond = first.passingSet.intersect(second.failingSet)
+        val passingFirstIgnoredSecond = first.passingSet.intersect(second.ignoredSet)
+        val failureFirstPassingSecond = first.failingSet.intersect(second.passingSet)
+        val ignoredFirstPassingSecond = first.ignoredSet.intersect(second.passingSet)
+        val firstPassingSize = first.passingSet.size
+        val firstFailingSize = first.failingSet.size
+        val firstIgnoreSize = first.ignoredSet.size
+        val secondPassingSize = second.passingSet.size
+        val secondFailingSize = second.failingSet.size
+        val secondIgnoreSize = second.ignoredSet.size
 
-    private val firstPassingPercent = firstPassingSize.toDouble() / firstTotalSize * 100
-    private val secondPassingPercent = secondPassingSize.toDouble() / secondTotalSize * 100
+        val firstTotalSize = firstPassingSize + firstFailingSize + firstIgnoreSize
+        val secondTotalSize = secondPassingSize + secondFailingSize + secondIgnoreSize
 
-    private val firstNameShort = "$BASE (${first.engine.uppercase()}-${first.commitIdShort.uppercase()})"
-    private val secondNameShort = "$TARGET (${second.engine.uppercase()}-${second.commitIdShort.uppercase()})"
+        val firstPassingPercent = if(firstTotalSize == 0) 0.0 else firstPassingSize.toDouble() / firstTotalSize * 100
+        val secondPassingPercent = if(secondTotalSize == 0) 0.0 else secondPassingSize.toDouble() / secondTotalSize * 100
+
+        val firstNameShort = "$BASE (${firstReport.engine}-${firstReport.commitIdShort.uppercase()})"
+        val secondNameShort = "$TARGET (${secondReport.engine}-${secondReport.commitIdShort.uppercase()})"
+    }
+
 
     fun generateComparisonReport(limit: Int): String {
+
+        val resultList: MutableList<ComparisonResult> = mutableListOf()
+
+        second.testsResults[PARTIQL_TAG]?.let {
+            resultList.add(ComparisonResult(first, second, PARTIQL_TAG))
+        }
+
+        second.testsResults[PARTIQL_EXTENDED_TAG]?.let {
+            resultList.add(ComparisonResult(first, second, PARTIQL_EXTENDED_TAG))
+        }
+
         return buildString {
-            appendTitle(this)
-            appendTable(this)
-            appendSummary(this)
-            appendOptionalNowFailingTests(this, limit, passingFirstFailingSecond, "FAILING")
-            appendOptionalNowFailingTests(this, limit, passingFirstIgnoredSecond, "IGNORED")
-            appendOptionalNowPassingTests(this, limit, failureFirstPassingSecond, "FAILING")
-            appendOptionalNowPassingTests(this, limit, ignoredFirstPassingSecond, "IGNORED")
+            appendTitle(this, resultList)
+            resultList.forEach { appendTable(this, it) }
+
+            appendSummary(this, resultList)
+
+            appendOptionalNowFailureTests(this, resultList.associate { Pair(it.tag, it.passingFirstFailingSecond) }, limit, TestStatus.FAILING)
+            appendOptionalNowFailureTests(this, resultList.associate { Pair(it.tag, it.passingFirstIgnoredSecond) }, limit, TestStatus.IGNORED)
+            appendOptionalNowPassingTests(this, resultList.associate { Pair(it.tag, it.failureFirstPassingSecond) }, limit, TestStatus.FAILING)
+            appendOptionalNowPassingTests(this, resultList.associate { Pair(it.tag, it.ignoredFirstPassingSecond) }, limit, TestStatus.IGNORED)
         }
     }
 
-    private fun appendTitle(out: Appendable) {
-        val icon = if (passingFirstFailingSecond.isEmpty()) ICON_CHECK else ICON_X
+    private fun appendTitle(out: Appendable, resultList: MutableList<ComparisonResult>) {
+        val icon = if (resultList.all { it.passingFirstFailingSecond.isEmpty() }) ICON_CHECK else ICON_X
         out.appendMarkdown("# $reportTitle $icon")
     }
 
-    private fun appendTable(out: Appendable) {
-        out.appendLine("| | $firstNameShort | $secondNameShort | +/- |")
+    private fun appendTable(out: Appendable, result: ComparisonResult?)  {
+        if (result == null) return
+        out.appendLine("| ${result.tag.uppercase()} Data Set| ${result.firstNameShort} | ${result.secondNameShort} | +/- |")
         out.appendLine("| --- | ---: | ---: | ---: |")
-        out.appendLine(tableRow("% Passing", firstPassingPercent, secondPassingPercent))
-        out.appendLine(tableRow("Passing", firstPassingSize, secondPassingSize, true))
-        out.appendLine(tableRow("Failing", firstFailingSize, secondFailingSize, false))
-        out.appendLine(tableRow("Ignored", firstIgnoreSize, secondIgnoreSize, false, badIcon = ICON_DIAMOND_ORANGE))
-        out.appendLine(tableRow("Total Tests", firstTotalSize, secondTotalSize, true))
+        out.appendLine(tableRow("% Passing", result.firstPassingPercent, result.secondPassingPercent))
+        out.appendLine(tableRow("Passing", result.firstPassingSize, result.secondPassingSize, true))
+        out.appendLine(tableRow("Failing", result.firstFailingSize, result.secondFailingSize, false))
+        out.appendLine(tableRow("Ignored", result.firstIgnoreSize, result.secondIgnoreSize, false, badIcon = ICON_DIAMOND_ORANGE))
+        out.appendLine(tableRow("Total Tests", result.firstTotalSize, result.secondTotalSize, true))
+        out.appendLine()
     }
 
     private fun tableRow(name: String, first: Double, second: Double): String {
@@ -101,7 +124,7 @@ class ReportAnalyzer(
         this.appendLine()
     }
 
-    private fun appendSummary(out: Appendable) {
+    private fun appendSummary(out: Appendable, resultList: MutableList<ComparisonResult>) {
         out.appendMarkdown("## Testing Details")
         out.appendLine("- **Base Commit**: ${first.commitId}")
         out.appendLine("- **Base Engine**: ${first.engine.uppercase()}")
@@ -109,25 +132,41 @@ class ReportAnalyzer(
         out.appendLine("- **Target Engine**: ${second.engine.uppercase()}")
 
         out.appendMarkdown("## Result Details")
-        if (passingFirstFailingSecond.isNotEmpty() || passingFirstIgnoredSecond.isNotEmpty()) {
-            out.appendLine("- **$ICON_X REGRESSION DETECTED. See *Now Failing/Ignored Tests*. $ICON_X**")
+
+        resultList.forEach {
+            out.appendMarkdown("### ${it.tag.uppercase()} Data Set")
+            if (it.passingFirstFailingSecond.isNotEmpty()){
+                out.appendLine("- **$ICON_X REGRESSION DETECTED. See *Now Failing/Ignored Tests*. $ICON_X**")
+            }
+
+            out.appendLine("- **Passing in both**: **${it.passingInBoth.count()}** ")
+            out.appendLine("- **Failing in both**: **${it.failingInBoth.count()}** ")
+            out.appendLine("- **Ignored in both**: **${it.ignoredInBoth.count()}** ")
+            out.appendLine("- **PASSING in $BASE but now FAILING in $TARGET**: **${it.passingFirstFailingSecond.count()}**")
+            out.appendLine("- **PASSING in $BASE but now IGNORED in $TARGET**: **${it.passingFirstIgnoredSecond.count()}**")
+            out.appendLine("- **FAILING in $BASE but now PASSING in $TARGET**: **${it.failureFirstPassingSecond.count()}**")
+            out.appendLine("- **IGNORED in $BASE but now PASSING in $TARGET**: **${it.ignoredFirstPassingSecond.count()}**")
         }
-        out.appendLine("- **Passing in both**: ${passingInBoth.count()}")
-        out.appendLine("- **Failing in both**: ${failingInBoth.count()}")
-        out.appendLine("- **Ignored in both**: ${ignoredInBoth.count()}")
-        out.appendLine("- **PASSING in $BASE but now FAILING in $TARGET**: ${passingFirstFailingSecond.count()}")
-        out.appendLine("- **PASSING in $BASE but now IGNORED in $TARGET**: ${passingFirstIgnoredSecond.count()}")
-        out.appendLine("- **FAILING in $BASE but now PASSING in $TARGET**: ${failureFirstPassingSecond.count()}")
-        out.appendLine("- **IGNORED in $BASE but now PASSING in $TARGET**: ${ignoredFirstPassingSecond.count()}")
     }
 
-    private fun appendOptionalNowFailingTests(out: Appendable, limit: Int, set: Set<String>, description: String) {
-        if (set.isNotEmpty()) {
-            out.appendMarkdown("## Now $description Tests $ICON_X")
-            // character count limitation with comments in GitHub
-            // also, not ideal to list out hundreds of test names
+
+    private fun appendOptionalNowFailureTests(out: Appendable, resultList: Map<String, Set<String>>, limit: Int, testStatus: TestStatus){
+
+        if (resultList.values.all { it.isEmpty() }) return
+
+        out.appendMarkdown("## Now $testStatus Tests $ICON_X")
+        // character count limitation with comments in GitHub
+        // also, not ideal to list out hundreds of test names
+
+        resultList.forEach {
+
+            if (it.value.isEmpty()) return@forEach
+
+            out.appendMarkdown("### ${it.key} data set")
+            val set = it.value
+
             if (set.size < limit) {
-                out.appendMarkdown("The following ${set.size} test(s) were previously PASSING in $BASE but are now $description in $TARGET:")
+                out.appendMarkdown("The following **${set.size}** test(s) were previously PASSING in $BASE but are now $testStatus in $TARGET:")
                 out.appendMarkdown("<details><summary>Click here to see</summary>")
                 set.forEachIndexed { index, testName ->
                     out.appendLine("${index + 1}. $testName")
@@ -139,20 +178,36 @@ class ReportAnalyzer(
         }
     }
 
-    private fun appendOptionalNowPassingTests(out: Appendable, limit: Int, set: Set<String>, description: String) {
-        if (set.isNotEmpty()) {
-            out.appendMarkdown("## Now Passing Tests")
+    private fun appendOptionalNowPassingTests(out: Appendable, resultList: Map<String, Set<String>>, limit: Int, testStatus: TestStatus){
+
+        if (resultList.values.all { it.isEmpty() }) return
+
+        out.appendMarkdown("## Now Passing Tests")
+        // character count limitation with comments in GitHub
+        // also, not ideal to list out hundreds of test names
+
+        resultList.forEach {
+            if (it.value.isEmpty()) return@forEach
+
+            out.appendMarkdown("### ${it.key.uppercase()} data set")
+            val set = it.value
+
             if (set.size < limit) {
-                out.appendMarkdown("The following ${set.size} test(s) were previously $description in $BASE but are now PASSING in $TARGET. Before merging, confirm they are intended to pass:")
+                out.appendMarkdown("The following **${set.size}** test(s) were previously $testStatus in $BASE but are now PASSING in $TARGET. Before merging, confirm they are intended to pass:")
                 out.appendMarkdown("<details><summary>Click here to see</summary>")
                 set.forEachIndexed { index, testName ->
                     out.appendLine("${index + 1}. $testName")
                 }
                 out.appendMarkdown("</details>")
             } else {
-                out.appendMarkdown("${set.size} test(s) were previously failing in $firstNameShort but now pass in $secondNameShort. Before merging, confirm they are intended to pass.")
+                out.appendMarkdown("${set.size} test(s) were previously failing in $BASE but now pass in $TARGET. Before merging, confirm they are intended to pass.")
                 out.appendMarkdown("The complete list can be found in GitHub CI summary, either from Step Summary or in the Artifact.")
             }
         }
     }
+
+}
+
+enum class TestStatus {
+    PASSING, FAILING, IGNORED
 }

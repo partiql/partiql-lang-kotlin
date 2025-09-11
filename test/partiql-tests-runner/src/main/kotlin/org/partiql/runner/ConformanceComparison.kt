@@ -3,6 +3,7 @@ package org.partiql.runner
 import com.amazon.ion.IonReader
 import com.amazon.ion.system.IonReaderBuilder
 import java.io.File
+import kotlin.collections.mutableMapOf
 
 fun analyze(file: File, reports: List<Report>, limit: Int, title: String) {
     var first = 0
@@ -27,23 +28,34 @@ fun loadReportFile(file: File, engine: String, commitId: String): Report {
 
 fun loadReport(reportContent: String, engine: String, commitId: String): Report {
     val reader: IonReader = IonReaderBuilder.standard().build(reportContent)
-    val passingSet = mutableSetOf<String>()
-    val failingSet = mutableSetOf<String>()
-    val ignoredSet = mutableSetOf<String>()
+    val report = Report(engine, commitId, mutableMapOf())
     reader.next()
+    reader.stepIn()
+
+    while (reader.next() != null) {
+        val tag = reader.fieldName
+        readTestResult(reader).let { report.testsResults[tag] = it }
+    }
+    reader.stepOut()
+    reader.close()
+    return report
+}
+
+private fun readTestResult(reader: IonReader): Report.TestResult{
+    val result = Report.TestResult()
+
     reader.stepIn()
     var nextType = reader.next()
     while (nextType != null) {
         when (reader.fieldName) {
-            "passing" -> readAll(reader, passingSet)
-            "failing" -> readAll(reader, failingSet)
-            "ignored" -> readAll(reader, ignoredSet)
+            "passing" -> readAll(reader, result.passingSet)
+            "failing" -> readAll(reader, result.failingSet)
+            "ignored" -> readAll(reader, result.ignoredSet)
         }
         nextType = reader.next()
     }
     reader.stepOut()
-    reader.close()
-    return Report(engine, commitId, passingSet.toSet(), failingSet.toSet(), ignoredSet.toSet())
+    return result
 }
 
 private fun readAll(reader: IonReader, mutableList: MutableSet<String>) {

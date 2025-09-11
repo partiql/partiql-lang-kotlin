@@ -37,6 +37,7 @@ val reportDir = file("$buildDir/conformance-test-report").absolutePath
 
 object Env {
     const val PARTIQL_EVAL = "PARTIQL_EVAL_TESTS_DATA"
+    const val PARTIQL_EVAL_EXTENDED = "PARTIQL_EVAL_TESTS_DATA_EXTENDED"
     const val PARTIQL_EQUIV = "PARTIQL_EVAL_EQUIV_TESTS_DATA"
 }
 
@@ -44,6 +45,11 @@ fun setEnvironmentDataDirectories(test: Test) {
     // Set PartiQL Evaluation Test Directory
     val conformanceDataEval = file("$tests/eval/").absolutePath
     test.environment(Env.PARTIQL_EVAL, conformanceDataEval)
+
+    // Set PartiQL Evaluation Extended Test Directory
+    val conformanceDataEvalExtended = file("$tests-extended/eval/").absolutePath
+    test.environment(Env.PARTIQL_EVAL_EXTENDED, conformanceDataEvalExtended)
+
     // Set PartiQL Evaluation Equivalence Test Directory
     val conformanceDataEquiv = file("$tests/eval-equiv/").absolutePath
     test.environment(Env.PARTIQL_EQUIV, conformanceDataEquiv)
@@ -52,12 +58,9 @@ fun setEnvironmentDataDirectories(test: Test) {
 tasks.test {
     useJUnitPlatform()
     setEnvironmentDataDirectories(this)
-
+    
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
     exclude("org/partiql/runner/ConformanceTestEval.class")
-
-    // May 2023: Disabled conformance testing during regular project build, because fail lists are out of date.
-    exclude("org/partiql/runner/ConformanceTest.class")
 }
 
 val createReportDir by tasks.registering {

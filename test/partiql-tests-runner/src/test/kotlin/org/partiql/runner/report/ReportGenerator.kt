@@ -11,24 +11,34 @@ import kotlin.io.path.Path
 
 class ReportGenerator(
     private val engine: String
-) : TestWatcher, AfterAllCallback {
+) : TestWatcher, AfterAllCallback{
 
-    private var failingTests = emptySet<String>()
-    private var passingTests = emptySet<String>()
-    private var ignoredTests = emptySet<String>()
+    private val REPORT_TAG_PREFIX = "report:"
+
+    data class TestResult(
+        var passing: Set<String> = emptySet(),
+        var failing: Set<String> = emptySet(),
+        var ignored: Set<String> = emptySet()
+    )
+    private var testsResults: MutableMap<String,TestResult> = mutableMapOf()
+
 
     override fun testFailed(context: ExtensionContext?, cause: Throwable?) {
-        failingTests += context?.displayName ?: ""
+        val tag = getReportTag(context)
+        testsResults.getOrPut(tag) { TestResult() }.failing += context?.displayName ?: ""
         super.testFailed(context, cause)
     }
 
     override fun testAborted(context: ExtensionContext?, cause: Throwable?) {
-        ignoredTests += context?.displayName ?: ""
+        val tag = getReportTag(context)
+        testsResults.getOrPut(tag) { TestResult() }.ignored += context?.displayName ?: ""
+
         super.testAborted(context, cause)
     }
 
     override fun testSuccessful(context: ExtensionContext?) {
-        passingTests += context?.displayName ?: ""
+        val tag = getReportTag(context)
+        testsResults.getOrPut(tag) { TestResult() }.passing += context?.displayName ?: ""
         super.testSuccessful(context)
     }
 
@@ -39,30 +49,43 @@ class ReportGenerator(
         val outputStream = file.outputStream()
         val writer = IonTextWriterBuilder.pretty().build(outputStream)
         writer.stepIn(IonType.STRUCT) // in: outer struct
+        testsResults.keys.forEach { tag ->
+            writer.setFieldName(tag) // engine name
+            writer.stepIn(IonType.STRUCT) // in: engine struct
 
-        // set struct field for passing
-        writer.setFieldName("passing")
-        writer.stepIn(IonType.LIST)
-        passingTests.forEach { passingTest ->
-            writer.writeString(passingTest)
-        }
-        writer.stepOut()
-        // set struct field for failing
-        writer.setFieldName("failing")
-        writer.stepIn(IonType.LIST)
-        failingTests.forEach { failingTest ->
-            writer.writeString(failingTest)
-        }
-        writer.stepOut()
+            val testResult = testsResults[tag]!!
 
-        // set struct field for ignored
-        writer.setFieldName("ignored")
-        writer.stepIn(IonType.LIST)
-        ignoredTests.forEach { ignoredTest ->
-            writer.writeString(ignoredTest)
+            // set struct field for passing
+            writer.setFieldName("passing")
+            writer.stepIn(IonType.LIST)
+            testResult.passing.forEach { passingTest ->
+                writer.writeString(passingTest)
+            }
+            writer.stepOut()
+            // set struct field for failing
+            writer.setFieldName("failing")
+            writer.stepIn(IonType.LIST)
+            testResult.failing.forEach { failingTest ->
+                writer.writeString(failingTest)
+            }
+            writer.stepOut()
+
+            // set struct field for ignored
+            writer.setFieldName("ignored")
+            writer.stepIn(IonType.LIST)
+            testResult.ignored.forEach { ignoredTest ->
+                writer.writeString(ignoredTest)
+            }
+            writer.stepOut()
+
+            writer.stepOut() // engine
         }
-        writer.stepOut()
 
         writer.stepOut() // out: outer struct
+    }
+
+    private fun getReportTag(context: ExtensionContext?): String {
+        val tags = context?.tags ?: emptyList()
+        return tags.single { it.startsWith(REPORT_TAG_PREFIX) }.substring(REPORT_TAG_PREFIX.length)
     }
 }
