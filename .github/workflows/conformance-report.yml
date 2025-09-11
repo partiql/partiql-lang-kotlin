@@ -8,7 +8,7 @@ env:
   CONFORMANCE_REPORT_RELATIVE_PATH: build/conformance-test-report
   COMPARISON_REPORT_NAME: comparison_report.md
   COMPARISON_REPORT_NAME_WITH_LIMIT: comparison_report_limited.md
-  COMMENT_SIZE_LIMIT: 6
+  COMMENT_SIZE_LIMIT: 10
 
 jobs:
   conformance-report:
