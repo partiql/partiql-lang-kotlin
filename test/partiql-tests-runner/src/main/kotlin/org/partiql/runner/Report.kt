@@ -3,7 +3,7 @@ package org.partiql.runner
 data class Report(
     val engine: String,
     val commitId: String,
-    var testsResults: MutableMap<String,TestResult> = mutableMapOf()
+    var testsResults: MutableMap<String, TestResult> = mutableMapOf()
 ) {
     data class TestResult(
         var passingSet: MutableSet<String> = mutableSetOf(),

@@ -11,7 +11,7 @@ import kotlin.io.path.Path
 
 class ReportGenerator(
     private val engine: String
-) : TestWatcher, AfterAllCallback{
+) : TestWatcher, AfterAllCallback {
 
     private val REPORT_TAG_PREFIX = "report:"
 
@@ -20,8 +20,7 @@ class ReportGenerator(
         var failing: Set<String> = emptySet(),
         var ignored: Set<String> = emptySet()
     )
-    private var testsResults: MutableMap<String,TestResult> = mutableMapOf()
-
+    private var testsResults: MutableMap<String, TestResult> = mutableMapOf()
 
     override fun testFailed(context: ExtensionContext?, cause: Throwable?) {
         val tag = getReportTag(context)

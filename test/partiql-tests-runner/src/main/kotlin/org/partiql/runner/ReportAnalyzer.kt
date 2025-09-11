@@ -21,9 +21,9 @@ class ReportAnalyzer(
         const val TARGET = "TARGET"
     }
 
-    data class ComparisonResult(val firstReport: Report, val secondReport: Report, val tag:String) {
-        private val first = firstReport.testsResults[tag]?: Report.TestResult()
-        private val second = secondReport.testsResults[tag]?: Report.TestResult()
+    data class ComparisonResult(val firstReport: Report, val secondReport: Report, val tag: String) {
+        private val first = firstReport.testsResults[tag] ?: Report.TestResult()
+        private val second = secondReport.testsResults[tag] ?: Report.TestResult()
 
         val passingInBoth = first.passingSet.intersect(second.passingSet)
         val failingInBoth = first.failingSet.intersect(second.failingSet)
@@ -42,13 +42,12 @@ class ReportAnalyzer(
         val firstTotalSize = firstPassingSize + firstFailingSize + firstIgnoreSize
         val secondTotalSize = secondPassingSize + secondFailingSize + secondIgnoreSize
 
-        val firstPassingPercent = if(firstTotalSize == 0) 0.0 else firstPassingSize.toDouble() / firstTotalSize * 100
-        val secondPassingPercent = if(secondTotalSize == 0) 0.0 else secondPassingSize.toDouble() / secondTotalSize * 100
+        val firstPassingPercent = if (firstTotalSize == 0) 0.0 else firstPassingSize.toDouble() / firstTotalSize * 100
+        val secondPassingPercent = if (secondTotalSize == 0) 0.0 else secondPassingSize.toDouble() / secondTotalSize * 100
 
         val firstNameShort = "$BASE (${firstReport.engine}-${firstReport.commitIdShort.uppercase()})"
         val secondNameShort = "$TARGET (${secondReport.engine}-${secondReport.commitIdShort.uppercase()})"
     }
-
 
     fun generateComparisonReport(limit: Int): String {
 
@@ -80,7 +79,7 @@ class ReportAnalyzer(
         out.appendMarkdown("# $reportTitle $icon")
     }
 
-    private fun appendTable(out: Appendable, result: ComparisonResult?)  {
+    private fun appendTable(out: Appendable, result: ComparisonResult?) {
         if (result == null) return
         out.appendLine("| ${result.tag.uppercase()} Data Set| ${result.firstNameShort} | ${result.secondNameShort} | +/- |")
         out.appendLine("| --- | ---: | ---: | ---: |")
@@ -135,7 +134,7 @@ class ReportAnalyzer(
 
         resultList.forEach {
             out.appendMarkdown("### ${it.tag.uppercase()} Data Set")
-            if (it.passingFirstFailingSecond.isNotEmpty()){
+            if (it.passingFirstFailingSecond.isNotEmpty()) {
                 out.appendLine("- **$ICON_X REGRESSION DETECTED. See *Now Failing/Ignored Tests*. $ICON_X**")
             }
 
@@ -149,9 +148,7 @@ class ReportAnalyzer(
         }
     }
 
-
-    private fun appendOptionalNowFailureTests(out: Appendable, resultList: Map<String, Set<String>>, limit: Int, testStatus: TestStatus){
-
+    private fun appendOptionalNowFailureTests(out: Appendable, resultList: Map<String, Set<String>>, limit: Int, testStatus: TestStatus) {
         if (resultList.values.all { it.isEmpty() }) return
 
         out.appendMarkdown("## Now $testStatus Tests $ICON_X")
@@ -178,7 +175,7 @@ class ReportAnalyzer(
         }
     }
 
-    private fun appendOptionalNowPassingTests(out: Appendable, resultList: Map<String, Set<String>>, limit: Int, testStatus: TestStatus){
+    private fun appendOptionalNowPassingTests(out: Appendable, resultList: Map<String, Set<String>>, limit: Int, testStatus: TestStatus) {
 
         if (resultList.values.all { it.isEmpty() }) return
 
@@ -205,7 +202,6 @@ class ReportAnalyzer(
             }
         }
     }
-
 }
 
 enum class TestStatus {

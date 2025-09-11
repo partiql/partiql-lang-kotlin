@@ -58,7 +58,7 @@ fun setEnvironmentDataDirectories(test: Test) {
 tasks.test {
     useJUnitPlatform()
     setEnvironmentDataDirectories(this)
-    
+
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
     exclude("org/partiql/runner/ConformanceTestEval.class")
 }

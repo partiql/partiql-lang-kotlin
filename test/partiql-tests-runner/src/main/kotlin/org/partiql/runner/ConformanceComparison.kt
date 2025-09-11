@@ -41,7 +41,7 @@ fun loadReport(reportContent: String, engine: String, commitId: String): Report 
     return report
 }
 
-private fun readTestResult(reader: IonReader): Report.TestResult{
+private fun readTestResult(reader: IonReader): Report.TestResult {
     val result = Report.TestResult()
 
     reader.stepIn()
