@@ -101,15 +101,12 @@ jobs:
       - name: "Artifact CROSS-COMMIT Report (create comparison_report.md)"
         continue-on-error: true
         run: |
-          T="CROSS-COMMIT-REPORT"
           BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
-          BL="EVAL"
           BT="${{ github.event.pull_request.base.sha }}"
-          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
-          TL="EVAL"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/$CONFORMANCE_REPORT_NAME"
           TT="$GITHUB_SHA"
           O="$COMPARISON_REPORT_NAME"
-          ARGS="-t $T -bf $BF -bl $BL -bt $BT -tf $TF -tl $TL -tt $TT -o $O"
+          ARGS="-bf $BF -bt $BT -tf $TF -tt $TT -o $O"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Print conformance report to GitHub actions workflow summary page
       - name: Print markdown in run
@@ -124,16 +121,13 @@ jobs:
       - name: "Comment CROSS-COMMIT Report (create comparison_report_limited.md)"
         continue-on-error: true
         run: |
-          T="CROSS-COMMIT-REPORT"
           BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
-          BL="EVAL"
           BT="${{ github.event.pull_request.base.sha }}"
-          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
-          TL="EVAL"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/$CONFORMANCE_REPORT_NAME"
           TT="$GITHUB_SHA"
           O="$COMPARISON_REPORT_NAME_WITH_LIMIT"
           L="$COMMENT_SIZE_LIMIT"
-          ARGS="-t $T -bf $BF -bl $BL -bt $BT -tf $TF -tl $TL -tt $TT -o $O -l $L"
+          ARGS="-bf $BF -bt $BT -tf $TF -tt $TT -o $O -l $L"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Find comment w/ conformance comparison if previous comment published
       - name: Find Comment

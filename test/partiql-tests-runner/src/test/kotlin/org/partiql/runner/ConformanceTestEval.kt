@@ -11,7 +11,7 @@ class ConformanceTestEval : ConformanceTestBase<Statement, Datum>() {
     companion object {
         @JvmStatic
         @RegisterExtension
-        val reporter = ReportGenerator("eval")
+        val reporter = ReportGenerator("conformance_test_results.ion")
     }
 
     private val factory = EvalExecutor.Factory

@@ -10,7 +10,8 @@ import java.nio.file.Files
 import kotlin.io.path.Path
 
 class ReportGenerator(
-    private val engine: String
+    // avoid naming conflict for derived class from ConformanceTestBase as the test report is for each test suite class.
+    private val reportName: String
 ) : TestWatcher, AfterAllCallback {
 
     private val REPORT_TAG_PREFIX = "report:"
@@ -45,8 +46,8 @@ class ReportGenerator(
 
     override fun afterAll(p0: ExtensionContext?) {
         val basePath = System.getenv("conformanceReportDir") ?: "."
-        val dir = Files.createDirectories(Path("$basePath/$engine")).toFile()
-        val file = File(dir, "conformance_test_results.ion")
+        val dir = Files.createDirectories(Path(basePath)).toFile()
+        val file = File(dir, reportName)
         val outputStream = file.outputStream()
         val writer = IonTextWriterBuilder.pretty().build(outputStream)
         writer.stepIn(IonType.STRUCT) // in: outer struct

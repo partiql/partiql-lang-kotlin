@@ -40,27 +40,11 @@ public class PartiQLTestsRunner implements Runnable {
 
     @CommandLine.Option(
             required = true,
-            description = {"The label for the base conformance report. Example: 'LEGACY', 'EVAL', etc."},
-            paramLabel = "<base_label>",
-            names = {"-bl", "--base-label"}
-    )
-    private String baseLabel;
-
-    @CommandLine.Option(
-            required = true,
             description = {"The tag for the base conformance report. Example: a commit id."},
             paramLabel = "<target_label>",
             names = {"-bt", "--base-tag"}
     )
     private String baseTag;
-
-    @CommandLine.Option(
-            required = true,
-            description = {"The label for the target conformance report. Example: 'LEGACY', 'EVAL', etc."},
-            paramLabel = "<target_label>",
-            names = {"-tl", "--target-label"}
-    )
-    private String targetLabel;
 
     @CommandLine.Option(
             required = true,
@@ -89,14 +73,16 @@ public class PartiQLTestsRunner implements Runnable {
 
     @Override
     public void run() {
-        Report baseReport = ConformanceComparisonKt.loadReportFile(baseReportFile, baseLabel, baseTag);
-        Report newReports = ConformanceComparisonKt.loadReportFile(targetReportFile, targetLabel, targetTag);
-        try {
-            outputFile.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        for(DataSet dataSet : DataSet.getEntries()) {
+            Report baseReport = ConformanceComparisonKt.loadReportFile(baseReportFile, dataSet, baseTag);
+            Report newReports = ConformanceComparisonKt.loadReportFile(targetReportFile, dataSet, targetTag);
+            try {
+                outputFile.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            ConformanceComparisonKt.analyze(outputFile, Arrays.asList(baseReport, newReports), limit);
         }
-        ConformanceComparisonKt.analyze(outputFile, Arrays.asList(baseReport, newReports), limit, title);
     }
 
     public static void main(String... args) {

@@ -3,13 +3,12 @@ package org.partiql.runner
 import com.amazon.ion.IonReader
 import com.amazon.ion.system.IonReaderBuilder
 import java.io.File
-import kotlin.collections.mutableMapOf
 
-fun analyze(file: File, reports: List<Report>, limit: Int, title: String) {
+fun analyze(file: File, reports: List<Report>, limit: Int) {
     var first = 0
     var second = first + 1
     while (first < second && second < reports.size) {
-        val report = ReportAnalyzer.build(title, reports[first], reports[second]).generateComparisonReport(limit)
+        val report = ReportAnalyzer.build(reports[first], reports[second]).generateComparisonReport(limit)
         file.appendText(report)
         file.appendText("\n")
         if (second < reports.size - 1) {
@@ -21,36 +20,46 @@ fun analyze(file: File, reports: List<Report>, limit: Int, title: String) {
     }
 }
 
-fun loadReportFile(file: File, engine: String, commitId: String): Report {
+fun loadReportFile(file: File, dataset: DataSet, commitId: String): Report {
     val report = file.readText()
-    return loadReport(report, engine, commitId)
+    return loadReport(report, dataset, commitId)
 }
 
-fun loadReport(reportContent: String, engine: String, commitId: String): Report {
+fun loadReport(reportContent: String, dataset: DataSet, commitId: String): Report {
     val reader: IonReader = IonReaderBuilder.standard().build(reportContent)
-    val report = Report(engine, commitId, mutableMapOf())
+    val passingSet = mutableSetOf<String>()
+    val failingSet = mutableSetOf<String>()
+    val ignoredSet = mutableSetOf<String>()
 
     if (!reportContent.contains("partiql-extended")) {
         // Since old report is in old format, we need to read it differently.
         // Read old report to show better view of new report.
         // TODO, remove this after new report in next PR.
         reader.next()
-        readTestResult(reader).let { report.testsResults["partiql"] = it }
+        val result = readTestResult(reader)
+        reader.close()
+        return Report(dataset, commitId, result)
     } else {
         reader.next()
         reader.stepIn()
 
         while (reader.next() != null) {
             val tag = reader.fieldName
-            readTestResult(reader).let { report.testsResults[tag] = it }
+            if (tag.equals(dataset.dataSetName, ignoreCase = true)) {
+                val result = readTestResult(reader)
+                reader.close()
+                return Report(dataset, commitId, result)
+            }
         }
         reader.stepOut()
     }
+
+    // if not found, return empty report
     reader.close()
-    return report
+    return Report(dataset, commitId, TestResult(passingSet, failingSet, ignoredSet))
 }
 
-private fun readTestResult(reader: IonReader): Report.TestResult {
+private fun readTestResult(reader: IonReader): TestResult {
     val passingSet = mutableSetOf<String>()
     val failingSet = mutableSetOf<String>()
     val ignoredSet = mutableSetOf<String>()
@@ -66,7 +75,7 @@ private fun readTestResult(reader: IonReader): Report.TestResult {
         nextType = reader.next()
     }
     reader.stepOut()
-    return Report.TestResult(passingSet, failingSet, ignoredSet)
+    return TestResult(passingSet, failingSet, ignoredSet)
 }
 
 private fun readAll(reader: IonReader, mutableList: MutableSet<String>) {
