@@ -5,8 +5,6 @@ class ReportAnalyzer(
     private val first: Report,
     private val second: Report
 ) {
-    private val PARTIQL_TAG = "partiql"
-    private val PARTIQL_EXTENDED_TAG = "partiql-extended"
 
     companion object {
         fun build(title: String, first: Report, second: Report): ReportAnalyzer {
@@ -53,20 +51,20 @@ class ReportAnalyzer(
 
         val resultList: MutableList<ComparisonResult> = mutableListOf()
 
-        second.testsResults[PARTIQL_TAG]?.let {
-            resultList.add(ComparisonResult(first, second, PARTIQL_TAG))
+        second.testsResults[DataSet.PartiQL.dataSetName]?.let {
+            resultList.add(ComparisonResult(first, second, DataSet.PartiQL.dataSetName))
         }
 
-        second.testsResults[PARTIQL_EXTENDED_TAG]?.let {
-            resultList.add(ComparisonResult(first, second, PARTIQL_EXTENDED_TAG))
+        second.testsResults[DataSet.PartiQLExtended.dataSetName]?.let {
+            resultList.add(ComparisonResult(first, second, DataSet.PartiQLExtended.dataSetName))
         }
 
         return buildString {
             appendTitle(this, resultList)
+
             resultList.forEach { appendTable(this, it) }
 
             appendSummary(this, resultList)
-
             appendOptionalNowFailureTests(this, resultList.associate { Pair(it.tag, it.passingFirstFailingSecond) }, limit, TestStatus.FAILING)
             appendOptionalNowFailureTests(this, resultList.associate { Pair(it.tag, it.passingFirstIgnoredSecond) }, limit, TestStatus.IGNORED)
             appendOptionalNowPassingTests(this, resultList.associate { Pair(it.tag, it.failureFirstPassingSecond) }, limit, TestStatus.FAILING)
@@ -74,13 +72,12 @@ class ReportAnalyzer(
         }
     }
 
-    private fun appendTitle(out: Appendable, resultList: MutableList<ComparisonResult>) {
+    private fun appendTitle(out: Appendable, resultList: List<ComparisonResult>) {
         val icon = if (resultList.all { it.passingFirstFailingSecond.isEmpty() }) ICON_CHECK else ICON_X
         out.appendMarkdown("# $reportTitle $icon")
     }
 
-    private fun appendTable(out: Appendable, result: ComparisonResult?) {
-        if (result == null) return
+    private fun appendTable(out: Appendable, result: ComparisonResult) {
         out.appendLine("| ${result.tag.uppercase()} Data Set| ${result.firstNameShort} | ${result.secondNameShort} | +/- |")
         out.appendLine("| --- | ---: | ---: | ---: |")
         out.appendLine(tableRow("% Passing", result.firstPassingPercent, result.secondPassingPercent))
@@ -123,12 +120,10 @@ class ReportAnalyzer(
         this.appendLine()
     }
 
-    private fun appendSummary(out: Appendable, resultList: MutableList<ComparisonResult>) {
+    private fun appendSummary(out: Appendable, resultList: List<ComparisonResult>) {
         out.appendMarkdown("## Testing Details")
         out.appendLine("- **Base Commit**: ${first.commitId}")
-        out.appendLine("- **Base Engine**: ${first.engine.uppercase()}")
         out.appendLine("- **Target Commit**: ${second.commitId}")
-        out.appendLine("- **Target Engine**: ${second.engine.uppercase()}")
 
         out.appendMarkdown("## Result Details")
 
@@ -159,7 +154,7 @@ class ReportAnalyzer(
 
             if (it.value.isEmpty()) return@forEach
 
-            out.appendMarkdown("### ${it.key} data set")
+            out.appendMarkdown("### ${it.key.uppercase()} Data Set")
             val set = it.value
 
             if (set.size < limit) {
@@ -186,7 +181,7 @@ class ReportAnalyzer(
         resultList.forEach {
             if (it.value.isEmpty()) return@forEach
 
-            out.appendMarkdown("### ${it.key.uppercase()} data set")
+            out.appendMarkdown("### ${it.key.uppercase()} Data Set")
             val set = it.value
 
             if (set.size < limit) {

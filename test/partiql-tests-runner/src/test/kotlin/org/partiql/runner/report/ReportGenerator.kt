@@ -16,28 +16,30 @@ class ReportGenerator(
     private val REPORT_TAG_PREFIX = "report:"
 
     data class TestResult(
-        var passing: Set<String> = emptySet(),
-        var failing: Set<String> = emptySet(),
-        var ignored: Set<String> = emptySet()
+        val passing: MutableSet<String> = mutableSetOf(),
+        val failing: MutableSet<String> = mutableSetOf(),
+        val ignored: MutableSet<String> = mutableSetOf()
     )
+
+    // key is dataset name, and value is test result collection.
     private var testsResults: MutableMap<String, TestResult> = mutableMapOf()
 
     override fun testFailed(context: ExtensionContext?, cause: Throwable?) {
         val tag = getReportTag(context)
-        testsResults.getOrPut(tag) { TestResult() }.failing += context?.displayName ?: ""
+        testsResults.getOrPut(tag) { TestResult() }.failing.add(context?.displayName ?: "")
         super.testFailed(context, cause)
     }
 
     override fun testAborted(context: ExtensionContext?, cause: Throwable?) {
         val tag = getReportTag(context)
-        testsResults.getOrPut(tag) { TestResult() }.ignored += context?.displayName ?: ""
+        testsResults.getOrPut(tag) { TestResult() }.ignored.add(context?.displayName ?: "")
 
         super.testAborted(context, cause)
     }
 
     override fun testSuccessful(context: ExtensionContext?) {
         val tag = getReportTag(context)
-        testsResults.getOrPut(tag) { TestResult() }.passing += context?.displayName ?: ""
+        testsResults.getOrPut(tag) { TestResult() }.passing.add(context?.displayName ?: "")
         super.testSuccessful(context)
     }
 

@@ -51,20 +51,22 @@ fun loadReport(reportContent: String, engine: String, commitId: String): Report 
 }
 
 private fun readTestResult(reader: IonReader): Report.TestResult {
-    val result = Report.TestResult()
+    val passingSet = mutableSetOf<String>()
+    val failingSet = mutableSetOf<String>()
+    val ignoredSet = mutableSetOf<String>()
 
     reader.stepIn()
     var nextType = reader.next()
     while (nextType != null) {
         when (reader.fieldName) {
-            "passing" -> readAll(reader, result.passingSet)
-            "failing" -> readAll(reader, result.failingSet)
-            "ignored" -> readAll(reader, result.ignoredSet)
+            "passing" -> readAll(reader, passingSet)
+            "failing" -> readAll(reader, failingSet)
+            "ignored" -> readAll(reader, ignoredSet)
         }
         nextType = reader.next()
     }
     reader.stepOut()
-    return result
+    return Report.TestResult(passingSet, failingSet, ignoredSet)
 }
 
 private fun readAll(reader: IonReader, mutableList: MutableSet<String>) {
