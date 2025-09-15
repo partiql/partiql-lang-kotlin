@@ -37,11 +37,11 @@ class ReportAnalyzer(
     private val firstTotalSize = firstPassingSize + firstFailingSize + firstIgnoreSize
     private val secondTotalSize = secondPassingSize + secondFailingSize + secondIgnoreSize
 
-    private val firstPassingPercent = firstPassingSize.toDouble() / firstTotalSize * 100
-    private val secondPassingPercent = secondPassingSize.toDouble() / secondTotalSize * 100
+    private val firstPassingPercent = if (firstTotalSize == 0) 0.0 else firstPassingSize.toDouble() / firstTotalSize * 100
+    private val secondPassingPercent = if (secondTotalSize == 0) 0.0 else secondPassingSize.toDouble() / secondTotalSize * 100
 
-    private val firstNameShort = "$BASE (${first.commitId.uppercase()})"
-    private val secondNameShort = "$TARGET (${second.commitId.uppercase()})"
+    private val firstNameShort = "$BASE (${first.commitIdShort.uppercase()})"
+    private val secondNameShort = "$TARGET (${second.commitIdShort.uppercase()})"
 
     private val reportTitle = TITLE_FORMAT.format(first.dataSet.dataSetName.uppercase())
 
@@ -147,7 +147,7 @@ class ReportAnalyzer(
                 }
                 out.appendMarkdown("</details>")
             } else {
-                out.appendMarkdown("${set.size} test(s) were previously failing in ${first.commitId} but now pass in ${second.commitId}. Before merging, confirm they are intended to pass.")
+                out.appendMarkdown("${set.size} test(s) were previously failing in $firstNameShort but now pass in $secondNameShort. Before merging, confirm they are intended to pass.")
                 out.appendMarkdown("The complete list can be found in GitHub CI summary, either from Step Summary or in the Artifact.")
             }
         }
