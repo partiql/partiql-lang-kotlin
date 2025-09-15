@@ -31,7 +31,7 @@ fun loadReport(reportContent: String, dataset: DataSet, commitId: String): Repor
     val failingSet = mutableSetOf<String>()
     val ignoredSet = mutableSetOf<String>()
 
-    if (!reportContent.contains("partiql-extended")) {
+    if (dataset == DataSet.PartiQLCore && !reportContent.contains("partiql-extended")) {
         // Since old report is in old format, we need to read it differently.
         // Read old report to show better view of new report.
         // TODO, remove this after new report in next PR.

@@ -14,15 +14,6 @@ import java.util.Arrays;
 public class PartiQLTestsRunner implements Runnable {
 
     @CommandLine.Option(
-            required = false,
-            description = {"Title of comparison report. Example: 'CROSS-COMMIT', 'CROSS-ENGINE', etc"},
-            paramLabel = "<title>",
-            defaultValue = "CONFORMANCE REPORT",
-            names = {"-t", "--title"}
-    )
-    private String title;
-
-    @CommandLine.Option(
             required = true,
             description = {"Path to base conformance report file."},
             paramLabel = "<base_report_file_path>",

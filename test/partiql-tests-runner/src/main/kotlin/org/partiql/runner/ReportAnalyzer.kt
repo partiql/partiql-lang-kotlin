@@ -40,8 +40,8 @@ class ReportAnalyzer(
     private val firstPassingPercent = firstPassingSize.toDouble() / firstTotalSize * 100
     private val secondPassingPercent = secondPassingSize.toDouble() / secondTotalSize * 100
 
-    private val firstNameShort = "$BASE (${first.commitIdShort.uppercase()})"
-    private val secondNameShort = "$TARGET (${second.commitIdShort.uppercase()})"
+    private val firstNameShort = "$BASE (${first.commitId.uppercase()})"
+    private val secondNameShort = "$TARGET (${second.commitId.uppercase()})"
 
     private val reportTitle = TITLE_FORMAT.format(first.dataSet.dataSetName.uppercase())
 
