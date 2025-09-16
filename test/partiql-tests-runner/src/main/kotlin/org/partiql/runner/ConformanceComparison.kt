@@ -3,6 +3,7 @@ package org.partiql.runner
 import com.amazon.ion.IonReader
 import com.amazon.ion.system.IonReaderBuilder
 import java.io.File
+import java.io.FileNotFoundException
 
 fun analyze(file: File, reports: List<Report>, limit: Int, title: String) {
     var first = 0
@@ -21,7 +22,13 @@ fun analyze(file: File, reports: List<Report>, limit: Int, title: String) {
 }
 
 fun loadReportFile(file: File, dataSet: DataSet, commitId: String): Report {
-    val report = file.readText()
+
+    val report = try {
+        file.readText()
+    } catch (ex: FileNotFoundException) {
+        println("Warning: Conformance test result file for data set [$dataSet] is not found at [${file.path}], Empty report is used.")
+        return Report(dataSet, commitId, emptySet(), emptySet(), emptySet())
+    }
     return loadReport(report, dataSet, commitId)
 }
 
