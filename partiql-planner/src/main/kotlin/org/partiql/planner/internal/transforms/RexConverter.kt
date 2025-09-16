@@ -637,6 +637,13 @@ internal object RexConverter {
             if (id.matches("EXISTS", ignoreCase = true)) {
                 return visitExprCallExists(node, context)
             }
+
+            val matchResult = FunctionUtils.DATE_ADD_FUNCTION_REGEX.find(id.getIdentifier().getText())
+            if (matchResult != null) {
+                val datetimeField = DatetimeField.parse(matchResult.groups[1]!!.value.uppercase())
+                return visitExprCallDateAddFunction(datetimeField, node, context)
+            }
+
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
 
@@ -710,6 +717,30 @@ internal object RexConverter {
             }
             val arg = visitExpr(node.args[0], context)
             val op = rexOpCallUnresolved(AstToPlan.convert(node.function), listOf(arg))
+            return rex(type, op)
+        }
+
+        /**
+         * Converts DATE_ADD_* function calls to plus operations with intervals.
+         *
+         * Transforms DATE_ADD(interval_Type, interval_value, datetime) into datetime + interval in planner
+         *
+         * @param datetimeField The datetimeField for the DATE_ADD function call
+         * @param node The ExprCall node representing the DATE_ADD function call
+         * @param context The planning environment context
+         * @return Rex node representing the equivalent plus operation, or falls back to unresolved call if invalid
+         */
+        private fun visitExprCallDateAddFunction(datetimeField: DatetimeField, node: ExprCall, context: Env): Rex {
+            val type = (ANY)
+            val intervalRex = visitExpr(node.args[0], context)
+            assert(intervalRex.op is Rex.Op.Lit) {
+                "DATE_ADD function expects a numeric literal as the interval value (Rex.Op.Lit), but received ${intervalRex.op::class.simpleName}."
+            }
+            val intervalDatum = IntervalUtils.convertArgToInterval(datetimeField, (intervalRex.op as Rex.Op.Lit).value)
+            val interval = rex(CompilerType(intervalDatum.type), rexOpLit(intervalDatum))
+            val datetime = visitExpr(node.args[1], context)
+            val op = call(FunctionUtils.OP_PLUS, interval, datetime)
+
             return rex(type, op)
         }
 
