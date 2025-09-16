@@ -3,6 +3,7 @@ package org.partiql.runner
 import com.amazon.ion.IonReader
 import com.amazon.ion.system.IonReaderBuilder
 import java.io.File
+import java.io.FileNotFoundException
 
 fun analyze(file: File, reports: List<Report>, limit: Int, title: String) {
     var first = 0
@@ -20,12 +21,18 @@ fun analyze(file: File, reports: List<Report>, limit: Int, title: String) {
     }
 }
 
-fun loadReportFile(file: File, engine: String, commitId: String): Report {
-    val report = file.readText()
-    return loadReport(report, engine, commitId)
+fun loadReportFile(file: File, dataSet: DataSet, commitId: String): Report {
+
+    val report = try {
+        file.readText()
+    } catch (ex: FileNotFoundException) {
+        println("Warning: Conformance test result file for data set [$dataSet] is not found at [${file.path}], Empty report is used.")
+        return Report(dataSet, commitId, emptySet(), emptySet(), emptySet())
+    }
+    return loadReport(report, dataSet, commitId)
 }
 
-fun loadReport(reportContent: String, engine: String, commitId: String): Report {
+fun loadReport(reportContent: String, dataSet: DataSet, commitId: String): Report {
     val reader: IonReader = IonReaderBuilder.standard().build(reportContent)
     val passingSet = mutableSetOf<String>()
     val failingSet = mutableSetOf<String>()
@@ -43,7 +50,7 @@ fun loadReport(reportContent: String, engine: String, commitId: String): Report 
     }
     reader.stepOut()
     reader.close()
-    return Report(engine, commitId, passingSet.toSet(), failingSet.toSet(), ignoredSet.toSet())
+    return Report(dataSet, commitId, passingSet.toSet(), failingSet.toSet(), ignoredSet.toSet())
 }
 
 private fun readAll(reader: IonReader, mutableList: MutableSet<String>) {

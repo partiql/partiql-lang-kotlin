@@ -5,7 +5,6 @@ class ReportAnalyzer(
     private val first: Report,
     private val second: Report
 ) {
-
     companion object {
         fun build(title: String, first: Report, second: Report): ReportAnalyzer {
             return ReportAnalyzer(title, first, second)
@@ -36,11 +35,11 @@ class ReportAnalyzer(
     private val firstTotalSize = firstPassingSize + firstFailingSize + firstIgnoreSize
     private val secondTotalSize = secondPassingSize + secondFailingSize + secondIgnoreSize
 
-    private val firstPassingPercent = firstPassingSize.toDouble() / firstTotalSize * 100
-    private val secondPassingPercent = secondPassingSize.toDouble() / secondTotalSize * 100
+    private val firstPassingPercent = if (firstTotalSize == 0) 0.0 else firstPassingSize.toDouble() / firstTotalSize * 100
+    private val secondPassingPercent = if (secondTotalSize == 0) 0.0 else secondPassingSize.toDouble() / secondTotalSize * 100
 
-    private val firstNameShort = "$BASE (${first.engine.uppercase()}-${first.commitIdShort.uppercase()})"
-    private val secondNameShort = "$TARGET (${second.engine.uppercase()}-${second.commitIdShort.uppercase()})"
+    private val firstNameShort = "$BASE (${first.commitIdShort.uppercase()})"
+    private val secondNameShort = "$TARGET (${second.commitIdShort.uppercase()})"
 
     fun generateComparisonReport(limit: Int): String {
         return buildString {
@@ -104,9 +103,7 @@ class ReportAnalyzer(
     private fun appendSummary(out: Appendable) {
         out.appendMarkdown("## Testing Details")
         out.appendLine("- **Base Commit**: ${first.commitId}")
-        out.appendLine("- **Base Engine**: ${first.engine.uppercase()}")
         out.appendLine("- **Target Commit**: ${second.commitId}")
-        out.appendLine("- **Target Engine**: ${second.engine.uppercase()}")
 
         out.appendMarkdown("## Result Details")
         if (passingFirstFailingSecond.isNotEmpty() || passingFirstIgnoredSecond.isNotEmpty()) {

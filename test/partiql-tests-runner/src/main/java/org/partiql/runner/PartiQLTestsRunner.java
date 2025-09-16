@@ -14,13 +14,23 @@ import java.util.Arrays;
 public class PartiQLTestsRunner implements Runnable {
 
     @CommandLine.Option(
-            required = false,
+            required = true,
             description = {"Title of comparison report. Example: 'CROSS-COMMIT', 'CROSS-ENGINE', etc"},
             paramLabel = "<title>",
             defaultValue = "CONFORMANCE REPORT",
             names = {"-t", "--title"}
     )
     private String title;
+
+    @CommandLine.Option(
+            required = true,
+            description = {"DataSet Type. Example: 'PartiQLCore', 'PartiQLExtended'"},
+            paramLabel = "<dataset>",
+            defaultValue = "PartiQLCore",
+
+            names = {"-d", "--dataset"}
+    )
+    private DataSet dataSet;
 
     @CommandLine.Option(
             required = true,
@@ -40,27 +50,11 @@ public class PartiQLTestsRunner implements Runnable {
 
     @CommandLine.Option(
             required = true,
-            description = {"The label for the base conformance report. Example: 'LEGACY', 'EVAL', etc."},
-            paramLabel = "<base_label>",
-            names = {"-bl", "--base-label"}
-    )
-    private String baseLabel;
-
-    @CommandLine.Option(
-            required = true,
             description = {"The tag for the base conformance report. Example: a commit id."},
             paramLabel = "<target_label>",
             names = {"-bt", "--base-tag"}
     )
     private String baseTag;
-
-    @CommandLine.Option(
-            required = true,
-            description = {"The label for the target conformance report. Example: 'LEGACY', 'EVAL', etc."},
-            paramLabel = "<target_label>",
-            names = {"-tl", "--target-label"}
-    )
-    private String targetLabel;
 
     @CommandLine.Option(
             required = true,
@@ -89,8 +83,8 @@ public class PartiQLTestsRunner implements Runnable {
 
     @Override
     public void run() {
-        Report baseReport = ConformanceComparisonKt.loadReportFile(baseReportFile, baseLabel, baseTag);
-        Report newReports = ConformanceComparisonKt.loadReportFile(targetReportFile, targetLabel, targetTag);
+        Report baseReport = ConformanceComparisonKt.loadReportFile(baseReportFile, dataSet, baseTag);
+        Report newReports = ConformanceComparisonKt.loadReportFile(targetReportFile, dataSet, targetTag);
         try {
             outputFile.createNewFile();
         } catch (IOException e) {

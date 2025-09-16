@@ -5,12 +5,13 @@ import com.amazon.ion.system.IonTextWriterBuilder
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestWatcher
+import org.partiql.runner.DataSet
 import java.io.File
 import java.nio.file.Files
 import kotlin.io.path.Path
 
 class ReportGenerator(
-    private val engine: String
+    private val dataSet: DataSet
 ) : TestWatcher, AfterAllCallback {
 
     private var failingTests = emptySet<String>()
@@ -34,7 +35,7 @@ class ReportGenerator(
 
     override fun afterAll(p0: ExtensionContext?) {
         val basePath = System.getenv("conformanceReportDir") ?: "."
-        val dir = Files.createDirectories(Path("$basePath/$engine")).toFile()
+        val dir = Files.createDirectories(Path("$basePath/${dataSet.toString().lowercase()}")).toFile()
         val file = File(dir, "conformance_test_results.ion")
         val outputStream = file.outputStream()
         val writer = IonTextWriterBuilder.pretty().build(outputStream)
