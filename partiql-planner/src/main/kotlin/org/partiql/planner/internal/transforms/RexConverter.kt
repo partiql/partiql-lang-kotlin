@@ -733,7 +733,9 @@ internal object RexConverter {
         private fun visitExprCallDateAddFunction(datetimeField: DatetimeField, node: ExprCall, context: Env): Rex {
             val type = (ANY)
             val intervalRex = visitExpr(node.args[0], context)
-            assert(intervalRex.op is Rex.Op.Lit) { "DATE_ADD function expects number as datetime field value here and should be Rex.Op.Lit type." }
+            assert(intervalRex.op is Rex.Op.Lit) {
+                "DATE_ADD function expects a numeric literal as the interval value (Rex.Op.Lit), but received ${intervalRex.op::class.simpleName}."
+            }
             val intervalDatum = IntervalUtils.convertArgToInterval(datetimeField, (intervalRex.op as Rex.Op.Lit).value)
             val interval = rex(CompilerType(intervalDatum.type), rexOpLit(intervalDatum))
             val datetime = visitExpr(node.args[1], context)

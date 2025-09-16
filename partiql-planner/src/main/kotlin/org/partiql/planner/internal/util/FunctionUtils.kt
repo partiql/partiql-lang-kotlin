@@ -19,7 +19,7 @@ internal object FunctionUtils {
     const val FN_CHAR_LENGTH: String = "char_length"
     const val FN_MODULO: String = "mod"
 
-    val DATE_ADD_FUNCTION_REGEX = "(?i)^\uFDEFdate_add_(year|month|day|hour|minute|second)$".toRegex()
+    val DATE_ADD_FUNCTION_REGEX = "(?i)^${SYSTEM_PREFIX_INTERNAL}date_add_(year|month|day|hour|minute|second)$".toRegex()
 
     // The following are hidden operators, unable to be invoked via PartiQL text.
     val OP_NOT: String = hide("not")
