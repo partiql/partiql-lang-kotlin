@@ -729,7 +729,7 @@ internal object RexConverter {
          * @param context The planning environment context
          * @return Rex node representing the equivalent plus operation, or falls back to unresolved call if invalid
          */
-        private fun visitExprCallDateAddFunction(datetimeField:DatetimeField, node: ExprCall, context: Env): Rex {
+        private fun visitExprCallDateAddFunction(datetimeField: DatetimeField, node: ExprCall, context: Env): Rex {
             val type = (ANY)
             val intervalRex = visitExpr(node.args[0], context)
             assert(intervalRex.op is Rex.Op.Lit) { "DATE_ADD function expects number as datetime field value here and should be Rex.Op.Lit type." }
