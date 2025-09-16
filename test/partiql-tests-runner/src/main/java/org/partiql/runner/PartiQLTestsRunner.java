@@ -15,6 +15,25 @@ public class PartiQLTestsRunner implements Runnable {
 
     @CommandLine.Option(
             required = true,
+            description = {"Title of comparison report. Example: 'CROSS-COMMIT', 'CROSS-ENGINE', etc"},
+            paramLabel = "<title>",
+            defaultValue = "CONFORMANCE REPORT",
+            names = {"-t", "--title"}
+    )
+    private String title;
+
+    @CommandLine.Option(
+            required = true,
+            description = {"DataSet Type. Example: 'PartiQLCore', 'PartiQLExtended'"},
+            paramLabel = "<dataset>",
+            defaultValue = "PartiQLCore",
+
+            names = {"-d", "--dataset"}
+    )
+    private DataSet dataSet;
+
+    @CommandLine.Option(
+            required = true,
             description = {"Path to base conformance report file."},
             paramLabel = "<base_report_file_path>",
             names = {"-bf", "--base-report-file"}
@@ -64,16 +83,14 @@ public class PartiQLTestsRunner implements Runnable {
 
     @Override
     public void run() {
-        for(DataSet dataSet : DataSet.getEntries()) {
-            Report baseReport = ConformanceComparisonKt.loadReportFile(baseReportFile, dataSet, baseTag);
-            Report newReports = ConformanceComparisonKt.loadReportFile(targetReportFile, dataSet, targetTag);
-            try {
-                outputFile.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            ConformanceComparisonKt.analyze(outputFile, Arrays.asList(baseReport, newReports), limit);
+        Report baseReport = ConformanceComparisonKt.loadReportFile(baseReportFile, dataSet, baseTag);
+        Report newReports = ConformanceComparisonKt.loadReportFile(targetReportFile, dataSet, targetTag);
+        try {
+            outputFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+        ConformanceComparisonKt.analyze(outputFile, Arrays.asList(baseReport, newReports), limit, title);
     }
 
     public static void main(String... args) {

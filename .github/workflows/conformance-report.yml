@@ -98,15 +98,29 @@ jobs:
         run: |
           mkdir -p $GITHUB_WORKSPACE/artifact
           cp -r $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH $GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_RELATIVE_PATH
-      - name: "Artifact CROSS-COMMIT Report (create comparison_report.md)"
+      - name: "Artifact CROSS-COMMIT-REPORT-PARTIQLCORE Report (creates comparison_report.md)"
         continue-on-error: true
         run: |
-          BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
+          T="CROSS-COMMIT-REPORT-PARTIQLCORE"
+          D="PartiQLCore"
+          BF="$GITHUB_WORKSPACE/artifact/partiqlcore/$CONFORMANCE_REPORT_NAME"
           BT="${{ github.event.pull_request.base.sha }}"
-          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/$CONFORMANCE_REPORT_NAME"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/partiqlcore/$CONFORMANCE_REPORT_NAME"
           TT="$GITHUB_SHA"
           O="$COMPARISON_REPORT_NAME"
-          ARGS="-bf $BF -bt $BT -tf $TF -tt $TT -o $O"
+          ARGS="-t $T -d $D -bf $BF -bt $BT -tf $TF -tt $TT -o $O"
+          gradle :test:partiql-tests-runner:run --args="$ARGS"
+      - name: "Artifact CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED Report (appends to comparison_report.md)"
+        continue-on-error: true
+        run: |
+          T="CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED"
+          D="PartiQLExtended"
+          BF="$GITHUB_WORKSPACE/artifact/partiqlextended/$CONFORMANCE_REPORT_NAME"
+          BT="${{ github.event.pull_request.base.sha }}"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/partiqlextended/$CONFORMANCE_REPORT_NAME"
+          TT="$GITHUB_SHA"
+          O="$COMPARISON_REPORT_NAME"
+          ARGS="-t $T -d $D -bf $BF -bt $BT -tf $TF -tt $TT -o $O"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Print conformance report to GitHub actions workflow summary page
       - name: Print markdown in run
@@ -118,16 +132,31 @@ jobs:
         with:
           name: conformance-analysis
           path: ${{ env.PATH_TO_TEST_RUNNER }}/comparison_report.md
-      - name: "Comment CROSS-COMMIT Report (create comparison_report_limited.md)"
+      - name: "Comment CROSS-COMMIT-REPORT-PARTIQLCORE Report (creates comparison_report_limited.md)"
         continue-on-error: true
         run: |
-          BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
+          T="CROSS-COMMIT-REPORT-PARTIQLCORE"
+          D="PartiQLCore"
+          BF="$GITHUB_WORKSPACE/artifact/partiqlcore/$CONFORMANCE_REPORT_NAME"
           BT="${{ github.event.pull_request.base.sha }}"
-          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/$CONFORMANCE_REPORT_NAME"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/partiqlcore/$CONFORMANCE_REPORT_NAME"
           TT="$GITHUB_SHA"
           O="$COMPARISON_REPORT_NAME_WITH_LIMIT"
           L="$COMMENT_SIZE_LIMIT"
-          ARGS="-bf $BF -bt $BT -tf $TF -tt $TT -o $O -l $L"
+          ARGS="-t $T -d $D -bf $BF -bt $BT -tf $TF -tt $TT -o $O -l $L"
+          gradle :test:partiql-tests-runner:run --args="$ARGS"
+      - name: "Comment CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED (appends to comparison_report_limited.md)"
+        continue-on-error: true
+        run: |
+          T="CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED"
+          D="PartiQLExtended"
+          BF="$GITHUB_WORKSPACE/artifact/partiqlextended/$CONFORMANCE_REPORT_NAME"
+          BT="${{ github.event.pull_request.base.sha }}"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/partiqlextended/$CONFORMANCE_REPORT_NAME"
+          TT="$GITHUB_SHA"
+          O="$COMPARISON_REPORT_NAME_WITH_LIMIT"
+          L="$COMMENT_SIZE_LIMIT"
+          ARGS="-t $T -d $D -bf $BF -bt $BT -tf $TF -tt $TT -o $O -l $L"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Find comment w/ conformance comparison if previous comment published
       - name: Find Comment
@@ -137,7 +166,7 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: CROSS-COMMIT-REPORT
+          body-includes: CROSS-ENGINE-REPORT
       # Create or update (if previous comment exists) with markdown version of comparison report
       - name: Create or update comment
         continue-on-error: true

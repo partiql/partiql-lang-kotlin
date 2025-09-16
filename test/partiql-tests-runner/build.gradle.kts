@@ -61,6 +61,7 @@ tasks.test {
 
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
     exclude("org/partiql/runner/ConformanceTestEval.class")
+    exclude("org/partiql/runner/ConformanceTestEvalExtended.class")
 }
 
 val createReportDir by tasks.registering {
@@ -76,4 +77,5 @@ val generateTestReport by tasks.registering(Test::class) {
     setEnvironmentDataDirectories(this)
     environment("conformanceReportDir", reportDir)
     include("org/partiql/runner/ConformanceTestEval.class")
+    include("org/partiql/runner/ConformanceTestEvalExtended.class")
 }

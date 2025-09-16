@@ -1,15 +1,13 @@
 package org.partiql.runner
 
 class ReportAnalyzer(
+    private val reportTitle: String,
     private val first: Report,
     private val second: Report
 ) {
     companion object {
-        private const val TITLE_FORMAT = "CROSS-COMMIT-REPORT-(%s DATA SET)"
-
-        fun build(first: Report, second: Report): ReportAnalyzer {
-            if (first.dataSet != second.dataSet) throw IllegalArgumentException("Data sets do not match")
-            return ReportAnalyzer(first, second)
+        fun build(title: String, first: Report, second: Report): ReportAnalyzer {
+            return ReportAnalyzer(title, first, second)
         }
 
         const val ICON_X = ":x:"
@@ -20,19 +18,19 @@ class ReportAnalyzer(
         const val TARGET = "TARGET"
     }
 
-    private val passingInBoth = first.testResult.passingSet.intersect(second.testResult.passingSet)
-    private val failingInBoth = first.testResult.failingSet.intersect(second.testResult.failingSet)
-    private val ignoredInBoth = first.testResult.ignoredSet.intersect(second.testResult.ignoredSet)
-    private val passingFirstFailingSecond = first.testResult.passingSet.intersect(second.testResult.failingSet)
-    private val passingFirstIgnoredSecond = first.testResult.passingSet.intersect(second.testResult.ignoredSet)
-    private val failureFirstPassingSecond = first.testResult.failingSet.intersect(second.testResult.passingSet)
-    private val ignoredFirstPassingSecond = first.testResult.ignoredSet.intersect(second.testResult.passingSet)
-    private val firstPassingSize = first.testResult.passingSet.size
-    private val firstFailingSize = first.testResult.failingSet.size
-    private val firstIgnoreSize = first.testResult.ignoredSet.size
-    private val secondPassingSize = second.testResult.passingSet.size
-    private val secondFailingSize = second.testResult.failingSet.size
-    private val secondIgnoreSize = second.testResult.ignoredSet.size
+    private val passingInBoth = first.passingSet.intersect(second.passingSet)
+    private val failingInBoth = first.failingSet.intersect(second.failingSet)
+    private val ignoredInBoth = first.ignoredSet.intersect(second.ignoredSet)
+    private val passingFirstFailingSecond = first.passingSet.intersect(second.failingSet)
+    private val passingFirstIgnoredSecond = first.passingSet.intersect(second.ignoredSet)
+    private val failureFirstPassingSecond = first.failingSet.intersect(second.passingSet)
+    private val ignoredFirstPassingSecond = first.ignoredSet.intersect(second.passingSet)
+    private val firstPassingSize = first.passingSet.size
+    private val firstFailingSize = first.failingSet.size
+    private val firstIgnoreSize = first.ignoredSet.size
+    private val secondPassingSize = second.passingSet.size
+    private val secondFailingSize = second.failingSet.size
+    private val secondIgnoreSize = second.ignoredSet.size
 
     private val firstTotalSize = firstPassingSize + firstFailingSize + firstIgnoreSize
     private val secondTotalSize = secondPassingSize + secondFailingSize + secondIgnoreSize
@@ -42,8 +40,6 @@ class ReportAnalyzer(
 
     private val firstNameShort = "$BASE (${first.commitIdShort.uppercase()})"
     private val secondNameShort = "$TARGET (${second.commitIdShort.uppercase()})"
-
-    private val reportTitle = TITLE_FORMAT.format(first.dataSet.dataSetName.uppercase())
 
     fun generateComparisonReport(limit: Int): String {
         return buildString {
@@ -105,6 +101,10 @@ class ReportAnalyzer(
     }
 
     private fun appendSummary(out: Appendable) {
+        out.appendMarkdown("## Testing Details")
+        out.appendLine("- **Base Commit**: ${first.commitId}")
+        out.appendLine("- **Target Commit**: ${second.commitId}")
+
         out.appendMarkdown("## Result Details")
         if (passingFirstFailingSecond.isNotEmpty() || passingFirstIgnoredSecond.isNotEmpty()) {
             out.appendLine("- **$ICON_X REGRESSION DETECTED. See *Now Failing/Ignored Tests*. $ICON_X**")
