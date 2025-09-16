@@ -104,6 +104,7 @@ jobs:
           T="CROSS-COMMIT-REPORT-PARTIQLCORE"
           D="PartiQLCore"
           BF="$GITHUB_WORKSPACE/artifact/partiqlcore/$CONFORMANCE_REPORT_NAME"
+          # Fall back for current PRs to find old reports
           if [ ! -f "$BF" ]; then
             BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
           fi
@@ -141,7 +142,8 @@ jobs:
         run: |
           T="CROSS-COMMIT-REPORT-PARTIQLCORE"
           D="PartiQLCore"
-          BF="$GITHUB_WORKSPACE/artifact/partiqlcore/$CONFORMANCE_REPORT_NAME"     
+          BF="$GITHUB_WORKSPACE/artifact/partiqlcore/$CONFORMANCE_REPORT_NAME"
+          # Fall back for current PRs to find old reports
           if [ ! -f "$BF" ]; then
             BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
           fi
