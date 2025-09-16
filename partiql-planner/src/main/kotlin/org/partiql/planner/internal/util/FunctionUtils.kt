@@ -20,12 +20,6 @@ internal object FunctionUtils {
     const val FN_MODULO: String = "mod"
 
     val DATE_ADD_FUNCTION_REGEX = "(?i)^\uFDEFdate_add_(year|month|day|hour|minute|second)$".toRegex()
-    val FN_DATE_ADD_DAY: String = hide("date_add_day")
-    val FN_DATE_ADD_HOUR: String = hide("date_add_hour")
-    val FN_DATE_ADD_MINUTE: String = hide("date_add_minute")
-    val FN_DATE_ADD_SECOND: String = hide("date_add_second")
-    val FN_DATE_ADD_YEAR: String = hide("date_add_year")
-    val FN_DATE_ADD_MONTH: String = hide("date_add_month")
 
     // The following are hidden operators, unable to be invoked via PartiQL text.
     val OP_NOT: String = hide("not")

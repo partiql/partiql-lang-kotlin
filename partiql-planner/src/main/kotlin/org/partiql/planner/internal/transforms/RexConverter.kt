@@ -725,6 +725,7 @@ internal object RexConverter {
          *
          * Transforms DATE_ADD(interval_Type, interval_value, datetime) into datetime + interval in planner
          *
+         * @param datetimeField The datetimeField for the DATE_ADD function call
          * @param node The ExprCall node representing the DATE_ADD function call
          * @param context The planning environment context
          * @return Rex node representing the equivalent plus operation, or falls back to unresolved call if invalid

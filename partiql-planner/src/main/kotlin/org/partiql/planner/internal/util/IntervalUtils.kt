@@ -36,7 +36,7 @@ internal object IntervalUtils {
      */
     internal fun convertArgToInterval(field: DatetimeField, interval: Datum): Datum {
         val intervalValue = when (interval.type.code()) {
-            PType.UNKNOWN -> return interval // Return unknown directly, as we cannot convert it to an interval
+            PType.UNKNOWN -> return interval // Return unknown directly, it will be handled by plus function later.
             PType.INTEGER -> interval.int
             PType.BIGINT -> {
                 val value = interval.long
@@ -46,7 +46,7 @@ internal object IntervalUtils {
                     error("The interval value [$value] is out of the allowed range: [${Int.MIN_VALUE}..${Int.MAX_VALUE}]")
                 }
             }
-            else -> error("Unexpected interval type: $interval")
+            else -> error("Unexpected interval type: ${interval.type}")
         }
 
         return when (field.code()) {
