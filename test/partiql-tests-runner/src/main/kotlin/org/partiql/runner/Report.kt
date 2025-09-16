@@ -1,7 +1,7 @@
 package org.partiql.runner
 
 data class Report(
-    val engine: String,
+    val dataSet: DataSet,
     val commitId: String,
     val passingSet: Set<String>,
     val failingSet: Set<String>,
@@ -9,4 +9,9 @@ data class Report(
 ) {
     // The short hash
     val commitIdShort = commitId.substring(0..6)
+}
+
+enum class DataSet {
+    PartiQLCore,
+    PartiQLExtended
 }
