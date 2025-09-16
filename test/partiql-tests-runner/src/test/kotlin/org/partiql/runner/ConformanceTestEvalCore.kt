@@ -14,7 +14,7 @@ import org.partiql.spi.value.Datum
 
 /**
  * Conformance test suite for PartiQL Core dataset using the evaluation engine.
- * 
+ *
  * This class runs the core PartiQL conformance tests against the Kotlin evaluation engine
  * to ensure compliance with the PartiQL specification. It includes both evaluation tests
  * and equivalence tests with configurable skip lists for known issues.
