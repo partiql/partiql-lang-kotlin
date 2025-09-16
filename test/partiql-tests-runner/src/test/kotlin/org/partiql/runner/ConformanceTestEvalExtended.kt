@@ -12,6 +12,13 @@ import org.partiql.runner.test.TestProvider
 import org.partiql.runner.test.TestRunner
 import org.partiql.spi.value.Datum
 
+/**
+ * Conformance test suite for PartiQL Extended dataset using the evaluation engine.
+ * 
+ * This class runs the extended PartiQL conformance tests against the Kotlin evaluation engine.
+ * The extended dataset includes additional test cases beyond the PartiQL specification.
+ *
+ */
 class ConformanceTestEvalExtended : ConformanceTestBase<Statement, Datum>() {
     companion object {
         @JvmStatic

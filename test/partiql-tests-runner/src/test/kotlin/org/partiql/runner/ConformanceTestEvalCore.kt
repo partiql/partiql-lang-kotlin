@@ -12,7 +12,14 @@ import org.partiql.runner.test.TestProvider
 import org.partiql.runner.test.TestRunner
 import org.partiql.spi.value.Datum
 
-class ConformanceTestEval : ConformanceTestBase<Statement, Datum>() {
+/**
+ * Conformance test suite for PartiQL Core dataset using the evaluation engine.
+ * 
+ * This class runs the core PartiQL conformance tests against the Kotlin evaluation engine
+ * to ensure compliance with the PartiQL specification. It includes both evaluation tests
+ * and equivalence tests with configurable skip lists for known issues.
+ */
+class ConformanceTestEvalCore : ConformanceTestBase<Statement, Datum>() {
     companion object {
         @JvmStatic
         @RegisterExtension
@@ -22,8 +29,8 @@ class ConformanceTestEval : ConformanceTestBase<Statement, Datum>() {
     private val factory = EvalExecutor.Factory
     override val runner = TestRunner(factory)
 
-    private val skipListForEvaluation: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval.txt")
-    private val skipListForEquivalence: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval-equiv.txt")
+    private val skipListForEvaluation: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval-core.txt")
+    private val skipListForEquivalence: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval-equiv-core.txt")
 
     /**
      * Tests the eval tests with the Kotlin implementation
