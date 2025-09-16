@@ -493,14 +493,10 @@ internal object RelConverter {
                     if (it.asAlias == null) {
                         error("not normalized, group key $it missing unique name")
                     }
-                    // Extract original column name
-                    val originalName = extractColumnName(it.expr)
-                    // Always use tableQualifier for GROUP BY columns to preserve table alias
-                    val qualifier = tableQualifier
                     val binding = relBinding(
-                        name = originalName ?: it.asAlias!!.text,
+                        name = it.asAlias!!.text,
                         type = (ANY),
-                        qualifier = qualifier
+                        qualifier = tableQualifier
                     )
                     schema.add(binding)
                     it.expr.toRex(env)
@@ -807,26 +803,6 @@ internal object RelConverter {
      */
     private fun inferTableQualifierFromInput(input: Rel): String? {
         return input.type.schema.firstOrNull()?.name
-    }
-
-    /**
-     * Extract the final column name from a qualified expression
-     */
-    private fun extractColumnName(expr: Expr): String? {
-        return when (expr) {
-            is ExprVarRef -> {
-                expr.identifier.identifier.text
-            }
-            is ExprPath -> {
-                expr.steps.lastOrNull()?.let { step ->
-                    when (step) {
-                        is PathStep.Field -> step.field.text
-                        else -> null
-                    }
-                }
-            }
-            else -> null
-        }
     }
 
     /**
