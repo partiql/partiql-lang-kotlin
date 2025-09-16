@@ -116,7 +116,6 @@ internal object RexConverter {
     private const val UNSPECIFIED_PRECISION = "UNSPECIFIED_PRECISION"
     private const val UNSPECIFIED_SCALE = "UNSPECIFIED_SCALE"
     private const val UNSPECIFIED_FRACTIONAL_PRECISION = "UNSPECIFIED_FRACTIONAL_PRECISION"
-    private val DATE_ADD_FUNCTION_REGEX = "(?i)date_add_(year|month|day|hour|minute|second)$".toRegex()
 
     private fun PType.setUnspecifiedLengthMeta() {
         this.metas[UNSPECIFIED_LENGTH] = true
@@ -639,8 +638,10 @@ internal object RexConverter {
                 return visitExprCallExists(node, context)
             }
 
-            if (isDateAddFunction(id)) {
-                return visitExprCallDateAddFunction(id, node, context)
+            val matchResult = FunctionUtils.DATE_ADD_FUNCTION_REGEX.find(id.getIdentifier().getText())
+            if (matchResult != null) {
+                val datetimeField = DatetimeField.parse(matchResult.groups[1]!!.value.uppercase())
+                return visitExprCallDateAddFunction(datetimeField, node, context)
             }
 
             // Args
@@ -719,17 +720,6 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        private fun isDateAddFunction(id: Identifier): Boolean {
-            return listOf(
-                FunctionUtils.FN_DATE_ADD_DAY,
-                FunctionUtils.FN_DATE_ADD_HOUR,
-                FunctionUtils.FN_DATE_ADD_MINUTE,
-                FunctionUtils.FN_DATE_ADD_SECOND,
-                FunctionUtils.FN_DATE_ADD_YEAR,
-                FunctionUtils.FN_DATE_ADD_MONTH
-            ).any { id.matches(it, ignoreCase = true) }
-        }
-
         /**
          * Converts DATE_ADD_* function calls to plus operations with intervals.
          *
@@ -739,13 +729,10 @@ internal object RexConverter {
          * @param context The planning environment context
          * @return Rex node representing the equivalent plus operation, or falls back to unresolved call if invalid
          */
-        private fun visitExprCallDateAddFunction(id: Identifier, node: ExprCall, context: Env): Rex {
-            val datetimeFieldStr = DATE_ADD_FUNCTION_REGEX.find(id.getIdentifier().getText())!!.groups[1]!!.value
-            val datetimeField = DatetimeField.parse(datetimeFieldStr.uppercase())
-
+        private fun visitExprCallDateAddFunction(datetimeField:DatetimeField, node: ExprCall, context: Env): Rex {
             val type = (ANY)
             val intervalRex = visitExpr(node.args[0], context)
-            assert(intervalRex.op is Rex.Op.Lit) { "Rex.Op.Lit is expected in order to retrieve its Datum value" }
+            assert(intervalRex.op is Rex.Op.Lit) { "DATE_ADD function expects number as datetime field value here and should be Rex.Op.Lit type." }
             val intervalDatum = IntervalUtils.convertArgToInterval(datetimeField, (intervalRex.op as Rex.Op.Lit).value)
             val interval = rex(CompilerType(intervalDatum.type), rexOpLit(intervalDatum))
             val datetime = visitExpr(node.args[1], context)

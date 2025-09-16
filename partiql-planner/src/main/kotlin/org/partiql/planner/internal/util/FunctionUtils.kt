@@ -19,6 +19,7 @@ internal object FunctionUtils {
     const val FN_CHAR_LENGTH: String = "char_length"
     const val FN_MODULO: String = "mod"
 
+    val DATE_ADD_FUNCTION_REGEX = "(?i)^\uFDEFdate_add_(year|month|day|hour|minute|second)$".toRegex()
     val FN_DATE_ADD_DAY: String = hide("date_add_day")
     val FN_DATE_ADD_HOUR: String = hide("date_add_hour")
     val FN_DATE_ADD_MINUTE: String = hide("date_add_minute")
