@@ -104,6 +104,10 @@ jobs:
           T="CROSS-COMMIT-REPORT-PARTIQLCORE"
           D="PartiQLCore"
           BF="$GITHUB_WORKSPACE/artifact/partiqlcore/$CONFORMANCE_REPORT_NAME"
+          if [ ! -f "$BF" ]; then
+            BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
+          fi
+          
           BT="${{ github.event.pull_request.base.sha }}"
           TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/partiqlcore/$CONFORMANCE_REPORT_NAME"
           TT="$GITHUB_SHA"
@@ -116,6 +120,10 @@ jobs:
           T="CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED"
           D="PartiQLExtended"
           BF="$GITHUB_WORKSPACE/artifact/partiqlextended/$CONFORMANCE_REPORT_NAME"
+          if [ ! -f "$BF" ]; then
+            BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
+          fi
+          
           BT="${{ github.event.pull_request.base.sha }}"
           TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/partiqlextended/$CONFORMANCE_REPORT_NAME"
           TT="$GITHUB_SHA"
@@ -137,7 +145,11 @@ jobs:
         run: |
           T="CROSS-COMMIT-REPORT-PARTIQLCORE"
           D="PartiQLCore"
-          BF="$GITHUB_WORKSPACE/artifact/partiqlcore/$CONFORMANCE_REPORT_NAME"
+          BF="$GITHUB_WORKSPACE/artifact/partiqlcore/$CONFORMANCE_REPORT_NAME"     
+          if [ ! -f "$BF" ]; then
+            BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
+          fi
+          
           BT="${{ github.event.pull_request.base.sha }}"
           TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/partiqlcore/$CONFORMANCE_REPORT_NAME"
           TT="$GITHUB_SHA"
@@ -151,6 +163,10 @@ jobs:
           T="CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED"
           D="PartiQLExtended"
           BF="$GITHUB_WORKSPACE/artifact/partiqlextended/$CONFORMANCE_REPORT_NAME"
+          if [ ! -f "$BF" ]; then
+            BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
+          fi
+          
           BT="${{ github.event.pull_request.base.sha }}"
           TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/partiqlextended/$CONFORMANCE_REPORT_NAME"
           TT="$GITHUB_SHA"
