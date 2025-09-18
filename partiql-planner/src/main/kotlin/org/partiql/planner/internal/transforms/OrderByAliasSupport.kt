@@ -19,15 +19,11 @@ import org.partiql.ast.Ast.orderBy
 import org.partiql.ast.Ast.sort
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
-import org.partiql.ast.GroupBy
 import org.partiql.ast.OrderBy
-import org.partiql.ast.Query
-import org.partiql.ast.QueryBody
-import org.partiql.ast.SelectList
-import org.partiql.ast.SelectStar
-import org.partiql.ast.SelectValue
+import org.partiql.ast.SelectItem
 import org.partiql.ast.Statement
 import org.partiql.ast.expr.Expr
+import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprVarRef
 
 /**
@@ -39,35 +35,49 @@ internal object OrderByAliasSupport : AstPass {
         return Visitor.visitStatement(statement, ArrayDeque()) as Statement
     }
 
-    fun resolveAliases(expr: Expr, ctx: MutableMap<String, Expr>): Expr {
-        return expr
-    }
-
     private object Visitor : AstRewriter<ArrayDeque<MutableMap<String, Expr>>>() {
-        override fun visitQuery(node: Query, ctx: ArrayDeque<MutableMap<String, Expr>>): AstNode {
+
+        override fun visitExprQuerySet(node: ExprQuerySet, ctx: ArrayDeque<MutableMap<String, Expr>>): AstNode {
             ctx.addLast(mutableMapOf())
-            super.visitQuery(node, ctx)
+            val transformed = super.visitExprQuerySet(node, ctx)
             ctx.removeLast()
-
-            return node
+            return transformed
         }
 
-        override fun visitSelectList(node: SelectList, ctx: ArrayDeque<MutableMap<String, Expr>>): SelectList {
-            super.visitSelectList(node, ctx)
-
-
-            return node
-        }
-
-        override fun visitGroupBy(node: GroupBy, ctx: ArrayDeque<MutableMap<String, Expr>>): AstNode {
-            super.visitGroupBy(node, ctx)
-            return node
+        override fun visitSelectItem(node: SelectItem, ctx: ArrayDeque<MutableMap<String, Expr>>): AstNode {
+            if (node is SelectItem.Expr && node.asAlias != null) {
+                ctx.last().put(node.asAlias!!.text, node.expr)
+            }
+            return super.visitSelectItem(node, ctx) ?: node
         }
 
         override fun visitOrderBy(node: OrderBy, ctx: ArrayDeque<MutableMap<String, Expr>>): AstNode {
-            super.visitOrderBy(node, ctx)
+            val aliasMap = ctx.last()
+            if (aliasMap.isEmpty()) return node
 
-            return node
+            val transformedSorts = node.sorts.map { sort ->
+                val transformedExpr = resolveExpr(sort.expr, aliasMap)
+                if (transformedExpr != sort.expr) {
+                    sort(
+                        expr = transformedExpr,
+                        order = sort.order,
+                        nulls = sort.nulls
+                    )
+                } else {
+                    sort
+                }
+            }
+            return orderBy(transformedSorts)
+        }
+
+        private fun resolveExpr(expr: Expr, aliasMap: MutableMap<String, Expr>): Expr {
+            return when (expr) {
+                is ExprVarRef -> {
+                    val aliasName = expr.identifier.identifier.text
+                    aliasMap[aliasName] ?: expr
+                }
+                else -> expr
+            }
         }
     }
 }

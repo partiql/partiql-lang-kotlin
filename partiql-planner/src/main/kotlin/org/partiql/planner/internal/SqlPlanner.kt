@@ -10,6 +10,7 @@ import org.partiql.planner.PartiQLPlannerPass
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.NormalizeFromSource
 import org.partiql.planner.internal.transforms.NormalizeGroupBy
+import org.partiql.planner.internal.transforms.OrderByAliasSupport
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
 import org.partiql.spi.Context
@@ -69,6 +70,7 @@ internal class SqlPlanner(
         var ast = this
         ast = NormalizeFromSource.apply(ast)
         ast = NormalizeGroupBy.apply(ast)
+        ast = OrderByAliasSupport.apply(ast)
         return ast
     }
 
