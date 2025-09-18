@@ -51,6 +51,7 @@ internal class ScopeTest {
                     relBinding("x", struct("Y" to PType.bool().toCType(), open = false), null), // We currently don't allow for partial schema structs
                     relBinding("y", struct(open = true), null),
                     relBinding("T", struct("x" to PType.bool().toCType(), "x" to PType.bool().toCType()), null),
+                    relBinding("s", struct("k" to PType.bool().toCType()), "Q"),
                 ),
                 outer = emptyList()
             )
@@ -83,7 +84,12 @@ internal class ScopeTest {
             """ "Y" """ to 3,
 
             // other
-            """ T.x """ to 5
+            """ T.x """ to 5,
+
+            // qualified searching
+            """ s """ to 6,
+            """ Q.s """ to 6,
+            """ "q".s """ to null
         )
     }
 

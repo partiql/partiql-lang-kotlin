@@ -807,32 +807,29 @@ internal object RelConverter {
 
     /**
      * Extract the qualifier (except for the final column) from a qualified expression
+     * 
+     * Examples:
+     * - `t.c` -> "t"
+     * - `t.c1.c2` -> "t.c1"
+     * - `t` -> null (no qualifier)
      */
     private fun extractQualifier(expr: Expr): String? {
         return when (expr) {
             is ExprVarRef -> {
-                if (expr.identifier.hasQualifier()) {
-                    expr.identifier.qualifier.joinToString(".") { it.text }
-                } else {
-                    null
-                }
+                expr.identifier.qualifier.takeIf { expr.identifier.hasQualifier() }
+                    ?.joinToString(".") { it.text }
             }
             is ExprPath -> {
-                val rootName = when (val root = expr.root) {
-                    is ExprVarRef -> root.identifier.identifier.text
-                    else -> null
+                val parts = mutableListOf<String>()
+                when (val root = expr.root) {
+                    is ExprVarRef -> parts.add(root.identifier.identifier.text)
                 }
-                val pathSteps = expr.steps.dropLast(1).mapNotNull { step ->
+                expr.steps.dropLast(1).forEach { step ->
                     when (step) {
-                        is PathStep.Field -> step.field.text
-                        else -> null
+                        is PathStep.Field -> parts.add(step.field.text)
                     }
                 }
-                when {
-                    rootName != null && pathSteps.isNotEmpty() -> "$rootName.${pathSteps.joinToString(".")}"
-                    rootName != null -> rootName
-                    else -> null
-                }
+                parts.takeIf { it.isNotEmpty() }?.joinToString(".")
             }
             else -> null
         }

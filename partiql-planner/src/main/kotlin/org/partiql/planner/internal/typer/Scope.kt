@@ -37,19 +37,12 @@ internal data class Scope(
         val path = identifier.toList()
         val head = path.first()
         val tail = path.drop(1)
-        // Try qualified match first if we have multiple parts
-        if (path.size >= 2) {
-            val qualifiedMatch = matchQualified(identifier)
-            if (qualifiedMatch != null) {
-                return qualifiedMatch
-            }
-        }
-        // Try exact match
-        val r = matchRoot(head)
-        if (r != null) {
+        // Try exact match first
+        matchRoot(head)?.let { r ->
             return if (tail.isEmpty()) r else r.toPath(tail)
         }
-        return null
+        // Try qualified match only if exact match fails and we have multiple parts
+        return if (path.size >= 2) matchQualified(identifier) else null
     }
 
     /**
@@ -77,22 +70,23 @@ internal data class Scope(
      */
     private fun matchQualified(identifier: Identifier, depth: Int = 0): Rex? {
         val path = identifier.toList()
-        val qualifier = path.dropLast(1).joinToString(".") { it.getText() }
-        val bindingName = path.last().getText()
+        val qualifierParts = path.dropLast(1)
+        val bindingName = path.last()
         for (i in schema.indices) {
             val local = schema[i]
             val type = local.type
-            if (local.qualifier != null &&
-                local.qualifier.equals(qualifier, ignoreCase = true) &&
-                local.name.equals(bindingName, ignoreCase = true)
-            ) {
-                return rex(type, rexOpVarLocal(depth, i))
+            if (local.qualifier != null && bindingName.matches(local.name)) {
+                val localQualifierParts = local.qualifier.split(".")
+                if (qualifierParts.size == localQualifierParts.size &&
+                    qualifierParts.zip(localQualifierParts).all { (identPart, localPart) ->
+                        identPart.getText().equals(localPart, ignoreCase = identPart.isRegular())
+                    }
+                ) {
+                    return rex(type, rexOpVarLocal(depth, i))
+                }
             }
         }
-        if (outer.isNotEmpty()) {
-            return outer.last().matchQualified(identifier, depth + 1)
-        }
-        return null
+        return outer.takeIf { it.isNotEmpty() }?.last()?.matchQualified(identifier, depth + 1)
     }
 
     /**
