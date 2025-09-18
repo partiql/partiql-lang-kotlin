@@ -807,7 +807,7 @@ internal object RelConverter {
 
     /**
      * Extract the qualifier (except for the final column) from a qualified expression
-     * 
+     *
      * Examples:
      * - `t.c` -> "t"
      * - `t.c1.c2` -> "t.c1"
