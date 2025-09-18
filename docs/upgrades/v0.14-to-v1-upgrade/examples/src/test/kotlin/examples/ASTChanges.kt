@@ -16,6 +16,7 @@ import org.partiql.ast.identifierSymbol
 import org.partiql.ast.selectProject
 import org.partiql.ast.selectProjectItemExpression
 import org.partiql.ast.statementQuery
+import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.parser.PartiQLParser
 import org.partiql.value.PartiQLValueExperimental
@@ -24,6 +25,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ASTChanges {
+    // Simple helper for these examples to parse a single, valid query
+    fun parseSingleQuery(query: String): AstNode {
+        return PartiQLParser.default().parse(query).root
+    }
+
     @OptIn(PartiQLValueExperimental::class)
     @Test
     fun `modeling of select-from-where queries using classes`() {
@@ -83,8 +89,8 @@ class ASTChanges {
                 offset = null
             )
         )
-        val parsedQuery = PartiQLParser.default().parse("SELECT a FROM tbl WHERE d = 'foo'")
-        assertEquals(ast, parsedQuery.root)
+        val parsedQuery = parseSingleQuery("SELECT a FROM tbl WHERE d = 'foo'")
+        assertEquals(ast, parsedQuery)
     }
 
     @OptIn(PartiQLValueExperimental::class)
@@ -145,8 +151,8 @@ class ASTChanges {
                 offset = null
             )
         )
-        val parsedQuery = PartiQLParser.default().parse("SELECT a FROM tbl WHERE d = 'foo'")
-        assertEquals(ast, parsedQuery.root)
+        val parsedQuery = parseSingleQuery("SELECT a FROM tbl WHERE d = 'foo'")
+        assertEquals(ast, parsedQuery)
     }
 
     @Test
@@ -184,8 +190,45 @@ class ASTChanges {
                 return super.visitExprLit(node, ctx)
             }
         }
-        val ast = PartiQLParser.default().parse("1 + 2 + 3")
-        val numLits = countExprLitVisitor.visit(ast.root, Unit)
+        val ast = parseSingleQuery("1 + 2 + 3")
+        val numLits = countExprLitVisitor.visit(ast, Unit)
         assertEquals(numLits, 3)
+    }
+
+    @Test
+    fun `AST rewriter`() {
+        // A simple rewriter to demonstrate the `AstRewriter` API.
+        // This rewriter adds an alias to any variable references in the projection that was missing an explicit
+        // alias.
+        val projectionAliasRewriter = object : AstRewriter<Unit>() {
+            // Infers the alias based on the last referenced identifier in the `Identifier`
+            private fun lastPart(id: Identifier): Identifier.Symbol {
+                return when (id) {
+                    is Identifier.Symbol -> return id
+                    is Identifier.Qualified -> if (id.steps.isEmpty()) {
+                        id.root
+                    } else {
+                        id.steps.last()
+                    }
+                }
+            }
+
+            // Apply this rewrite to just project items
+            override fun visitSelectProjectItem(node: Select.Project.Item, ctx: Unit): AstNode {
+                val newNode = if (node is Select.Project.Item.Expression && node.asAlias == null) {
+                    when (val expr = node.expr) {
+                        is Expr.Var -> node.copy(asAlias = lastPart(expr.identifier))
+                        else -> node
+                    }
+                } else {
+                    node
+                }
+                return super.visitSelectProjectItem(newNode, ctx)
+            }
+        }
+        val ast = parseSingleQuery("SELECT a, b FROM tbl")
+        val astWithExplicitAliases = parseSingleQuery("SELECT a AS a, b AS b FROM tbl")
+        // AST with the explicit aliases should be the same as after performing the rewrite
+        assertEquals(astWithExplicitAliases, projectionAliasRewriter.visit(ast, Unit))
     }
 }
