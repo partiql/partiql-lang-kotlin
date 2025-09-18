@@ -197,7 +197,8 @@ class ASTChanges {
 
     @Test
     fun `AST rewriter`() {
-        // A simple rewriter to demonstrate the `AstRewriter` API.
+        // A simple rewriter to demonstrate the `AstRewriter` API, which extends the `AstBaseVisitor` to return
+        // `AstNode`s for each visitor function.
         // This rewriter adds an alias to any variable references in the projection that was missing an explicit
         // alias.
         val projectionAliasRewriter = object : AstRewriter<Unit>() {
