@@ -92,6 +92,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.util.BinderUtils.toBinder
+import org.partiql.spi.catalog.Identifier.Simple
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -489,7 +490,7 @@ internal object RelConverter {
             }
             var groups = emptyList<Rex>()
             if (groupBy != null) {
-                groups = groupBy.keys.map {
+                groups = groupBy.keys.map { it ->
                     if (it.asAlias == null) {
                         error("not normalized, group key $it missing unique name")
                     }
@@ -801,35 +802,35 @@ internal object RelConverter {
     /**
      * Infer table qualifier (alias from FROM clause) from input schema
      */
-    private fun inferTableQualifierFromInput(input: Rel): String? {
-        return input.type.schema.firstOrNull()?.name
+    private fun inferTableQualifierFromInput(input: Rel): List<Simple>? {
+        return input.type.schema.firstOrNull()?.name?.let { listOf(Simple.regular(it)) }
     }
 
     /**
      * Extract the qualifier (except for the final column) from a qualified expression
      *
      * Examples:
-     * - `t.c` -> "t"
-     * - `t.c1.c2` -> "t.c1"
+     * - `t.c` -> ["t"]
+     * - `t.c1.c2` -> ["t", "c1"]
      * - `t` -> null (no qualifier)
      */
-    private fun extractQualifier(expr: Expr): String? {
+    private fun extractQualifier(expr: Expr): List<Simple>? {
         return when (expr) {
             is ExprVarRef -> {
                 expr.identifier.qualifier.takeIf { expr.identifier.hasQualifier() }
-                    ?.joinToString(".") { it.text }
+                    ?.map { Simple.regular(it.text) }
             }
             is ExprPath -> {
-                val parts = mutableListOf<String>()
+                val parts = mutableListOf<Simple>()
                 when (val root = expr.root) {
-                    is ExprVarRef -> parts.add(root.identifier.identifier.text)
+                    is ExprVarRef -> parts.add(Simple.regular(root.identifier.identifier.text))
                 }
                 expr.steps.dropLast(1).forEach { step ->
                     when (step) {
-                        is PathStep.Field -> parts.add(step.field.text)
+                        is PathStep.Field -> parts.add(Simple.regular(step.field.text))
                     }
                 }
-                parts.takeIf { it.isNotEmpty() }?.joinToString(".")
+                parts.takeIf { it.isNotEmpty() }
             }
             else -> null
         }

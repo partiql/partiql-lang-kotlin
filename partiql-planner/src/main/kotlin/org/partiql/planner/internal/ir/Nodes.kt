@@ -1359,7 +1359,7 @@ internal data class Rel(
     internal data class Binding(
         @JvmField internal val name: String,
         @JvmField internal val type: CompilerType,
-        @JvmField internal val qualifier: String? = null,
+        @JvmField internal val qualifier: List<Identifier.Simple>? = null,
     ) : PlanNode() {
         public override val children: List<PlanNode> = emptyList()
 

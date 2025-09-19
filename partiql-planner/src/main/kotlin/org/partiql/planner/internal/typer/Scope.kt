@@ -75,16 +75,14 @@ internal data class Scope(
         for (i in schema.indices) {
             val local = schema[i]
             val type = local.type
-            if (local.qualifier != null && bindingName.matches(local.name)) {
-                val localQualifierParts = local.qualifier.split(".")
-                if (qualifierParts.size == localQualifierParts.size &&
-                    qualifierParts.zip(localQualifierParts).all { (identPart, localPart) ->
-                        identPart.getText().equals(localPart, ignoreCase = identPart.isRegular())
-                    }
-                ) {
-                    return rex(type, rexOpVarLocal(depth, i))
-                }
-            }
+            if (local.qualifier == null) continue
+            if (!bindingName.matches(local.name)) continue
+            val localQualifierParts = local.qualifier
+            if (qualifierParts.size != localQualifierParts.size) continue
+            if (!qualifierParts.zip(localQualifierParts).all { (identPart, localPart) ->
+                identPart.matches(localPart.getText())
+            }) continue
+            return rex(type, rexOpVarLocal(depth, i))
         }
         return outer.takeIf { it.isNotEmpty() }?.last()?.matchQualified(identifier, depth + 1)
     }

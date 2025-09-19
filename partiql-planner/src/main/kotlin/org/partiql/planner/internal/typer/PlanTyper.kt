@@ -638,7 +638,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 val inScopeVariables = typeEnv.locals.schema.map {
                     when (it.qualifier) {
                         null -> it.name
-                        else -> "${it.qualifier}.${it.name}"
+                        else -> "${it.qualifier.joinToString(".") { q -> q.getText() }}.${it.name}"
                     }
                 }.toSet()
                 val problem = PErrors.varRefNotFound(null, node.identifier, inScopeVariables.toList())
