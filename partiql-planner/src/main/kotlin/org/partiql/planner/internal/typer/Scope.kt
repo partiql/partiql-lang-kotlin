@@ -81,7 +81,8 @@ internal data class Scope(
             if (qualifierParts.size != localQualifierParts.size) continue
             if (!qualifierParts.zip(localQualifierParts).all { (identPart, localPart) ->
                 identPart.matches(localPart.getText())
-            }) continue
+            }
+            ) continue
             return rex(type, rexOpVarLocal(depth, i))
         }
         return outer.takeIf { it.isNotEmpty() }?.last()?.matchQualified(identifier, depth + 1)
