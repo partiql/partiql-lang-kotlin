@@ -635,7 +635,12 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             }
             val resolvedVar = typeEnv.resolve(node.identifier, strategy)
             if (resolvedVar == null) {
-                val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
+                val inScopeVariables = typeEnv.locals.schema.map {
+                    when (it.qualifier) {
+                        null -> it.name
+                        else -> "${it.qualifier.joinToString(".") { q -> q.getText() }}.${it.name}"
+                    }
+                }.toSet()
                 val problem = PErrors.varRefNotFound(null, node.identifier, inScopeVariables.toList())
                 return errorRexAndReport(_listener, problem, PType.unknown())
             }

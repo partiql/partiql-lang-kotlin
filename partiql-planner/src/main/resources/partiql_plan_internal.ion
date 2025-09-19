@@ -1,6 +1,7 @@
 imports::{
   kotlin: [
     identifier::'org.partiql.spi.catalog.Identifier',
+    identifier_simple::'org.partiql.spi.catalog.Identifier.Simple',
     name::'org.partiql.spi.catalog.Name',
     partiql_value::'org.partiql.spi.value.Datum',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
@@ -385,6 +386,7 @@ rel::{
     binding::{
       name: string,
       type: static_type,
+      qualifier: optional::list::[identifier_simple],
     },
   ]
 }

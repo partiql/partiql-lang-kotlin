@@ -593,7 +593,8 @@ internal object RexConverter {
             val schema = listOf(
                 relBinding(
                     name = "_v$index", // fresh variable
-                    type = path.type
+                    type = path.type,
+                    qualifier = null
                 )
             )
             val props = emptySet<Rel.Prop>()
@@ -610,11 +611,13 @@ internal object RexConverter {
             val schema = listOf(
                 relBinding(
                     name = "_k$index", // fresh variable
-                    type = STRING
+                    type = STRING,
+                    qualifier = null
                 ),
                 relBinding(
                     name = "_v$index", // fresh variable
-                    type = path.type
+                    type = path.type,
+                    qualifier = null
                 )
             )
             val props = emptySet<Rel.Prop>()

@@ -63,6 +63,7 @@ rewritten to their query representation
 - Return `missing` instead of `null` for `NULLIF(MISSING, MISSING)`
 - CLI printing of mixed sign literals
 - Parsing of `TIMESTAMP` and `TIME` literals with timezone offsets
+- Variable resolution for qualified references with `GROUP BY`
 
 ### Removed
 

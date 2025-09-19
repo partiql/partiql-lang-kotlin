@@ -48,7 +48,10 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
+import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
+import org.partiql.ast.expr.ExprVarRef
+import org.partiql.ast.expr.PathStep
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.ir.Rel
@@ -89,6 +92,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.util.BinderUtils.toBinder
+import org.partiql.spi.catalog.Identifier.Simple
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -253,7 +257,7 @@ internal object RelConverter {
         override fun visitSelectValue(node: SelectValue, input: Rel): Rel {
             val name = node.constructor.toBinder(1).text
             val rex = RexConverter.apply(node.constructor, env)
-            val schema = listOf(relBinding(name, rex.type))
+            val schema = listOf(relBinding(name, rex.type, null))
             val props = input.type.props
             val type = relType(schema, props)
             val op = relOpProject(input, projections = listOf(rex))
@@ -279,7 +283,8 @@ internal object RelConverter {
                 null -> error("AST not normalized, missing AS alias on $node")
                 else -> relBinding(
                     name = a.text,
-                    type = rex.type
+                    type = rex.type,
+                    qualifier = null
                 )
             }
             return when (node.fromType.code()) {
@@ -289,7 +294,8 @@ internal object RelConverter {
                         else -> {
                             val index = relBinding(
                                 name = i.text,
-                                type = (INT)
+                                type = (INT),
+                                qualifier = null
                             )
                             convertScanIndexed(rex, binding, index)
                         }
@@ -300,7 +306,8 @@ internal object RelConverter {
                         null -> error("AST not normalized, missing AT alias on UNPIVOT $node")
                         else -> relBinding(
                             name = at.text,
-                            type = (STRING)
+                            type = (STRING),
+                            qualifier = null
                         )
                     }
                     convertUnpivot(rex, k = atAlias, v = binding)
@@ -382,14 +389,14 @@ internal object RelConverter {
                 else -> a.text
             }
             val rex = RexConverter.apply(item.expr, env)
-            val binding = relBinding(name, rex.type)
+            val binding = relBinding(name, rex.type, null)
             return binding to rex
         }
 
         private fun convertLetBinding(binding: Binding): Pair<Rel.Binding, Rex> {
             val name = binding.asAlias.text
             val rex = RexConverter.apply(binding.expr, env)
-            val newBinding = relBinding(name, rex.type)
+            val newBinding = relBinding(name, rex.type, null)
             return newBinding to rex
         }
 
@@ -431,10 +438,14 @@ internal object RelConverter {
 
             // Build the rel operator
             var strategy = Rel.Op.Aggregate.Strategy.FULL
+            // Extract table qualifier from GROUP BY expressions or infer from FROM clause
+            val tableQualifier = groupBy?.keys?.firstOrNull()?.let { extractQualifier(it.expr) }
+                ?: inferTableQualifierFromInput(input)
             val calls = aggregations.mapIndexed { i, expr ->
                 val binding = relBinding(
                     name = syntheticAgg(i),
                     type = (ANY),
+                    qualifier = tableQualifier
                 )
                 schema.add(binding)
                 val args = expr.args.map { arg -> arg.toRex(env) }
@@ -465,7 +476,7 @@ internal object RelConverter {
             // Add GROUP_AS aggregation
             groupBy?.let { gb ->
                 gb.asAlias?.let { groupAs ->
-                    val binding = relBinding(groupAs.text, ANY)
+                    val binding = relBinding(groupAs.text, ANY, null)
                     schema.add(binding)
                     val fields = input.type.schema.mapIndexed { bindingIndex, currBinding ->
                         rexOpStructField(
@@ -479,13 +490,14 @@ internal object RelConverter {
             }
             var groups = emptyList<Rex>()
             if (groupBy != null) {
-                groups = groupBy.keys.map {
+                groups = groupBy.keys.map { it ->
                     if (it.asAlias == null) {
                         error("not normalized, group key $it missing unique name")
                     }
                     val binding = relBinding(
                         name = it.asAlias!!.text,
-                        type = (ANY)
+                        type = (ANY),
+                        qualifier = tableQualifier
                     )
                     schema.add(binding)
                     it.expr.toRex(env)
@@ -524,7 +536,7 @@ internal object RelConverter {
                 else -> {
                     val rex = RexConverter.applyRel(expr, env)
                     val op = relOpScan(rex)
-                    val type = Rel.Type(listOf(Rel.Binding("_1", ANY)), props = emptySet())
+                    val type = Rel.Type(listOf(Rel.Binding("_1", ANY, null)), props = emptySet())
                     return rel(type, op)
                 }
             }
@@ -536,7 +548,7 @@ internal object RelConverter {
         private fun convertSetOp(setExpr: QueryBody.SetOp): Rel {
             val lhs = visitIfQuerySet(setExpr.lhs)
             val rhs = visitIfQuerySet(setExpr.rhs)
-            val type = Rel.Type(listOf(Rel.Binding("_0", ANY)), props = emptySet())
+            val type = Rel.Type(listOf(Rel.Binding("_0", ANY, null)), props = emptySet())
             val quantifier = when (setExpr.type.setq?.code()) {
                 SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
                 null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
@@ -786,6 +798,43 @@ internal object RelConverter {
     }
 
     private fun syntheticAgg(i: Int) = "\$agg_$i"
+
+    /**
+     * Infer table qualifier (alias from FROM clause) from input schema
+     */
+    private fun inferTableQualifierFromInput(input: Rel): List<Simple>? {
+        return input.type.schema.firstOrNull()?.name?.let { listOf(Simple.regular(it)) }
+    }
+
+    /**
+     * Extract the qualifier (except for the final column) from a qualified expression
+     *
+     * Examples:
+     * - `t.c` -> ["t"]
+     * - `t.c1.c2` -> ["t", "c1"]
+     * - `t` -> null (no qualifier)
+     */
+    private fun extractQualifier(expr: Expr): List<Simple>? {
+        return when (expr) {
+            is ExprVarRef -> {
+                expr.identifier.qualifier.takeIf { expr.identifier.hasQualifier() }
+                    ?.map { Simple.regular(it.text) }
+            }
+            is ExprPath -> {
+                val parts = mutableListOf<Simple>()
+                when (val root = expr.root) {
+                    is ExprVarRef -> parts.add(Simple.regular(root.identifier.identifier.text))
+                }
+                expr.steps.dropLast(1).forEach { step ->
+                    when (step) {
+                        is PathStep.Field -> parts.add(Simple.regular(step.field.text))
+                    }
+                }
+                parts.takeIf { it.isNotEmpty() }
+            }
+            else -> null
+        }
+    }
 
     private val ANY: CompilerType = CompilerType(PType.dynamic())
     private val BOOL: CompilerType = CompilerType(PType.bool())
