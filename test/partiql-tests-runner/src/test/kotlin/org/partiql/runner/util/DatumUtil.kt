@@ -41,7 +41,7 @@ internal fun Datum.toIonElement(): IonElement {
                     fields.add(field("minute", ionInt(time.minute.toLong())))
                     val totalSeconds = time.second.toBigDecimal() + time.nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal())
                     fields.add(field("second", ionDecimal(Decimal.valueOf(totalSeconds))))
-                    fields.add(field("offset", ionInt(0L)))
+                    fields.add(field("offset", ionString("null")))
                     ionStructOf(fields).withAnnotations("\$time")
                 }
                 PType.TIMEZ -> {
@@ -65,7 +65,7 @@ internal fun Datum.toIonElement(): IonElement {
                     fields.add(field("minute", ionInt(timestamp.minute.toLong())))
                     val totalSeconds = timestamp.second.toBigDecimal() + timestamp.nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal())
                     fields.add(field("second", ionDecimal(Decimal.valueOf(totalSeconds))))
-                    fields.add(field("offset", ionInt(0L)))
+                    fields.add(field("offset", ionString("null")))
                     ionStructOf(fields).withAnnotations("\$timestamp")
                 }
                 PType.TIMESTAMPZ -> {
