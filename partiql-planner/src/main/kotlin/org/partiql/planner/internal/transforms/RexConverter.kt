@@ -220,7 +220,7 @@ internal object RexConverter {
                             val date = DateTimeUtils.parseDate(typedString)
                             return Datum.date(date)
                         }
-                        DataType.TIME -> {
+                        DataType.TIME, DataType.TIME_WITHOUT_TIME_ZONE -> {
                             val time = DateTimeUtils.parseTime(typedString)
                             val precision = type.precision ?: 6
                             return Datum.time(time, precision)
@@ -230,7 +230,7 @@ internal object RexConverter {
                             val precision = type.precision ?: 6
                             return Datum.timez(time, precision)
                         }
-                        DataType.TIMESTAMP -> {
+                        DataType.TIMESTAMP, DataType.TIMESTAMP_WITHOUT_TIME_ZONE -> {
                             val timestamp = DateTimeUtils.parseTimestamp(typedString)
                             val precision = type.precision ?: 6
                             return Datum.timestamp(timestamp, precision)
@@ -956,9 +956,9 @@ internal object RexConverter {
                 DataType.DATE -> call(FunctionUtils.OP_IS_DATE, arg0)
                 // TODO: DO we want to separate with time zone vs without time zone into two different type in the plan?
                 //  leave the parameterized type out for now until the above is answered
-                DataType.TIME -> call(FunctionUtils.OP_IS_TIME, arg0)
+                DataType.TIME, DataType.TIME_WITHOUT_TIME_ZONE -> call(FunctionUtils.OP_IS_TIME, arg0)
                 DataType.TIME_WITH_TIME_ZONE -> call(FunctionUtils.OP_IS_TIMEZ, arg0)
-                DataType.TIMESTAMP -> call(FunctionUtils.OP_IS_TIMESTAMP, arg0)
+                DataType.TIMESTAMP, DataType.TIMESTAMP_WITHOUT_TIME_ZONE -> call(FunctionUtils.OP_IS_TIMESTAMP, arg0)
                 DataType.TIMESTAMP_WITH_TIME_ZONE -> call(FunctionUtils.OP_IS_TIMESTAMPZ, arg0)
                 // <interval type>
                 DataType.INTERVAL -> call(FunctionUtils.OP_IS_INTERVAL, arg0) // TODO define in parser
@@ -1219,7 +1219,7 @@ internal object RexConverter {
                 DataType.BOOL, DataType.BOOLEAN -> PType.bool()
                 // <datetime type>
                 DataType.DATE -> PType.date()
-                DataType.TIME -> assertGtEqZeroAndCreate(PType.TIME, "precision", type.precision ?: 0, PType::time).also {
+                DataType.TIME, DataType.TIME_WITHOUT_TIME_ZONE -> assertGtEqZeroAndCreate(PType.TIME, "precision", type.precision ?: 0, PType::time).also {
                     if (type.precision == null) {
                         it.setUnspecifiedPrecisionMeta()
                     }
@@ -1234,7 +1234,7 @@ internal object RexConverter {
                         it.setUnspecifiedPrecisionMeta()
                     }
                 }
-                DataType.TIMESTAMP -> assertGtEqZeroAndCreate(
+                DataType.TIMESTAMP, DataType.TIMESTAMP_WITHOUT_TIME_ZONE -> assertGtEqZeroAndCreate(
                     PType.TIMESTAMP,
                     "precision",
                     type.precision ?: 6,

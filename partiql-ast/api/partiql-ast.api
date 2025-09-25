@@ -632,7 +632,9 @@ public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public static final field SYMBOL I
 	public static final field TIME I
 	public static final field TIMESTAMP I
+	public static final field TIMESTAMP_WITHOUT_TIME_ZONE I
 	public static final field TIMESTAMP_WITH_TIME_ZONE I
+	public static final field TIME_WITHOUT_TIME_ZONE I
 	public static final field TIME_WITH_TIME_ZONE I
 	public static final field TINYINT I
 	public static final field TUPLE I
@@ -702,8 +704,12 @@ public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public static fun TIME (I)Lorg/partiql/ast/DataType;
 	public static fun TIMESTAMP ()Lorg/partiql/ast/DataType;
 	public static fun TIMESTAMP (I)Lorg/partiql/ast/DataType;
+	public static fun TIMESTAMP_WITHOUT_TIME_ZONE ()Lorg/partiql/ast/DataType;
+	public static fun TIMESTAMP_WITHOUT_TIME_ZONE (I)Lorg/partiql/ast/DataType;
 	public static fun TIMESTAMP_WITH_TIME_ZONE ()Lorg/partiql/ast/DataType;
 	public static fun TIMESTAMP_WITH_TIME_ZONE (I)Lorg/partiql/ast/DataType;
+	public static fun TIME_WITHOUT_TIME_ZONE ()Lorg/partiql/ast/DataType;
+	public static fun TIME_WITHOUT_TIME_ZONE (I)Lorg/partiql/ast/DataType;
 	public static fun TIME_WITH_TIME_ZONE ()Lorg/partiql/ast/DataType;
 	public static fun TIME_WITH_TIME_ZONE (I)Lorg/partiql/ast/DataType;
 	public static fun TINYINT ()Lorg/partiql/ast/DataType;

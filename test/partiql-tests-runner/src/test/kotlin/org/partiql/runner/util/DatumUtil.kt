@@ -12,10 +12,12 @@ import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
-import com.amazon.ionelement.api.ionTimestamp
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import kotlin.math.abs
+
+const val SecondPerMinute = 60
+const val nanoPerSecond = 1000000000L
 
 // For error display only
 internal fun Datum.toIonElement(): IonElement {
@@ -31,15 +33,14 @@ internal fun Datum.toIonElement(): IonElement {
                 PType.DECIMAL -> ionDecimal(Decimal.valueOf(this.bigDecimal))
                 PType.DOUBLE -> ionFloat(this.double)
                 PType.REAL -> ionFloat(this.float.toDouble())
-                PType.TIMESTAMP -> ionTimestamp(this.localDateTime.toString() + "Z")
-                PType.TIMESTAMPZ -> ionTimestamp(this.offsetDateTime.toString())
                 PType.DATE -> ionString(this.localDate.toString()).withAnnotations("\$date")
                 PType.TIME -> {
                     val time = this.localTime
                     val fields = mutableListOf<StructField>()
                     fields.add(field("hour", ionInt(time.hour.toLong())))
                     fields.add(field("minute", ionInt(time.minute.toLong())))
-                    fields.add(field("second", ionDecimal(Decimal.valueOf(time.second.toBigDecimal()))))
+                    fields.add(field("second", ionDecimal(computeTotalSeconds(time.second, time.nano))))
+                    fields.add(field("offset", ionString("null")))
                     ionStructOf(fields).withAnnotations("\$time")
                 }
                 PType.TIMEZ -> {
@@ -47,14 +48,35 @@ internal fun Datum.toIonElement(): IonElement {
                     val fields = mutableListOf<StructField>()
                     fields.add(field("hour", ionInt(offsetTime.hour.toLong())))
                     fields.add(field("minute", ionInt(offsetTime.minute.toLong())))
-                    fields.add(field("second", ionDecimal(Decimal.valueOf(offsetTime.second.toBigDecimal()))))
-                    val offset = offsetTime.offset
-                    val totalSeconds = offset.totalSeconds
-                    val timezoneHours = totalSeconds / 3600
-                    val timezoneMinutes = (totalSeconds % 3600) / 60
-                    fields.add(field("timezone_hour", ionInt(timezoneHours.toLong())))
-                    fields.add(field("timezone_minute", ionInt(timezoneMinutes.toLong())))
+                    fields.add(field("second", ionDecimal(computeTotalSeconds(offsetTime.second, offsetTime.nano))))
+                    val offset = offsetTime.offset.totalSeconds / SecondPerMinute
+                    fields.add(field("offset", ionInt(offset.toLong())))
                     ionStructOf(fields).withAnnotations("\$time")
+                }
+                PType.TIMESTAMP -> {
+                    val timestamp = this.localDateTime
+                    val fields = mutableListOf<StructField>()
+                    fields.add(field("year", ionInt(timestamp.year.toLong())))
+                    fields.add(field("month", ionInt(timestamp.monthValue.toLong())))
+                    fields.add(field("day", ionInt(timestamp.dayOfMonth.toLong())))
+                    fields.add(field("hour", ionInt(timestamp.hour.toLong())))
+                    fields.add(field("minute", ionInt(timestamp.minute.toLong())))
+                    fields.add(field("second", ionDecimal(computeTotalSeconds(timestamp.second, timestamp.nano))))
+                    fields.add(field("offset", ionString("null")))
+                    ionStructOf(fields).withAnnotations("\$timestamp")
+                }
+                PType.TIMESTAMPZ -> {
+                    val offsetDateTime = this.offsetDateTime
+                    val fields = mutableListOf<StructField>()
+                    fields.add(field("year", ionInt(offsetDateTime.year.toLong())))
+                    fields.add(field("month", ionInt(offsetDateTime.monthValue.toLong())))
+                    fields.add(field("day", ionInt(offsetDateTime.dayOfMonth.toLong())))
+                    fields.add(field("hour", ionInt(offsetDateTime.hour.toLong())))
+                    fields.add(field("minute", ionInt(offsetDateTime.minute.toLong())))
+                    fields.add(field("second", ionDecimal(computeTotalSeconds(offsetDateTime.second, offsetDateTime.nano))))
+                    val offset = offsetDateTime.offset.totalSeconds / SecondPerMinute
+                    fields.add(field("offset", ionInt(offset.toLong())))
+                    ionStructOf(fields).withAnnotations("\$timestamp")
                 }
                 PType.INTERVAL_YM -> {
                     val fields = mutableListOf<StructField>()
@@ -115,3 +137,7 @@ internal fun Datum.toIonElement(): IonElement {
         }
     }
 }
+
+// Helper function
+private fun computeTotalSeconds(second: Int, nano: Int) =
+    Decimal.valueOf(second.toBigDecimal() + nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal()))

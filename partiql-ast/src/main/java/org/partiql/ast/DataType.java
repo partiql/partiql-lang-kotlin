@@ -154,6 +154,9 @@ public final class DataType extends AstEnum {
     public static final int SEXP = 44;
     // <user defined type>
     public static final int USER_DEFINED = 45;
+    // <datetime type> continue
+    public static final int TIME_WITHOUT_TIME_ZONE = 46;
+    public static final int TIMESTAMP_WITHOUT_TIME_ZONE = 47;
 
     public static DataType BOOL() {
         return new DataType(BOOL);
@@ -427,6 +430,22 @@ public final class DataType extends AstEnum {
         return new DataType(TIMESTAMP_WITH_TIME_ZONE, precision, null, null);
     }
 
+    public static DataType TIME_WITHOUT_TIME_ZONE() {
+        return new DataType(TIME_WITHOUT_TIME_ZONE);
+    }
+
+    public static DataType TIME_WITHOUT_TIME_ZONE(int precision) {
+        return new DataType(TIME_WITHOUT_TIME_ZONE, precision, null, null);
+    }
+
+    public static DataType TIMESTAMP_WITHOUT_TIME_ZONE() {
+        return new DataType(TIMESTAMP_WITHOUT_TIME_ZONE);
+    }
+
+    public static DataType TIMESTAMP_WITHOUT_TIME_ZONE(int precision) {
+        return new DataType(TIMESTAMP_WITHOUT_TIME_ZONE, precision, null, null);
+    }
+
     /**
      * Returns a data type with code {@link #INTERVAL}, however, the interval qualifier is null.
      * @deprecated Use {@link #INTERVAL(IntervalQualifier)} instead.
@@ -617,6 +636,8 @@ public final class DataType extends AstEnum {
             case TIME_WITH_TIME_ZONE: return "TIME_WITH_TIME_ZONE";
             case TIMESTAMP: return "TIMESTAMP";
             case TIMESTAMP_WITH_TIME_ZONE: return "TIMESTAMP_WITH_TIME_ZONE";
+            case TIME_WITHOUT_TIME_ZONE: return "TIME_WITHOUT_TIME_ZONE";
+            case TIMESTAMP_WITHOUT_TIME_ZONE: return "TIMESTAMP_WITHOUT_TIME_ZONE";
             case INTERVAL: return "INTERVAL";
             case STRUCT: return "STRUCT";
             case TUPLE: return "TUPLE";
@@ -669,6 +690,8 @@ public final class DataType extends AstEnum {
         TIME_WITH_TIME_ZONE,
         TIMESTAMP,
         TIMESTAMP_WITH_TIME_ZONE,
+        TIME_WITHOUT_TIME_ZONE,
+        TIMESTAMP_WITHOUT_TIME_ZONE,
         INTERVAL,
         STRUCT,
         TUPLE,
@@ -725,6 +748,8 @@ public final class DataType extends AstEnum {
             case "TIME_WITH_TIME_ZONE": return TIME_WITH_TIME_ZONE();
             case "TIMESTAMP": return TIMESTAMP();
             case "TIMESTAMP_WITH_TIME_ZONE": return TIMESTAMP_WITH_TIME_ZONE();
+            case "TIME_WITHOUT_TIME_ZONE": return TIME_WITHOUT_TIME_ZONE();
+            case "TIMESTAMP_WITHOUT_TIME_ZONE": return TIMESTAMP_WITHOUT_TIME_ZONE();
             case "INTERVAL": return INTERVAL();
             case "USER_DEFINED": return USER_DEFINED();
             default: throw new IllegalArgumentException("No enum constant DataType." + value);

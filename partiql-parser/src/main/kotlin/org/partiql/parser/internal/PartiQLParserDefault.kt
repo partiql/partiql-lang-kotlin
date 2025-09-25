@@ -2080,20 +2080,32 @@ internal class PartiQLParserDefault : PartiQLParser {
                 if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds [0,9]")
                 p
             }
-            val hasTimezoneLiteral = timeString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
-            if (ctx.ZONE() != null && !hasTimezoneLiteral) {
+            val hasTimezoneOffset = timeString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
+            val hasWithTimeZone = ctx.WITH() != null
+            val hasWithoutTimeZone = ctx.WITHOUT() != null
+
+            if (hasWithTimeZone && !hasTimezoneOffset) {
                 throw error(pattern, "TIME WITH TIME ZONE specified without a timezone offset in the literal string")
             }
-            val hasTimezone = hasTimezoneLiteral || ctx.ZONE() != null
-            val type = when (hasTimezone) {
-                true -> {
+            if (hasWithoutTimeZone && hasTimezoneOffset) {
+                throw error(pattern, "TIME WITHOUT TIME ZONE specified with a timezone offset in the literal string")
+            }
+            val type = when {
+                hasWithoutTimeZone -> {
+                    if (precision == null) {
+                        DataType.TIME_WITHOUT_TIME_ZONE()
+                    } else {
+                        DataType.TIME_WITHOUT_TIME_ZONE(precision)
+                    }
+                }
+                hasTimezoneOffset -> {
                     if (precision == null) {
                         DataType.TIME_WITH_TIME_ZONE()
                     } else {
                         DataType.TIME_WITH_TIME_ZONE(precision)
                     }
                 }
-                false -> {
+                else -> {
                     if (precision == null) {
                         DataType.TIME()
                     } else {
@@ -2115,20 +2127,32 @@ internal class PartiQLParserDefault : PartiQLParser {
                 if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds")
                 p
             }
-            val hasTimezoneLiteral = timestampString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
-            if (ctx.ZONE() != null && !hasTimezoneLiteral) {
+            val hasTimezoneOffset = timestampString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
+            val hasWithTimeZone = ctx.WITH() != null
+            val hasWithoutTimeZone = ctx.WITHOUT() != null
+
+            if (hasWithTimeZone && !hasTimezoneOffset) {
                 throw error(pattern, "TIMESTAMP WITH TIME ZONE specified without a timezone offset in the literal string")
             }
-            val hasTimezone = hasTimezoneLiteral || ctx.ZONE() != null
-            val type = when (hasTimezone) {
-                true -> {
+            if (hasWithoutTimeZone && hasTimezoneOffset) {
+                throw error(pattern, "TIMESTAMP WITHOUT TIME ZONE specified with a timezone offset in the literal string")
+            }
+            val type = when {
+                hasWithoutTimeZone -> {
+                    if (precision == null) {
+                        DataType.TIMESTAMP_WITHOUT_TIME_ZONE()
+                    } else {
+                        DataType.TIMESTAMP_WITHOUT_TIME_ZONE(precision)
+                    }
+                }
+                hasTimezoneOffset -> {
                     if (precision == null) {
                         DataType.TIMESTAMP_WITH_TIME_ZONE()
                     } else {
                         DataType.TIMESTAMP_WITH_TIME_ZONE(precision)
                     }
                 }
-                false -> {
+                else -> {
                     if (precision == null) {
                         DataType.TIMESTAMP()
                     } else {
@@ -2316,25 +2340,36 @@ internal class PartiQLParserDefault : PartiQLParser {
                 p
             }
 
+            val hasWithTimeZone = ctx.WITH() != null
+            val hasWithoutTimeZone = ctx.WITHOUT() != null
+
             when (ctx.datatype.type) {
-                GeneratedParser.TIME -> when (ctx.ZONE()) {
-                    null -> when (precision) {
-                        null -> DataType.TIME()
-                        else -> DataType.TIME(precision)
-                    }
-                    else -> when (precision) {
+                GeneratedParser.TIME -> when {
+                    hasWithTimeZone -> when (precision) {
                         null -> DataType.TIME_WITH_TIME_ZONE()
                         else -> DataType.TIME_WITH_TIME_ZONE(precision)
                     }
-                }
-                GeneratedParser.TIMESTAMP -> when (ctx.ZONE()) {
-                    null -> when (precision) {
-                        null -> DataType.TIMESTAMP()
-                        else -> DataType.TIMESTAMP(precision)
+                    hasWithoutTimeZone -> when (precision) {
+                        null -> DataType.TIME_WITHOUT_TIME_ZONE()
+                        else -> DataType.TIME_WITHOUT_TIME_ZONE(precision)
                     }
                     else -> when (precision) {
+                        null -> DataType.TIME()
+                        else -> DataType.TIME(precision)
+                    }
+                }
+                GeneratedParser.TIMESTAMP -> when {
+                    hasWithTimeZone -> when (precision) {
                         null -> DataType.TIMESTAMP_WITH_TIME_ZONE()
                         else -> DataType.TIMESTAMP_WITH_TIME_ZONE(precision)
+                    }
+                    hasWithoutTimeZone -> when (precision) {
+                        null -> DataType.TIMESTAMP_WITHOUT_TIME_ZONE()
+                        else -> DataType.TIMESTAMP_WITHOUT_TIME_ZONE(precision)
+                    }
+                    else -> when (precision) {
+                        null -> DataType.TIMESTAMP()
+                        else -> DataType.TIMESTAMP(precision)
                     }
                 }
                 else -> throw error(ctx.datatype, "Invalid datatype")
