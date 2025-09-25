@@ -2080,24 +2080,17 @@ internal class PartiQLParserDefault : PartiQLParser {
                 if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds [0,9]")
                 p
             }
-            val hasTimezoneLiteral = timeString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
+            val hasTimezoneOffset = timeString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
             val hasWithTimeZone = ctx.WITH() != null
             val hasWithoutTimeZone = ctx.WITHOUT() != null
 
-            if (hasWithTimeZone && !hasTimezoneLiteral) {
+            if (hasWithTimeZone && !hasTimezoneOffset) {
                 throw error(pattern, "TIME WITH TIME ZONE specified without a timezone offset in the literal string")
             }
-            if (hasWithoutTimeZone && hasTimezoneLiteral) {
+            if (hasWithoutTimeZone && hasTimezoneOffset) {
                 throw error(pattern, "TIME WITHOUT TIME ZONE specified with a timezone offset in the literal string")
             }
             val type = when {
-                hasWithTimeZone -> {
-                    if (precision == null) {
-                        DataType.TIME_WITH_TIME_ZONE()
-                    } else {
-                        DataType.TIME_WITH_TIME_ZONE(precision)
-                    }
-                }
                 hasWithoutTimeZone -> {
                     if (precision == null) {
                         DataType.TIME_WITHOUT_TIME_ZONE()
@@ -2105,7 +2098,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                         DataType.TIME_WITHOUT_TIME_ZONE(precision)
                     }
                 }
-                hasTimezoneLiteral -> {
+                hasTimezoneOffset -> {
                     if (precision == null) {
                         DataType.TIME_WITH_TIME_ZONE()
                     } else {
@@ -2134,24 +2127,17 @@ internal class PartiQLParserDefault : PartiQLParser {
                 if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds")
                 p
             }
-            val hasTimezoneLiteral = timestampString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
+            val hasTimezoneOffset = timestampString.contains(Regex("[+|-]\\d\\d:\\d\\d$"))
             val hasWithTimeZone = ctx.WITH() != null
             val hasWithoutTimeZone = ctx.WITHOUT() != null
 
-            if (hasWithTimeZone && !hasTimezoneLiteral) {
+            if (hasWithTimeZone && !hasTimezoneOffset) {
                 throw error(pattern, "TIMESTAMP WITH TIME ZONE specified without a timezone offset in the literal string")
             }
-            if (hasWithoutTimeZone && hasTimezoneLiteral) {
+            if (hasWithoutTimeZone && hasTimezoneOffset) {
                 throw error(pattern, "TIMESTAMP WITHOUT TIME ZONE specified with a timezone offset in the literal string")
             }
             val type = when {
-                hasWithTimeZone -> {
-                    if (precision == null) {
-                        DataType.TIMESTAMP_WITH_TIME_ZONE()
-                    } else {
-                        DataType.TIMESTAMP_WITH_TIME_ZONE(precision)
-                    }
-                }
                 hasWithoutTimeZone -> {
                     if (precision == null) {
                         DataType.TIMESTAMP_WITHOUT_TIME_ZONE()
@@ -2159,7 +2145,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                         DataType.TIMESTAMP_WITHOUT_TIME_ZONE(precision)
                     }
                 }
-                hasTimezoneLiteral -> {
+                hasTimezoneOffset -> {
                     if (precision == null) {
                         DataType.TIMESTAMP_WITH_TIME_ZONE()
                     } else {

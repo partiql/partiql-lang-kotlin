@@ -39,8 +39,7 @@ internal fun Datum.toIonElement(): IonElement {
                     val fields = mutableListOf<StructField>()
                     fields.add(field("hour", ionInt(time.hour.toLong())))
                     fields.add(field("minute", ionInt(time.minute.toLong())))
-                    val totalSeconds = time.second.toBigDecimal() + time.nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal())
-                    fields.add(field("second", ionDecimal(Decimal.valueOf(totalSeconds))))
+                    fields.add(field("second", ionDecimal(computeTotalSeconds(time.second, time.nano))))
                     fields.add(field("offset", ionString("null")))
                     ionStructOf(fields).withAnnotations("\$time")
                 }
@@ -49,8 +48,7 @@ internal fun Datum.toIonElement(): IonElement {
                     val fields = mutableListOf<StructField>()
                     fields.add(field("hour", ionInt(offsetTime.hour.toLong())))
                     fields.add(field("minute", ionInt(offsetTime.minute.toLong())))
-                    val totalSeconds = offsetTime.second.toBigDecimal() + offsetTime.nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal())
-                    fields.add(field("second", ionDecimal(Decimal.valueOf(totalSeconds))))
+                    fields.add(field("second", ionDecimal(computeTotalSeconds(offsetTime.second, offsetTime.nano))))
                     val offset = offsetTime.offset.totalSeconds / SecondPerMinute
                     fields.add(field("offset", ionInt(offset.toLong())))
                     ionStructOf(fields).withAnnotations("\$time")
@@ -63,8 +61,7 @@ internal fun Datum.toIonElement(): IonElement {
                     fields.add(field("day", ionInt(timestamp.dayOfMonth.toLong())))
                     fields.add(field("hour", ionInt(timestamp.hour.toLong())))
                     fields.add(field("minute", ionInt(timestamp.minute.toLong())))
-                    val totalSeconds = timestamp.second.toBigDecimal() + timestamp.nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal())
-                    fields.add(field("second", ionDecimal(Decimal.valueOf(totalSeconds))))
+                    fields.add(field("second", ionDecimal(computeTotalSeconds(timestamp.second, timestamp.nano))))
                     fields.add(field("offset", ionString("null")))
                     ionStructOf(fields).withAnnotations("\$timestamp")
                 }
@@ -76,8 +73,7 @@ internal fun Datum.toIonElement(): IonElement {
                     fields.add(field("day", ionInt(offsetDateTime.dayOfMonth.toLong())))
                     fields.add(field("hour", ionInt(offsetDateTime.hour.toLong())))
                     fields.add(field("minute", ionInt(offsetDateTime.minute.toLong())))
-                    val totalSeconds = offsetDateTime.second.toBigDecimal() + offsetDateTime.nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal())
-                    fields.add(field("second", ionDecimal(Decimal.valueOf(totalSeconds))))
+                    fields.add(field("second", ionDecimal(computeTotalSeconds(offsetDateTime.second, offsetDateTime.nano))))
                     val offset = offsetDateTime.offset.totalSeconds / SecondPerMinute
                     fields.add(field("offset", ionInt(offset.toLong())))
                     ionStructOf(fields).withAnnotations("\$timestamp")
@@ -141,3 +137,7 @@ internal fun Datum.toIonElement(): IonElement {
         }
     }
 }
+
+// Helper function
+private fun computeTotalSeconds(second: Int, nano: Int) =
+    Decimal.valueOf(second.toBigDecimal() + nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal()))

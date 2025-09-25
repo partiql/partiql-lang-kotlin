@@ -34,7 +34,7 @@ class DatumIonReader(
     private val MINUTES_PER_HOUR = 60
     private val INTERVAL_MAX_PRECISION = 9
     private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
-    private val TIME_PRECISION = 9
+    private val TIME_MAX_PRECISION = 9
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
@@ -127,11 +127,11 @@ class DatumIonReader(
                 // [0-59].000_000_000
                 val ds = ts.decimalSecond
                 val second: Int = ds.toInt()
-                val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(TIME_PRECISION).toInt()
+                val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(TIME_MAX_PRECISION).toInt()
                 // date/time pair
                 val date = LocalDate.of(ts.year, ts.month, ts.day)
                 val time = LocalTime.of(ts.hour, ts.minute, second, nanoOfSecond)
-                return Datum.timestampz(OffsetDateTime.of(date, time, tz), TIME_PRECISION)
+                return Datum.timestampz(OffsetDateTime.of(date, time, tz), TIME_MAX_PRECISION)
             }
             IonType.STRING, IonType.SYMBOL -> Datum.string(reader.stringValue())
             IonType.CLOB -> Datum.clob(reader.newBytes())
@@ -273,9 +273,9 @@ class DatumIonReader(
                         // calculate second/nanos
                         val ds = second.bigDecimal
                         val seconds: Int = ds.toInt()
-                        val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(TIME_PRECISION).toInt()
+                        val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(TIME_MAX_PRECISION).toInt()
 
-                        Datum.timez(OffsetTime.of(hour.int, minute.int, seconds, nanoOfSecond, offsetTz), TIME_PRECISION)
+                        Datum.timez(OffsetTime.of(hour.int, minute.int, seconds, nanoOfSecond, offsetTz), TIME_MAX_PRECISION)
                     }
                     PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> {
                         reader.stepIn()
@@ -299,11 +299,11 @@ class DatumIonReader(
                         // calculate second/nanos
                         val ds = second.bigDecimal
                         val seconds: Int = ds.toInt()
-                        val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(TIME_PRECISION).toInt()
+                        val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(TIME_MAX_PRECISION).toInt()
                         // date/time
                         val date = LocalDate.of(year.int, month.int, day.int)
                         val time = LocalTime.of(hour.int, minute.int, seconds, nanoOfSecond)
-                        Datum.timestampz(OffsetDateTime.of(date, time, offsetTz), TIME_PRECISION)
+                        Datum.timestampz(OffsetDateTime.of(date, time, offsetTz), TIME_MAX_PRECISION)
                     }
                     PARTIQL_ANNOTATION.INTERVAL_YM_ANNOTATION -> {
                         reader.stepIn()

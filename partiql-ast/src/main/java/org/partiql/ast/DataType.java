@@ -142,20 +142,21 @@ public final class DataType extends AstEnum {
     public static final int TIME_WITH_TIME_ZONE = 35;
     public static final int TIMESTAMP = 36;
     public static final int TIMESTAMP_WITH_TIME_ZONE = 37;
-    public static final int TIME_WITHOUT_TIME_ZONE = 38;
-    public static final int TIMESTAMP_WITHOUT_TIME_ZONE = 39;
     // <interval type>
-    public static final int INTERVAL = 40;
+    public static final int INTERVAL = 38;
     // <container type>
-    public static final int STRUCT = 41;
-    public static final int TUPLE = 42;
+    public static final int STRUCT = 39;
+    public static final int TUPLE = 40;
     // <collection type>
-    public static final int LIST = 43;
-    public static final int ARRAY = 44;
-    public static final int BAG = 45;
-    public static final int SEXP = 46;
+    public static final int LIST = 41;
+    public static final int ARRAY = 42;
+    public static final int BAG = 43;
+    public static final int SEXP = 44;
     // <user defined type>
-    public static final int USER_DEFINED = 47;
+    public static final int USER_DEFINED = 45;
+    // <datetime type> continue
+    public static final int TIME_WITHOUT_TIME_ZONE = 46;
+    public static final int TIMESTAMP_WITHOUT_TIME_ZONE = 47;
 
     public static DataType BOOL() {
         return new DataType(BOOL);
