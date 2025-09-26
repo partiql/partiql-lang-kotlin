@@ -25,6 +25,9 @@ class ReportAnalyzer(
     private val passingFirstIgnoredSecond = first.passingSet.intersect(second.ignoredSet)
     private val failureFirstPassingSecond = first.failingSet.intersect(second.passingSet)
     private val ignoredFirstPassingSecond = first.ignoredSet.intersect(second.passingSet)
+    private val newPassing = second.passingSet - first.passingSet - first.failingSet - first.ignoredSet
+    private val newFailing = second.failingSet - first.passingSet - first.failingSet - first.ignoredSet
+    private val newIgnored = second.ignoredSet - first.passingSet - first.failingSet - first.ignoredSet
     private val firstPassingSize = first.passingSet.size
     private val firstFailingSize = first.failingSet.size
     private val firstIgnoreSize = first.ignoredSet.size
@@ -46,6 +49,7 @@ class ReportAnalyzer(
             appendTitle(this)
             appendTable(this)
             appendSummary(this)
+            appendOptionalNewTests(this, limit)
             appendOptionalNowFailingTests(this, limit, passingFirstFailingSecond, "FAILING")
             appendOptionalNowFailingTests(this, limit, passingFirstIgnoredSecond, "IGNORED")
             appendOptionalNowPassingTests(this, limit, failureFirstPassingSecond, "FAILING")
@@ -104,11 +108,16 @@ class ReportAnalyzer(
         out.appendMarkdown("## Testing Details")
         out.appendLine("- **Base Commit**: ${first.commitId}")
         out.appendLine("- **Target Commit**: ${second.commitId}")
+        out.appendLine("- **Java Version**: ${VersionProvider.getJavaVersion()}")
+        out.appendLine("- **PartiQL Version**: ${VersionProvider.getPartiQLVersion()}")
 
         out.appendMarkdown("## Result Details")
         if (passingFirstFailingSecond.isNotEmpty() || passingFirstIgnoredSecond.isNotEmpty()) {
             out.appendLine("- **$ICON_X REGRESSION DETECTED. See *Now Failing/Ignored Tests*. $ICON_X**")
         }
+        out.appendLine("- **New passing tests**: ${newPassing.count()}")
+        out.appendLine("- **New failing tests**: ${newFailing.count()}")
+        out.appendLine("- **New ignored tests**: ${newIgnored.count()}")
         out.appendLine("- **Passing in both**: ${passingInBoth.count()}")
         out.appendLine("- **Failing in both**: ${failingInBoth.count()}")
         out.appendLine("- **Ignored in both**: ${ignoredInBoth.count()}")
@@ -116,6 +125,31 @@ class ReportAnalyzer(
         out.appendLine("- **PASSING in $BASE but now IGNORED in $TARGET**: ${passingFirstIgnoredSecond.count()}")
         out.appendLine("- **FAILING in $BASE but now PASSING in $TARGET**: ${failureFirstPassingSecond.count()}")
         out.appendLine("- **IGNORED in $BASE but now PASSING in $TARGET**: ${ignoredFirstPassingSecond.count()}")
+    }
+
+    private fun appendOptionalNewTests(out: Appendable, limit: Int) {
+        if (this.newPassing.isNotEmpty() || this.newFailing.isNotEmpty() || this.newIgnored.isNotEmpty()) {
+            out.appendMarkdown("## New Tests Added")
+            // character count limitation with comments in GitHub
+            // also, not ideal to list out hundreds of test names
+            if (newPassing.size + newFailing.size + newIgnored.size < limit) {
+                out.appendMarkdown("<details><summary>Click here to see</summary>")
+                var i: Int = 0
+                newPassing.forEach { testName ->
+                    out.appendLine("${ICON_CHECK}${i++}. $testName")
+                }
+                newPassing.forEach { testName ->
+                    out.appendLine("${ICON_CHECK}${i++}. $testName")
+                }
+                newPassing.forEach { testName ->
+                    out.appendLine("${ICON_CHECK}${i++}. $testName")
+                }
+
+                out.appendMarkdown("</details>")
+            } else {
+                out.appendMarkdown("The complete list can be found in GitHub CI summary, either from Step Summary or in the Artifact.")
+            }
+        }
     }
 
     private fun appendOptionalNowFailingTests(out: Appendable, limit: Int, set: Set<String>, description: String) {

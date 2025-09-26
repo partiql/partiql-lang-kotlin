@@ -1,13 +1,29 @@
 package org.partiql.runner
 
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.TestInfo
+import org.junit.jupiter.api.TestInstance
 import org.partiql.runner.test.TestRunner
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // Annotation is need avoid allTests and skiplist recreated for each test.
 abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>
+    private var allTests = emptySet<String>() // for duplicate detection
 
     companion object {
         val COERCE_EVAL_MODE_COMPILE_OPTIONS = CompileType.PERMISSIVE
         val ERROR_EVAL_MODE_COMPILE_OPTIONS = CompileType.STRICT
+    }
+
+    @BeforeEach
+    fun afterEach(testInfo: TestInfo) {
+        if (allTests.contains(testInfo.displayName)) {
+            // Fail the test if duplicate name is detected.
+            // Note: TestInfo.displayName is truncated if it is too long in the callback. However, there is no official document mentioned how it works
+            throw IllegalStateException("DUPLICATE TESTS DETECTED, PLEASE RENAME: ${testInfo.displayName}")
+        } else {
+            allTests += testInfo.displayName
+        }
     }
 
     protected fun getSkipList(path: String): Set<Pair<String, CompileType>> {
