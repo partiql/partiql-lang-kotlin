@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.2.3](https://TODO.com) - 2025-09-29
+
+### Added
 - partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
 - **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the 
 `OperatorVisitor`
@@ -74,6 +91,7 @@ Thank you to all who have contributed!
 - @zyfy29
 - @alancai98
 - @XuechunHHH
+- @xd1313113
 
 ## [1.2.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.2) - 2025-06-26
 
