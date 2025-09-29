@@ -330,7 +330,23 @@ class OrderByAliasSupportTest {
                     SELECT col AS alias FROM t1
                     UNION
                     SELECT col AS alias FROM t2
-                    ORDER BY col
+                    ORDER BY alias
+                """,
+                description = "UNION with ORDER BY alias resolution"
+            ),
+            TestCase(
+                name = "union_with_order_by_alias_with_inner_order_by",
+                sql = """
+                    (SELECT a AS c FROM tA ORDER BY c LIMIT 4 OFFSET 1)
+                    UNION
+                    (SELECT b AS c FROM tB ORDER BY c LIMIT 4 OFFSET 3)
+                    ORDER BY c DESC LIMIT 100 OFFSET 1
+                """,
+                transformedSql = """
+                    (SELECT a AS c FROM tA ORDER BY a LIMIT 4 OFFSET 1)
+                    UNION
+                    (SELECT b AS c FROM tB ORDER BY b LIMIT 4 OFFSET 3)
+                    ORDER BY c DESC LIMIT 100 OFFSET 1
                 """,
                 description = "UNION with ORDER BY alias resolution"
             ),
@@ -346,7 +362,7 @@ class OrderByAliasSupportTest {
                     SELECT price AS p FROM products
                     INTERSECT
                     SELECT cost AS p FROM orders
-                    ORDER BY price
+                    ORDER BY p
                 """,
                 description = "INTERSECT with ORDER BY alias resolution"
             ),
@@ -362,7 +378,7 @@ class OrderByAliasSupportTest {
                     SELECT id AS identifier FROM table1
                     EXCEPT
                     SELECT id AS identifier FROM table2
-                    ORDER BY id
+                    ORDER BY identifier
                 """,
                 description = "EXCEPT with ORDER BY alias resolution"
             ),
@@ -378,7 +394,7 @@ class OrderByAliasSupportTest {
                     SELECT a + b AS total FROM t1
                     UNION ALL
                     SELECT x + y AS total FROM t2
-                    ORDER BY a + b DESC
+                    ORDER BY total DESC
                 """,
                 description = "UNION ALL with complex expression alias resolution"
             )

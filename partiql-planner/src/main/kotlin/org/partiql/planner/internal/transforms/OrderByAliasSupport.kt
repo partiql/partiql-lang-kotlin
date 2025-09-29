@@ -56,7 +56,7 @@ internal object OrderByAliasSupport : AstPass {
      * - Each ExprQuerySet creates its own alias scope on the stack
      * - SELECT aliases are collected into the current scope's map
      * - ORDER BY expressions resolve aliases from the appropriate scope
-     * - Set operations (UNION, INTERSECT, EXCEPT) use left-hand side aliases
+     * - Set operations (UNION, INTERSECT, EXCEPT) are skipped Order-By alias replacement
      * - Case sensitivity is handled for both regular and delimited identifiers
      *
      * Example with nested queries:
@@ -107,18 +107,17 @@ internal object OrderByAliasSupport : AstPass {
 
         /**
          * Resolves ORDER BY expressions by replacing aliases with their original expressions.
-         * For set operations, uses the left-hand side query's aliases per SQL standard.
+         * For set operations, skip alias resolvation
          */
         override fun visitOrderBy(node: OrderBy, ctx: Context): AstNode {
             val parent = ctx.parentStack.last()
-            val aliasMap = if (parent.body is QueryBody.SetOp) {
-                // Set operations use left-hand side aliases for ORDER BY resolution
-                val lhs = (parent.body as QueryBody.SetOp).lhs as? ExprQuerySet
-                ctx.aliasMap[lhs]!!
-            } else {
-                // Regular queries use their own alias map
-                ctx.aliasMap[parent]!!
+            // Skip alias replacement if OrderBy belongs to set operator.
+            if (parent.body is QueryBody.SetOp) {
+                return node
             }
+
+            // Regular queries use their own alias map
+            val aliasMap = ctx.aliasMap[parent]!!
             if (aliasMap.isEmpty()) return node
 
             val transformedSorts = node.sorts.map { sort ->
