@@ -40,7 +40,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 
-## [1.2.3](https://TODO.com) - 2025-09-29
+## [1.2.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.3) - 2025-09-29
 
 ### Added
 - partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
