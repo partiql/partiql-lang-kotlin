@@ -27,7 +27,7 @@ internal val Fn_LOWER__CLOB__CLOB = Function.overload(
     parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
 
 ) { args ->
-    val string = args[0].string
+    val string = args[0].bytes.toString(Charsets.UTF_8)
     val result = string.lowercase()
     Datum.clob(result.toByteArray())
 }
