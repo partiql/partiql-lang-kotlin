@@ -58,8 +58,8 @@ import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprVarRef
-import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.ExprWindowFunction
+import org.partiql.ast.expr.PathStep
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.ir.Rel
@@ -580,7 +580,7 @@ internal object RelConverter {
                     rex(PType.dynamic().toCType(), op)
                 } ?: emptyList()
                 val functionNodes = window.functions.map { convertWindowFunction(it) }
-                val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType()) }
+                val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }
                 val newSchema = current.type.schema + functionBindings
                 val type = relType(newSchema, emptySet())
                 val op = relOpWindow(current, functionNodes, partitions, orderBy)
