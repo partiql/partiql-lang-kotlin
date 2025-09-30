@@ -129,6 +129,10 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rel, ctx);
     }
 
+    /**
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     default R visitWindow(@NotNull RelWindow rel, C ctx) {
         return defaultVisit(rel, ctx);
     }

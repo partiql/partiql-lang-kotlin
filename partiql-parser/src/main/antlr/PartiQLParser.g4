@@ -1061,7 +1061,7 @@ windowSpecification
         existingWindowName=symbolPrimitive?
         partition=windowPartitionClause?
         order=orderByClause?
-        // TODO: windowFrameClause
+        // TODO: windowFrameClause. https://github.com/partiql/partiql-lang-kotlin/issues/1837
         PAREN_RIGHT
     ;
 

@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * Represents a PartiQL WINDOW clause.
- * @see WindowDefinition
+ * @see Definition
  * @see org.partiql.ast.expr.ExprWindowFunction
  * @deprecated This feature is experimental and is subject to change.
  */
@@ -19,13 +19,13 @@ import java.util.List;
 public final class WindowClause extends AstNode {
 
     @NotNull
-    private final List<WindowDefinition> definitions;
+    private final List<Definition> definitions;
 
     /**
      * Constructs a new WINDOW clause.
      * @param definitions the window definitions
      */
-    public WindowClause(@NotNull List<WindowDefinition> definitions) {
+    public WindowClause(@NotNull List<Definition> definitions) {
         this.definitions = definitions;
     }
 
@@ -34,7 +34,7 @@ public final class WindowClause extends AstNode {
      * @return the window definitions
      */
     @NotNull
-    public List<WindowDefinition> getDefinitions() {
+    public List<Definition> getDefinitions() {
         return this.definitions;
     }
 
@@ -52,10 +52,12 @@ public final class WindowClause extends AstNode {
     /**
      * Represents a window definition in a PartiQL WINDOW clause.
      * @see WindowClause
+     * @deprecated This feature is experimental and is subject to change.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
-    public static final class WindowDefinition extends AstNode {
+    @Deprecated
+    public static final class Definition extends AstNode {
         @NotNull
         private final Identifier.Simple name;
 
@@ -67,7 +69,7 @@ public final class WindowClause extends AstNode {
          * @param name the window name
          * @param specification the window specification
          */
-        public WindowDefinition(@NotNull Identifier.Simple name, @NotNull WindowSpecification specification) {
+        public Definition(@NotNull Identifier.Simple name, @NotNull WindowSpecification specification) {
             this.specification = specification;
             this.name = name;
         }

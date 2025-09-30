@@ -798,11 +798,11 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
-    override fun visitWindowDefinition(node: WindowClause.WindowDefinition, ctx: C): AstNode {
+    override fun visitWindowDefinition(node: WindowClause.Definition, ctx: C): AstNode {
         val name = visitIdentifierSimple(node.name, ctx) as Identifier.Simple
         val spec = visitWindowSpecification(node.specification, ctx) as WindowSpecification
         return if (name !== node.name || spec !== node.specification) {
-            WindowClause.WindowDefinition(name, spec)
+            WindowClause.Definition(name, spec)
         } else {
             node
         }

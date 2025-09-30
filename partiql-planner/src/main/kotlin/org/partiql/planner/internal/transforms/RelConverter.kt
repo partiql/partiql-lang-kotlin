@@ -620,7 +620,6 @@ internal object RelConverter {
             private fun assertKeyDoesNotExist(name: String) {
                 if (definitions.containsKey(name)) {
                     val id = org.partiql.spi.catalog.Identifier.delimited(name)
-                    // TODO: We may want to introduce a VAR_DECL_AMBIGUOUS or NAME_SHADOW warning.
                     env.listener.report(PErrors.varRefAmbiguous(null, id))
                     return
                 }

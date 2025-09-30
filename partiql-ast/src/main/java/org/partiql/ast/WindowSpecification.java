@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Represents a window specification or a window reference.
- * @see WindowClause.WindowDefinition#getSpecification()
+ * @see WindowClause.Definition#getSpecification()
  * @deprecated This feature is experimental and is subject to change.
  */
 @Builder(builderClassName = "Builder")
@@ -18,6 +18,7 @@ import java.util.List;
 @Deprecated
 public final class WindowSpecification extends AstNode {
     // TODO: In the future: @Nullable private final WindowFrameClause frameClause;
+    //  See: https://github.com/partiql/partiql-lang-kotlin/issues/1837
 
     @Nullable
     private final Identifier.Simple existingName;

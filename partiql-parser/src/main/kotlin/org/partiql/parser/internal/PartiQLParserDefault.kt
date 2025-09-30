@@ -1083,14 +1083,14 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitWindowClause(ctx: GeneratedParser.WindowClauseContext) = translate(ctx) {
             listener.report(PErrors.experimental("Window Clause", ctx))
-            val definitions = visitOrEmpty<WindowClause.WindowDefinition>(ctx.windowDefinition())
+            val definitions = visitOrEmpty<WindowClause.Definition>(ctx.windowDefinition())
             WindowClause(definitions)
         }
 
         override fun visitWindowDefinition(ctx: GeneratedParser.WindowDefinitionContext) = translate(ctx) {
             val name = visitSymbolPrimitive(ctx.name)
             val spec = visitWindowSpecification(ctx.windowSpecification())
-            WindowClause.WindowDefinition(name, spec)
+            WindowClause.Definition(name, spec)
         }
 
         /**

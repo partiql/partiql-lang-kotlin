@@ -63,6 +63,7 @@ public class PRuntimeException extends RuntimeException {
      */
     @Override
     public synchronized Throwable getCause() {
+        // DEVELOPERS: With PError, we are creating our own error-handling mechanism, not using Java's exception handling.
         // DEVELOPERS: You may TEMPORARILY uncomment the following 4 lines during debugging. Do not commit the lines uncommented.
         // Throwable t = error.getOrNull("CAUSE", Throwable.class);
         // if (t != null) {
