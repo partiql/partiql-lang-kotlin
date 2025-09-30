@@ -394,18 +394,6 @@ public abstract class AstVisitor<R, C> {
      */
     @Deprecated
     public R visitWindowPartition(WindowPartition node, C ctx) {
-        return node.accept(this, ctx);
-    }
-
-    /**
-     * TODO
-     * @param node TODO
-     * @param ctx TODO
-     * @return TODO
-     * @deprecated This feature is experimental and is subject to change.
-     */
-    @Deprecated
-    public R visitWindowPartitionName(WindowPartition.Name node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

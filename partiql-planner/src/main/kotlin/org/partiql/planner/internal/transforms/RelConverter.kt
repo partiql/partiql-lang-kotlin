@@ -50,7 +50,6 @@ import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowFunctionType.Lag
 import org.partiql.ast.WindowFunctionType.Lead
-import org.partiql.ast.WindowPartition
 import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
@@ -94,7 +93,6 @@ import org.partiql.planner.internal.ir.relOpWith
 import org.partiql.planner.internal.ir.relOpWithWithListElement
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
-import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
@@ -571,11 +569,6 @@ internal object RelConverter {
             val rel = windows.getAll().foldRight(input) { window, current ->
                 val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
                 val partitions = window.spec.partitionClause?.map {
-                    if (it !is WindowPartition.Name) {
-                        val cause = IllegalStateException("Window Partition ${it.javaClass.simpleName} not supported.")
-                        env.listener.report(PErrors.internalError(cause))
-                        return@map Rex(PType.dynamic().toCType(), rexOpErr())
-                    }
                     val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
                     rex(PType.dynamic().toCType(), op)
                 } ?: emptyList()

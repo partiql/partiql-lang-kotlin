@@ -863,10 +863,10 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         return node
     }
 
-    override fun visitWindowPartitionName(node: WindowPartition.Name, ctx: C): AstNode {
+    override fun visitWindowPartition(node: WindowPartition, ctx: C): AstNode {
         val identifier = visitIdentifier(node.columnReference, ctx) as Identifier
         return if (identifier !== node.columnReference) {
-            WindowPartition.Name(identifier)
+            WindowPartition(identifier)
         } else {
             node
         }
