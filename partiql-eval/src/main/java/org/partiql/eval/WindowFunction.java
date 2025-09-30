@@ -6,7 +6,9 @@ import org.partiql.spi.value.Datum;
 /**
  * Represents an executable window function.
  * @see org.partiql.plan.WindowFunctionNode
+ * @deprecated This feature is experimental and is subject to change.
  */
+@Deprecated
 public interface WindowFunction {
 
     /**

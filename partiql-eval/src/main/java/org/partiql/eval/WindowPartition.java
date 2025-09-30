@@ -4,7 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a partition of rows within a window.
+ * @deprecated This feature is experimental and is subject to change.
  */
+@Deprecated
 public interface WindowPartition {
 
     /**

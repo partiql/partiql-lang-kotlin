@@ -38,7 +38,8 @@ internal object WindowFunctionSignatureProvider {
     private val ROW_NUMBER = WindowFunctionSignature("row_number", emptyList(), PType.bigint(), false)
 
     /**
-     * Creates the LAG window function signature.
+     * Creates the LAG window function signature. We use the [DynamicTyper] since the output of lag/lead is the "common supertype" (as
+     * described by the SQL specification and is extended to handle PartiQL's dynamic typing) of the expr/default arguments.
      * TODO: We may eventually want/need to handle coercion of the expr/default. This would require this class
      *  to return a nullable [org.partiql.plan.WindowFunctionNode], not a [WindowFunctionSignature].
      * @return null if unable to create a signature.

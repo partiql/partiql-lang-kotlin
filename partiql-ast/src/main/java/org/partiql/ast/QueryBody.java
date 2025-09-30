@@ -45,6 +45,7 @@ public abstract class QueryBody extends AstNode {
 
         /**
          * Constructs a new SFW query body.
+         * @deprecated This window feature is experimental and is subject to change.
          * @param select the select clause
          * @param exclude the exclude clause
          * @param from the from clause
@@ -54,6 +55,7 @@ public abstract class QueryBody extends AstNode {
          * @param having the having clause
          * @param window the window clause
          */
+        @Deprecated
         public SFW(@NotNull Select select, @Nullable Exclude exclude, @NotNull From from,
                    @Nullable Let let, @Nullable Expr where, @Nullable GroupBy groupBy,
                    @Nullable Expr having, @Nullable WindowClause window) {
