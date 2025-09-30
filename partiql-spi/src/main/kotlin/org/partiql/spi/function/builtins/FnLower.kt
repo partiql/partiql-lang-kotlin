@@ -29,5 +29,5 @@ internal val Fn_LOWER__CLOB__CLOB = Function.overload(
 ) { args ->
     val string = args[0].string
     val result = string.lowercase()
-    Datum.string(result)
+    Datum.clob(result.toByteArray())
 }

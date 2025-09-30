@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Datum return type for `LOWER` on a CLOB value
 
 ### Removed
 
