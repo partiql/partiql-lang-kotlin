@@ -135,15 +135,15 @@ class ReportAnalyzer(
             if (newPassing.size + newFailing.size + newIgnored.size < limit) {
                 out.appendMarkdown("<details><summary>Click here to see</summary>")
                 var i: Int = 0
-                out.appendLine("### Passing ${ICON_CHECK}")
+                out.appendLine("### Passing $ICON_CHECK")
                 newPassing.forEach { testName ->
                     out.appendLine("${i++}. $testName")
                 }
-                out.appendLine("### Failing ${ICON_X}")
+                out.appendLine("### Failing $ICON_X")
                 newFailing.forEach { testName ->
                     out.appendLine("${i++}. $testName")
                 }
-                out.appendLine("### Ignored ${ICON_CHECK}")
+                out.appendLine("### Ignored $ICON_CHECK")
                 newIgnored.forEach { testName ->
                     out.appendLine("${i++}. $testName")
                 }
