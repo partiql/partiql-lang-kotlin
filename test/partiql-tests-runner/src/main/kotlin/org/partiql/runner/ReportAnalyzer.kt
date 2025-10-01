@@ -143,7 +143,7 @@ class ReportAnalyzer(
                 newFailing.forEach { testName ->
                     out.appendLine("${i++}. $testName")
                 }
-                out.appendLine("### Ignored $ICON_CHECK")
+                out.appendLine("### Ignored $ICON_DIAMOND_ORANGE")
                 newIgnored.forEach { testName ->
                     out.appendLine("${i++}. $testName")
                 }
