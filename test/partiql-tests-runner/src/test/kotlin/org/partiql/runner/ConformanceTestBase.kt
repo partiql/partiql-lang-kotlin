@@ -1,7 +1,5 @@
 package org.partiql.runner
 
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestInstance
 import org.partiql.runner.test.TestRunner
 
