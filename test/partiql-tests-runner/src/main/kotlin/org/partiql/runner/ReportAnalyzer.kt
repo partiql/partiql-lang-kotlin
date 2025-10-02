@@ -18,6 +18,7 @@ class ReportAnalyzer(
         const val TARGET = "TARGET"
     }
 
+    private val firstTotal =  first.passingSet - first.failingSet - first.ignoredSet
     private val passingInBoth = first.passingSet.intersect(second.passingSet)
     private val failingInBoth = first.failingSet.intersect(second.failingSet)
     private val ignoredInBoth = first.ignoredSet.intersect(second.ignoredSet)
@@ -25,9 +26,9 @@ class ReportAnalyzer(
     private val passingFirstIgnoredSecond = first.passingSet.intersect(second.ignoredSet)
     private val failureFirstPassingSecond = first.failingSet.intersect(second.passingSet)
     private val ignoredFirstPassingSecond = first.ignoredSet.intersect(second.passingSet)
-    private val newPassing = second.passingSet - first.passingSet - first.failingSet - first.ignoredSet
-    private val newFailing = second.failingSet - first.passingSet - first.failingSet - first.ignoredSet
-    private val newIgnored = second.ignoredSet - first.passingSet - first.failingSet - first.ignoredSet
+    private val newPassing = second.passingSet - firstTotal
+    private val newFailing = second.failingSet - firstTotal
+    private val newIgnored = second.ignoredSet - firstTotal
     private val firstPassingSize = first.passingSet.size
     private val firstFailingSize = first.failingSet.size
     private val firstIgnoreSize = first.ignoredSet.size
@@ -108,9 +109,7 @@ class ReportAnalyzer(
         out.appendMarkdown("## Testing Details")
         out.appendLine("- **Base Commit**: ${first.commitId}")
         out.appendLine("- **Target Commit**: ${second.commitId}")
-        out.appendLine("- **Java Version**: ${VersionProvider.getJavaVersion()}")
-        out.appendLine("- **PartiQL Version**: ${VersionProvider.getPartiQLVersion()}")
-
+        out.appendLine("- **Java Version**: ${System.getProperty("java.version")}")
         out.appendMarkdown("## Result Details")
         if (passingFirstFailingSecond.isNotEmpty() || passingFirstIgnoredSecond.isNotEmpty()) {
             out.appendLine("- **$ICON_X REGRESSION DETECTED. See *Now Failing/Ignored Tests*. $ICON_X**")
