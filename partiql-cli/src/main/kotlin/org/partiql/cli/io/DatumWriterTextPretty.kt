@@ -166,9 +166,11 @@ class DatumWriterTextPretty(
         this.out.println()
         // Print elements and postfix
         val newFormat = format?.nest()
-        while (iterator.hasNext()) {
+        var hasNext = iterator.hasNext()
+        while (hasNext) {
             write(iterator.next(), newFormat)
-            if (iterator.hasNext()) {
+            hasNext = iterator.hasNext()
+            if (hasNext) {
                 this.out.print(",")
             }
             this.out.println()

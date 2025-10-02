@@ -186,6 +186,19 @@ internal object PErrors {
         )
     }
 
+    internal fun varRefAmbiguous(
+        location: SourceLocation?,
+        id: Identifier?,
+    ): PError {
+        return PError(
+            PError.VAR_REF_AMBIGUOUS,
+            Severity.WARNING(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("ID" to id)
+        )
+    }
+
     /**
      * @param path see [PError.INVALID_EXCLUDE_PATH]
      * @return an error representing [PError.INVALID_EXCLUDE_PATH]
@@ -216,6 +229,16 @@ internal object PErrors {
         )
     }
 
+    internal fun experimental(feature: String, location: SourceLocation? = null): PError {
+        return PError(
+            PError.EXPERIMENTAL,
+            Severity.WARNING(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("FEATURE" to feature),
+        )
+    }
+
     internal fun degreeViolationScalarSubquery(actual: Int, location: SourceLocation? = null): PError {
         return PError(
             PError.DEGREE_VIOLATION_SCALAR_SUBQUERY,
@@ -226,7 +249,7 @@ internal object PErrors {
         )
     }
 
-    private fun internalError(cause: Throwable): PError = PError(
+    internal fun internalError(cause: Throwable): PError = PError(
         PError.INTERNAL_ERROR,
         Severity.ERROR(),
         PErrorKind.SEMANTIC(),
