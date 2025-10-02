@@ -9,6 +9,26 @@ import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointTrim
 import org.partiql.spi.value.Datum
 
+internal val Fn_TRIM__CHAR__CHAR = FunctionUtils.hidden(
+
+    name = "trim",
+    returns = PType.character(),
+    parameters = arrayOf(Parameter("value", PType.character())),
+
+) { args ->
+    TODO("Not yet implemented")
+}
+
+internal val Fn_TRIM__VARCHAR__VARCHAR = FunctionUtils.hidden(
+
+    name = "trim",
+    returns = PType.varchar(),
+    parameters = arrayOf(Parameter("value", PType.varchar())),
+
+) { args ->
+    TODO("Not yet implemented")
+}
+
 /**
  * From section 6.7 of SQL 92 spec:
  * ```

@@ -8,6 +8,26 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
+internal val Fn_LOWER__CHAR__CHAR = Function.overload(
+
+    name = "lower",
+    returns = PType.character(),
+    parameters = arrayOf(Parameter("value", PType.character())),
+
+) { args ->
+    TODO("Not yet implemented")
+}
+
+internal val Fn_LOWER__VARCHAR__VARCHAR = Function.overload(
+
+    name = "lower",
+    returns = PType.varchar(),
+    parameters = arrayOf(Parameter("value", PType.varchar())),
+
+) { args ->
+    TODO("Not yet implemented")
+}
+
 internal val Fn_LOWER__STRING__STRING = Function.overload(
 
     name = "lower",
