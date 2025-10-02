@@ -1,7 +1,9 @@
 package org.partiql.runner
 
+import org.junit.jupiter.api.TestInstance
 import org.partiql.runner.test.TestRunner
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // Annotation is need to avoid skipList being recreated for each test.
 abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>
 
