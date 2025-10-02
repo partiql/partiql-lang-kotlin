@@ -18,7 +18,7 @@ class ReportAnalyzer(
         const val TARGET = "TARGET"
     }
 
-    private val firstTotal =  first.passingSet - first.failingSet - first.ignoredSet
+    private val firstTotal =  first.passingSet + first.failingSet + first.ignoredSet
     private val passingInBoth = first.passingSet.intersect(second.passingSet)
     private val failingInBoth = first.failingSet.intersect(second.failingSet)
     private val ignoredInBoth = first.ignoredSet.intersect(second.ignoredSet)
