@@ -15,24 +15,37 @@
 
 package org.partiql.planner.internal.transforms
 
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.parser.PartiQLParser
+import org.partiql.spi.Context
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
+import org.partiql.spi.errors.PRuntimeException
+import org.partiql.spi.errors.Severity
 import kotlin.test.assertEquals
 
 class OrderByAliasSupportTest {
 
-    data class TestCase(
+    data class SuccessTestCase(
         val name: String,
         val sql: String,
         val transformedSql: String,
-        val description: String
+        val description: String,
+    )
+
+    data class FailedTestCase(
+        val name: String,
+        val sql: String,
+        val description: String,
+        val exception: PRuntimeException
     )
 
     companion object {
         @JvmStatic
-        fun testCases() = listOf(
-            TestCase(
+        fun successTestCases() = listOf(
+            SuccessTestCase(
                 name = "regular_alias",
                 sql = """
                     SELECT col AS alias
@@ -46,7 +59,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Regular column alias should resolve to original column"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "aggregation_alias",
                 sql = """
                     SELECT MAX(price) AS max_price
@@ -62,7 +75,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Aggregation alias should resolve to original aggregation function"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "nested_query",
                 sql = """
                     SELECT pid AS p
@@ -84,7 +97,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Nested query alias should resolve correctly at each scope level"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "multiple_aliases",
                 sql = """
                     SELECT col1 AS a, col2 AS b
@@ -98,7 +111,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Multiple aliases should resolve in correct order"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "no_alias",
                 sql = """
                     SELECT col
@@ -113,7 +126,7 @@ class OrderByAliasSupportTest {
                 description = "No alias case should remain unchanged"
             ),
             // Test cases from https://github.com/partiql/partiql-lang-kotlin/blob/v0.14.9/partiql-lang/src/test/kotlin/org/partiql/lang/eval/visitors/OrderBySortSpecVisitorTransformTests.kt
-            TestCase(
+            SuccessTestCase(
                 name = "simplest_case",
                 sql = """
                     SELECT a AS b
@@ -127,7 +140,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Simplest case of alias resolution"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "different_projection_aliases",
                 sql = """
                     SELECT a AS b
@@ -149,7 +162,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Different projection aliases in nested queries"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "same_projection_alias",
                 sql = """
                     SELECT a AS b
@@ -171,7 +184,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Same projection alias in nested queries"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "complex_projection_same_alias",
                 sql = """
                     SELECT a + b AS b
@@ -193,7 +206,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Complex projection expressions with same alias"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "case_sensitive_alias",
                 sql = """
                     SELECT a + b AS b
@@ -215,7 +228,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Case sensitive ORDER BY with lowercase projection alias"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "case_sensitive_projection",
                 sql = """
                     SELECT a + b AS "B"
@@ -237,8 +250,8 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Case sensitive projection alias with case insensitive ORDER BY"
             ),
-            TestCase(
-                name = "case_insensitive_mismatch",
+            SuccessTestCase(
+                name = "case_sensitive_mismatch",
                 sql = """
                     SELECT a + b AS b
                     FROM (
@@ -259,7 +272,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Case insensitive projection with case sensitive ORDER BY - no match"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "case_insensitive_different_cases",
                 sql = """
                     SELECT a + b AS b
@@ -281,7 +294,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Case insensitive aliases with different cases in ORDER BY"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "multiple_sort_specs",
                 sql = """
                     SELECT a + b AS b
@@ -303,7 +316,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "Multiple sort specifications with aliases"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "negative_expression_alias",
                 sql = """
                     SELECT (a * -1) AS a
@@ -318,7 +331,7 @@ class OrderByAliasSupportTest {
                 description = "Negative expression with alias matching original column"
             ),
             // Set operator test cases
-            TestCase(
+            SuccessTestCase(
                 name = "union_with_order_by_alias",
                 sql = """
                     SELECT col AS alias FROM t1
@@ -334,7 +347,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "UNION with ORDER BY alias resolution"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "union_with_order_by_alias_with_inner_order_by",
                 sql = """
                     (SELECT a AS c FROM tA ORDER BY c LIMIT 4 OFFSET 1)
@@ -350,7 +363,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "UNION with ORDER BY alias resolution"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "intersect_with_order_by_alias",
                 sql = """
                     SELECT price AS p FROM products
@@ -366,7 +379,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "INTERSECT with ORDER BY alias resolution"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "except_with_order_by_alias",
                 sql = """
                     SELECT id AS identifier FROM table1
@@ -382,7 +395,7 @@ class OrderByAliasSupportTest {
                 """,
                 description = "EXCEPT with ORDER BY alias resolution"
             ),
-            TestCase(
+            SuccessTestCase(
                 name = "union_all_with_complex_alias",
                 sql = """
                     SELECT a + b AS total FROM t1
@@ -399,21 +412,54 @@ class OrderByAliasSupportTest {
                 description = "UNION ALL with complex expression alias resolution"
             )
         )
+
+        @JvmStatic
+        fun failedTestCases() = listOf(
+            FailedTestCase(
+                name = "ambiguous_alias",
+                sql = """
+                    SELECT col1 as a, col2 as a
+                    FROM t
+                    ORDER BY a
+                """,
+                description = "ambiguous_alias case should remain unchanged",
+                exception = PRuntimeException(PError(PError.VAR_REF_AMBIGUOUS, Severity.ERROR(), PErrorKind.SEMANTIC(), null, null))
+            ),
+        )
     }
 
     @ParameterizedTest
-    @MethodSource("testCases")
-    fun testOrderByAliasResolution(testCase: TestCase) {
+    @MethodSource("successTestCases")
+    fun testOrderByAliasResolutionSuccess(testCase: SuccessTestCase) {
         // Parse original SQL to AST
         val parser = PartiQLParser.standard()
         val originalStatement = parser.parse(testCase.sql.trimIndent())
+        val ctx = Context.standard()
 
         // Apply OrderByAliasSupport transform
-        val transformedStatement = OrderByAliasSupport.apply(originalStatement.statements[0])
+        val transformedStatement = OrderByAliasSupport(ctx.errorListener).apply(originalStatement.statements[0])
 
         // Parse expected SQL to AST for comparison
         val expectedStatement = parser.parse(testCase.transformedSql.trimIndent()).statements[0]
 
         assertEquals(expectedStatement, transformedStatement, testCase.description)
+    }
+
+    @ParameterizedTest
+    @MethodSource("failedTestCases")
+    fun testOrderByAliasResolutionFailed(testCase: FailedTestCase) {
+        // Parse original SQL to AST
+        val parser = PartiQLParser.standard()
+        val originalStatement = parser.parse(testCase.sql.trimIndent())
+        val ctx = Context.standard()
+
+        val exception = assertThrows<PRuntimeException> {
+            // Apply OrderByAliasSupport transform
+            val transformedStatement = OrderByAliasSupport(ctx.errorListener).apply(originalStatement.statements[0])
+        }
+
+        assertEquals(testCase.exception.error.code(), exception.error.code())
+        assertEquals(testCase.exception.error.kind, exception.error.kind)
+        assertEquals(testCase.exception.error.severity, exception.error.severity)
     }
 }

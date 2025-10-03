@@ -26,27 +26,26 @@ import org.partiql.ast.Statement
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprVarRef
+import org.partiql.planner.internal.PErrors
+import org.partiql.spi.errors.PErrorListener
+import kotlin.collections.MutableMap
 
 /**
  * Normalizes ORDER BY expressions by replacing SELECT aliases with their original expressions.
  * Uses a stack-based approach to maintain separate alias maps for each query scope,
  * enabling proper alias resolution in nested queries and set operations.
  */
-internal object OrderByAliasSupport : AstPass {
-
+internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
     /**
      * Context for tracking parent query scopes and their alias mappings.
      *
      * @property parentStack Stack of ExprQuerySet nodes representing nested query scopes
-     * @property aliasMap Maps each query scope to its SELECT alias definitions
+     * @property aliasList Maps each query scope to its SELECT alias definitions
      */
-    data class Context(
-        val parentStack: ArrayDeque<ExprQuerySet> = ArrayDeque(),
-        val aliasMap: MutableMap<ExprQuerySet, MutableMap<String, Expr>> = mutableMapOf()
-    )
+    data class Context(val parentStack: ArrayDeque<ExprQuerySet> = ArrayDeque(), val aliasList: MutableMap<ExprQuerySet, MutableList<Pair<String, Expr>>> = mutableMapOf())
 
     override fun apply(statement: Statement): Statement {
-        return Visitor.visitStatement(statement, Context()) as Statement
+        return Visitor(listener).visitStatement(statement, Context()) as Statement
     }
 
     /**
@@ -74,7 +73,7 @@ internal object OrderByAliasSupport : AstPass {
      * 5. Resolve ORDER BY p using outer scope
      * 6. Pop outer scope
      */
-    private object Visitor : AstRewriter<Context>() {
+    private class Visitor(val listener: PErrorListener) : AstRewriter<Context>() {
         /**
          * Manages query scope stack for each ExprQuerySet.
          * Pushes current query to stack on entry, pops on exit to maintain proper nesting.
@@ -82,7 +81,7 @@ internal object OrderByAliasSupport : AstPass {
         override fun visitExprQuerySet(node: ExprQuerySet, ctx: Context): AstNode {
             // Push current query scope onto stack
             ctx.parentStack.addLast(node)
-            ctx.aliasMap[node] = mutableMapOf()
+            ctx.aliasList[node] = mutableListOf()
 
             val transformed = super.visitExprQuerySet(node, ctx)
 
@@ -99,7 +98,7 @@ internal object OrderByAliasSupport : AstPass {
             if (node is SelectItem.Expr) {
                 node.asAlias?.let { alias ->
                     // Add alias mapping to current query scope
-                    ctx.aliasMap[ctx.parentStack.last()]?.put(alias.text, node.expr)
+                    ctx.aliasList[ctx.parentStack.last()]?.add(alias.text to node.expr)
                 }
             }
             return node
@@ -117,7 +116,7 @@ internal object OrderByAliasSupport : AstPass {
             }
 
             // Regular queries use their own alias map
-            val aliasMap = ctx.aliasMap[parent]!!
+            val aliasMap = ctx.aliasList[parent]!!
             if (aliasMap.isEmpty()) return node
 
             val transformedSorts = node.sorts.map { sort ->
@@ -146,7 +145,7 @@ internal object OrderByAliasSupport : AstPass {
          * @param aliasMap Current scope's alias mappings
          * @return Resolved expression or original if no alias found
          */
-        private fun resolveExpr(expr: Expr, aliasMap: Map<String, Expr>): Expr {
+        private fun resolveExpr(expr: Expr, aliasMap: List<Pair<String, Expr>>): Expr {
             return when (expr) {
                 is ExprVarRef -> {
                     val identifier = expr.identifier.identifier
@@ -154,17 +153,24 @@ internal object OrderByAliasSupport : AstPass {
                     val isOrderByRegular = identifier.isRegular
 
                     // Find matching alias considering case sensitivity
-                    val matchingAlias = if (isOrderByRegular) {
-                        // Regular (unquoted) identifier: case-insensitive lookup
-                        aliasMap.entries.find { (aliasName, _) ->
-                            orderByName.equals(aliasName, ignoreCase = true)
-                        }?.value
-                    } else {
-                        // Delimited (quoted) identifier: case-sensitive lookup
-                        aliasMap[orderByName]
-                    }
+                    val candidates = aliasMap.filter { orderByName.equals(it.first, ignoreCase = isOrderByRegular) }
 
-                    matchingAlias ?: expr
+                    if (candidates.size == 1) {
+                        candidates[0].second
+                    } else {
+                        if (candidates.size > 1) {
+                            val candidateNames = candidates.map {
+                                val ref = it.second
+                                if (ref is ExprVarRef) {
+                                    ref.identifier.identifier.text
+                                } else {
+                                    "Not a column name or alias"
+                                }
+                            }.toList()
+                            listener.report(PErrors.varRefAmbiguous(null, expr.identifier, candidateNames))
+                        }
+                        expr
+                    }
                 }
                 else -> expr
             }

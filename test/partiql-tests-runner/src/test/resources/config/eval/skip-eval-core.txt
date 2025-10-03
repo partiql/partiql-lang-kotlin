@@ -1,14 +1,6 @@
 // TODO: NOT NEEDED FOR V1 RELEASE. Alias tests. Fixing this would not result in an API change.
 PERMISSIVE:::group and order by count
 STRICT:::group and order by count
-PERMISSIVE:::order by aggregation function directly
-STRICT:::order by aggregation function directly
-PERMISSIVE:::order by different aggregation function from select
-STRICT:::order by different aggregation function from select
-PERMISSIVE:::order by aggregation alias
-STRICT:::order by aggregation alias
-PERMISSIVE:::order by aggregation alias with group by alias
-STRICT:::order by aggregation alias with group by alias
 
 // TODO: NOT NEEDED FOR V1 RELEASE. Arithmetic tests. All tests are wrong.
 PERMISSIVE:::repeatingDecimal // TODO: This is wrong. 4.0000 / 3.0 = 1.3333333

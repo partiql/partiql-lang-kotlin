@@ -187,6 +187,26 @@ internal object PErrors {
     }
 
     /**
+     * @param location see [PError.location]
+     * @param id see [PError.VAR_REF_AMBIGUOUS]
+     * @param candidates see [PError.VAR_REF_AMBIGUOUS]
+     * @return an error representing [PError.VAR_REF_AMBIGUOUS]
+     */
+    internal fun varRefAmbiguous(
+        location: SourceLocation?,
+        id: org.partiql.ast.Identifier?,
+        candidates: List<String?>?
+    ): PError {
+        return PError(
+            PError.VAR_REF_AMBIGUOUS,
+            Severity.ERROR(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("ID" to id, "CANDIDATES" to candidates)
+        )
+    }
+
+    /**
      * @param path see [PError.INVALID_EXCLUDE_PATH]
      * @return an error representing [PError.INVALID_EXCLUDE_PATH]
      */
