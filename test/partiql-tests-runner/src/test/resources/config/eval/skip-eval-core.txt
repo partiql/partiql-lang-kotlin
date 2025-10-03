@@ -1,8 +1,4 @@
 // TODO: NOT NEEDED FOR V1 RELEASE. Alias tests. Fixing this would not result in an API change.
-PERMISSIVE:::testing alias support
-STRICT:::testing alias support
-PERMISSIVE:::testing nested alias support
-STRICT:::testing nested alias support
 PERMISSIVE:::group and order by count
 STRICT:::group and order by count
 

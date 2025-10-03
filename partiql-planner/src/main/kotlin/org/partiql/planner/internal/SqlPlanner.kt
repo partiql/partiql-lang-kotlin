@@ -10,12 +10,14 @@ import org.partiql.planner.PartiQLPlannerPass
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.NormalizeFromSource
 import org.partiql.planner.internal.transforms.NormalizeGroupBy
+import org.partiql.planner.internal.transforms.OrderByAliasSupport
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 
@@ -36,7 +38,7 @@ internal class SqlPlanner(
             val env = Env(session, ctx.errorListener)
 
             // 1. Normalize
-            val ast = statement.normalize()
+            val ast = statement.normalize(ctx.errorListener)
 
             // 2. AST to Rel/Rex
             val root = AstToPlan.apply(ast, env)
@@ -64,11 +66,12 @@ internal class SqlPlanner(
     /**
      * AST normalization
      */
-    private fun Statement.normalize(): Statement {
+    private fun Statement.normalize(listener: PErrorListener): Statement {
         // could be a fold, but this is nice for setting breakpoints
         var ast = this
         ast = NormalizeFromSource.apply(ast)
         ast = NormalizeGroupBy.apply(ast)
+        ast = OrderByAliasSupport(listener).apply(ast)
         return ast
     }
 
