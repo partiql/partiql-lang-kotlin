@@ -963,16 +963,16 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     @NotNull
     @SuppressWarnings("SameParameterValue")
-    public static PType clob(int length) {
-        return new PTypeWithMaxLength(CLOB, length);
+    public static PType clob(long length) {
+        return new PTypeWithLongMaxLength(CLOB, length);
     }
 
     /**
-     * @return a PartiQL clob type with a default length of {@link Integer#MAX_VALUE}.
+     * @return a PartiQL clob type with a default length of {@link Long#MAX_VALUE}.
      */
     @NotNull
     public static PType clob() {
-        PType clob = new PTypeWithMaxLength(CLOB, Integer.MAX_VALUE);
+        PType clob = new PTypeWithLongMaxLength(CLOB, Long.MAX_VALUE);
         setUnspecifiedLengthMeta(clob);
         return clob;
     }

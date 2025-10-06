@@ -28,6 +28,7 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
+- Change max and default length for `PType.CLOB` from `Integer.MAX_VALUE` to `Long.MAX_VALUE` 
 
 ### Deprecated
 
