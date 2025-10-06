@@ -89,7 +89,7 @@ public abstract class PType extends org.partiql.spi.Enum {
      * @throws UnsupportedOperationException if this is called on a type whose {@link PType#code()} is not:
      *                                       {@link PType#CHAR}, {@link PType#CLOB}, {@link PType#BLOB}
      */
-    public int getLength() throws UnsupportedOperationException {
+    public long getLength() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
 

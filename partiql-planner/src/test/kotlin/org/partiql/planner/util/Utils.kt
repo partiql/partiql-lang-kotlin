@@ -72,7 +72,7 @@ val allCharStringPType = setOf(
     PType.character(256), // TODO: Length
     PType.varchar(256), // TODO: Length
     PType.string(),
-    PType.clob(Int.MAX_VALUE), // TODO: Length
+    PType.clob(Long.MAX_VALUE),
 )
 
 val allBinaryPType = setOf(

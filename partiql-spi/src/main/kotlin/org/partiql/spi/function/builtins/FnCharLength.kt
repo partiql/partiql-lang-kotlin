@@ -26,7 +26,7 @@ internal val Fn_CHAR_LENGTH__CLOB__INT = Function.overload(
     name = "char_length",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("lhs", PType.clob(Int.MAX_VALUE)),
+        Parameter("lhs", PType.clob(Long.MAX_VALUE)),
     ),
 
 ) { args ->

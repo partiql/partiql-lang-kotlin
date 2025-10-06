@@ -38,5 +38,5 @@ internal val Fn_IS_CHAR__INT32_ANY__BOOL = FunctionUtils.hidden(
     if (length < 0) {
         throw PErrors.internalErrorException(IllegalArgumentException("Length must be non-negative."))
     }
-    Datum.bool(value.type.length == length)
+    Datum.bool(value.type.length == length.toLong())
 }

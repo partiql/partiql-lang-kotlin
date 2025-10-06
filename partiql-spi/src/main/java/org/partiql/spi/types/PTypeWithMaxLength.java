@@ -12,7 +12,7 @@ class PTypeWithMaxLength extends PType {
     }
 
     @Override
-    public int getLength() {
+    public long getLength() {
         return _maxLength;
     }
 

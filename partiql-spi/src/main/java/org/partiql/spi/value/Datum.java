@@ -722,7 +722,7 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum clob(@NotNull byte[] value) throws PRuntimeException {
         // TODO: Check size of value
-        return clob(value, Integer.MAX_VALUE);
+        return clob(value, Long.MAX_VALUE);
     }
 
     /**
@@ -732,7 +732,7 @@ public interface Datum extends Iterable<Datum> {
      * @throws PRuntimeException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum clob(@NotNull byte[] value, int length) throws PRuntimeException {
+    static Datum clob(@NotNull byte[] value, long length) throws PRuntimeException {
         // TODO: Check size of value
         return new DatumBytes(value, PType.clob(length));
     }

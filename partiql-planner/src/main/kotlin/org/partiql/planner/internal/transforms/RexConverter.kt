@@ -1144,9 +1144,12 @@ internal object RexConverter {
                         }
                     }
                 }
-                DataType.CLOB -> assertGtZeroAndCreate(PType.CLOB, "length", type.length ?: Int.MAX_VALUE, PType::clob).also {
-                    if (type.length == null) {
-                        it.setUnspecifiedLengthMeta()
+                DataType.CLOB -> {
+                    val length = type.length?.toLong() ?: Long.MAX_VALUE
+                    assertGtZeroAndCreateLong(PType.CLOB, "length", length) { PType.clob(it) }.also {
+                        if (type.length == null) {
+                            it.setUnspecifiedLengthMeta()
+                        }
                     }
                 }
                 DataType.STRING -> PType.string()
@@ -1325,6 +1328,11 @@ internal object RexConverter {
             return create.invoke(value)
         }
 
+        private fun assertGtZeroAndCreateLong(type: Int, param: String, value: Any, create: (Long) -> PType): PType {
+            assertParamCompToZeroLong(type, param, value as Long, false)
+            return create.invoke(value)
+        }
+
         /**
          * @param allowZero when FALSE, this asserts that [value] > 0. If TRUE, this asserts that [value] >= 0.
          */
@@ -1335,6 +1343,19 @@ internal object RexConverter {
             }
             if (!result) {
                 throw PErrors.internalErrorException(IllegalArgumentException("$type $param must be an integer value $compString 0."))
+            }
+        }
+
+        /**
+         * @param allowZero when FALSE, this asserts that [value] > 0. If TRUE, this asserts that [value] >= 0.
+         */
+        private fun assertParamCompToZeroLong(type: Int, param: String, value: Long, allowZero: Boolean) {
+            val (result, compString) = when (allowZero) {
+                true -> (value >= 0) to "greater than"
+                false -> (value > 0) to "greater than or equal to"
+            }
+            if (!result) {
+                throw PErrors.internalErrorException(IllegalArgumentException("$type $param must be a long value $compString 0."))
             }
         }
 

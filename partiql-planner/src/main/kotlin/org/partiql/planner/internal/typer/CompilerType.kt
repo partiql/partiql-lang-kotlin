@@ -32,7 +32,7 @@ internal class CompilerType(
         }.toMutableList()
     }
 
-    override fun getLength(): Int {
+    override fun getLength(): Long {
         return _delegate.length
     }
 

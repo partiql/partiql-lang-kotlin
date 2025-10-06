@@ -52,10 +52,10 @@ internal val Fn_CONCAT__STRING_STRING__STRING = FunctionUtils.hidden(
 internal val Fn_CONCAT__CLOB_CLOB__CLOB = FunctionUtils.hidden(
 
     name = "concat",
-    returns = PType.clob(Int.MAX_VALUE),
+    returns = PType.clob(Long.MAX_VALUE),
     parameters = arrayOf(
-        Parameter("lhs", PType.clob(Int.MAX_VALUE)),
-        Parameter("rhs", PType.clob(Int.MAX_VALUE)),
+        Parameter("lhs", PType.clob(Long.MAX_VALUE)),
+        Parameter("rhs", PType.clob(Long.MAX_VALUE)),
     ),
 
 ) { args ->

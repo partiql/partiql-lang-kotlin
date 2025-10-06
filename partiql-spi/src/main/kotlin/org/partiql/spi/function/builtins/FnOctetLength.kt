@@ -24,7 +24,7 @@ internal val Fn_OCTET_LENGTH__CLOB__INT32 = Function.overload(
     name = "octet_length",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("value", PType.clob(Int.MAX_VALUE)),
+        Parameter("value", PType.clob(Long.MAX_VALUE)),
     ),
 
 ) { args ->

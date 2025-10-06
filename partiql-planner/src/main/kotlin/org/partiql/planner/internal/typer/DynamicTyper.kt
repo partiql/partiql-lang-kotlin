@@ -144,10 +144,10 @@ internal class DynamicTyper {
                 }
                 PType.VARCHAR -> {
                     containsVarChar = true
-                    acc.coerceAtLeast(type.length)
+                    acc.coerceAtLeast(type.length.toInt())
                 }
                 PType.CHAR -> {
-                    acc.coerceAtLeast(type.length)
+                    acc.coerceAtLeast(type.length.toInt())
                 }
                 else -> error("Received type: $type")
             }
@@ -376,7 +376,7 @@ internal class DynamicTyper {
             PType.VARCHAR -> PType.varchar(255) // TODO: To be updated
             PType.STRING -> PType.string()
             PType.BLOB -> PType.blob(Int.MAX_VALUE) // TODO: To be updated
-            PType.CLOB -> PType.clob(Int.MAX_VALUE) // TODO: To be updated
+            PType.CLOB -> PType.clob(Long.MAX_VALUE)
             PType.DATE -> PType.date()
             PType.TIMEZ -> PType.timez(6) // TODO: To be updated
             PType.TIME -> PType.time(6) // TODO: To be updated

@@ -179,8 +179,8 @@ internal object CastTable {
             DOUBLE
         ) { x, _ -> Datum.doublePrecision(if (x.boolean) 1.0 else 0.0) }
         register(BOOL, STRING) { x, _ -> Datum.string(if (x.boolean) "true" else "false") }
-        register(BOOL, VARCHAR) { x, t -> Datum.varchar(if (x.boolean) "true" else "false", t.length) }
-        register(BOOL, CHAR) { x, t -> Datum.character(if (x.boolean) "true" else "false", t.length) }
+        register(BOOL, VARCHAR) { x, t -> Datum.varchar(if (x.boolean) "true" else "false", t.length.toInt()) }
+        register(BOOL, CHAR) { x, t -> Datum.character(if (x.boolean) "true" else "false", t.length.toInt()) }
         register(BOOL, CLOB) { x, t -> Datum.clob((if (x.boolean) "true" else "false").toByteArray(), t.length) }
     }
 
@@ -210,8 +210,8 @@ internal object CastTable {
         register(TINYINT, REAL) { x, _ -> Datum.real(x.byte.toFloat()) }
         register(TINYINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.byte.toDouble()) }
         register(TINYINT, STRING) { x, _ -> Datum.string(x.byte.toString()) }
-        register(TINYINT, VARCHAR) { x, t -> Datum.varchar(x.byte.toString(), t.length) }
-        register(TINYINT, CHAR) { x, t -> Datum.character(x.byte.toString(), t.length) }
+        register(TINYINT, VARCHAR) { x, t -> Datum.varchar(x.byte.toString(), t.length.toInt()) }
+        register(TINYINT, CHAR) { x, t -> Datum.character(x.byte.toString(), t.length.toInt()) }
         register(TINYINT, CLOB) { x, t -> Datum.clob(x.byte.toString().toByteArray(), t.length) }
     }
 
@@ -241,8 +241,8 @@ internal object CastTable {
         register(SMALLINT, REAL) { x, _ -> Datum.real(x.short.toFloat()) }
         register(SMALLINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.short.toDouble()) }
         register(SMALLINT, STRING) { x, _ -> Datum.string(x.short.toString()) }
-        register(SMALLINT, VARCHAR) { x, t -> Datum.varchar(x.short.toString(), t.length) }
-        register(SMALLINT, CHAR) { x, t -> Datum.character(x.short.toString(), t.length) }
+        register(SMALLINT, VARCHAR) { x, t -> Datum.varchar(x.short.toString(), t.length.toInt()) }
+        register(SMALLINT, CHAR) { x, t -> Datum.character(x.short.toString(), t.length.toInt()) }
         register(SMALLINT, CLOB) { x, t -> Datum.clob(x.short.toString().toByteArray(), t.length) }
     }
 
@@ -266,8 +266,8 @@ internal object CastTable {
         register(INTEGER, REAL) { x, _ -> Datum.real(x.int.toFloat()) }
         register(INTEGER, DOUBLE) { x, _ -> Datum.doublePrecision(x.int.toDouble()) }
         register(INTEGER, STRING) { x, _ -> Datum.string(x.int.toString()) }
-        register(INTEGER, VARCHAR) { x, t -> Datum.varchar(x.int.toString(), t.length) }
-        register(INTEGER, CHAR) { x, t -> Datum.character(x.int.toString(), t.length) }
+        register(INTEGER, VARCHAR) { x, t -> Datum.varchar(x.int.toString(), t.length.toInt()) }
+        register(INTEGER, CHAR) { x, t -> Datum.character(x.int.toString(), t.length.toInt()) }
         register(INTEGER, CLOB) { x, t -> Datum.clob(x.int.toString().toByteArray(), t.length) }
     }
 
@@ -291,8 +291,8 @@ internal object CastTable {
         register(BIGINT, REAL) { x, _ -> Datum.real(x.long.toFloat()) }
         register(BIGINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.long.toDouble()) }
         register(BIGINT, STRING) { x, _ -> Datum.string(x.long.toString()) }
-        register(BIGINT, VARCHAR) { x, t -> Datum.varchar(x.long.toString(), t.length) }
-        register(BIGINT, CHAR) { x, t -> Datum.character(x.long.toString(), t.length) }
+        register(BIGINT, VARCHAR) { x, t -> Datum.varchar(x.long.toString(), t.length.toInt()) }
+        register(BIGINT, CHAR) { x, t -> Datum.character(x.long.toString(), t.length.toInt()) }
         register(BIGINT, CLOB) { x, t -> Datum.clob(x.long.toString().toByteArray(), t.length) }
     }
 
@@ -319,8 +319,8 @@ internal object CastTable {
             DOUBLE
         ) { x, _ -> datumDoublePrecision(x.bigDecimal) }
         register(NUMERIC, STRING) { x, _ -> Datum.string(x.bigDecimal.toString()) }
-        register(NUMERIC, VARCHAR) { x, t -> Datum.varchar(x.bigDecimal.toString(), t.length) }
-        register(NUMERIC, CHAR) { x, t -> Datum.character(x.bigDecimal.toString(), t.length) }
+        register(NUMERIC, VARCHAR) { x, t -> Datum.varchar(x.bigDecimal.toString(), t.length.toInt()) }
+        register(NUMERIC, CHAR) { x, t -> Datum.character(x.bigDecimal.toString(), t.length.toInt()) }
         register(NUMERIC, CLOB) { x, t -> Datum.clob(x.bigDecimal.toString().toByteArray(), t.length) }
     }
 
@@ -344,8 +344,8 @@ internal object CastTable {
             DOUBLE
         ) { x, _ -> datumDoublePrecision(x.bigDecimal) }
         register(DECIMAL, STRING) { x, _ -> Datum.string(x.bigDecimal.toString()) }
-        register(DECIMAL, VARCHAR) { x, t -> Datum.varchar(x.bigDecimal.toString(), t.length) }
-        register(DECIMAL, CHAR) { x, t -> Datum.character(x.bigDecimal.toString(), t.length) }
+        register(DECIMAL, VARCHAR) { x, t -> Datum.varchar(x.bigDecimal.toString(), t.length.toInt()) }
+        register(DECIMAL, CHAR) { x, t -> Datum.character(x.bigDecimal.toString(), t.length.toInt()) }
         register(DECIMAL, CLOB) { x, t -> Datum.clob(x.bigDecimal.toString().toByteArray(), t.length) }
     }
 
@@ -375,8 +375,8 @@ internal object CastTable {
         register(REAL, REAL) { x, _ -> x }
         register(REAL, DOUBLE) { x, _ -> Datum.doublePrecision(x.float.toDouble()) }
         register(REAL, STRING) { x, _ -> Datum.string(x.float.toString()) }
-        register(REAL, VARCHAR) { x, t -> Datum.varchar(x.float.toString(), t.length) }
-        register(REAL, CHAR) { x, t -> Datum.character(x.float.toString(), t.length) }
+        register(REAL, VARCHAR) { x, t -> Datum.varchar(x.float.toString(), t.length.toInt()) }
+        register(REAL, CHAR) { x, t -> Datum.character(x.float.toString(), t.length.toInt()) }
         register(REAL, CLOB) { x, t -> Datum.clob(x.float.toString().toByteArray(), t.length) }
     }
 
@@ -410,8 +410,8 @@ internal object CastTable {
         register(DOUBLE, REAL) { x, _ -> datumReal(x.double) }
         register(DOUBLE, DOUBLE) { x, _ -> x }
         register(DOUBLE, STRING) { x, _ -> Datum.string(x.double.toString()) }
-        register(DOUBLE, VARCHAR) { x, t -> Datum.varchar(x.double.toString(), t.length) }
-        register(DOUBLE, CHAR) { x, t -> Datum.character(x.double.toString(), t.length) }
+        register(DOUBLE, VARCHAR) { x, t -> Datum.varchar(x.double.toString(), t.length.toInt()) }
+        register(DOUBLE, CHAR) { x, t -> Datum.character(x.double.toString(), t.length.toInt()) }
         register(DOUBLE, CLOB) { x, t -> Datum.clob(x.double.toString().toByteArray(), t.length) }
     }
 
@@ -452,8 +452,8 @@ internal object CastTable {
         register(STRING, REAL) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, DOUBLE) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, STRING) { x, _ -> x }
-        register(STRING, VARCHAR) { x, t -> Datum.varchar(x.string, t.length) }
-        register(STRING, CHAR) { x, t -> Datum.character(x.string, t.length) }
+        register(STRING, VARCHAR) { x, t -> Datum.varchar(x.string, t.length.toInt()) }
+        register(STRING, CHAR) { x, t -> Datum.character(x.string, t.length.toInt()) }
         register(STRING, CLOB) { x, t -> Datum.clob(x.string.toByteArray(), t.length) }
     }
 

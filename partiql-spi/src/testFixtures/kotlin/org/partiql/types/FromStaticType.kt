@@ -32,7 +32,7 @@ fun fromStaticType(type: StaticType): PType {
     } else if (type is BoolType) {
         return PType.bool()
     } else if (type is ClobType) {
-        return PType.clob(Int.MAX_VALUE) // TODO: Update this
+        return PType.clob(Long.MAX_VALUE)
     } else if (type is DateType) {
         return PType.date()
     } else if (type is DecimalType) {

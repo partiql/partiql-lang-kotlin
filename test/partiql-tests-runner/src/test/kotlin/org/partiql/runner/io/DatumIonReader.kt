@@ -79,7 +79,7 @@ class DatumIonReader(
             IonType.DECIMAL -> PType.decimal(38, 0)
             IonType.TIMESTAMP -> PType.timestamp(6)
             IonType.STRING, IonType.SYMBOL -> PType.string()
-            IonType.CLOB -> PType.clob(Int.MAX_VALUE)
+            IonType.CLOB -> PType.clob(Long.MAX_VALUE)
             IonType.BLOB -> PType.blob(Int.MAX_VALUE)
             IonType.LIST, IonType.SEXP -> PType.array()
             IonType.STRUCT -> PType.struct()

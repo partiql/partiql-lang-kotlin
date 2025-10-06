@@ -23,8 +23,8 @@ internal val Fn_LOWER__STRING__STRING = Function.overload(
 internal val Fn_LOWER__CLOB__CLOB = Function.overload(
 
     name = "lower",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
+    returns = PType.clob(Long.MAX_VALUE),
+    parameters = arrayOf(Parameter("value", PType.clob(Long.MAX_VALUE))),
 
 ) { args ->
     val string = args[0].bytes.toString(Charsets.UTF_8)

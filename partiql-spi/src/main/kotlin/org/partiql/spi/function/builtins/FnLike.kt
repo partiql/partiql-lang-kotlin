@@ -38,8 +38,8 @@ internal val Fn_LIKE__CLOB_CLOB__BOOL = FunctionUtils.hidden(
     name = "like",
     returns = PType.bool(),
     parameters = arrayOf(
-        Parameter("value", PType.clob(Int.MAX_VALUE)),
-        Parameter("pattern", PType.clob(Int.MAX_VALUE)),
+        Parameter("value", PType.clob(Long.MAX_VALUE)),
+        Parameter("pattern", PType.clob(Long.MAX_VALUE)),
     ),
 
 ) { args ->

@@ -28,10 +28,10 @@ internal val Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING = FunctionUtils.hidden
 internal val Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB = FunctionUtils.hidden(
 
     name = "trim_leading_chars",
-    returns = PType.clob(Int.MAX_VALUE),
+    returns = PType.clob(Long.MAX_VALUE),
     parameters = arrayOf(
-        Parameter("value", PType.clob(Int.MAX_VALUE)),
-        Parameter("chars", PType.clob(Int.MAX_VALUE)),
+        Parameter("value", PType.clob(Long.MAX_VALUE)),
+        Parameter("chars", PType.clob(Long.MAX_VALUE)),
     ),
 
 ) { args ->

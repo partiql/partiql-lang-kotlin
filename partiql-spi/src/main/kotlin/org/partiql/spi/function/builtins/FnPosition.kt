@@ -30,8 +30,8 @@ internal val Fn_POSITION__CLOB_CLOB__INT64 = FunctionUtils.hidden(
     name = "position",
     returns = PType.bigint(),
     parameters = arrayOf(
-        Parameter("probe", PType.clob(Int.MAX_VALUE)),
-        Parameter("value", PType.clob(Int.MAX_VALUE)),
+        Parameter("probe", PType.clob(Long.MAX_VALUE)),
+        Parameter("value", PType.clob(Long.MAX_VALUE)),
     ),
 
 ) { args ->

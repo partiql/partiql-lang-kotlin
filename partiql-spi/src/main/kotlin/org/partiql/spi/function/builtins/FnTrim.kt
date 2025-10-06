@@ -53,8 +53,8 @@ internal val Fn_TRIM__STRING__STRING = FunctionUtils.hidden(
 internal val Fn_TRIM__CLOB__CLOB = FunctionUtils.hidden(
 
     name = "trim",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
+    returns = PType.clob(Long.MAX_VALUE),
+    parameters = arrayOf(Parameter("value", PType.clob(Long.MAX_VALUE))),
 
 ) { args ->
     val string = args[0].bytes.toString(Charsets.UTF_8)

@@ -254,13 +254,13 @@ internal class IonDatumReader internal constructor(
 
     private fun clob0(): Datum {
         val v = reader.newBytes()
-        val n = v.size
+        val n = v.size.toLong()
         return Datum.clob(v, n)
     }
 
-    private fun clob1(size: Int): Datum {
+    private fun clob1(size: Long): Datum {
         val v = reader.newBytes()
-        val s = v.size
+        val s = v.size.toLong()
         if (s != size) {
             throw IonDatumException("clob($size) had size $s", null, span())
         }
