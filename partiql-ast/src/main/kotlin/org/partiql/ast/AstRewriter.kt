@@ -855,6 +855,14 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         return node
     }
 
+    override fun visitWindowFunctionTypeDenseRank(node: WindowFunctionType.DenseRank, ctx: C): AstNode {
+        return node
+    }
+
+    override fun visitWindowFunctionTypePercentRank(node: WindowFunctionType.PercentRank, ctx: C): AstNode {
+        return node
+    }
+
     override fun visitWindowFunctionTypeCumeDist(node: WindowFunctionType.CumeDist, ctx: C): AstNode {
         return node
     }

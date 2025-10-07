@@ -2012,9 +2012,9 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitWindowFunctionTypeRank(ctx: GeneratedParser.WindowFunctionTypeRankContext) = translate(ctx) {
             val func = ctx.rankFunctionType()
             when {
-                func.RANK() != null -> WindowFunctionType.Rank(WindowFunctionType.Rank.RANK)
-                func.DENSE_RANK() != null -> WindowFunctionType.Rank(WindowFunctionType.Rank.DENSE_RANK)
-                func.PERCENT_RANK() != null -> WindowFunctionType.Rank(WindowFunctionType.Rank.PERCENT_RANK)
+                func.RANK() != null -> WindowFunctionType.Rank()
+                func.DENSE_RANK() != null -> WindowFunctionType.DenseRank()
+                func.PERCENT_RANK() != null -> WindowFunctionType.PercentRank()
                 func.CUME_DIST() != null -> WindowFunctionType.CumeDist()
                 else -> throw error(ctx, "Expected one of: RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST")
             }

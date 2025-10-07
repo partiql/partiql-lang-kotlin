@@ -369,6 +369,30 @@ public abstract class AstVisitor<R, C> {
      * @deprecated This feature is experimental and is subject to change.
      */
     @Deprecated
+    public R visitWindowFunctionTypeDenseRank(WindowFunctionType.DenseRank node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypePercentRank(WindowFunctionType.PercentRank node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     public R visitWindowFunctionTypeCumeDist(WindowFunctionType.CumeDist node, C ctx) {
         return node.accept(this, ctx);
     }
@@ -641,10 +665,26 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     public R visitWindowClause(WindowClause node, C ctx) {
         return defaultVisit(node, ctx);
     }
 
+    /**
+     * TODO
+     * @param node TODO
+     * @param ctx TODO
+     * @return TODO
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     public R visitWindowDefinition(WindowClause.Definition node, C ctx) {
         return defaultVisit(node, ctx);
     }

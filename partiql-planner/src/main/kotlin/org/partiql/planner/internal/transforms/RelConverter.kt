@@ -652,23 +652,22 @@ internal object RelConverter {
 
         private fun convertWindowFunction(node: ExprWindowFunction): Rel.Op.Window.WindowFunction {
             return when (val windowType = node.functionType) {
-                is WindowFunctionType.Rank -> {
-                    val name = when (windowType.type) {
-                        WindowFunctionType.Rank.RANK -> "rank"
-                        WindowFunctionType.Rank.DENSE_RANK -> "dense_rank"
-                        WindowFunctionType.Rank.PERCENT_RANK -> "percent_rank"
+                // No args
+                is WindowFunctionType.Rank, is WindowFunctionType.DenseRank, is WindowFunctionType.PercentRank,
+                is WindowFunctionType.CumeDist, is WindowFunctionType.RowNumber -> {
+                    val name = when (windowType) {
+                        is WindowFunctionType.Rank -> "rank"
+                        is WindowFunctionType.DenseRank -> "dense_rank"
+                        is WindowFunctionType.PercentRank -> "percent_rank"
+                        is WindowFunctionType.CumeDist -> "cume_dist"
+                        is WindowFunctionType.RowNumber -> "row_number"
                         else -> {
-                            PErrors.internalError(IllegalStateException("Window function $windowType unknown."))
+                            val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
+                            env.listener.report(PErrors.internalError(cause))
                             "unknown"
                         }
                     }
                     relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
-                }
-                is WindowFunctionType.CumeDist -> {
-                    relOpWindowWindowFunction("cume_dist", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
-                }
-                is WindowFunctionType.RowNumber -> {
-                    relOpWindowWindowFunction("row_number", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
                 }
                 is WindowFunctionType.LeadOrLag -> {
                     val name = when (windowType) {

@@ -18,6 +18,12 @@ import java.util.List;
 @Deprecated
 public abstract class WindowFunctionType extends AstNode {
 
+    @NotNull
+    @Override
+    public List<AstNode> getChildren() {
+        return new ArrayList<>();
+    }
+
     /**
      * The RANK window function.
      * @see ExprWindowFunction#getFunctionType()
@@ -27,48 +33,60 @@ public abstract class WindowFunctionType extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     @Deprecated
     public static final class Rank extends WindowFunctionType {
-        private int _type;
-
         /**
-         * The plain RANK variant.
+         * Constructs a RANK window function type.
+         * @deprecated This feature is experimental and is subject to change.
          */
-        public static int RANK = 0;
-
-        /**
-         * The DENSE RANK variant.
-         */
-        public static int DENSE_RANK = 1;
-
-        /**
-         * The PERCENT RANK variant.
-         */
-        public static int PERCENT_RANK = 2;
-
-        /**
-         * See the static fields of the {@link Rank} class.
-         * @return the type of rank function.
-         */
-        public int getType() {
-            return _type;
-        }
-
-        /**
-         * Constructs a RANK function.
-         * @param type the type of the RANK function. See the static fields in the {@link Rank} class.
-         */
-        public Rank(int type) {
-            this._type = type;
-        }
-
-        @NotNull
-        @Override
-        public List<AstNode> getChildren() {
-            return new ArrayList<>();
-        }
+        @Deprecated
+        public Rank() {}
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitWindowFunctionTypeRank(this, ctx);
+        }
+    }
+
+    /**
+     * The DENSE RANK window function.
+     * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    @Deprecated
+    public static final class DenseRank extends WindowFunctionType {
+        /**
+         * Constructs a DENSE RANK window function type.
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public DenseRank() {}
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeDenseRank(this, ctx);
+        }
+    }
+
+    /**
+     * The PERCENT RANK window function.
+     * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    @Deprecated
+    public static final class PercentRank extends WindowFunctionType {
+        /**
+         * Constructs a PERCENT RANK window function type.
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public PercentRank() {}
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypePercentRank(this, ctx);
         }
     }
 
@@ -83,7 +101,9 @@ public abstract class WindowFunctionType extends AstNode {
     public static final class CumeDist extends WindowFunctionType {
         /**
          * Constructs a CUME_DIST window function.
+         * @deprecated This feature is experimental and is subject to change.
          */
+        @Deprecated
         public CumeDist() {}
 
         @NotNull
@@ -110,7 +130,9 @@ public abstract class WindowFunctionType extends AstNode {
 
         /**
          * Constructs a new ROW_NUMBER window function.
+         * @deprecated This feature is experimental and is subject to change.
          */
+        @Deprecated
         public RowNumber() {}
 
         @NotNull
@@ -182,7 +204,9 @@ public abstract class WindowFunctionType extends AstNode {
          * @param offset the offset of the window function
          * @param defaultValue the default value of the window function
          * @param nullTreatment the null treatment of the window function
+         * @deprecated This feature is experimental and is subject to change.
          */
+        @Deprecated
         public Lead(
                 @NotNull Expr extent,
                 @Nullable Long offset,
@@ -254,7 +278,9 @@ public abstract class WindowFunctionType extends AstNode {
          * @param offset the offset of the window function
          * @param defaultValue the default value of the window function
          * @param nullTreatment the null treatment of the window function
+         * @deprecated This feature is experimental and is subject to change.
          */
+        @Deprecated
         public Lag(
                 @NotNull Expr extent,
                 @Nullable Long offset,
