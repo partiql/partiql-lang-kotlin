@@ -37,6 +37,7 @@ object ErrorMessageFormatter {
             ErrorCodeString.DIVISION_BY_ZERO -> divisionByZero(error)
             ErrorCodeString.TYPE_UNEXPECTED -> typeUnexpected(error)
             ErrorCodeString.DEGREE_VIOLATION_SCALAR_SUBQUERY -> degreeViolationScalarSubquery(error)
+            ErrorCodeString.EXPERIMENTAL -> experimental(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -139,6 +140,15 @@ object ErrorMessageFormatter {
         val actualType = error.getOrNull("ACTUAL", java.lang.Integer::class.java)
         val actualTypeStr = prepare(actualType.toString(), " Actual degree: ", ".")
         return "Degree of scalar subquery must be 1 (one).$actualTypeStr"
+    }
+
+    /**
+     * @see PError.EXPERIMENTAL
+     */
+    private fun experimental(error: PError): String {
+        val actualType = error.getOrNull("FEATURE", String::class.java)
+        val actualTypeStr = prepare(actualType.toString(), " (", ")")
+        return "Feature$actualTypeStr is experimental and is subject to change."
     }
 
     /**

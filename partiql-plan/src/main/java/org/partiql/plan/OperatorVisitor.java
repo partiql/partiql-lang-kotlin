@@ -18,6 +18,7 @@ import org.partiql.plan.rel.RelSort;
 import org.partiql.plan.rel.RelUnion;
 import org.partiql.plan.rel.RelUnpivot;
 import org.partiql.plan.rel.RelWith;
+import org.partiql.plan.rel.RelWindow;
 import org.partiql.plan.rex.RexArray;
 import org.partiql.plan.rex.RexBag;
 import org.partiql.plan.rex.RexCall;
@@ -125,6 +126,14 @@ public interface OperatorVisitor<R, C> {
     }
 
     default R visitSort(@NotNull RelSort rel, C ctx) {
+        return defaultVisit(rel, ctx);
+    }
+
+    /**
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    default R visitWindow(@NotNull RelWindow rel, C ctx) {
         return defaultVisit(rel, ctx);
     }
 

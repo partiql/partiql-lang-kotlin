@@ -26,10 +26,12 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
 
 ### Changed
 
 ### Deprecated
+- Deprecated previous modeling of window functions.
 
 ### Fixed
 - Datum return type for `LOWER` on a CLOB value
@@ -40,11 +42,13 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @johnedquinn
 
 ## [1.2.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.3) - 2025-09-29
 
 ### Added
 - partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
+
 - **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the 
 `OperatorVisitor`
 - **EXPERIMENTAL** partiql-planner: add planner builder function to control whether `With` table references are 
