@@ -356,6 +356,7 @@ public class org/partiql/spi/errors/PRuntimeException : java/lang/RuntimeExcepti
 	public fun <init> (Lorg/partiql/spi/errors/PError;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun fillInStackTrace ()Ljava/lang/Throwable;
+	public fun getCause ()Ljava/lang/Throwable;
 	public fun getError ()Lorg/partiql/spi/errors/PError;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

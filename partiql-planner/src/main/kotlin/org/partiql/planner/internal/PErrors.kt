@@ -226,7 +226,7 @@ internal object PErrors {
         )
     }
 
-    private fun internalError(cause: Throwable): PError = PError(
+    internal fun internalError(cause: Throwable): PError = PError(
         PError.INTERNAL_ERROR,
         Severity.ERROR(),
         PErrorKind.SEMANTIC(),
