@@ -28,6 +28,7 @@ Thank you to all who have contributed!
 ### Added
 - `UPPER`, `LOWER`, `TRIM` function support for `CHAR/VARCHAR` types
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
+- `UPPER`, `LOWER`, `TRIM` function support for `CHAR/VARCHAR` types
 
 ### Changed
 - Formalize `CONCAT` length handling on string types
@@ -50,7 +51,6 @@ Thank you to all who have contributed!
 
 ### Added
 - partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
-
 - **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the 
 `OperatorVisitor`
 - **EXPERIMENTAL** partiql-planner: add planner builder function to control whether `With` table references are 
