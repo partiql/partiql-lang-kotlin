@@ -26,7 +26,6 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
-- `UPPER`, `LOWER`, `TRIM` function support for `CHAR/VARCHAR` types
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
 - `UPPER`, `LOWER`, `TRIM` function support for `CHAR/VARCHAR` types
 
@@ -46,6 +45,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @johnedquinn
+- @XuechunHHH
 
 ## [1.2.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.3) - 2025-09-29
 
