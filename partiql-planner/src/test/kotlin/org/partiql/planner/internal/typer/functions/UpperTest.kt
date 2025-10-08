@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 class UpperTest {
 
     @Test
-    fun `upper preserves CHAR length`() {
+    fun `upper preserves CHAR length and type`() {
         val session = Session.builder()
             .catalog("default")
             .catalogs(
@@ -32,7 +32,7 @@ class UpperTest {
     }
 
     @Test
-    fun `upper preserves VARCHAR length`() {
+    fun `upper preserves VARCHAR length and type`() {
         val session = Session.builder()
             .catalog("default")
             .catalogs(

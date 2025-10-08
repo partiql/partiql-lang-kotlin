@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 class TrimTest {
 
     @Test
-    fun `trim preserves CHAR length`() {
+    fun `trim preserves CHAR length and type`() {
         val session = Session.builder()
             .catalog("default")
             .catalogs(
@@ -32,7 +32,7 @@ class TrimTest {
     }
 
     @Test
-    fun `trim preserves VARCHAR length`() {
+    fun `trim preserves VARCHAR length and type`() {
         val session = Session.builder()
             .catalog("default")
             .catalogs(
