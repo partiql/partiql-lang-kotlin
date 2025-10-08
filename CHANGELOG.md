@@ -30,6 +30,7 @@ Thank you to all who have contributed!
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
 
 ### Changed
+- Formalize `CONCAT` length handling on string types
 
 ### Deprecated
 - Deprecated previous modeling of window functions.
