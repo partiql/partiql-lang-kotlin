@@ -35,7 +35,7 @@ class OrderByAliasSupportTest {
         val description: String,
     )
 
-    data class FailedTestCase(
+    data class FailureTestCase(
         val name: String,
         val sql: String,
         val description: String,
@@ -414,13 +414,23 @@ class OrderByAliasSupportTest {
         )
 
         @JvmStatic
-        fun failedTestCases() = listOf(
-            FailedTestCase(
-                name = "ambiguous_alias",
+        fun failureTestCases() = listOf(
+            FailureTestCase(
+                name = "case_insensitive_ambiguous_alias",
+                sql = """
+                    SELECT col1 as a, col2 as A
+                    FROM t
+                    ORDER BY a
+                """,
+                description = "ambiguous_alias case should remain unchanged",
+                exception = PRuntimeException(PError(PError.VAR_REF_AMBIGUOUS, Severity.ERROR(), PErrorKind.SEMANTIC(), null, null))
+            ),
+            FailureTestCase(
+                name = "case_sensitive_ambiguous_alias",
                 sql = """
                     SELECT col1 as a, col2 as a
                     FROM t
-                    ORDER BY a
+                    ORDER BY "a"
                 """,
                 description = "ambiguous_alias case should remain unchanged",
                 exception = PRuntimeException(PError(PError.VAR_REF_AMBIGUOUS, Severity.ERROR(), PErrorKind.SEMANTIC(), null, null))
@@ -446,8 +456,8 @@ class OrderByAliasSupportTest {
     }
 
     @ParameterizedTest
-    @MethodSource("failedTestCases")
-    fun testOrderByAliasResolutionFailed(testCase: FailedTestCase) {
+    @MethodSource("failureTestCases")
+    fun testOrderByAliasResolutionFailed(testCase: FailureTestCase) {
         // Parse original SQL to AST
         val parser = PartiQLParser.standard()
         val originalStatement = parser.parse(testCase.sql.trimIndent())

@@ -42,7 +42,10 @@ internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
      * @property parentStack Stack of ExprQuerySet nodes representing nested query scopes
      * @property aliasList Maps each query scope to its SELECT alias definitions
      */
-    data class Context(val parentStack: ArrayDeque<ExprQuerySet> = ArrayDeque(), val aliasList: MutableMap<ExprQuerySet, MutableList<Pair<String, Expr>>> = mutableMapOf())
+    data class Context(
+        val parentStack: ArrayDeque<ExprQuerySet> = ArrayDeque(),
+        val aliasList: MutableMap<ExprQuerySet, MutableMap<String, MutableList<Expr>>> = mutableMapOf()
+    )
 
     override fun apply(statement: Statement): Statement {
         return Visitor(listener).visitStatement(statement, Context()) as Statement
@@ -81,11 +84,11 @@ internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
         override fun visitExprQuerySet(node: ExprQuerySet, ctx: Context): AstNode {
             // Push current query scope onto stack
             ctx.parentStack.addLast(node)
-            ctx.aliasList[node] = mutableListOf()
+            ctx.aliasList[node] = mutableMapOf()
 
             val transformed = super.visitExprQuerySet(node, ctx)
 
-            // Pop scope when exiting query
+            // Pop scope from current querySet
             ctx.parentStack.removeLast()
             return transformed
         }
@@ -97,8 +100,9 @@ internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
         override fun visitSelectItem(node: SelectItem, ctx: Context): AstNode {
             if (node is SelectItem.Expr) {
                 node.asAlias?.let { alias ->
-                    // Add alias mapping to current query scope
-                    ctx.aliasList[ctx.parentStack.last()]?.add(alias.text to node.expr)
+                    val currentAliasMap = ctx.aliasList[ctx.parentStack.last()]!!
+                    // Add alias mapping to the current query scope
+                    currentAliasMap.getOrPut(alias.text) { mutableListOf() }.add(node.expr)
                 }
             }
             return node
@@ -145,28 +149,33 @@ internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
          * @param aliasMap Current scope's alias mappings
          * @return Resolved expression or original if no alias found
          */
-        private fun resolveExpr(expr: Expr, aliasMap: List<Pair<String, Expr>>): Expr {
+        private fun resolveExpr(expr: Expr, aliasMap: Map<String, List<Expr>>): Expr {
             return when (expr) {
                 is ExprVarRef -> {
                     val identifier = expr.identifier.identifier
                     val orderByName = identifier.text
                     val isOrderByRegular = identifier.isRegular
 
-                    // Find matching alias considering case sensitivity
-                    val candidates = aliasMap.filter { orderByName.equals(it.first, ignoreCase = isOrderByRegular) }
+                    val candidates = if (isOrderByRegular) {
+                        aliasMap.filterKeys { it.equals(orderByName, ignoreCase = true) }.values.flatten()
+                    } else {
+                        aliasMap[orderByName]
+                    }
 
-                    if (candidates.size == 1) {
-                        candidates[0].second
+                    if (candidates == null) {
+                        expr
+                    } else if (candidates.size == 1) {
+                        candidates[0]
                     } else {
                         if (candidates.size > 1) {
-                            val candidateNames = candidates.map {
-                                val ref = it.second
+                            val candidateNames = candidates.mapNotNull {
+                                val ref = it
                                 if (ref is ExprVarRef) {
                                     ref.identifier.identifier.text
                                 } else {
-                                    "Not a column name or alias"
+                                    null
                                 }
-                            }.toList()
+                            }
                             listener.report(PErrors.varRefAmbiguous(null, expr.identifier, candidateNames))
                         }
                         expr
