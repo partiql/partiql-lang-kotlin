@@ -9,10 +9,10 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.types.PType
 import kotlin.test.assertEquals
 
-class LowerTest {
+class TrimTest {
 
     @Test
-    fun `lower preserves CHAR length`() {
+    fun `trim preserves CHAR length`() {
         val session = Session.builder()
             .catalog("default")
             .catalogs(
@@ -21,18 +21,18 @@ class LowerTest {
                     .build()
             )
             .build()
-        val parseResult = PartiQLParser.standard().parse("LOWER(CAST('hello' AS CHAR(5)))")
+        val parseResult = PartiQLParser.standard().parse("TRIM(CAST('  HELLO  ' AS CHAR(9)))")
         val ast = parseResult.statements[0]
         val planner = PartiQLPlanner.builder().build()
         val result = planner.plan(ast, session)
         val query = result.plan.action as Action.Query
         val actualType = query.rex.type.pType
         assertEquals(PType.CHAR, actualType.code())
-        assertEquals(5, actualType.length)
+        assertEquals(9, actualType.length)
     }
 
     @Test
-    fun `lower preserves VARCHAR length`() {
+    fun `trim preserves VARCHAR length`() {
         val session = Session.builder()
             .catalog("default")
             .catalogs(
@@ -41,18 +41,18 @@ class LowerTest {
                     .build()
             )
             .build()
-        val parseResult = PartiQLParser.standard().parse("LOWER(CAST('hello' AS VARCHAR(10)))")
+        val parseResult = PartiQLParser.standard().parse("TRIM(CAST('  HELLO  ' AS VARCHAR(15)))")
         val ast = parseResult.statements[0]
         val planner = PartiQLPlanner.builder().build()
         val result = planner.plan(ast, session)
         val query = result.plan.action as Action.Query
         val actualType = query.rex.type.pType
         assertEquals(PType.VARCHAR, actualType.code())
-        assertEquals(10, actualType.length)
+        assertEquals(15, actualType.length)
     }
 
     @Test
-    fun `lower preserves CLOB type`() {
+    fun `trim preserves CLOB type`() {
         val session = Session.builder()
             .catalog("default")
             .catalogs(
@@ -61,7 +61,7 @@ class LowerTest {
                     .build()
             )
             .build()
-        val parseResult = PartiQLParser.standard().parse("LOWER(CAST('hello' AS CLOB))")
+        val parseResult = PartiQLParser.standard().parse("TRIM(CAST('  HELLO  ' AS CLOB))")
         val ast = parseResult.statements[0]
         val planner = PartiQLPlanner.builder().build()
         val result = planner.plan(ast, session)
@@ -71,7 +71,7 @@ class LowerTest {
     }
 
     @Test
-    fun `lower preserves STRING type`() {
+    fun `trim preserves STRING type`() {
         val session = Session.builder()
             .catalog("default")
             .catalogs(
@@ -80,7 +80,7 @@ class LowerTest {
                     .build()
             )
             .build()
-        val parseResult = PartiQLParser.standard().parse("LOWER('hello')")
+        val parseResult = PartiQLParser.standard().parse("TRIM('  HELLO  ')")
         val ast = parseResult.statements[0]
         val planner = PartiQLPlanner.builder().build()
         val result = planner.plan(ast, session)

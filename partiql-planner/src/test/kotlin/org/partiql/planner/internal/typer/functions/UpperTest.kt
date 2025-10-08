@@ -69,4 +69,23 @@ class UpperTest {
         val actualType = query.rex.type.pType
         assertEquals(PType.CLOB, actualType.code())
     }
+
+    @Test
+    fun `upper preserves STRING type`() {
+        val session = Session.builder()
+            .catalog("default")
+            .catalogs(
+                TestCatalog.builder()
+                    .name("default")
+                    .build()
+            )
+            .build()
+        val parseResult = PartiQLParser.standard().parse("UPPER('HELLO')")
+        val ast = parseResult.statements[0]
+        val planner = PartiQLPlanner.builder().build()
+        val result = planner.plan(ast, session)
+        val query = result.plan.action as Action.Query
+        val actualType = query.rex.type.pType
+        assertEquals(PType.STRING, actualType.code())
+    }
 }

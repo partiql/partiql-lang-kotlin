@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- `UPPER`, `LOWER`, `TRIM` function support for `CHAR/VARCHAR` types
 
 ### Changed
 

@@ -3,7 +3,11 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
+import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointTrim
@@ -38,42 +42,57 @@ import org.partiql.spi.value.Datum
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-internal val Fn_TRIM__CHAR__CHAR = FunctionUtils.hidden(
-    name = "trim",
-    returns = PType.character(),
-    parameters = arrayOf(Parameter("value", PType.character())),
-) { args ->
-    val string = args[0].bytes.toString(Charsets.UTF_8)
-    val result = string.codepointTrim()
-    Datum.character(result)
+internal object FnTrim : FnOverload() {
+
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature(FunctionUtils.hide("trim"), listOf(PType.dynamic()))
+    }
+
+    override fun getInstance(args: Array<PType>): Fn? {
+        val inputType = args[0]
+        return when (inputType.code()) {
+            PType.CHAR -> Function.instance(
+                name = FunctionUtils.hide("trim"),
+                returns = PType.character(inputType.length),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val string = args[0].bytes.toString(Charsets.UTF_8)
+                val result = string.codepointTrim()
+                Datum.character(result, inputType.length)
+            }
+            PType.VARCHAR -> Function.instance(
+                name = FunctionUtils.hide("trim"),
+                returns = PType.varchar(inputType.length),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val string = args[0].bytes.toString(Charsets.UTF_8)
+                val result = string.codepointTrim()
+                Datum.varchar(result, inputType.length)
+            }
+            PType.STRING -> Function.instance(
+                name = FunctionUtils.hide("trim"),
+                returns = PType.string(),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val value = args[0].string
+                val result = value.codepointTrim()
+                Datum.string(result)
+            }
+            PType.CLOB -> Function.instance(
+                name = FunctionUtils.hide("trim"),
+                returns = PType.clob(inputType.length),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val string = args[0].bytes.toString(Charsets.UTF_8)
+                val result = string.codepointTrim()
+                Datum.clob(result.toByteArray())
+            }
+            else -> null
+        }
+    }
 }
 
-internal val Fn_TRIM__VARCHAR__VARCHAR = FunctionUtils.hidden(
-    name = "trim",
-    returns = PType.varchar(),
-    parameters = arrayOf(Parameter("value", PType.varchar())),
-) { args ->
-    val string = args[0].bytes.toString(Charsets.UTF_8)
-    val result = string.codepointTrim()
-    Datum.varchar(result)
-}
-
-internal val Fn_TRIM__STRING__STRING = FunctionUtils.hidden(
-    name = "trim",
-    returns = PType.string(),
-    parameters = arrayOf(Parameter("value", PType.string())),
-) { args ->
-    val value = args[0].string
-    val result = value.codepointTrim()
-    Datum.string(result)
-}
-
-internal val Fn_TRIM__CLOB__CLOB = FunctionUtils.hidden(
-    name = "trim",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
-) { args ->
-    val string = args[0].bytes.toString(Charsets.UTF_8)
-    val result = string.codepointTrim()
-    Datum.clob(result.toByteArray())
-}
+internal val Fn_TRIM__CHAR__CHAR = FnTrim
+internal val Fn_TRIM__VARCHAR__VARCHAR = FnTrim
+internal val Fn_TRIM__STRING__STRING = FnTrim
+internal val Fn_TRIM__CLOB__CLOB = FnTrim
