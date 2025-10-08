@@ -9,26 +9,6 @@ import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointTrim
 import org.partiql.spi.value.Datum
 
-internal val Fn_TRIM__CHAR__CHAR = FunctionUtils.hidden(
-
-    name = "trim",
-    returns = PType.character(),
-    parameters = arrayOf(Parameter("value", PType.character())),
-
-) { args ->
-    TODO("Not yet implemented")
-}
-
-internal val Fn_TRIM__VARCHAR__VARCHAR = FunctionUtils.hidden(
-
-    name = "trim",
-    returns = PType.varchar(),
-    parameters = arrayOf(Parameter("value", PType.varchar())),
-
-) { args ->
-    TODO("Not yet implemented")
-}
-
 /**
  * From section 6.7 of SQL 92 spec:
  * ```
@@ -58,12 +38,30 @@ internal val Fn_TRIM__VARCHAR__VARCHAR = FunctionUtils.hidden(
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-internal val Fn_TRIM__STRING__STRING = FunctionUtils.hidden(
+internal val Fn_TRIM__CHAR__CHAR = FunctionUtils.hidden(
+    name = "trim",
+    returns = PType.character(),
+    parameters = arrayOf(Parameter("value", PType.character())),
+) { args ->
+    val string = args[0].bytes.toString(Charsets.UTF_8)
+    val result = string.codepointTrim()
+    Datum.character(result)
+}
 
+internal val Fn_TRIM__VARCHAR__VARCHAR = FunctionUtils.hidden(
+    name = "trim",
+    returns = PType.varchar(),
+    parameters = arrayOf(Parameter("value", PType.varchar())),
+) { args ->
+    val string = args[0].bytes.toString(Charsets.UTF_8)
+    val result = string.codepointTrim()
+    Datum.varchar(result)
+}
+
+internal val Fn_TRIM__STRING__STRING = FunctionUtils.hidden(
     name = "trim",
     returns = PType.string(),
     parameters = arrayOf(Parameter("value", PType.string())),
-
 ) { args ->
     val value = args[0].string
     val result = value.codepointTrim()
@@ -71,11 +69,9 @@ internal val Fn_TRIM__STRING__STRING = FunctionUtils.hidden(
 }
 
 internal val Fn_TRIM__CLOB__CLOB = FunctionUtils.hidden(
-
     name = "trim",
     returns = PType.clob(Int.MAX_VALUE),
     parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
-
 ) { args ->
     val string = args[0].bytes.toString(Charsets.UTF_8)
     val result = string.codepointTrim()

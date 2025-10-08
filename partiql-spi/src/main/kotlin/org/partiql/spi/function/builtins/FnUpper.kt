@@ -3,51 +3,66 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_UPPER__CHAR__CHAR = Function.overload(
+internal object FnUpper : FnOverload() {
 
-    name = "upper",
-    returns = PType.character(),
-    parameters = arrayOf(Parameter("value", PType.character())),
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature("upper", listOf(PType.dynamic()))
+    }
 
-) { args ->
-    TODO("Not yet implemented")
+    override fun getInstance(args: Array<PType>): Fn? {
+        val inputType = args[0]
+        return when (inputType.code()) {
+            PType.CHAR -> Function.instance(
+                name = "upper",
+                returns = PType.character(inputType.length),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val string = args[0].bytes.toString(Charsets.UTF_8)
+                val result = string.uppercase()
+                Datum.character(result, inputType.length)
+            }
+            PType.VARCHAR -> Function.instance(
+                name = "upper",
+                returns = PType.varchar(inputType.length),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val string = args[0].bytes.toString(Charsets.UTF_8)
+                val result = string.uppercase()
+                Datum.varchar(result, inputType.length)
+            }
+            PType.STRING -> Function.instance(
+                name = "upper",
+                returns = PType.string(),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val string = args[0].string
+                val result = string.uppercase()
+                Datum.string(result)
+            }
+            PType.CLOB -> Function.instance(
+                name = "upper",
+                returns = PType.clob(inputType.length),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val string = args[0].bytes.toString(Charsets.UTF_8)
+                val result = string.uppercase()
+                Datum.clob(result.toByteArray())
+            }
+            else -> null
+        }
+    }
 }
 
-internal val Fn_UPPER__VARCHAR__VARCHAR = Function.overload(
-
-    name = "upper",
-    returns = PType.varchar(),
-    parameters = arrayOf(Parameter("value", PType.varchar())),
-
-) { args ->
-    TODO("Not yet implemented")
-}
-
-internal val Fn_UPPER__STRING__STRING = Function.overload(
-
-    name = "upper",
-    returns = PType.string(),
-    parameters = arrayOf(Parameter("value", PType.string())),
-
-) { args ->
-    val string = args[0].string
-    val result = string.uppercase()
-    Datum.string(result)
-}
-
-internal val Fn_UPPER__CLOB__CLOB = Function.overload(
-
-    name = "upper",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
-
-) { args ->
-    val string = args[0].bytes.toString(Charsets.UTF_8)
-    val result = string.uppercase()
-    Datum.clob(result.toByteArray())
-}
+// Keep the old function names for backward compatibility in Builtins.kt
+internal val Fn_UPPER__CHAR__CHAR = FnUpper
+internal val Fn_UPPER__VARCHAR__VARCHAR = FnUpper
+internal val Fn_UPPER__STRING__STRING = FnUpper
+internal val Fn_UPPER__CLOB__CLOB = FnUpper
