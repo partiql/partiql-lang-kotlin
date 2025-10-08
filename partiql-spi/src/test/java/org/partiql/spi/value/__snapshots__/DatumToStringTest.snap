@@ -1,10 +1,10 @@
 org.partiql.spi.value.DatumToStringTest.testDatumBagToString[datumWithMixedType]=[
-DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}
+DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value='hello world'}]}
 ]
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumBagToString[datumWithNestedType]=[
-DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumInt{_type=INTEGER, _value=2}, DatumInt{_type=INTEGER, _value=3}]}, DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}]}
+DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumInt{_type=INTEGER, _value=2}, DatumInt{_type=INTEGER, _value=3}]}, DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value='hello world'}]}]}
 ]
 
 
@@ -34,17 +34,17 @@ DatumBytes{_type=BLOB(2147483647), _value=[10, 50, 100, 127]}
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumCharsToString[datum]=[
-DatumString{_type=CHAR(10), _value=test      }
+DatumString{_type=CHAR(10), _value='test      '}
 ]
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumCollectionToString[datumWithMixedType]=[
-DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}
+DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value='hello world'}]}
 ]
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumCollectionToString[datumWithNestedType]=[
-DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumInt{_type=INTEGER, _value=2}, DatumInt{_type=INTEGER, _value=3}]}, DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}]}
+DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumInt{_type=INTEGER, _value=2}, DatumInt{_type=INTEGER, _value=3}]}, DatumCollection{_type=ARRAY(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value='hello world'}]}]}
 ]
 
 
@@ -169,17 +169,17 @@ DatumNull{_type=STRING}
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumRowToString[datumWithDuplicateKey]=[
-DatumRow{_type=ROW(col1: STRING, col1: INTEGER), _value={col1: [DatumString{_type=STRING, _value=John}, DatumInt{_type=INTEGER, _value=30}]}}
+DatumRow{_type=ROW(col1: STRING, col1: INTEGER), _value={col1: [DatumString{_type=STRING, _value='John'}, DatumInt{_type=INTEGER, _value=30}]}}
 ]
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumRowToString[datumWithNested]=[
-DatumRow{_type=ROW(col1: STRING, col2: BAG(DYNAMIC)), _value={col2: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}], col1: [DatumString{_type=STRING, _value=John}]}}
+DatumRow{_type=ROW(col1: STRING, col2: BAG(DYNAMIC)), _value={col2: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value='hello world'}]}], col1: [DatumString{_type=STRING, _value='John'}]}}
 ]
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumRowToString[datum]=[
-DatumRow{_type=ROW(col1: STRING, col2: INTEGER), _value={col2: [DatumInt{_type=INTEGER, _value=30}], col1: [DatumString{_type=STRING, _value=John}]}}
+DatumRow{_type=ROW(col1: STRING, col2: INTEGER), _value={col2: [DatumInt{_type=INTEGER, _value=30}], col1: [DatumString{_type=STRING, _value='John'}]}}
 ]
 
 
@@ -189,22 +189,22 @@ DatumShort{_type=SMALLINT, _value=1234}
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumStringToString[datum]=[
-DatumString{_type=STRING, _value=hello world}
+DatumString{_type=STRING, _value='hello world'}
 ]
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumStructToString[datumWithDuplicateKey]=[
-DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value=John}, DatumInt{_type=INTEGER, _value=30}]}}
+DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value='John'}, DatumInt{_type=INTEGER, _value=30}]}}
 ]
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumStructToString[datumWithNested]=[
-DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value=John}], property: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value=hello world}]}]}}
+DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value='John'}], property: [DatumCollection{_type=BAG(DYNAMIC), _value=[DatumInt{_type=INTEGER, _value=1}, DatumString{_type=STRING, _value='hello world'}]}]}}
 ]
 
 
 org.partiql.spi.value.DatumToStringTest.testDatumStructToString[datum]=[
-DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value=John}], age: [DatumInt{_type=INTEGER, _value=30}]}}
+DatumStruct{_type=STRUCT, _value={name: [DatumString{_type=STRING, _value='John'}], age: [DatumInt{_type=INTEGER, _value=30}]}}
 ]
 
 

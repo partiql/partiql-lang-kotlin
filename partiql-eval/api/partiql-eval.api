@@ -44,6 +44,16 @@ public abstract interface class org/partiql/eval/Statement {
 	public abstract fun execute ()Lorg/partiql/spi/value/Datum;
 }
 
+public abstract interface class org/partiql/eval/WindowFunction {
+	public abstract fun eval (Lorg/partiql/eval/Environment;JJ)Lorg/partiql/spi/value/Datum;
+	public abstract fun reset (Lorg/partiql/eval/WindowPartition;)V
+}
+
+public abstract interface class org/partiql/eval/WindowPartition {
+	public abstract fun get (J)Lorg/partiql/eval/Row;
+	public abstract fun size ()J
+}
+
 public class org/partiql/eval/compiler/Match {
 	public fun <init> (Lorg/partiql/plan/Operand;)V
 	public fun getOperand ()Lorg/partiql/plan/Operand;

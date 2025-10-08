@@ -1,5 +1,6 @@
 package org.partiql.planner.`internal`.ir
 
+import org.partiql.planner.internal.ir.Rel.Op.Sort.Order
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
 import org.partiql.planner.internal.ir.builder.RefAggBuilder
 import org.partiql.planner.internal.ir.builder.RefCastBuilder
@@ -33,6 +34,8 @@ import org.partiql.planner.internal.ir.builder.RelOpSortBuilder
 import org.partiql.planner.internal.ir.builder.RelOpSortSpecBuilder
 import org.partiql.planner.internal.ir.builder.RelOpUnionBuilder
 import org.partiql.planner.internal.ir.builder.RelOpUnpivotBuilder
+import org.partiql.planner.internal.ir.builder.RelOpWindowBuilder
+import org.partiql.planner.internal.ir.builder.RelOpWindowWindowFunctionBuilder
 import org.partiql.planner.internal.ir.builder.RelOpWithBuilder
 import org.partiql.planner.internal.ir.builder.RelOpWithWithListElementBuilder
 import org.partiql.planner.internal.ir.builder.RelTypeBuilder
@@ -781,6 +784,7 @@ internal data class Rel(
             is ScanIndexed -> visitor.visitRelOpScanIndexed(this, ctx)
             is Unpivot -> visitor.visitRelOpUnpivot(this, ctx)
             is Distinct -> visitor.visitRelOpDistinct(this, ctx)
+            is Window -> visitor.visitRelOpWindow(this, ctx)
             is Filter -> visitor.visitRelOpFilter(this, ctx)
             is Sort -> visitor.visitRelOpSort(this, ctx)
             is Union -> visitor.visitRelOpUnion(this, ctx)
@@ -861,6 +865,51 @@ internal data class Rel(
             internal companion object {
                 @JvmStatic
                 internal fun builder(): RelOpDistinctBuilder = RelOpDistinctBuilder()
+            }
+        }
+
+        internal data class Window(
+            @JvmField internal val input: Rel,
+            @JvmField internal val functions: List<WindowFunction>,
+            @JvmField internal val partitions: List<Rex>,
+            @JvmField internal val sorts: List<Sort.Spec>
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(input)
+                kids.addAll(functions)
+                kids.addAll(partitions)
+                kids.addAll(sorts)
+                kids.filterNotNull()
+            }
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpWindow(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RelOpWindowBuilder = RelOpWindowBuilder()
+            }
+
+            internal data class WindowFunction(
+                @JvmField internal val name: String,
+                @JvmField internal val args: List<Rex>,
+                @JvmField internal val isIgnoreNulls: Boolean,
+                @JvmField internal val parameterTypes: List<CompilerType>?,
+                @JvmField internal val returnType: CompilerType?,
+            ) : PlanNode() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.addAll(args)
+                    kids.filterNotNull()
+                }
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRelOpWindowWindowFunction(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RelOpWindowWindowFunctionBuilder = RelOpWindowWindowFunctionBuilder()
+                }
             }
         }
 

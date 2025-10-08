@@ -115,10 +115,10 @@ jobs:
           O="$COMPARISON_REPORT_NAME"
           ARGS="-t $T -d $D -bf $BF -bt $BT -tf $TF -tt $TT -o $O"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
-      - name: "Artifact CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED Report (appends to comparison_report.md)"
+      - name: "Artifact CROSS-COMMIT-REPORT-PARTIQLEXTENDED Report (appends to comparison_report.md)"
         continue-on-error: true
         run: |
-          T="CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED"
+          T="CROSS-COMMIT-REPORT-PARTIQLEXTENDED"
           D="PartiQLExtended"
           BF="$GITHUB_WORKSPACE/artifact/partiqlextended/$CONFORMANCE_REPORT_NAME"
           BT="${{ github.event.pull_request.base.sha }}"
@@ -155,10 +155,10 @@ jobs:
           L="$COMMENT_SIZE_LIMIT"
           ARGS="-t $T -d $D -bf $BF -bt $BT -tf $TF -tt $TT -o $O -l $L"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
-      - name: "Comment CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED (appends to comparison_report_limited.md)"
+      - name: "Comment CROSS-COMMIT-REPORT-PARTIQLEXTENDED (appends to comparison_report_limited.md)"
         continue-on-error: true
         run: |
-          T="CROSS-COMMIT-REPORT-PARTIQLCORE-EXTENDED"
+          T="CROSS-COMMIT-REPORT-PARTIQLEXTENDED"
           D="PartiQLExtended"
           BF="$GITHUB_WORKSPACE/artifact/partiqlextended/$CONFORMANCE_REPORT_NAME"          
           BT="${{ github.event.pull_request.base.sha }}"

@@ -303,6 +303,7 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field CARDINALITY_VIOLATION I
 	public static final field DEGREE_VIOLATION_SCALAR_SUBQUERY I
 	public static final field DIVISION_BY_ZERO I
+	public static final field EXPERIMENTAL I
 	public static final field FEATURE_NOT_SUPPORTED I
 	public static final field FUNCTION_NOT_FOUND I
 	public static final field FUNCTION_TYPE_MISMATCH I
@@ -356,6 +357,7 @@ public class org/partiql/spi/errors/PRuntimeException : java/lang/RuntimeExcepti
 	public fun <init> (Lorg/partiql/spi/errors/PError;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun fillInStackTrace ()Ljava/lang/Throwable;
+	public fun getCause ()Ljava/lang/Throwable;
 	public fun getError ()Lorg/partiql/spi/errors/PError;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
