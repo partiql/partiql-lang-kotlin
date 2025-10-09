@@ -15,6 +15,7 @@
 
 package org.partiql.planner.internal.transforms
 
+import org.partiql.ast.Ast.exprQuerySet
 import org.partiql.ast.Ast.orderBy
 import org.partiql.ast.Ast.sort
 import org.partiql.ast.AstNode
@@ -23,6 +24,7 @@ import org.partiql.ast.OrderBy
 import org.partiql.ast.QueryBody
 import org.partiql.ast.SelectItem
 import org.partiql.ast.Statement
+import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprVarRef
@@ -31,96 +33,72 @@ import org.partiql.spi.errors.PErrorListener
 import kotlin.collections.MutableMap
 
 /**
- * Normalizes ORDER BY expressions by replacing SELECT aliases with their original expressions.
- * Uses a stack-based approach to maintain separate alias maps for each query scope,
- * enabling proper alias resolution in nested queries and set operations.
+ * Replaces ORDER BY aliases with their corresponding SELECT expressions using stack-based scope tracking.
  */
 internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
-    /**
-     * Context for tracking parent query scopes and their alias mappings.
-     *
-     * @property parentStack Stack of ExprQuerySet nodes representing nested query scopes
-     * @property aliasList Maps each query scope to its SELECT alias definitions
-     */
-    data class Context(
-        val parentStack: ArrayDeque<ExprQuerySet> = ArrayDeque(),
-        val aliasList: MutableMap<ExprQuerySet, MutableMap<String, MutableList<Expr>>> = mutableMapOf()
-    )
-
     override fun apply(statement: Statement): Statement {
-        return Visitor(listener).visitStatement(statement, Context()) as Statement
+        return Visitor(listener).visitStatement(statement, ArrayDeque()) as Statement
     }
 
     /**
-     * AST visitor that uses a stack-based approach to track parent query scopes.
-     *
-     * Key behaviors:
-     * - Each ExprQuerySet creates its own alias scope on the stack
-     * - SELECT aliases are collected into the current scope's map
-     * - ORDER BY expressions resolve aliases from the appropriate scope
-     * - Set operations (UNION, INTERSECT, EXCEPT) are skipped Order-By alias replacement
-     * - Case sensitivity is handled for both regular and delimited identifiers
-     *
-     * Example with nested queries:
-     * ```sql
-     * SELECT pid AS p FROM (
-     *   SELECT productId AS pid FROM products ORDER BY pid
-     * ) ORDER BY p
-     * ```
-     *
-     * Stack operations:
-     * 1. Push outer query scope, collect "p" -> pid
-     * 2. Push inner query scope, collect "pid" -> productId
-     * 3. Resolve ORDER BY pid using inner scope
-     * 4. Pop inner scope
-     * 5. Resolve ORDER BY p using outer scope
-     * 6. Pop outer scope
+     * Maintains alias scope stack for nested queries and resolves ORDER BY aliases.
      */
-    private class Visitor(val listener: PErrorListener) : AstRewriter<Context>() {
+    private class Visitor(val listener: PErrorListener) :
+        AstRewriter<ArrayDeque<MutableMap<String, MutableList<Expr>>>>() {
         /**
-         * Manages query scope stack for each ExprQuerySet.
-         * Pushes current query to stack on entry, pops on exit to maintain proper nesting.
+         * Pushes new alias scope, processes query, then pops scope.
          */
-        override fun visitExprQuerySet(node: ExprQuerySet, ctx: Context): AstNode {
-            // Push current query scope onto stack
-            ctx.parentStack.addLast(node)
-            ctx.aliasList[node] = mutableMapOf()
+        override fun visitExprQuerySet(
+            node: ExprQuerySet,
+            ctx: ArrayDeque<MutableMap<String, MutableList<Expr>>>
+        ): AstNode {
+            // Push new scope
+            ctx.addLast(mutableMapOf())
 
-            val transformed = super.visitExprQuerySet(node, ctx)
+            // Visit all statements that may have SELECT or ORDER BY
+            val body = node.body.let { visitQueryBody(it, ctx) as QueryBody }
+            val orderBy = node.orderBy?.let {
+                if (body !is QueryBody.SetOp) {
+                    // Skip alias replacement if the query body is set operations
+                    visitOrderBy(it, ctx) as OrderBy?
+                } else {
+                    node.orderBy
+                }
+            }
+            val with = node.with?.let { visitWith(it, ctx) as With? }
+            val transformed = if (body !== node.body || orderBy !== node.orderBy || with !== node.with
+            ) {
+                exprQuerySet(body, orderBy, node.limit, node.offset, with)
+            } else {
+                node
+            }
 
-            // Pop scope from current querySet
-            ctx.parentStack.removeLast()
+            // Pop scope
+            ctx.removeLast()
             return transformed
         }
 
         /**
-         * Collects SELECT aliases into the current query scope's alias map.
-         * Only processes SelectItem.Expr nodes that have AS aliases defined.
+         * Collects SELECT aliases into current scope map.
          */
-        override fun visitSelectItem(node: SelectItem, ctx: Context): AstNode {
+        override fun visitSelectItem(
+            node: SelectItem,
+            ctx: ArrayDeque<MutableMap<String, MutableList<Expr>>>
+        ): AstNode {
             if (node is SelectItem.Expr) {
                 node.asAlias?.let { alias ->
-                    val currentAliasMap = ctx.aliasList[ctx.parentStack.last()]!!
-                    // Add alias mapping to the current query scope
-                    currentAliasMap.getOrPut(alias.text) { mutableListOf() }.add(node.expr)
+                    ctx.last().getOrPut(alias.text) { mutableListOf() }.add(node.expr)
                 }
             }
+
             return node
         }
 
         /**
-         * Resolves ORDER BY expressions by replacing aliases with their original expressions.
-         * For set operations, skip alias resolvation
+         * Replaces ORDER BY aliases with their SELECT expressions.
          */
-        override fun visitOrderBy(node: OrderBy, ctx: Context): AstNode {
-            val parent = ctx.parentStack.last()
-            // Skip alias replacement if OrderBy belongs to set operator.
-            if (parent.body is QueryBody.SetOp) {
-                return node
-            }
-
-            // Regular queries use their own alias map
-            val aliasMap = ctx.aliasList[parent]!!
+        override fun visitOrderBy(node: OrderBy, ctx: ArrayDeque<MutableMap<String, MutableList<Expr>>>): AstNode {
+            val aliasMap = ctx.last()
             if (aliasMap.isEmpty()) return node
 
             val transformedSorts = node.sorts.map { sort ->
@@ -139,24 +117,16 @@ internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
         }
 
         /**
-         * Resolves expressions recursively, handling aliases and complex expressions.
-         *
-         * Case sensitivity rules:
-         * - Regular identifiers (unquoted): case-insensitive matching
-         * - Delimited identifiers (quoted): case-sensitive matching
-         *
-         * @param expr Expression to resolve
-         * @param aliasMap Current scope's alias mappings
-         * @return Resolved expression or original if no alias found
+         * Resolves variable references to their aliased expressions.
+         * Regular identifiers use case-insensitive matching, delimited use case-sensitive.
          */
         private fun resolveExpr(expr: Expr, aliasMap: Map<String, List<Expr>>): Expr {
             return when (expr) {
                 is ExprVarRef -> {
                     val identifier = expr.identifier.identifier
                     val orderByName = identifier.text
-                    val isOrderByRegular = identifier.isRegular
 
-                    val candidates = if (isOrderByRegular) {
+                    val candidates = if (identifier.isRegular) {
                         aliasMap.filterKeys { it.equals(orderByName, ignoreCase = true) }.values.flatten()
                     } else {
                         aliasMap[orderByName]
