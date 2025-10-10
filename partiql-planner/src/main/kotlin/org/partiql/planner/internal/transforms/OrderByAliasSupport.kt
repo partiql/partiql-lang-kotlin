@@ -37,32 +37,53 @@ import kotlin.collections.MutableMap
  */
 internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
     override fun apply(statement: Statement): Statement {
-        return Visitor(listener).visitStatement(statement, ArrayDeque()) as Statement
+        return Visitor(listener).visitStatement(statement, Context()) as Statement
     }
+
+    /**
+     * Context for tracking alias scopes across nested queries using a stack-based approach.
+     *
+     * Structure breakdown:
+     * - **Stack (ArrayDeque)**: Each query level gets its own scope pushed/popped from stack
+     * - **Map (String -> MutableList<Expr>)**: Maps alias names to their expressions within a scope
+     * - **List (MutableList<Expr>)**: Handles duplicate aliases (same name, multiple expressions)
+     *
+     * Example for nested query with duplicates:
+     * ```sql
+     * SELECT pid AS p FROM (
+     *   SELECT name AS x, age AS x FROM products ORDER BY x
+     * ) ORDER BY p
+     * ```
+     *
+     * Stack operations:
+     * 1. Push outer scope: {"p" -> [pid]}
+     * 2. Push inner scope: {"x" -> [name, age]} // List handles duplicate "x" aliases
+     * 3. Resolve ORDER BY x: detects ambiguity from list size > 1
+     * 4. Pop inner scope
+     * 5. Resolve ORDER BY p: finds single expression from list
+     * 6. Pop outer scope
+     */
+    data class Context(val aliasMapStack: ArrayDeque<MutableMap<String, MutableList<Expr>>> = ArrayDeque())
 
     /**
      * Maintains alias scope stack for nested queries and resolves ORDER BY aliases.
      */
-    private class Visitor(val listener: PErrorListener) :
-        AstRewriter<ArrayDeque<MutableMap<String, MutableList<Expr>>>>() {
+    private class Visitor(val listener: PErrorListener) : AstRewriter<Context>() {
         /**
          * Pushes new alias scope, processes query, then pops scope.
          */
-        override fun visitExprQuerySet(
-            node: ExprQuerySet,
-            ctx: ArrayDeque<MutableMap<String, MutableList<Expr>>>
-        ): AstNode {
+        override fun visitExprQuerySet(node: ExprQuerySet, ctx: Context): AstNode {
             // Push new scope
-            ctx.addLast(mutableMapOf())
+            ctx.aliasMapStack.addLast(mutableMapOf())
 
             // Visit all statements that may have SELECT or ORDER BY
             val body = node.body.let { visitQueryBody(it, ctx) as QueryBody }
             val orderBy = node.orderBy?.let {
-                if (body !is QueryBody.SetOp) {
+                if (body is QueryBody.SetOp) {
                     // Skip alias replacement if the query body is set operations
-                    visitOrderBy(it, ctx) as OrderBy?
-                } else {
                     node.orderBy
+                } else {
+                    visitOrderBy(it, ctx) as OrderBy?
                 }
             }
             val with = node.with?.let { visitWith(it, ctx) as With? }
@@ -74,20 +95,17 @@ internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
             }
 
             // Pop scope
-            ctx.removeLast()
+            ctx.aliasMapStack.removeLast()
             return transformed
         }
 
         /**
          * Collects SELECT aliases into current scope map.
          */
-        override fun visitSelectItem(
-            node: SelectItem,
-            ctx: ArrayDeque<MutableMap<String, MutableList<Expr>>>
-        ): AstNode {
+        override fun visitSelectItem(node: SelectItem, ctx: Context): AstNode {
             if (node is SelectItem.Expr) {
                 node.asAlias?.let { alias ->
-                    ctx.last().getOrPut(alias.text) { mutableListOf() }.add(node.expr)
+                    ctx.aliasMapStack.last().getOrPut(alias.text) { mutableListOf() }.add(node.expr)
                 }
             }
 
@@ -97,8 +115,8 @@ internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
         /**
          * Replaces ORDER BY aliases with their SELECT expressions.
          */
-        override fun visitOrderBy(node: OrderBy, ctx: ArrayDeque<MutableMap<String, MutableList<Expr>>>): AstNode {
-            val aliasMap = ctx.last()
+        override fun visitOrderBy(node: OrderBy, ctx: Context): AstNode {
+            val aliasMap = ctx.aliasMapStack.last()
             if (aliasMap.isEmpty()) return node
 
             val transformedSorts = node.sorts.map { sort ->
@@ -127,6 +145,8 @@ internal class OrderByAliasSupport(val listener: PErrorListener) : AstPass {
                     val orderByName = identifier.text
 
                     val candidates = if (identifier.isRegular) {
+                        // This is O(N) look up time for each alias used in order by. In the case of performance concern,
+                        // we need to consider implementing a normalized case-insensitive map for O(1) look up.
                         aliasMap.filterKeys { it.equals(orderByName, ignoreCase = true) }.values.flatten()
                     } else {
                         aliasMap[orderByName]
