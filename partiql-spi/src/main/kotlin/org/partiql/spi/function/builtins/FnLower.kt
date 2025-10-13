@@ -11,6 +11,22 @@ import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
+/**
+ * SQL LOWER function implementation.
+ *
+ * Implements the SQL <fold> function as defined in SQL2023 section 6.33 <string value function>.
+ *
+ * According to SQL specification:
+ * - The declared type of the result is the declared type of the <character value expression>
+ * - For CHAR, VARCHAR, and CLOB types, the length parameter is preserved from the input type
+ * - For STRING type, no length parameter is applicable
+ *
+ * Type preservation behavior:
+ * - CHAR(n) → CHAR(n)
+ * - VARCHAR(n) → VARCHAR(n)
+ * - CLOB(n) → CLOB(n)
+ * - STRING → STRING
+ */
 internal object FnLower : FnOverload() {
 
     override fun getSignature(): RoutineOverloadSignature {
@@ -20,49 +36,49 @@ internal object FnLower : FnOverload() {
     override fun getInstance(args: Array<PType>): Fn? {
         val inputType = args[0]
         return when (inputType.code()) {
-            PType.CHAR -> Function.instance(
-                name = "lower",
-                returns = PType.character(inputType.length),
-                parameters = arrayOf(Parameter("value", inputType)),
-            ) { args ->
-                val string = args[0].bytes.toString(Charsets.UTF_8)
-                val result = string.lowercase()
-                Datum.character(result, inputType.length)
+            PType.CHAR -> {
+                Function.instance(
+                    name = "lower",
+                    returns = PType.character(inputType.length),
+                    parameters = arrayOf(Parameter("value", inputType)),
+                ) { params ->
+                    val string = params[0].string
+                    val result = string.lowercase()
+                    Datum.character(result, inputType.length)
+                }
             }
-            PType.VARCHAR -> Function.instance(
-                name = "lower",
-                returns = PType.varchar(inputType.length),
-                parameters = arrayOf(Parameter("value", inputType)),
-            ) { args ->
-                val string = args[0].bytes.toString(Charsets.UTF_8)
-                val result = string.lowercase()
-                Datum.varchar(result, inputType.length)
+            PType.VARCHAR -> {
+                Function.instance(
+                    name = "lower",
+                    returns = PType.varchar(inputType.length),
+                    parameters = arrayOf(Parameter("value", inputType)),
+                ) { params ->
+                    val string = params[0].string
+                    val result = string.lowercase()
+                    Datum.varchar(result, inputType.length)
+                }
+            }
+            PType.CLOB -> {
+                Function.instance(
+                    name = "lower",
+                    returns = PType.clob(inputType.length),
+                    parameters = arrayOf(Parameter("value", inputType)),
+                ) { params ->
+                    val string = params[0].bytes.toString(Charsets.UTF_8)
+                    val result = string.lowercase()
+                    Datum.clob(result.toByteArray(), inputType.length)
+                }
             }
             PType.STRING -> Function.instance(
                 name = "lower",
                 returns = PType.string(),
                 parameters = arrayOf(Parameter("value", inputType)),
-            ) { args ->
-                val string = args[0].string
+            ) { params ->
+                val string = params[0].string
                 val result = string.lowercase()
                 Datum.string(result)
             }
-            PType.CLOB -> Function.instance(
-                name = "lower",
-                returns = PType.clob(inputType.length),
-                parameters = arrayOf(Parameter("value", inputType)),
-            ) { args ->
-                val string = args[0].bytes.toString(Charsets.UTF_8)
-                val result = string.lowercase()
-                Datum.clob(result.toByteArray())
-            }
-            else -> null
+            else -> error("Unsupported type for LOWER function: ${inputType.code()}")
         }
     }
 }
-
-// Keep the old function names for backward compatibility in Builtins.kt
-internal val Fn_LOWER__CHAR__CHAR = FnLower
-internal val Fn_LOWER__VARCHAR__VARCHAR = FnLower
-internal val Fn_LOWER__STRING__STRING = FnLower
-internal val Fn_LOWER__CLOB__CLOB = FnLower

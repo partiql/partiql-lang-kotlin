@@ -1262,11 +1262,11 @@ type
     : datatype=(
         BOOL | BOOLEAN | TINYINT | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
         | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER
-        | STRING | SYMBOL | BLOB | CLOB | DATE | ANY
+        | STRING | SYMBOL | BLOB | DATE | ANY
       )                                                                                                                # TypeAtomic
     | datatype=( STRUCT | TUPLE | LIST | ARRAY | SEXP | BAG )                                                          # TypeComplexAtomic
     | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
-    | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
+    | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR|CLOB) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
     | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
     | datatype=(TIME|TIMESTAMP) ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE | WITHOUT TIME ZONE)?                # TypeTimeZone

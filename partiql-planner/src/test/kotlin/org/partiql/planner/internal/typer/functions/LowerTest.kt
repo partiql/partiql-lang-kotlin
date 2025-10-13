@@ -1,11 +1,8 @@
 package org.partiql.planner.internal.typer.functions
 
 import org.junit.jupiter.api.Test
-import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Action
-import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.TestCatalog
-import org.partiql.spi.catalog.Session
+import org.junit.jupiter.api.assertThrows
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import kotlin.test.assertEquals
 
@@ -13,79 +10,35 @@ class LowerTest {
 
     @Test
     fun `lower preserves CHAR length and type`() {
-        val session = Session.builder()
-            .catalog("default")
-            .catalogs(
-                TestCatalog.builder()
-                    .name("default")
-                    .build()
-            )
-            .build()
-        val parseResult = PartiQLParser.standard().parse("LOWER(CAST('hello' AS CHAR(5)))")
-        val ast = parseResult.statements[0]
-        val planner = PartiQLPlanner.builder().build()
-        val result = planner.plan(ast, session)
-        val query = result.plan.action as Action.Query
-        val actualType = query.rex.type.pType
+        val actualType = FnTestUtils.getQueryResultType("LOWER(CAST('HELLO' AS CHAR(5)))")
         assertEquals(PType.CHAR, actualType.code())
         assertEquals(5, actualType.length)
     }
 
     @Test
     fun `lower preserves VARCHAR length and type`() {
-        val session = Session.builder()
-            .catalog("default")
-            .catalogs(
-                TestCatalog.builder()
-                    .name("default")
-                    .build()
-            )
-            .build()
-        val parseResult = PartiQLParser.standard().parse("LOWER(CAST('hello' AS VARCHAR(10)))")
-        val ast = parseResult.statements[0]
-        val planner = PartiQLPlanner.builder().build()
-        val result = planner.plan(ast, session)
-        val query = result.plan.action as Action.Query
-        val actualType = query.rex.type.pType
+        val actualType = FnTestUtils.getQueryResultType("LOWER(CAST('HELLO ' AS VARCHAR(10)))")
         assertEquals(PType.VARCHAR, actualType.code())
         assertEquals(10, actualType.length)
     }
 
     @Test
-    fun `lower preserves CLOB type`() {
-        val session = Session.builder()
-            .catalog("default")
-            .catalogs(
-                TestCatalog.builder()
-                    .name("default")
-                    .build()
-            )
-            .build()
-        val parseResult = PartiQLParser.standard().parse("LOWER(CAST('hello' AS CLOB))")
-        val ast = parseResult.statements[0]
-        val planner = PartiQLPlanner.builder().build()
-        val result = planner.plan(ast, session)
-        val query = result.plan.action as Action.Query
-        val actualType = query.rex.type.pType
+    fun `lower preserves CLOB length and type`() {
+        val actualType = FnTestUtils.getQueryResultType("LOWER(CAST(' HELLO' AS CLOB(20)))")
         assertEquals(PType.CLOB, actualType.code())
+        assertEquals(20, actualType.length)
     }
 
     @Test
     fun `lower preserves STRING type`() {
-        val session = Session.builder()
-            .catalog("default")
-            .catalogs(
-                TestCatalog.builder()
-                    .name("default")
-                    .build()
-            )
-            .build()
-        val parseResult = PartiQLParser.standard().parse("LOWER('hello')")
-        val ast = parseResult.statements[0]
-        val planner = PartiQLPlanner.builder().build()
-        val result = planner.plan(ast, session)
-        val query = result.plan.action as Action.Query
-        val actualType = query.rex.type.pType
+        val actualType = FnTestUtils.getQueryResultType("LOWER('HELLO')")
         assertEquals(PType.STRING, actualType.code())
+    }
+
+    @Test
+    fun `lower with unsupported type throws exception`() {
+        assertThrows<PRuntimeException> {
+            FnTestUtils.getQueryResultType("LOWER(42)")
+        }
     }
 }

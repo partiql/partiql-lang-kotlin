@@ -58,10 +58,7 @@ internal object Builtins {
         Fn_COLL_AGG__BAG__ANY.MIN_DISTINCT,
         Fn_COLL_AGG__BAG__ANY.SOME_DISTINCT,
         Fn_COLL_AGG__BAG__ANY.SUM_DISTINCT,
-        Fn_CONCAT__CHAR_CHAR__CHAR,
-        Fn_CONCAT__VARCHAR_VARCHAR__VARCHAR,
-        Fn_CONCAT__STRING_STRING__STRING,
-        Fn_CONCAT__CLOB_CLOB__CLOB,
+        FnConcat,
 
         Fn_CURRENT_DATE____DATE,
         Fn_CURRENT_USER____STRING,
@@ -147,10 +144,7 @@ internal object Builtins {
         Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL,
         Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL,
 
-        Fn_LOWER__CHAR__CHAR,
-        Fn_LOWER__VARCHAR__VARCHAR,
-        Fn_LOWER__STRING__STRING,
-        Fn_LOWER__CLOB__CLOB,
+        FnLower,
 
         FnLt,
         FnLte,
@@ -186,10 +180,7 @@ internal object Builtins {
         Fn_SUBSTRING__CLOB_INT64_INT64__CLOB,
 
         FnTimes,
-        Fn_TRIM__CHAR__CHAR,
-        Fn_TRIM__VARCHAR__VARCHAR,
-        Fn_TRIM__STRING__STRING,
-        Fn_TRIM__CLOB__CLOB,
+        FnTrim,
 
         Fn_TRIM_CHARS__STRING_STRING__STRING,
         Fn_TRIM_CHARS__CLOB_CLOB__CLOB,
@@ -206,10 +197,7 @@ internal object Builtins {
         Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING,
         Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB,
 
-        Fn_UPPER__CHAR__CHAR,
-        Fn_UPPER__VARCHAR__VARCHAR,
-        Fn_UPPER__STRING__STRING,
-        Fn_UPPER__CLOB__CLOB,
+        FnUpper,
 
         Fn_UTCNOW____TIMESTAMP,
         //

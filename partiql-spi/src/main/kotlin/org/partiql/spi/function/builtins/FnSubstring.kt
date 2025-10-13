@@ -3,6 +3,7 @@
 
 package org.partiql.spi.function.builtins
 
+// TODO: add support for CHAR/VARCHAR - https://github.com/partiql/partiql-lang-kotlin/issues/1838
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType

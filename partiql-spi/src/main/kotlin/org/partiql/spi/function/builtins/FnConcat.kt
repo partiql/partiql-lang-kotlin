@@ -8,12 +8,32 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 
+/**
+ * SQL concatenation function implementation.
+ *
+ * Implements the SQL <concatenation> as defined in SQL2023 section 6.32 <string value expression>.
+ *
+ * According to SQL specification, result type is determined by precedence:
+ * - If either argument is STRING: result is STRING (no length parameter)
+ * - If either argument is CLOB: result is CLOB with length = min(L1 + L2, max_clob_length)
+ * - If either argument is VARCHAR: result is VARCHAR with length = min(L1 + L2, max_varchar_length)
+ * - If both arguments are CHAR: result is CHAR with length = min(L1 + L2, max_char_length)
+ *
+ * Type precedence behavior:
+ * - STRING || any → STRING
+ * - CLOB(n) || CHAR(m)/VARCHAR(m) → CLOB(n + m)
+ * - VARCHAR(n) || CHAR(m) → VARCHAR(n + m)
+ * - CHAR(n) || CHAR(m) → CHAR(n + m)
+ *
+ * Length overflow handling:
+ * - If L1 + L2 exceeds maximum allowed length, an exception is raised at compile time
+ */
 internal object FnConcat : FnOverload() {
-    const val MAXLENGTH = Int.MAX_VALUE
 
     override fun getSignature(): RoutineOverloadSignature {
         return RoutineOverloadSignature(FunctionUtils.hide("concat"), listOf(PType.dynamic(), PType.dynamic()))
@@ -23,87 +43,52 @@ internal object FnConcat : FnOverload() {
         val lhsType = args[0]
         val rhsType = args[1]
         // Check if both are string types
-        val stringTypes = setOf(PType.CHAR, PType.VARCHAR, PType.STRING, PType.CLOB)
-        if (lhsType.code() !in stringTypes || rhsType.code() !in stringTypes) {
-            return null
-        }
+        if (lhsType !in SqlTypeFamily.TEXT || rhsType !in SqlTypeFamily.TEXT) return null
         // If string types are different, use precedence: CHAR > VARCHAR > STRING > CLOB
-        if (lhsType.code() != rhsType.code()) {
-            val resultType = maxOf(lhsType.code(), rhsType.code())
-            return when (resultType) {
-                PType.VARCHAR -> {
-                    val totalLength = (lhsType.length.toLong() + rhsType.length.toLong()).coerceAtMost(MAXLENGTH.toLong()).toInt()
-                    Function.instance(
-                        name = FunctionUtils.hide("concat"),
-                        returns = PType.varchar(totalLength),
-                        parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
-                    ) { args ->
-                        val arg0 = args[0].string
-                        val arg1 = args[1].string
-                        Datum.varchar(arg0 + arg1, totalLength)
-                    }
-                }
-                PType.STRING -> Function.instance(
-                    name = FunctionUtils.hide("concat"),
-                    returns = PType.string(),
-                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
-                ) { args ->
-                    val arg0 = args[0].string
-                    val arg1 = args[1].string
-                    Datum.string(arg0 + arg1)
-                }
-                PType.CLOB -> {
-                    val totalLength = when {
-                        lhsType.code() == PType.STRING || rhsType.code() == PType.STRING -> MAXLENGTH
-                        else -> (lhsType.length.toLong() + rhsType.length.toLong()).coerceAtMost(MAXLENGTH.toLong()).toInt()
-                    }
-                    Function.instance(
-                        name = FunctionUtils.hide("concat"),
-                        returns = PType.clob(totalLength),
-                        parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
-                    ) { args ->
-                        val arg0 = args[0].string
-                        val arg1 = args[1].string
-                        Datum.clob((arg0 + arg1).toByteArray())
-                    }
-                }
-                else -> null
-            }
+        val resultType = if (lhsType.code() != rhsType.code()) {
+            maxOf(lhsType.code(), rhsType.code())
+        } else {
+            lhsType.code()
         }
-        // With same string types
-        return when (lhsType.code()) {
+        return createConcatFunction(lhsType, rhsType, resultType)
+    }
+
+    private fun createConcatFunction(lhsType: PType, rhsType: PType, resultType: Int): Fn? {
+        return when (resultType) {
             PType.CHAR -> {
-                val totalLength = lhsType.length.toLong() + rhsType.length.toLong()
-                val maxLength = totalLength.coerceAtMost(MAXLENGTH.toLong()).toInt()
+                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
                 Function.instance(
                     name = FunctionUtils.hide("concat"),
-                    returns = PType.character(maxLength),
+                    returns = PType.character(totalLength),
                     parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
                 ) { args ->
                     val arg0 = args[0].string
                     val arg1 = args[1].string
-                    val actualLength = arg0.length.toLong() + arg1.length.toLong()
-                    if (actualLength > MAXLENGTH) {
-                        throw IllegalArgumentException("Total length of concatenated strings exceeds maximum allowed length")
-                    }
-                    Datum.character(arg0 + arg1, actualLength.toInt())
+                    Datum.character(arg0 + arg1, totalLength)
                 }
             }
             PType.VARCHAR -> {
-                val totalLength = lhsType.length.toLong() + rhsType.length.toLong()
-                val maxLength = totalLength.coerceAtMost(MAXLENGTH.toLong()).toInt()
+                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
                 Function.instance(
                     name = FunctionUtils.hide("concat"),
-                    returns = PType.varchar(maxLength),
+                    returns = PType.varchar(totalLength),
                     parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
                 ) { args ->
                     val arg0 = args[0].string
                     val arg1 = args[1].string
-                    val actualLength = arg0.length.toLong() + arg1.length.toLong()
-                    if (actualLength > MAXLENGTH) {
-                        throw IllegalArgumentException("Total length of concatenated strings exceeds maximum allowed length")
-                    }
-                    Datum.varchar(arg0 + arg1, actualLength.toInt())
+                    Datum.varchar(arg0 + arg1, totalLength)
+                }
+            }
+            PType.CLOB -> {
+                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
+                Function.instance(
+                    name = FunctionUtils.hide("concat"),
+                    returns = PType.clob(totalLength),
+                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
+                ) { args ->
+                    val arg0 = args[0].string
+                    val arg1 = args[1].string
+                    Datum.clob((arg0 + arg1).toByteArray(), totalLength)
                 }
             }
             PType.STRING -> Function.instance(
@@ -115,25 +100,7 @@ internal object FnConcat : FnOverload() {
                 val arg1 = args[1].string
                 Datum.string(arg0 + arg1)
             }
-            PType.CLOB -> {
-                val totalLength = lhsType.length.toLong() + rhsType.length.toLong()
-                val maxLength = totalLength.coerceAtMost(MAXLENGTH.toLong()).toInt()
-                Function.instance(
-                    name = FunctionUtils.hide("concat"),
-                    returns = PType.clob(maxLength),
-                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
-                ) { args ->
-                    val arg0 = args[0].bytes
-                    val arg1 = args[1].bytes
-                    Datum.clob(arg0 + arg1)
-                }
-            }
             else -> null
         }
     }
 }
-
-internal val Fn_CONCAT__CHAR_CHAR__CHAR = FnConcat
-internal val Fn_CONCAT__VARCHAR_VARCHAR__VARCHAR = FnConcat
-internal val Fn_CONCAT__STRING_STRING__STRING = FnConcat
-internal val Fn_CONCAT__CLOB_CLOB__CLOB = FnConcat
