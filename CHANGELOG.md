@@ -27,10 +27,11 @@ Thank you to all who have contributed!
 
 ### Added
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
-- `UPPER`, `LOWER`, `TRIM` function support for `CHAR/VARCHAR` types
+- `UPPER`, `LOWER`, `TRIM` functions support for `CHAR/VARCHAR`
 
 ### Changed
-- Formalize `CONCAT` length handling on string types
+- Formalize `UPPER`, `LOWER`, `TRIM` and `CONCAT` length and type handling on string types
+- `CLOB` now supports length parameters with `CLOB(n)` syntax
 
 ### Deprecated
 - Deprecated previous modeling of window functions.
