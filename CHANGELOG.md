@@ -28,6 +28,7 @@ Thank you to all who have contributed!
 ### Added
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
 - `UPPER`, `LOWER`, `TRIM` functions support for `CHAR/VARCHAR`
+- `LIKE` and `LIKE_ESCAPE` functions support for `CHAR/VARCHAR/CLOB/STRING` with dynamic type coercion
 
 ### Changed
 - Formalize `UPPER`, `LOWER`, `TRIM` and `CONCAT` length and type handling on string types
