@@ -40,7 +40,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 
-## [1.3.0](https://TODO.com) - 2025-10-13
+## [1.3.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.0) - 2025-10-13
 
 ### Added
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
