@@ -2376,6 +2376,14 @@ internal class PartiQLParserDefault : PartiQLParser {
                     null -> DataType.VARCHAR()
                     else -> DataType.VARCHAR(n)
                 }
+                GeneratedParser.CLOB -> when (n) {
+                    null -> DataType.CLOB()
+                    else -> DataType.CLOB(n)
+                }
+                GeneratedParser.BLOB -> when (n) {
+                    null -> DataType.BLOB()
+                    else -> DataType.BLOB(n)
+                }
                 else -> throw error(ctx.datatype, "Invalid datatype")
             }
         }

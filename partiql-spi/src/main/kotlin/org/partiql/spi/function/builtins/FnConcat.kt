@@ -3,63 +3,106 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
+import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 
-internal val Fn_CONCAT__CHAR_CHAR__CHAR = FunctionUtils.hidden(
-    name = "concat",
-    returns = PType.character(256), // TODO: Handle length
-    parameters = arrayOf(
-        Parameter("lhs", PType.character(256)), // TODO: Handle length
-        Parameter("rhs", PType.character(256)), // TODO: Handle length
-    ),
-) { args ->
-    val arg0 = args[0].string
-    val arg1 = args[1].string
-    Datum.character(arg0 + arg1, 256)
-}
+/**
+ * SQL concatenation function implementation.
+ *
+ * Implements the SQL <concatenation> as defined in SQL2023 section 6.32 <string value expression>.
+ *
+ * According to SQL specification, result type is determined by coercibility:
+ * - If either argument is CLOB: result is CLOB with length = min(L1 + L2, max_clob_length)
+ * - If either argument is VARCHAR: result is VARCHAR with length = min(L1 + L2, max_varchar_length)
+ * - If both arguments are CHAR: result is CHAR with length = min(L1 + L2, max_char_length)
+ *
+ * PartiQL extensions:
+ * - STRING type (PartiQL-specific unlimited length string) has the highest coercibility
+ *
+ * Coercibility order: STRING > CLOB > VARCHAR > CHAR
+ * - STRING || any → STRING (PartiQL extension)
+ * - CLOB(L1) || CHAR(L2)/VARCHAR(L2) → CLOB(L1 + L2)
+ * - VARCHAR(L1) || CHAR(L2) → VARCHAR(L1 + L2)
+ * - CHAR(L1) || CHAR(L2) → CHAR(L1 + L2)
+ *
+ * Length overflow handling:
+ * - If L1 + L2 exceeds maximum allowed length, an exception is raised at compile time
+ */
+internal object FnConcat : FnOverload() {
 
-internal val Fn_CONCAT__VARCHAR_VARCHAR__VARCHAR = FunctionUtils.hidden(
-    name = "concat",
-    returns = PType.varchar(256), // TODO: Handle length
-    parameters = arrayOf(
-        Parameter("lhs", PType.varchar(256)), // TODO: Handle length
-        Parameter("rhs", PType.varchar(256)), // TODO: Handle length
-    ),
-) { args ->
-    val arg0 = args[0].string
-    val arg1 = args[1].string
-    Datum.varchar(arg0 + arg1, 256)
-}
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature(FunctionUtils.hide("concat"), listOf(PType.dynamic(), PType.dynamic()))
+    }
 
-internal val Fn_CONCAT__STRING_STRING__STRING = FunctionUtils.hidden(
+    override fun getInstance(args: Array<PType>): Fn? {
+        val lhsType = args[0]
+        val rhsType = args[1]
+        // Check if both are string types
+        if (lhsType !in SqlTypeFamily.TEXT || rhsType !in SqlTypeFamily.TEXT) return null
+        // If string types are different, use coercibility: STRING > CLOB > VARCHAR > CHAR
+        val resultType = if (lhsType.code() != rhsType.code()) {
+            FnUtils.getHigherCoercibilityType(lhsType.code(), rhsType.code())
+        } else {
+            lhsType.code()
+        }
+        return createConcatFunction(lhsType, rhsType, resultType)
+    }
 
-    name = "concat",
-    returns = PType.string(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.string()),
-        Parameter("rhs", PType.string()),
-    ),
-
-) { args ->
-    val arg0 = args[0].string
-    val arg1 = args[1].string
-    Datum.string(arg0 + arg1)
-}
-
-internal val Fn_CONCAT__CLOB_CLOB__CLOB = FunctionUtils.hidden(
-
-    name = "concat",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(
-        Parameter("lhs", PType.clob(Int.MAX_VALUE)),
-        Parameter("rhs", PType.clob(Int.MAX_VALUE)),
-    ),
-
-) { args ->
-    val arg0 = args[0].bytes
-    val arg1 = args[1].bytes
-    Datum.clob(arg0 + arg1)
+    private fun createConcatFunction(lhsType: PType, rhsType: PType, resultType: Int): Fn? {
+        return when (resultType) {
+            PType.CHAR -> {
+                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
+                Function.instance(
+                    name = FunctionUtils.hide("concat"),
+                    returns = PType.character(totalLength),
+                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
+                ) { args ->
+                    val arg0 = args[0].string
+                    val arg1 = args[1].string
+                    Datum.character(arg0 + arg1, totalLength)
+                }
+            }
+            PType.VARCHAR -> {
+                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
+                Function.instance(
+                    name = FunctionUtils.hide("concat"),
+                    returns = PType.varchar(totalLength),
+                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
+                ) { args ->
+                    val arg0 = args[0].string
+                    val arg1 = args[1].string
+                    Datum.varchar(arg0 + arg1, totalLength)
+                }
+            }
+            PType.CLOB -> {
+                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
+                Function.instance(
+                    name = FunctionUtils.hide("concat"),
+                    returns = PType.clob(totalLength),
+                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
+                ) { args ->
+                    val arg0 = args[0].string
+                    val arg1 = args[1].string
+                    Datum.clob((arg0 + arg1).toByteArray(), totalLength)
+                }
+            }
+            PType.STRING -> Function.instance(
+                name = FunctionUtils.hide("concat"),
+                returns = PType.string(),
+                parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
+            ) { args ->
+                val arg0 = args[0].string
+                val arg1 = args[1].string
+                Datum.string(arg0 + arg1)
+            }
+            else -> null
+        }
+    }
 }

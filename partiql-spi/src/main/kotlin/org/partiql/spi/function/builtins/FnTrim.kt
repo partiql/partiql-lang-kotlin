@@ -3,61 +3,75 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
+import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointTrim
 import org.partiql.spi.value.Datum
 
 /**
- * From section 6.7 of SQL 92 spec:
- * ```
- * 6) If <trim function> is specified, then
- *   a) If FROM is specified, then either <trim specification> or <trim character> or both shall be specified.
+ * SQL TRIM function implementation.
  *
- *   b) If <trim specification> is not specified, then BOTH is implicit.
+ * Implements the SQL <trim function> as defined in SQL2023 section 6.33 <string value function>.
  *
- *   c) If <trim character> is not specified, then ' ' is implicit.
+ * According to SQL specification:
+ * - For CHAR/VARCHAR: result type is variable-length character string (VARCHAR) with maximum length equal to the input length
+ * - For CLOB: result type is character large object type (CLOB) with maximum length equal to the input length
  *
- *   d) If TRIM ( SRC ) is specified, then TRIM ( BOTH ' ' FROM SRC ) is implicit.
+ * PartiQL extensions:
+ * - STRING type (PartiQL-specific unlimited length string) preserves its type
  *
- *   e) The data type of the <trim function> is variable-length character string with maximum length equal to the
- *   fixed length or maximum variable length of the <trim source>.
- *
- *   f) If a <trim character> is specified, then <trim character> and <trim source> shall be comparable.
- *
- *   g) The character repertoire and form-of-use of the <trim function> are the same as those of the <trim source>.
- *
- *   h) The collating sequence and the coercibility attribute are determined as specified for monadic operators in
- *      Subclause 4.2.3, "Rules determining collating sequence usage", where the <trim source> of TRIM plays the
- *      role of the monadic operand.
- *  ```
- *
- *  Where:
- *  * `<trim specification> ::= LEADING | TRAILING | BOTH`
- *  * `<trim character> ::= <character value expression>`
- *  * `<trim source> ::= <character value expression>`
+ * Type preservation behavior:
+ * - CHAR(n) → VARCHAR(n)
+ * - VARCHAR(n) → VARCHAR(n)
+ * - CLOB(n) → CLOB(n)
+ * - STRING → STRING (PartiQL extension)
  */
-internal val Fn_TRIM__STRING__STRING = FunctionUtils.hidden(
+internal object FnTrim : FnOverload() {
 
-    name = "trim",
-    returns = PType.string(),
-    parameters = arrayOf(Parameter("value", PType.string())),
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature(FunctionUtils.hide("trim"), listOf(PType.dynamic()))
+    }
 
-) { args ->
-    val value = args[0].string
-    val result = value.codepointTrim()
-    Datum.string(result)
-}
-
-internal val Fn_TRIM__CLOB__CLOB = FunctionUtils.hidden(
-
-    name = "trim",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
-
-) { args ->
-    val string = args[0].bytes.toString(Charsets.UTF_8)
-    val result = string.codepointTrim()
-    Datum.clob(result.toByteArray())
+    override fun getInstance(args: Array<PType>): Fn? {
+        val inputType = args[0]
+        return when (inputType.code()) {
+            PType.CHAR, PType.VARCHAR -> {
+                Function.instance(
+                    name = FunctionUtils.hide("trim"),
+                    returns = PType.varchar(inputType.length),
+                    parameters = arrayOf(Parameter("value", inputType)),
+                ) { params ->
+                    val string = params[0].string
+                    val result = string.codepointTrim()
+                    Datum.varchar(result, inputType.length)
+                }
+            }
+            PType.CLOB -> {
+                Function.instance(
+                    name = FunctionUtils.hide("trim"),
+                    returns = PType.clob(inputType.length),
+                    parameters = arrayOf(Parameter("value", inputType)),
+                ) { params ->
+                    val string = params[0].bytes.toString(Charsets.UTF_8)
+                    val result = string.codepointTrim()
+                    Datum.clob(result.toByteArray(), inputType.length)
+                }
+            }
+            PType.STRING -> Function.instance(
+                name = FunctionUtils.hide("trim"),
+                returns = PType.string(),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { params ->
+                val value = params[0].string
+                val result = value.codepointTrim()
+                Datum.string(result)
+            }
+            else -> error("Unsupported type for TRIM function: ${inputType.code()}")
+        }
+    }
 }

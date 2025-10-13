@@ -27,8 +27,12 @@ Thank you to all who have contributed!
 
 ### Added
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
+- `UPPER`, `LOWER`, `TRIM` functions support for `CHAR/VARCHAR`
+- `LIKE` and `LIKE_ESCAPE` functions support for `CHAR/VARCHAR/CLOB/STRING` with dynamic type coercion
+- `CLOB/BLOB` now supports length parameters with `CLOB(max_length)/BLOB(max_length)` syntax
 
 ### Changed
+- Formalize `UPPER`, `LOWER`, `TRIM` and `CONCAT` length and type handling on string types
 
 ### Deprecated
 - Deprecated previous modeling of window functions.
@@ -43,12 +47,12 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @johnedquinn
+- @XuechunHHH
 
 ## [1.2.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.3) - 2025-09-29
 
 ### Added
 - partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
-
 - **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the 
 `OperatorVisitor`
 - **EXPERIMENTAL** partiql-planner: add planner builder function to control whether `With` table references are 

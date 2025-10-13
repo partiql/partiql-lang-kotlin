@@ -3,31 +3,84 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_UPPER__STRING__STRING = Function.overload(
+/**
+ * SQL UPPER function implementation.
+ *
+ * Implements the SQL <fold> function as defined in SQL2023 section 6.33 <string value function>.
+ *
+ * According to SQL specification:
+ * - The declared type of the result is the declared type of the <character value expression>
+ * - For CHAR, VARCHAR, and CLOB types, the length parameter is preserved from the input type
+ *
+ * PartiQL extensions:
+ * - STRING type (PartiQL-specific unlimited length string) preserves its type
+ *
+ * Type preservation behavior:
+ * - CHAR(n) → CHAR(n)
+ * - VARCHAR(n) → VARCHAR(n)
+ * - CLOB(n) → CLOB(n)
+ * - STRING → STRING (PartiQL extension)
+ */
+internal object FnUpper : FnOverload() {
 
-    name = "upper",
-    returns = PType.string(),
-    parameters = arrayOf(Parameter("value", PType.string())),
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature("upper", listOf(PType.dynamic()))
+    }
 
-) { args ->
-    val string = args[0].string
-    val result = string.uppercase()
-    Datum.string(result)
-}
-
-internal val Fn_UPPER__CLOB__CLOB = Function.overload(
-
-    name = "upper",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
-
-) { args ->
-    val string = args[0].bytes.toString(Charsets.UTF_8)
-    val result = string.uppercase()
-    Datum.clob(result.toByteArray())
+    override fun getInstance(args: Array<PType>): Fn? {
+        val inputType = args[0]
+        return when (inputType.code()) {
+            PType.CHAR -> {
+                Function.instance(
+                    name = "upper",
+                    returns = PType.character(inputType.length),
+                    parameters = arrayOf(Parameter("value", inputType)),
+                ) { params ->
+                    val string = params[0].string
+                    val result = string.uppercase()
+                    Datum.character(result, inputType.length)
+                }
+            }
+            PType.VARCHAR -> {
+                Function.instance(
+                    name = "upper",
+                    returns = PType.varchar(inputType.length),
+                    parameters = arrayOf(Parameter("value", inputType)),
+                ) { params ->
+                    val string = params[0].string
+                    val result = string.uppercase()
+                    Datum.varchar(result, inputType.length)
+                }
+            }
+            PType.CLOB -> {
+                Function.instance(
+                    name = "upper",
+                    returns = PType.clob(inputType.length),
+                    parameters = arrayOf(Parameter("value", inputType)),
+                ) { params ->
+                    val string = params[0].bytes.toString(Charsets.UTF_8)
+                    val result = string.uppercase()
+                    Datum.clob(result.toByteArray(), inputType.length)
+                }
+            }
+            PType.STRING -> Function.instance(
+                name = "upper",
+                returns = PType.string(),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { params ->
+                val string = params[0].string
+                val result = string.uppercase()
+                Datum.string(result)
+            }
+            else -> error("Unsupported type for UPPER function: ${inputType.code()}")
+        }
+    }
 }

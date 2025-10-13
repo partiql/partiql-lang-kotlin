@@ -60,7 +60,8 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @return the underlying value applicable to the types:
      * {@link PType#STRING},
-     * {@link PType#CHAR}
+     * {@link PType#CHAR},
+     * {@link PType#VARCHAR}
      * @throws InvalidOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.

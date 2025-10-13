@@ -72,7 +72,7 @@ val allCharStringPType = setOf(
     PType.character(256), // TODO: Length
     PType.varchar(256), // TODO: Length
     PType.string(),
-    PType.clob(Int.MAX_VALUE), // TODO: Length
+    PType.clob(256), // TODO: Length
 )
 
 val allBinaryPType = setOf(
@@ -314,7 +314,7 @@ val castTablePType: ((PType, PType) -> CastType) = { from, to ->
             else -> CastType.UNSAFE
         }
         PType.CLOB -> when (to.code()) {
-            PType.CLOB -> CastType.COERCION
+            PType.CLOB, PType.STRING -> CastType.COERCION
             else -> CastType.UNSAFE
         }
         PType.BAG -> when (to.code()) {
@@ -368,7 +368,7 @@ val castTablePType: ((PType, PType) -> CastType) = { from, to ->
             else -> CastType.UNSAFE
         }
         PType.STRING -> when (to.code()) {
-            PType.STRING, PType.CLOB -> CastType.COERCION
+            PType.STRING -> CastType.COERCION
             else -> CastType.UNSAFE
         }
         PType.STRUCT -> when (to.code()) {
@@ -392,11 +392,11 @@ val castTablePType: ((PType, PType) -> CastType) = { from, to ->
             else -> CastType.UNSAFE
         }
         PType.CHAR -> when (to.code()) {
-            PType.CHAR, PType.VARCHAR, PType.STRING, PType.CLOB -> CastType.COERCION
+            PType.CHAR, PType.VARCHAR, PType.CLOB, PType.STRING -> CastType.COERCION
             else -> CastType.UNSAFE
         }
         PType.VARCHAR -> when (to.code()) {
-            PType.VARCHAR, PType.STRING, PType.CLOB -> CastType.COERCION
+            PType.VARCHAR, PType.CLOB, PType.STRING -> CastType.COERCION
             else -> CastType.UNSAFE
         }
         PType.ROW -> when (to.code()) {
