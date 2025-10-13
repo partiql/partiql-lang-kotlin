@@ -398,6 +398,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitLiteral (Lorg/partiql/ast/Literal;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitOnConflict (Lorg/partiql/ast/dml/OnConflict;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOnConflict (Lorg/partiql/ast/dml/OnConflict;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPathStepAllElements (Lorg/partiql/ast/expr/PathStep$AllElements;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepAllElements (Lorg/partiql/ast/expr/PathStep$AllElements;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPathStepAllFields (Lorg/partiql/ast/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
@@ -430,6 +432,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitSetClause (Lorg/partiql/ast/dml/SetClause;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitUpdate (Lorg/partiql/ast/dml/Update;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdate (Lorg/partiql/ast/dml/Update;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitUpdateTarget (Lorg/partiql/ast/dml/UpdateTarget;Ljava/lang/Object;)Ljava/lang/Object;
