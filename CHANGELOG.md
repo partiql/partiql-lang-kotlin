@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.0](https://TODO.com) - 2025-10-13
+
+### Added
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
 - `UPPER`, `LOWER`, `TRIM` functions support for `CHAR/VARCHAR`
 - `LIKE` and `LIKE_ESCAPE` functions support for `CHAR/VARCHAR/CLOB/STRING` with dynamic type coercion
