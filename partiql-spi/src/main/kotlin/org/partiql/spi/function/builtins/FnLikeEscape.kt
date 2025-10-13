@@ -34,8 +34,9 @@ import java.util.regex.Pattern
  *     represents a literal.
  *   - Invalid escape sequences raise a data exception (e.g. ESCAPE character length ≠ 1).
  *
- * Type coercion follows SQL precedence:
- * - CHAR > VARCHAR > STRING > CLOB
+ * Type coercion follows SQL coercibility with PartiQL extensions:
+ * - Coercibility order: STRING > CLOB > VARCHAR > CHAR
+ * - STRING has highest coercibility (PartiQL extension)
  *
  * Behavior:
  * - If any of value, pattern, or escape are NULL, the result is UNKNOWN (null).
@@ -67,8 +68,8 @@ internal object FnLikeEscape : FnOverload() {
         val escapeType = args[2]
         // Check if all are string types
         if (valueType !in SqlTypeFamily.TEXT || patternType !in SqlTypeFamily.TEXT || escapeType !in SqlTypeFamily.TEXT) return null
-        // Use type precedence for coercion: CHAR > VARCHAR > STRING > CLOB
-        val resultType = maxOf(valueType.code(), patternType.code(), escapeType.code())
+        // Use type coercibility for coercion: STRING > CLOB > VARCHAR > CHAR
+        val resultType = FnUtils.getHigherCoercibilityType(FnUtils.getHigherCoercibilityType(valueType.code(), patternType.code()), escapeType.code())
         return when (resultType) {
             PType.CHAR, PType.VARCHAR, PType.STRING -> {
                 Function.instance(

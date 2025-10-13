@@ -28,8 +28,24 @@ internal object FnUtils {
      */
     fun getTypeLength(type: PType): Int {
         return when (type.code()) {
-            PType.STRING -> 0
+            PType.STRING -> error("STRING type does not have length constraints")
             else -> type.length
         }
+    }
+
+    /**
+     * Returns the type with higher coercibility for string type coercion.
+     * Coercibility order: STRING > CLOB > VARCHAR > CHAR
+     */
+    fun getHigherCoercibilityType(type1: Int, type2: Int): Int {
+        val coercibility = mapOf(
+            PType.STRING to 4,
+            PType.CLOB to 3,
+            PType.VARCHAR to 2,
+            PType.CHAR to 1
+        )
+        val coer1 = coercibility[type1] ?: error("Unknown type: $type1")
+        val coer2 = coercibility[type2] ?: error("Unknown type: $type2")
+        return if (coer1 >= coer2) type1 else type2
     }
 }

@@ -21,13 +21,15 @@ import org.partiql.spi.value.Datum
  * According to SQL specification:
  * - For CHAR/VARCHAR: result type is variable-length character string (VARCHAR) with maximum length equal to the input length
  * - For CLOB: result type is character large object type (CLOB) with maximum length equal to the input length
- * - For STRING: no length parameter is applicable
+ *
+ * PartiQL extensions:
+ * - STRING type (PartiQL-specific unlimited length string) preserves its type
  *
  * Type preservation behavior:
  * - CHAR(n) → VARCHAR(n)
  * - VARCHAR(n) → VARCHAR(n)
  * - CLOB(n) → CLOB(n)
- * - STRING → STRING
+ * - STRING → STRING (PartiQL extension)
  */
 internal object FnTrim : FnOverload() {
 

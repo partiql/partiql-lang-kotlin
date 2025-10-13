@@ -18,17 +18,19 @@ import org.partiql.spi.value.Datum
  *
  * Implements the SQL <concatenation> as defined in SQL2023 section 6.32 <string value expression>.
  *
- * According to SQL specification, result type is determined by precedence:
- * - If either argument is STRING: result is STRING (no length parameter)
+ * According to SQL specification, result type is determined by coercibility:
  * - If either argument is CLOB: result is CLOB with length = min(L1 + L2, max_clob_length)
  * - If either argument is VARCHAR: result is VARCHAR with length = min(L1 + L2, max_varchar_length)
  * - If both arguments are CHAR: result is CHAR with length = min(L1 + L2, max_char_length)
  *
- * Type precedence behavior:
- * - STRING || any → STRING
- * - CLOB(n) || CHAR(m)/VARCHAR(m) → CLOB(n + m)
- * - VARCHAR(n) || CHAR(m) → VARCHAR(n + m)
- * - CHAR(n) || CHAR(m) → CHAR(n + m)
+ * PartiQL extensions:
+ * - STRING type (PartiQL-specific unlimited length string) has the highest coercibility
+ *
+ * Coercibility order: STRING > CLOB > VARCHAR > CHAR
+ * - STRING || any → STRING (PartiQL extension)
+ * - CLOB(L1) || CHAR(L2)/VARCHAR(L2) → CLOB(L1 + L2)
+ * - VARCHAR(L1) || CHAR(L2) → VARCHAR(L1 + L2)
+ * - CHAR(L1) || CHAR(L2) → CHAR(L1 + L2)
  *
  * Length overflow handling:
  * - If L1 + L2 exceeds maximum allowed length, an exception is raised at compile time
@@ -44,9 +46,9 @@ internal object FnConcat : FnOverload() {
         val rhsType = args[1]
         // Check if both are string types
         if (lhsType !in SqlTypeFamily.TEXT || rhsType !in SqlTypeFamily.TEXT) return null
-        // If string types are different, use precedence: CHAR > VARCHAR > STRING > CLOB
+        // If string types are different, use coercibility: STRING > CLOB > VARCHAR > CHAR
         val resultType = if (lhsType.code() != rhsType.code()) {
-            maxOf(lhsType.code(), rhsType.code())
+            FnUtils.getHigherCoercibilityType(lhsType.code(), rhsType.code())
         } else {
             lhsType.code()
         }

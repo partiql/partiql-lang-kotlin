@@ -28,8 +28,9 @@ import java.util.regex.Pattern
  * - `'_'` matches exactly one character
  * - `'%'` matches zero or more characters
  *
- * Type coercion follows SQL precedence:
- * - CHAR > VARCHAR > STRING > CLOB
+ * Type coercion follows SQL coercibility with PartiQL extensions:
+ * - Coercibility order: STRING > CLOB > VARCHAR > CHAR
+ * - STRING has highest coercibility (PartiQL extension)
  *
  * Behavior:
  * - If either value or pattern is NULL, result is UNKNOWN (null).
@@ -56,9 +57,9 @@ internal object FnLike : FnOverload() {
         val patternType = args[1]
         // Check if both are string types
         if (valueType !in SqlTypeFamily.TEXT || patternType !in SqlTypeFamily.TEXT) return null
-        // Use type precedence for coercion: CHAR > VARCHAR > STRING > CLOB
+        // Use type coercibility for coercion: STRING > CLOB > VARCHAR > CHAR
         val resultType = if (valueType.code() != patternType.code()) {
-            maxOf(valueType.code(), patternType.code())
+            FnUtils.getHigherCoercibilityType(valueType.code(), patternType.code())
         } else {
             valueType.code()
         }

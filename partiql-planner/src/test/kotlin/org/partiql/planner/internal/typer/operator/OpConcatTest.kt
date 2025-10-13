@@ -33,8 +33,8 @@ class OpConcatTest : PartiQLTyperTestBase() {
                 val arg1 = args[1]
                 val output = when {
                     arg0 == arg1 -> arg1
-                    castTablePType(arg1, arg0) == CastType.COERCION -> arg0
                     castTablePType(arg0, arg1) == CastType.COERCION -> arg1
+                    castTablePType(arg1, arg0) == CastType.COERCION -> arg0
                     else -> error("Arguments do not conform to parameters. Args: $args")
                 }
                 accumulateSuccess(output, args)
