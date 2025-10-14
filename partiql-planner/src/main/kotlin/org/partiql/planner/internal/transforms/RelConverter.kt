@@ -199,7 +199,7 @@ internal object RelConverter {
                     var rel = visitFrom(sel.from, nil)
                     rel = convertWhere(rel, sel.where)
                     // kotlin does not have destructuring reassignment
-                    val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy, env)
+                    val (_sel, _orderBy, _rel) = convertAgg(rel, sel, orderBy, env)
                     sel = _sel
                     rel = _rel
                     // Plan.create (possibly rewritten) sel node
@@ -207,7 +207,7 @@ internal object RelConverter {
                     val (windowSel, windowRel) = convertWindow(rel, sel)
                     rel = windowRel
                     sel = windowSel
-                    rel = convertOrderBy(rel, orderBy)
+                    rel = convertOrderBy(rel, _orderBy)
                     // offset should precede limit
                     rel = convertOffset(rel, offset)
                     rel = convertLimit(rel, limit)
@@ -437,13 +437,17 @@ internal object RelConverter {
          *         1. Ast.Expr.SFW has every Ast.Expr.CallAgg replaced by a synthetic Ast.Expr.Var
          *         2. Rel which has the appropriate Rex.Agg calls and groups
          */
-        private fun convertAgg(input: Rel, select: QueryBody.SFW, groupBy: GroupBy?, env: Env): Pair<QueryBody.SFW, Rel> {
-            // Rewrite and extract all aggregations in the SELECT clause
-            val (sel, aggregations) = AggregationTransform.apply(select, env)
+        private fun convertAgg(input: Rel, body: QueryBody.SFW, orderBy: OrderBy?, env: Env): Triple<QueryBody.SFW, OrderBy?, Rel> {
+            val groupBy = body.groupBy
+            // Rewrite and extract all aggregations in the SFW clause
+            val aggregations = mutableListOf<ExprCall>()
+            val sel = SFWAggregationTransform.apply(body, aggregations, env)
+            // Rewrite and extract all aggregations in the Order By clause
+            val orderBy = orderBy?.let { OrderByAggregationTransform.apply(it, aggregations, env) }
 
             // No aggregation planning required for GROUP BY
             if (aggregations.isEmpty() && groupBy == null) {
-                return Pair(select, input)
+                return Triple(body, orderBy, input)
             }
 
             // Build the schema -> (calls... groups...)
@@ -525,7 +529,7 @@ internal object RelConverter {
             val type = relType(schema, props)
             val op = relOpAggregate(input, strategy, calls, groups)
             val rel = rel(type, op)
-            return Pair(sel, rel)
+            return Triple(sel, orderBy, rel)
         }
 
         /**
@@ -923,21 +927,53 @@ internal object RelConverter {
     }
 
     /**
-     * Rewrites a SELECT node replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
+     * Base class for rewriting AST nodes and extracting aggregation calls.
      */
-    private object AggregationTransform : AstRewriter<AggregationTransform.Context>() {
-        private data class Context(
+    private abstract class AggregationTransform : AstRewriter<AggregationTransform.Context>() {
+        protected data class Context(
             val aggregations: MutableList<ExprCall>,
             val keys: List<GroupBy.Key>,
             val env: Env
         )
 
-        fun apply(node: QueryBody.SFW, env: Env): Pair<QueryBody.SFW, List<ExprCall>> {
-            val aggs = mutableListOf<ExprCall>()
+        override fun visitExprCall(node: ExprCall, ctx: Context) =
+            when (isAggregateCall(node, ctx)) {
+                true -> {
+                    val id = Identifier.delimited(syntheticAgg(ctx.aggregations.size))
+                    ctx.aggregations += node
+                    exprVarRef(id, isQualified = false)
+                }
+                else -> node
+            }
+
+        protected fun isAggregateCall(node: ExprCall, ctx: Context): Boolean {
+            val fnName = node.function.identifier.text.lowercase()
+            val isScalar = ctx.env.hasFn(fnName)
+            val isAggregate = if (fnName == "count" && node.args.isEmpty()) {
+                // Yet another special case for `COUNT(*)`
+                ctx.env.getAggCandidates(fnName, node.args.size + 1).isNotEmpty()
+            } else {
+                ctx.env.getAggCandidates(fnName, node.args.size).isNotEmpty()
+            }
+
+            if (isAggregate && isScalar) {
+                throw IllegalStateException("Name registered as both a scalar and aggregate call: `$fnName`")
+            }
+
+            return isAggregate
+        }
+
+        override fun defaultReturn(node: AstNode, context: Context) = node
+    }
+
+    /**
+     * Handles aggregation transformation for SFW.
+     */
+    private object SFWAggregationTransform : AggregationTransform() {
+        fun apply(node: QueryBody.SFW, aggregations: MutableList<ExprCall>, env: Env): QueryBody.SFW {
             val keys = node.groupBy?.keys ?: emptyList()
-            val context = Context(aggs, keys, env)
-            val select = super.visitQueryBodySFW(node, context) as QueryBody.SFW
-            return Pair(select, aggs)
+            val context = Context(aggregations, keys, env)
+            return super.visitQueryBodySFW(node, context) as QueryBody.SFW
         }
 
         override fun visitSelectValue(node: SelectValue, ctx: Context): AstNode {
@@ -950,35 +986,16 @@ internal object RelConverter {
 
         // only rewrite top-level SFW
         override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: Context): AstNode = node
+    }
 
-        override fun visitExprCall(node: ExprCall, ctx: Context) =
-            when (node.isAggregateCall(ctx)) {
-                true -> {
-                    val id = Identifier.delimited(syntheticAgg(ctx.aggregations.size))
-                    ctx.aggregations += node
-                    exprVarRef(id, isQualified = false)
-                }
-                else -> node
-            }
-
-        private fun ExprCall.isAggregateCall(ctx: Context): Boolean {
-            val fnName = this.function.identifier.text.lowercase()
-            val isScalar = ctx.env.hasFn(fnName)
-            val isAggregate = if (fnName == "count" && this.args.isEmpty()) {
-                // Yet another special case for `COUNT(*)`
-                ctx.env.getAggCandidates(fnName, this.args.size + 1).isNotEmpty()
-            } else {
-                ctx.env.getAggCandidates(fnName, this.args.size).isNotEmpty()
-            }
-
-            if (isAggregate && isScalar) {
-                throw IllegalStateException("Name registered as both a scalar and aggregate call: `$fnName`")
-            }
-
-            return isAggregate
+    /**
+     * Handles aggregation transformation for ORDER BY clauses.
+     */
+    private object OrderByAggregationTransform : AggregationTransform() {
+        fun apply(node: OrderBy, aggregations: MutableList<ExprCall>, env: Env): OrderBy {
+            val context = Context(aggregations, emptyList(), env)
+            return super.visitOrderBy(node, context) as OrderBy
         }
-
-        override fun defaultReturn(node: AstNode, context: Context) = node
     }
 
     private fun syntheticAgg(i: Int) = "\$agg_$i"
