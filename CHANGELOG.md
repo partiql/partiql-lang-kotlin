@@ -26,7 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
-- Fix that the ORDER BY does not work with aggregation function
+- Support aggregation function calls in the `ORDER BY` and `HAVING` clause
 
 ### Changed
 
