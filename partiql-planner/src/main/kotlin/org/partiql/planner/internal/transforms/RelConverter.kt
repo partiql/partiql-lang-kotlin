@@ -199,7 +199,7 @@ internal object RelConverter {
                     sel = _transformed.body
                     rel = _rel
                     // Plan.create (possibly rewritten) sel node
-                    rel = convertHaving(rel, _transformed.body.having)
+                    rel = convertHaving(rel, sel.having)
                     val (windowSel, windowRel) = convertWindow(rel, sel)
                     rel = windowRel
                     sel = windowSel
