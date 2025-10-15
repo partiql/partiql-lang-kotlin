@@ -501,7 +501,7 @@ EXTRACT(TIMEZONE_MINUTE FROM TIME WITH TIME ZONE '23:12:59-08:30')  -- -30
 ```
 *Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` and `TIME` (without time zone) types, as well as for `INTERVAL` types which do not have timezone information.
 
-### `FILTER_DISTINCT` -- since v0.7.0
+### `FILTER_DISTINCT` -- from v0.7.0 to v0.14.9; removed in v1
 
 Signature
 : `FILTER_DISTINCT: Container -> Bag|List`
@@ -546,7 +546,7 @@ Examples
 LOWER('AbCdEfG!@#$') -- 'abcdefg!@#$'
 ```
 
-### MAKE_DATE -- since v0.3.0
+### MAKE_DATE -- from v0.7.0 to v0.14.9; removed in v1
 
 Given the integer values for the year, month and day returns the associated date.
 
@@ -577,7 +577,7 @@ MAKE_DATE(missing, 02, 28)               -- null
 MAKE_DATE(2021, missing, 28)             -- null
 MAKE_DATE(2021, 02, missing)             -- null
 ```
-### MAKE_TIME -- since v0.3.0
+### MAKE_TIME -- from v0.7.0 to v0.14.9; removed in v1
 
 Given the values for the hour (int), minute (int), second (BigDecimal) and optionally for timezone minutes (int) returns the associated time.
 
@@ -611,7 +611,7 @@ MAKE_TIME(21, 02, 28., null)             -- null
 MAKE_TIME(21, 02, 28., missing)          -- null
 ```
 
-### SIZE -- since v0.1.0, CARDINALITY -- since v0.10.0
+### SIZE -- from v0.1.0 to v0.9.0, CARDINALITY -- since v0.10.0
 
 Given any container data type (i.e., list, structure or bag) return the number of elements in the container. 
 
@@ -791,21 +791,21 @@ Examples
 : 
 
 ```sql
-SUBSTRING("123456789", 0)      -- "123456789"
-SUBSTRING("123456789", 1)      -- "123456789"
-SUBSTRING("123456789", 2)      -- "23456789"
-SUBSTRING("123456789", -4)     -- "123456789"
-SUBSTRING("123456789", 0, 999) -- "123456789" 
-SUBSTRING("123456789", 0, 2)   -- "1"
-SUBSTRING("123456789", 1, 999) -- "123456789"
-SUBSTRING("123456789", 1, 2)   -- "12"
-SUBSTRING("1", 1, 0)           -- ""
-SUBSTRING("1", 1, 0)           -- ""
-SUBSTRING("1", -4, 0)          -- ""
-SUBSTRING("1234", 10, 10)      -- ""
+SUBSTRING('123456789', 0)      -- '123456789'
+SUBSTRING('123456789', 1)      -- '123456789'
+SUBSTRING('123456789', 2)      -- '23456789'
+SUBSTRING('123456789', -4)     -- '123456789'
+SUBSTRING('123456789', 0, 999) -- '123456789"'
+SUBSTRING('123456789', 0, 2)   -- '1'
+SUBSTRING('123456789', 1, 999) -- '123456789'
+SUBSTRING('123456789', 1, 2)   -- '12'
+SUBSTRING('1', 1, 0)           -- ''
+SUBSTRING('1', 1, 0)           -- ''
+SUBSTRING('1', -4, 0)          -- ''
+SUBSTRING('1234', 10, 10)      -- ''
 ```
 
-### TEXT_REPLACE -- since v0.10.0
+### TEXT_REPLACE -- from v0.10.0 to v0.14.9; removed in v1
 
 In `string`, replaces all occurrences of substring `from` with another string `to`.
 
@@ -828,7 +828,7 @@ text_replace('', 'abc', 'XX')                  -- ''
 text_replace('', '', 'XX')                     -- 'XX'
 ```
     
-### TO_STRING -- since v0.1.0
+### TO_STRING -- from v0.1.0 to v0.14.9; removed in v1
 
 Given a timestamp and a format pattern return a string representation of the timestamp in the given format. 
 
@@ -896,7 +896,7 @@ TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')  -- "1969-07-20T2
 ```
        
     
-### TO_TIMESTAMP -- since v0.1.0
+### TO_TIMESTAMP -- from v0.1.0 to v0.14.9; removed in v1
 
 Given a string convert it to a timestamp. This is the inverse operation of [`TO_STRING`](#to_string)
 
@@ -1035,7 +1035,7 @@ Examples
 UTCNOW() -- 2017-10-13T16:02:11.123Z 
 ```
 
-### UNIX_TIMESTAMP -- since v0.2.6
+### UNIX_TIMESTAMP -- from v0.2.6 to v0.14.9; removed in v1
 
 With no `timestamp` argument, returns the number of seconds since the last epoch ('1970-01-01 00:00:00' UTC).
 
@@ -1075,7 +1075,7 @@ UNIX_TIMESTAMP(`2020-01-01T00:00:00.100Z`)  -- 1577836800.1
 UNIX_TIMESTAMP(`1969T`)                     -- -31536000 (timestamp is before last epoch)
 ```
 
-### FROM_UNIXTIME -- since v0.2.6
+### FROM_UNIXTIME -- from v0.2.6 to v0.14.9; removed in v1
 
 Converts the given unix epoch into a timestamp.
 
@@ -1106,7 +1106,7 @@ FROM_UNIXTIME(1577836800)   -- `2020-01-01T00:00:00-00:00`      (unix_timestamp 
 
 ## Math Functions
 
-### CEIL / CEILING -- since v0.7.0
+### CEIL / CEILING -- from v0.7.0 to v0.14.9; removed in v1
 
 Returns the nearest integer greater than or equal to the input.
 
@@ -1124,7 +1124,7 @@ CEIL(`-inf`) = `-inf` -- Float
 CEIL(`nan`) = `nan` -- Float
 ```
 
-### FLOOR -- since v0.10.0
+### FLOOR -- from v0.10.0 to v0.14.9; removed in v1
 
 Returns the nearest integer less than or equal to the input.
 
@@ -1144,7 +1144,7 @@ FLOOR(`nan`) = `nan` -- Float
 
 ### ABS -- since v0.10.0
 
-Returns the absolute value of the given number. 
+Returns the absolute value of the given number or of the given datetime interval.
 
 Note that abs(n) will throw an EVALUATOR_INTEGER_OVERFLOW when n is both of type `INT` and n = `INT.MIN_VALUE`.
 
@@ -1193,7 +1193,7 @@ mod(17, 1)     -- 0
 mod(17, 3)     -- 2
 ```
 
-### SQRT -- since v0.10.0
+### SQRT -- from v0.10.0 to v0.14.9; removed in v1
 
 Returns the square root of the given number.
 
@@ -1219,7 +1219,7 @@ sqrt(`+inf`) = `+inf`
 sqrt(`nan`) = `nan`
 ```
 
-### LN -- since v0.10.0
+### LN -- from v0.10.0 to v0.14.9; removed in v1
 
 Returns the natural log of the given number.
 
@@ -1252,7 +1252,7 @@ ln(`+inf`) = `+inf`
 ln(`nan`) = `nan`
 ```
 
-### EXP -- since v0.10.0
+### EXP -- from v0.10.0 to v0.14.9; removed in v1
 
 Returns e^x for a given x.
 
@@ -1285,7 +1285,7 @@ exp(`-inf`) = `0e0`
 exp(`nan`) = `nan`
 ```
 
-### POWER -- since v0.10.0
+### POWER -- from v0.10.0 to v0.14.9; removed in v1
 
 POW(x,y) return x^y.
 
