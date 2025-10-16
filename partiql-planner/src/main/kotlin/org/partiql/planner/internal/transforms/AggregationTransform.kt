@@ -30,8 +30,8 @@ import org.partiql.ast.expr.ExprCall
 import org.partiql.planner.internal.Env
 
 /**
- * Handles aggregation transformation for both SELECT, HAVING and ORDER BY clauses.
- * Rewrites their node buy replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
+ * Handles aggregation transformation for both SELECT, HAVING, and ORDER BY clauses.
+ * Rewrites their node by replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
  */
 internal object AggregationTransform : AstRewriter<AggregationTransform.Context>() {
     data class Context(
