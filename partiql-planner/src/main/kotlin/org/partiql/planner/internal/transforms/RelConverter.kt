@@ -17,9 +17,7 @@
 package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.Ast.exprLit
-import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.AstNode
-import org.partiql.ast.AstRewriter
 import org.partiql.ast.AstVisitor
 import org.partiql.ast.Exclude
 import org.partiql.ast.ExcludeStep
@@ -27,9 +25,7 @@ import org.partiql.ast.From
 import org.partiql.ast.FromExpr
 import org.partiql.ast.FromJoin
 import org.partiql.ast.FromType
-import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
-import org.partiql.ast.Identifier
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Let.Binding
@@ -53,7 +49,6 @@ import org.partiql.ast.WindowFunctionType.Lead
 import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
-import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprVarRef
@@ -100,6 +95,7 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
+import org.partiql.planner.internal.transforms.AggregationTransform.syntheticAgg
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.BinderUtils.toBinder
@@ -199,15 +195,15 @@ internal object RelConverter {
                     var rel = visitFrom(sel.from, nil)
                     rel = convertWhere(rel, sel.where)
                     // kotlin does not have destructuring reassignment
-                    val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy, env)
-                    sel = _sel
+                    val (_transformed, _rel) = convertAgg(rel, sel, orderBy, env)
+                    sel = _transformed.body
                     rel = _rel
                     // Plan.create (possibly rewritten) sel node
                     rel = convertHaving(rel, sel.having)
                     val (windowSel, windowRel) = convertWindow(rel, sel)
                     rel = windowRel
                     sel = windowSel
-                    rel = convertOrderBy(rel, orderBy)
+                    rel = convertOrderBy(rel, _transformed.orderBy)
                     // offset should precede limit
                     rel = convertOffset(rel, offset)
                     rel = convertLimit(rel, limit)
@@ -428,22 +424,25 @@ internal object RelConverter {
         }
 
         /**
-         * Append [Rel.Op.Aggregate] only if SELECT contains aggregate expressions.
+         * Append [Rel.Op.Aggregate] only if SELECT/HAVING/ORDER BY contains aggregate expressions.
          *
          * TODO Set quantifiers
          * TODO Group As
          *
          * @return Pair<Ast.Expr.SFW, Rel> is returned where
-         *         1. Ast.Expr.SFW has every Ast.Expr.CallAgg replaced by a synthetic Ast.Expr.Var
+         *         1. AggregationTransform.Result has every Ast.Expr.CallAgg replaced by a synthetic Ast.Expr.Var
          *         2. Rel which has the appropriate Rex.Agg calls and groups
          */
-        private fun convertAgg(input: Rel, select: QueryBody.SFW, groupBy: GroupBy?, env: Env): Pair<QueryBody.SFW, Rel> {
-            // Rewrite and extract all aggregations in the SELECT clause
-            val (sel, aggregations) = AggregationTransform.apply(select, env)
+        private fun convertAgg(input: Rel, body: QueryBody.SFW, orderBy: OrderBy?, env: Env): Pair<AggregationTransform.Result, Rel> {
+            val groupBy = body.groupBy
+
+            // Rewrite and extract all aggregations in the SFW Body(SELECT/HAVING) and ORDER BY clause
+            val transformResult = AggregationTransform.apply(body, orderBy, env)
+            val aggregations = transformResult.aggregations
 
             // No aggregation planning required for GROUP BY
             if (aggregations.isEmpty() && groupBy == null) {
-                return Pair(select, input)
+                return Pair(transformResult, input)
             }
 
             // Build the schema -> (calls... groups...)
@@ -525,7 +524,7 @@ internal object RelConverter {
             val type = relType(schema, props)
             val op = relOpAggregate(input, strategy, calls, groups)
             val rel = rel(type, op)
-            return Pair(sel, rel)
+            return Pair(transformResult, rel)
         }
 
         /**
@@ -921,67 +920,6 @@ internal object RelConverter {
         //     )
         // }
     }
-
-    /**
-     * Rewrites a SELECT node replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
-     */
-    private object AggregationTransform : AstRewriter<AggregationTransform.Context>() {
-        private data class Context(
-            val aggregations: MutableList<ExprCall>,
-            val keys: List<GroupBy.Key>,
-            val env: Env
-        )
-
-        fun apply(node: QueryBody.SFW, env: Env): Pair<QueryBody.SFW, List<ExprCall>> {
-            val aggs = mutableListOf<ExprCall>()
-            val keys = node.groupBy?.keys ?: emptyList()
-            val context = Context(aggs, keys, env)
-            val select = super.visitQueryBodySFW(node, context) as QueryBody.SFW
-            return Pair(select, aggs)
-        }
-
-        override fun visitSelectValue(node: SelectValue, ctx: Context): AstNode {
-            val visited = super.visitSelectValue(node, ctx)
-            val substitutions = ctx.keys.associate {
-                it.expr to exprVarRef(Identifier.regular(it.asAlias!!.text), isQualified = false)
-            }
-            return SubstitutionVisitor.visit(visited, substitutions)
-        }
-
-        // only rewrite top-level SFW
-        override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: Context): AstNode = node
-
-        override fun visitExprCall(node: ExprCall, ctx: Context) =
-            when (node.isAggregateCall(ctx)) {
-                true -> {
-                    val id = Identifier.delimited(syntheticAgg(ctx.aggregations.size))
-                    ctx.aggregations += node
-                    exprVarRef(id, isQualified = false)
-                }
-                else -> node
-            }
-
-        private fun ExprCall.isAggregateCall(ctx: Context): Boolean {
-            val fnName = this.function.identifier.text.lowercase()
-            val isScalar = ctx.env.hasFn(fnName)
-            val isAggregate = if (fnName == "count" && this.args.isEmpty()) {
-                // Yet another special case for `COUNT(*)`
-                ctx.env.getAggCandidates(fnName, this.args.size + 1).isNotEmpty()
-            } else {
-                ctx.env.getAggCandidates(fnName, this.args.size).isNotEmpty()
-            }
-
-            if (isAggregate && isScalar) {
-                throw IllegalStateException("Name registered as both a scalar and aggregate call: `$fnName`")
-            }
-
-            return isAggregate
-        }
-
-        override fun defaultReturn(node: AstNode, context: Context) = node
-    }
-
-    private fun syntheticAgg(i: Int) = "\$agg_$i"
 
     /**
      * Infer table qualifier (alias from FROM clause) from input schema

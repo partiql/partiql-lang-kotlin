@@ -1,7 +1,3 @@
-// TODO: NOT NEEDED FOR V1 RELEASE. Alias tests. Fixing this would not result in an API change.
-PERMISSIVE:::group and order by count
-STRICT:::group and order by count
-
 // TODO: NOT NEEDED FOR V1 RELEASE. Arithmetic tests. All tests are wrong.
 PERMISSIVE:::repeatingDecimal // TODO: This is wrong. 4.0000 / 3.0 = 1.3333333
 STRICT:::repeatingDecimal // TODO: This is wrong. 4.0000 / 3.0 = 1.3333333

@@ -1067,4 +1067,21 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
         return node
     }
+
+    override fun visitOrderBy(node: OrderBy, ctx: C): AstNode {
+        val sorts = _visitList(node.sorts, ctx, ::visitSort)
+        if (sorts != node.sorts) {
+            return OrderBy(sorts)
+        }
+        return node
+    }
+
+    override fun visitSort(node: Sort, ctx: C): AstNode {
+        val expr = visitExpr(node.expr, ctx) as Expr
+        if (expr !== node.expr) {
+            return Sort(expr, node.order, node.nulls)
+        }
+
+        return node
+    }
 }
