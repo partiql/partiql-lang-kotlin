@@ -10,6 +10,10 @@ env:
   COMPARISON_REPORT_NAME_WITH_LIMIT: comparison_report_limited.md
   COMMENT_SIZE_LIMIT: 10
 
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   conformance-report:
     name: Create conformance report for `push` and `pull_request` events
