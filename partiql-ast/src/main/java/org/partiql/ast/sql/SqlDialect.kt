@@ -97,7 +97,7 @@ import org.partiql.ast.expr.TruthValue
 /**
  * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
  */
-    public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
+public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     public companion object {
 
