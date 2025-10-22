@@ -77,6 +77,7 @@ import org.partiql.ast.expr.ExprNullIf
 import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
+import org.partiql.ast.expr.ExprOverlaps
 import org.partiql.ast.expr.ExprOverlay
 import org.partiql.ast.expr.ExprParameter
 import org.partiql.ast.expr.ExprPath
@@ -96,7 +97,7 @@ import org.partiql.ast.expr.TruthValue
 /**
  * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
  */
-public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
+    public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     public companion object {
 
@@ -638,6 +639,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         return t
     }
 
+    override fun visitExprOverlaps(node: ExprOverlaps, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprOverlapsArgs(node.lhs, t)
+        t = t concat " OVERLAPS "
+        t = visitExprOverlapsArgs(node.rhs, t)
+        return t
+    }
+
     override fun visitExprQuerySet(node: ExprQuerySet, tail: SqlBlock): SqlBlock {
         var t = tail
         t = if (node.with != null) visitWith(node.with!!, t) else t
@@ -969,5 +978,18 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     private fun Simple.sql() = when (isRegular) {
         true -> text // verbatim ..
         false -> "\"$text\""
+    }
+
+    private fun visitExprOverlapsArgs(expr: Expr, tail: SqlBlock): SqlBlock {
+        var t = tail
+        if (expr is ExprArray) {
+            t = t concat list { expr.values }
+        } else if (expr is ExprBag) {
+            t = t concat list { expr.values }
+        } else {
+            error("Unsupported args type $expr")
+        }
+
+        return t
     }
 }
