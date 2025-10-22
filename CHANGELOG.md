@@ -27,6 +27,7 @@ Thank you to all who have contributed!
 
 ### Added
 - Support aggregation function calls in the `ORDER BY` and `HAVING` clause
+- Add Support to transcribe `Overlaps` function
 
 ### Changed
 
