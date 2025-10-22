@@ -3630,6 +3630,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitExprOperator (Lorg/partiql/ast/expr/ExprOperator;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprOr (Lorg/partiql/ast/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOr (Lorg/partiql/ast/expr/ExprOr;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprOverlaps (Lorg/partiql/ast/expr/ExprOverlaps;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOverlaps (Lorg/partiql/ast/expr/ExprOverlaps;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprOverlay (Lorg/partiql/ast/expr/ExprOverlay;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOverlay (Lorg/partiql/ast/expr/ExprOverlay;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprParameter (Lorg/partiql/ast/expr/ExprParameter;Ljava/lang/Object;)Ljava/lang/Object;
