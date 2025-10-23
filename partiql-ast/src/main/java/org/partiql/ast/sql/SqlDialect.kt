@@ -77,6 +77,7 @@ import org.partiql.ast.expr.ExprNullIf
 import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
+import org.partiql.ast.expr.ExprOverlaps
 import org.partiql.ast.expr.ExprOverlay
 import org.partiql.ast.expr.ExprParameter
 import org.partiql.ast.expr.ExprPath
@@ -635,6 +636,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         t = t concat " AS "
         t = visitDataType(node.asType, t)
         t = t concat ")"
+        return t
+    }
+
+    override fun visitExprOverlaps(node: ExprOverlaps, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat " OVERLAPS "
+        t = visitExprWrapped(node.rhs, t)
         return t
     }
 

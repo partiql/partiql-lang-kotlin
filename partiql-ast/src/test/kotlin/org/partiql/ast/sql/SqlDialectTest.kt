@@ -40,6 +40,7 @@ import org.partiql.ast.Ast.exprNot
 import org.partiql.ast.Ast.exprNullIf
 import org.partiql.ast.Ast.exprNullPredicate
 import org.partiql.ast.Ast.exprOperator
+import org.partiql.ast.Ast.exprOverlaps
 import org.partiql.ast.Ast.exprOverlay
 import org.partiql.ast.Ast.exprPath
 import org.partiql.ast.Ast.exprPathStepAllElements
@@ -1194,6 +1195,27 @@ class SqlDialectTest {
                 exprExtract(
                     field = DatetimeField.MINUTE(),
                     source = v("x")
+                )
+            ),
+            expect(
+                "(x, y) OVERLAPS (a, b)",
+                exprOverlaps(
+                    lhs = exprRowValue(listOf(v("x"), v("y"))),
+                    rhs = exprRowValue(listOf(v("a"), v("b")))
+                )
+            ),
+            expect(
+                "[x, y] OVERLAPS [a, b]",
+                exprOverlaps(
+                    lhs = exprArray(listOf(v("x"), v("y"))),
+                    rhs = exprArray(listOf(v("a"), v("b")))
+                )
+            ),
+            expect(
+                "<<x, y>> OVERLAPS <<a, b>>",
+                exprOverlaps(
+                    lhs = exprBag(listOf(v("x"), v("y"))),
+                    rhs = exprBag(listOf(v("a"), v("b")))
                 )
             ),
             expect(
