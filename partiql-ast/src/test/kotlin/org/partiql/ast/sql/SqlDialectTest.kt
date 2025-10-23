@@ -1205,6 +1205,13 @@ class SqlDialectTest {
                 )
             ),
             expect(
+                "(x, y) OVERLAPS (a, b)",
+                exprOverlaps(
+                    lhs = exprBag(listOf(v("x"), v("y"))),
+                    rhs = exprBag(listOf(v("a"), v("b")))
+                )
+            ),
+            expect(
                 "CAST(x AS INT)",
                 exprCast(
                     value = v("x"),
