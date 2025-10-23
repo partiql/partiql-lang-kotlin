@@ -641,9 +641,9 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExprOverlaps(node: ExprOverlaps, tail: SqlBlock): SqlBlock {
         var t = tail
-        t = visitExprOverlapsArgs(node.lhs, t)
+        t = visitExprOverlapsArg(node.lhs, t)
         t = t concat " OVERLAPS "
-        t = visitExprOverlapsArgs(node.rhs, t)
+        t = visitExprOverlapsArg(node.rhs, t)
         return t
     }
 
@@ -980,7 +980,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         false -> "\"$text\""
     }
 
-    private fun visitExprOverlapsArgs(expr: Expr, tail: SqlBlock): SqlBlock {
+    private fun visitExprOverlapsArg(expr: Expr, tail: SqlBlock): SqlBlock {
         var t = tail
         if (expr is ExprArray) {
             t = t concat list { expr.values }
