@@ -641,9 +641,9 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExprOverlaps(node: ExprOverlaps, tail: SqlBlock): SqlBlock {
         var t = tail
-        t = visitExprOverlapsArg(node.lhs, t)
+        t = visitExprWrapped(node.lhs, t)
         t = t concat " OVERLAPS "
-        t = visitExprOverlapsArg(node.rhs, t)
+        t = visitExprWrapped(node.rhs, t)
         return t
     }
 
@@ -978,18 +978,5 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     private fun Simple.sql() = when (isRegular) {
         true -> text // verbatim ..
         false -> "\"$text\""
-    }
-
-    private fun visitExprOverlapsArg(expr: Expr, tail: SqlBlock): SqlBlock {
-        var t = tail
-        if (expr is ExprArray) {
-            t = t concat list { expr.values }
-        } else if (expr is ExprBag) {
-            t = t concat list { expr.values }
-        } else {
-            error("Unsupported args type $expr")
-        }
-
-        return t
     }
 }
