@@ -1198,6 +1198,13 @@ class SqlDialectTest {
                 )
             ),
             expect(
+                "(x, y) OVERLAPS (a, b)",
+                exprOverlaps(
+                    lhs = exprRowValue(listOf(v("x"), v("y"))),
+                    rhs = exprRowValue(listOf(v("a"), v("b")))
+                )
+            ),
+            expect(
                 "[x, y] OVERLAPS [a, b]",
                 exprOverlaps(
                     lhs = exprArray(listOf(v("x"), v("y"))),
