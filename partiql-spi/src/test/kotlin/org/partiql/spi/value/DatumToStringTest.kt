@@ -151,6 +151,35 @@ class DatumToStringTest {
         expect.scenario("datumHourMinute").toMatchSnapshot(datumHourMinute)
         expect.scenario("datumHourSecond").toMatchSnapshot(datumHourSecond)
         expect.scenario("datumMinuteSecond").toMatchSnapshot(datumMinuteSecond)
+
+        // Negative intervals
+        val datumDayNegative = Datum.intervalDay(-10, 2)
+        val datumHourNegative = Datum.intervalHour(-5, 2)
+        val datumMinuteNegative = Datum.intervalMinute(-30, 2)
+        val datumSecondNegative = Datum.intervalSecond(-45, -500000000, 2, 6)
+        val datumDayHourNegative = Datum.intervalDayHour(-3, -12, 2)
+        val datumDayMinuteNegative = Datum.intervalDayMinute(-2, -8, -45, 2)
+        val datumDaySecondNegative = Datum.intervalDaySecond(-1, -2, -30, -45, -500000000, 2, 6)
+        val datumDaySecondWithSmallNanoNegative = Datum.intervalDaySecond(-1, -2, -30, -45, -5000, 2, 6)
+        val datumDaySecondWithTinyNanoNegative = Datum.intervalDaySecond(-1, -2, -30, -45, -5, 2, 6)
+        val datumDaySecondWithZeroNanoNegative = Datum.intervalDaySecond(-1, -2, -30, -45, 0, 2, 6)
+        val datumHourMinuteNegative = Datum.intervalHourMinute(-14, -30, 2)
+        val datumHourSecondNegative = Datum.intervalHourSecond(-6, -15, -20, -750000000, 2, 6)
+        val datumMinuteSecondNegative = Datum.intervalMinuteSecond(-25, -30, -250000000, 2, 6)
+
+        expect.scenario("datumDayNegative").toMatchSnapshot(datumDayNegative)
+        expect.scenario("datumHourNegative").toMatchSnapshot(datumHourNegative)
+        expect.scenario("datumMinuteNegative").toMatchSnapshot(datumMinuteNegative)
+        expect.scenario("datumSecondNegative").toMatchSnapshot(datumSecondNegative)
+        expect.scenario("datumDayHourNegative").toMatchSnapshot(datumDayHourNegative)
+        expect.scenario("datumDayMinuteNegative").toMatchSnapshot(datumDayMinuteNegative)
+        expect.scenario("datumDaySecondNegative").toMatchSnapshot(datumDaySecondNegative)
+        expect.scenario("datumDaySecondWithSmallNanoNegative").toMatchSnapshot(datumDaySecondWithSmallNanoNegative)
+        expect.scenario("datumDaySecondWithTinyNanoNegative").toMatchSnapshot(datumDaySecondWithTinyNanoNegative)
+        expect.scenario("datumDaySecondWithZeroNanoNegative").toMatchSnapshot(datumDaySecondWithZeroNanoNegative)
+        expect.scenario("datumHourMinuteNegative").toMatchSnapshot(datumHourMinuteNegative)
+        expect.scenario("datumHourSecondNegative").toMatchSnapshot(datumHourSecondNegative)
+        expect.scenario("datumMinuteSecondNegative").toMatchSnapshot(datumMinuteSecondNegative)
     }
 
     @Test
@@ -162,6 +191,15 @@ class DatumToStringTest {
         expect.scenario("datumYearMonth").toMatchSnapshot(datumYearMonth)
         expect.scenario("datumYear").toMatchSnapshot(datumYear)
         expect.scenario("datumMonth").toMatchSnapshot(datumMonth)
+
+        // Negative intervals
+        val datumYearMonthNegative = Datum.intervalYearMonth(-2, -6, 2)
+        val datumYearNegative = Datum.intervalYear(-15, 2)
+        val datumMonthNegative = Datum.intervalMonth(-15, 2)
+
+        expect.scenario("datumYearMonthNegative").toMatchSnapshot(datumYearMonthNegative)
+        expect.scenario("datumYearNegative").toMatchSnapshot(datumYearNegative)
+        expect.scenario("datumMonthNegative").toMatchSnapshot(datumMonthNegative)
     }
 
     @Test

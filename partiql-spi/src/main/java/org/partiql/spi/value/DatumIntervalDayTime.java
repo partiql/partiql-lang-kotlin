@@ -150,10 +150,10 @@ class DatumIntervalDayTime implements Datum {
         String nanosStr = "";
 
         if (fractionalPrecision != 0) {
-            nanosStr = String.format("%09d", getNanos());
+            nanosStr = String.format("%09d", Math.abs(getNanos()));
             nanosStr = "." + nanosStr.substring(0, fractionalPrecision);
         }
-        
+
         return "DatumIntervalDayTime{" +
                 "_type=" + getType() +
                 ", _value=" + "INTERVAL '" + sign + Math.abs(getDays()) + " " + Math.abs(getHours()) + ":" + Math.abs(getMinutes()) + ":" + Math.abs(getSeconds()) + nanosStr + "'" +
