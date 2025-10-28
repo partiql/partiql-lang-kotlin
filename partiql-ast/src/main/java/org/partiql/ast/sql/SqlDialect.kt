@@ -48,6 +48,10 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
+import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionType
+import org.partiql.ast.WindowPartition
+import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
 import org.partiql.ast.WithListElement
 import org.partiql.ast.ddl.CreateTable
@@ -91,6 +95,7 @@ import org.partiql.ast.expr.ExprTrim
 import org.partiql.ast.expr.ExprValues
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
+import org.partiql.ast.expr.ExprWindowFunction
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.TruthValue
 
@@ -193,6 +198,120 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExcludeStepCollWildcard(node: ExcludeStep.CollWildcard, tail: SqlBlock): SqlBlock {
         return tail concat "[*]"
+    }
+
+    // Window Function Methods
+    override fun visitExprWindowFunction(node: ExprWindowFunction, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitWindowFunctionType(node.functionType, t)
+        t = t concat " OVER "
+        t = visitWindowSpecification(node.windowSpecification, t)
+        return t
+    }
+
+    override fun visitWindowFunctionType(node: WindowFunctionType, tail: SqlBlock): SqlBlock {
+        return node.accept(this, tail)
+    }
+
+    override fun visitWindowFunctionTypeRank(node: WindowFunctionType.Rank, tail: SqlBlock): SqlBlock {
+        return tail concat "RANK()"
+    }
+
+    override fun visitWindowFunctionTypeDenseRank(node: WindowFunctionType.DenseRank, tail: SqlBlock): SqlBlock {
+        return tail concat "DENSE_RANK()"
+    }
+
+    override fun visitWindowFunctionTypePercentRank(node: WindowFunctionType.PercentRank, tail: SqlBlock): SqlBlock {
+        return tail concat "PERCENT_RANK()"
+    }
+
+    override fun visitWindowFunctionTypeCumeDist(node: WindowFunctionType.CumeDist, tail: SqlBlock): SqlBlock {
+        return tail concat "CUME_DIST()"
+    }
+
+    override fun visitWindowFunctionTypeRowNumber(node: WindowFunctionType.RowNumber, tail: SqlBlock): SqlBlock {
+        return tail concat "ROW_NUMBER()"
+    }
+
+    override fun visitWindowFunctionTypeLead(node: WindowFunctionType.Lead, tail: SqlBlock): SqlBlock {
+        var t = tail concat "LEAD("
+        t = visitExpr(node.extent, t)
+        node.offset?.let {
+            t = t concat ", $it"
+        }
+
+        node.defaultValue.let { defaultValue ->
+            t = t concat ", "
+            t = visitExpr(defaultValue, t)
+        }
+
+        t = t concat ")"
+        node.nullTreatment?.let { nullTreatment ->
+            t = t concat " ${nullTreatment.name()}"
+        }
+
+        return t
+    }
+
+    override fun visitWindowFunctionTypeLag(node: WindowFunctionType.Lag, tail: SqlBlock): SqlBlock {
+        var t = tail concat "LAG("
+        t = visitExpr(node.extent, t)
+        node.offset?.let {
+            t = t concat ", $it"
+        }
+
+        node.defaultValue.let { defaultValue ->
+            t = t concat ", "
+            t = visitExpr(defaultValue, t)
+        }
+
+        t = t concat ")"
+        node.nullTreatment?.let { nullTreatment ->
+            t = t concat " ${nullTreatment.name()}"
+        }
+        return t
+    }
+
+    override fun visitWindowPartition(node: WindowPartition, tail: SqlBlock): SqlBlock {
+        return visitIdentifier(node.columnReference, tail)
+    }
+
+    override fun visitWindowSpecification(node: WindowSpecification, tail: SqlBlock): SqlBlock {
+        var t = tail concat "("
+        // Existing window name reference
+        node.existingName?.let { existingName ->
+            t = visitIdentifierSimple(existingName, t)
+            if (!node.partitionClause.isNullOrEmpty() || node.orderClause != null) {
+                t = t concat " "
+            }
+        }
+        // PARTITION BY clause
+        if (!node.partitionClause.isNullOrEmpty()) {
+            t = t concat "PARTITION BY "
+            t = t concat list(start = null, end = null) { node.partitionClause!! }
+            t = t concat " "
+        }
+
+        // ORDER BY clause
+        node.orderClause?.let { orderClause ->
+            t = visitOrderBy(orderClause, t)
+        }
+        t = t concat ")"
+        return t
+    }
+
+    override fun visitWindowClause(node: WindowClause, tail: SqlBlock): SqlBlock {
+        var t = tail concat "WINDOW "
+        t = t concat list(start = null, end = null) { node.definitions }
+        return t
+    }
+
+    override fun visitWindowDefinition(node: WindowClause.Definition, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitIdentifierSimple(node.name, t)
+        t = t concat " AS "
+        t = visitWindowSpecification(node.specification, t)
+        return t
     }
 
     // TYPES
@@ -707,6 +826,9 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         // HAVING
         val having = node.having
         t = if (having != null) visitExprWrapped(having, t concat " HAVING ") else t
+        // WINDOW
+        val window = node.window
+        t = if (window != null) visitWindowClause(window, t concat " ") else t
         return t
     }
 

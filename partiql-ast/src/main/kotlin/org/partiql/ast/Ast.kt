@@ -57,6 +57,7 @@ import org.partiql.ast.expr.ExprValues
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.ExprWindow
+import org.partiql.ast.expr.ExprWindowFunction
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.PathStep.AllFields
 import org.partiql.ast.expr.SessionAttribute
@@ -299,6 +300,43 @@ public object Ast {
         over: ExprWindow.Over
     ): ExprWindow {
         return ExprWindow(windowFunction, expression, offset, defaultValue, over)
+    }
+
+    @JvmStatic
+    @Deprecated("This feature is experimental and is subject to change")
+    public fun exprWindowFunction(
+        type: WindowFunctionType,
+        spec: WindowSpecification
+    ): ExprWindowFunction {
+        return ExprWindowFunction(type, spec)
+    }
+
+    @JvmStatic
+    @Deprecated("This feature is experimental and is subject to change")
+    public fun windowSpecification(
+        existingName: Identifier.Simple?,
+        partitionClause: List<WindowPartition>,
+        orderByClause: OrderBy?
+    ): WindowSpecification {
+        return WindowSpecification(existingName, partitionClause, orderByClause)
+    }
+
+    @JvmStatic
+    @Deprecated("This feature is experimental and is subject to change")
+    public fun windowPartition(columnReference: Identifier): WindowPartition {
+        return WindowPartition(columnReference)
+    }
+
+    @JvmStatic
+    @Deprecated("This feature is experimental and is subject to change")
+    public fun windowClause(definitions: List<WindowClause.Definition>): WindowClause {
+        return WindowClause(definitions)
+    }
+
+    @JvmStatic
+    @Deprecated("This feature is experimental and is subject to change")
+    public fun windowClauseDefinition(name: Identifier.Simple, spec: WindowSpecification): WindowClause.Definition {
+        return WindowClause.Definition(name, spec)
     }
 
     @JvmStatic
