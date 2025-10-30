@@ -237,7 +237,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 it.copy(rex = rex)
             }
             val schema = ctx!!.copyWithSchema(input.type.schema.map { it.type } + functions.map { it.returnType!! })
-            val window = relOpWindow(input, functions, partitions, sorts)
+            val window = relOpWindow(node.name, input, functions, partitions, sorts)
             return rel(schema, window)
         }
 

@@ -869,6 +869,7 @@ internal data class Rel(
         }
 
         internal data class Window(
+            @JvmField internal val name: String? = null,
             @JvmField internal val input: Rel,
             @JvmField internal val functions: List<WindowFunction>,
             @JvmField internal val partitions: List<Rex>,

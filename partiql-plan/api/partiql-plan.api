@@ -648,9 +648,10 @@ public abstract class org/partiql/plan/rel/RelUnpivot : org/partiql/plan/rel/Rel
 public abstract class org/partiql/plan/rel/RelWindow : org/partiql/plan/rel/RelBase {
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun create (Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
+	public static fun create (Ljava/lang/String;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
 	public abstract fun getCollations ()Ljava/util/List;
 	public abstract fun getInput ()Lorg/partiql/plan/rel/Rel;
+	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getPartitions ()Ljava/util/List;
 	public abstract fun getWindowFunctions ()Ljava/util/List;
 	protected final fun operands ()Ljava/util/List;

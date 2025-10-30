@@ -575,7 +575,7 @@ internal object RelConverter {
                 val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }
                 val newSchema = current.type.schema + functionBindings
                 val type = relType(newSchema, emptySet())
-                val op = relOpWindow(current, functionNodes, partitions, orderBy)
+                val op = relOpWindow(window.name, current, functionNodes, partitions, orderBy)
                 rel(type, op)
             }
             return Pair(sel, rel)
@@ -589,11 +589,11 @@ internal object RelConverter {
 
             fun addWindowDef(name: String, spec: WindowSpecification) {
                 assertKeyDoesNotExist(name)
-                definitions[name] = InternalWindowDefinition(spec, mutableListOf(), mutableListOf())
+                definitions[name] = InternalWindowDefinition(name, spec, mutableListOf(), mutableListOf())
             }
 
             fun addFunctionWithInLineWindowSpec(spec: WindowSpecification, function: ExprWindowFunction, functionBinding: String) {
-                val def = InternalWindowDefinition(spec, mutableListOf(), mutableListOf())
+                val def = InternalWindowDefinition(null, spec, mutableListOf(), mutableListOf())
                 def.functions.add(function)
                 def.functionBindings.add(functionBinding)
                 inLineWindowDefs.add(def)
@@ -627,9 +627,10 @@ internal object RelConverter {
         }
 
         private class InternalWindowDefinition(
+            val name: String? = null,
             val spec: WindowSpecification,
             val functions: MutableList<ExprWindowFunction>,
-            val functionBindings: MutableList<String>,
+            val functionBindings: MutableList<String>
         )
 
         private fun convertSort(it: Sort): Rel.Op.Sort.Spec {
