@@ -4419,10 +4419,26 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "SELECT a FROM T WINDOW w AS (PARTITION BY dept, region ORDER BY salary DESC NULLS FIRST)",
+                "SELECT a, RANK() OVER w FROM T WINDOW w AS (PARTITION BY dept, region ORDER BY salary DESC NULLS FIRST)",
                 qSet(
                     body = sfw(
-                        select = select("a"),
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(v("a"), asAlias = null),
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
                         from = table("T"),
                         window = windowClause(
                             listOf(
@@ -4435,6 +4451,108 @@ class SqlDialectTest {
                                             windowPartition(Identifier.of(regular("region")))
                                         ),
                                         orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            expect(
+                "SELECT RANK() OVER w1, ROW_NUMBER() OVER (ORDER BY id ASC NULLS LAST) FROM T WINDOW w1 AS (PARTITION BY dept ORDER BY salary DESC NULLS FIRST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w1"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                ),
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.RowNumber(),
+                                        spec = windowSpecification(
+                                            null,
+                                            emptyList(),
+                                            orderBy(listOf(sort(v("id"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w1"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.of(regular("dept")))),
+                                        orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            expect(
+                "SELECT RANK() OVER w1, DENSE_RANK() OVER w2 FROM T WINDOW w1 AS (PARTITION BY dept ORDER BY salary DESC NULLS FIRST), w2 AS (ORDER BY age ASC NULLS LAST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w1"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                ),
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.DenseRank(),
+                                        spec = windowSpecification(
+                                            regular("w2"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w1"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.of(regular("dept")))),
+                                        orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
+                                    )
+                                ),
+                                windowClauseDefinition(
+                                    regular("w2"),
+                                    windowSpecification(
+                                        null,
+                                        emptyList(),
+                                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
                                     )
                                 )
                             )
