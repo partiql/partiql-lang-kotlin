@@ -4273,7 +4273,7 @@ class SqlDialectTest {
             ),
             // Window functions with named window reference
             expect(
-                "RANK() OVER (w)",
+                "RANK() OVER w",
                 exprWindowFunction(
                     type = WindowFunctionType.Rank(),
                     spec = windowSpecification(
@@ -4284,7 +4284,7 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "DENSE_RANK() OVER (w)",
+                "DENSE_RANK() OVER w",
                 exprWindowFunction(
                     type = WindowFunctionType.DenseRank(),
                     spec = windowSpecification(
@@ -4295,7 +4295,7 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "ROW_NUMBER() OVER (w)",
+                "ROW_NUMBER() OVER w",
                 exprWindowFunction(
                     type = WindowFunctionType.RowNumber(),
                     spec = windowSpecification(
@@ -4306,7 +4306,7 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "LAG(name, 1, 'UNKNOWN') OVER (w)",
+                "LAG(name, 1, 'UNKNOWN') OVER w",
                 exprWindowFunction(
                     type = WindowFunctionType.Lag(
                         v("name"),
@@ -4322,7 +4322,7 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "LEAD(name, 1, 'UNKNOWN') OVER (w)",
+                "LEAD(name, 1, 'UNKNOWN') OVER w",
                 exprWindowFunction(
                     type = WindowFunctionType.Lead(
                         v("name"),
