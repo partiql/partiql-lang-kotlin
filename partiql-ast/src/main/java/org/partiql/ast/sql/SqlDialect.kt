@@ -277,26 +277,28 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     }
 
     override fun visitWindowSpecification(node: WindowSpecification, tail: SqlBlock): SqlBlock {
-        var t = tail concat "("
-        // Existing window name reference
-        node.existingName?.let { existingName ->
-            t = visitIdentifierSimple(existingName, t)
+        var t = tail
+        if (node.existingName != null) {
+            t = visitIdentifierSimple(node.existingName!!, t)
             if (!node.partitionClause.isNullOrEmpty() || node.orderClause != null) {
                 t = t concat " "
             }
-        }
-        // PARTITION BY clause
-        if (!node.partitionClause.isNullOrEmpty()) {
-            t = t concat "PARTITION BY "
-            t = t concat list(start = null, end = null) { node.partitionClause!! }
-            t = t concat " "
+        } else {
+            t = t concat "("
+            // PARTITION BY clause
+            if (!node.partitionClause.isNullOrEmpty()) {
+                t = t concat "PARTITION BY "
+                t = t concat list(start = null, end = null) { node.partitionClause!! }
+                t = t concat " "
+            }
+
+            // ORDER BY clause
+            node.orderClause?.let { orderClause ->
+                t = visitOrderBy(orderClause, t)
+            }
+            t = t concat ")"
         }
 
-        // ORDER BY clause
-        node.orderClause?.let { orderClause ->
-            t = visitOrderBy(orderClause, t)
-        }
-        t = t concat ")"
         return t
     }
 

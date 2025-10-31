@@ -315,7 +315,7 @@ public object Ast {
     @Deprecated("This feature is experimental and is subject to change")
     public fun windowSpecification(
         existingName: Identifier.Simple?,
-        partitionClause: List<WindowPartition>,
+        partitionClause: List<WindowPartition>?,
         orderByClause: OrderBy?
     ): WindowSpecification {
         return WindowSpecification(existingName, partitionClause, orderByClause)
