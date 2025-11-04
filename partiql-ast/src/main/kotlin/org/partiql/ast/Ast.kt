@@ -323,7 +323,7 @@ public object Ast {
 
     @JvmStatic
     @Deprecated("This feature is experimental and is subject to change")
-    public fun windowPartition(columnReference: Identifier): WindowPartition {
+    public fun windowPartition(columnReference: Expr): WindowPartition {
         return WindowPartition(columnReference)
     }
 

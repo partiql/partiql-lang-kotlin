@@ -2049,8 +2049,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitWindowPartitionColumnReference(ctx: GeneratedParser.WindowPartitionColumnReferenceContext) = translate(ctx) {
-            val id = visitQualifiedName(ctx.qualifiedName())
-            WindowPartition(id)
+            val columnReference = visitExpr(ctx.expr())
+            WindowPartition(columnReference)
         }
 
         override fun visitWindowSpecification(ctx: GeneratedParser.WindowSpecificationContext) = translate(ctx) {

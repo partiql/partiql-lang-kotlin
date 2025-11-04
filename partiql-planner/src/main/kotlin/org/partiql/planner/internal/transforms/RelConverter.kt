@@ -568,8 +568,7 @@ internal object RelConverter {
             val rel = windows.getAll().foldRight(input) { window, current ->
                 val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
                 val partitions = window.spec.partitionClause?.map {
-                    val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
-                    rex(PType.dynamic().toCType(), op)
+                    it.columnReference.toRex(env)
                 } ?: emptyList()
                 val functionNodes = window.functions.map { convertWindowFunction(it) }
                 val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }

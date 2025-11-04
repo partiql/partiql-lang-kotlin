@@ -1077,7 +1077,7 @@ windowPartitionClause: PARTITION BY col+=windowPartitionColumnReference (COMMA c
  *   <basic identifier chain>
  *   | MODULE <period> <qualified identifier> <period> <column name>
  */
-windowPartitionColumnReference: qualifiedName;
+windowPartitionColumnReference: expr;
 
 cast
     : CAST PAREN_LEFT expr AS type PAREN_RIGHT;

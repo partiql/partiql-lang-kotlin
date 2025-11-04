@@ -273,7 +273,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     }
 
     override fun visitWindowPartition(node: WindowPartition, tail: SqlBlock): SqlBlock {
-        return visitIdentifier(node.columnReference, tail)
+        return visitExprWrapped(node.columnReference, tail)
     }
 
     override fun visitWindowSpecification(node: WindowSpecification, tail: SqlBlock): SqlBlock {

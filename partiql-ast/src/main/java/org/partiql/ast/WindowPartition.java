@@ -3,6 +3,7 @@ package org.partiql.ast;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +18,13 @@ import java.util.List;
 @Deprecated
 public final class WindowPartition extends AstNode {
 
-    private final Identifier columnReference;
+    private final Expr columnReference;
 
     /**
      * Constructs a new window partition backed by a column reference.
      * @param columnReference the column reference backing the window partition
      */
-    public WindowPartition(@NotNull Identifier columnReference) {
+    public WindowPartition(@NotNull Expr columnReference) {
         this.columnReference = columnReference;
     }
 
@@ -32,7 +33,7 @@ public final class WindowPartition extends AstNode {
      * @return the column reference backing the window partition
      */
     @NotNull
-    public Identifier getColumnReference() {
+    public Expr getColumnReference() {
         return this.columnReference;
     }
 

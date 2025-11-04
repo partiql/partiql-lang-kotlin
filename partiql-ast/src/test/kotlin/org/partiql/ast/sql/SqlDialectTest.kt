@@ -109,6 +109,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
@@ -4121,7 +4122,7 @@ class SqlDialectTest {
                                         type = WindowFunctionType.Rank(),
                                         spec = windowSpecification(
                                             null,
-                                            listOf(windowPartition(Identifier.of(regular("department")))),
+                                            listOf(windowPartition(v("department"))),
                                             orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.LAST())))
                                         )
                                     ),
@@ -4186,7 +4187,7 @@ class SqlDialectTest {
                     type = WindowFunctionType.Rank(),
                     spec = windowSpecification(
                         null,
-                        listOf(windowPartition(Identifier.of(regular("department")))),
+                        listOf(windowPartition(v("department"))),
                         orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
                     )
                 )
@@ -4197,7 +4198,7 @@ class SqlDialectTest {
                     type = WindowFunctionType.DenseRank(),
                     spec = windowSpecification(
                         null,
-                        listOf(windowPartition(Identifier.of(regular("department")))),
+                        listOf(windowPartition(v("department"))),
                         orderBy(
                             listOf(
                                 sort(v("age"), Order.ASC(), Nulls.LAST()),
@@ -4219,45 +4220,45 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "LAG(name, 1, 'UNKNOWN') OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
+                "LAG(name, 1, 'UNKNOWN') RESPECT NULLS OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
                 exprWindowFunction(
                     type = WindowFunctionType.Lag(
                         v("name"),
                         1L,
                         exprLit(string("UNKNOWN")),
-                        null
+                        WindowFunctionNullTreatment.RESPECT_NULLS()
                     ),
                     spec = windowSpecification(
                         null,
-                        listOf(windowPartition(Identifier.of(regular("department")))),
+                        listOf(windowPartition(v("department"))),
                         orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
                     )
                 )
             ),
             expect(
-                "LEAD(name, 1, 'UNKNOWN') OVER (PARTITION BY department ORDER BY age DESC NULLS LAST)",
+                "LEAD(name, 1, 'UNKNOWN') IGNORE NULLS OVER (PARTITION BY department ORDER BY age DESC NULLS LAST)",
                 exprWindowFunction(
                     type = WindowFunctionType.Lead(
                         v("name"),
                         1L,
                         exprLit(string("UNKNOWN")),
-                        null
+                        WindowFunctionNullTreatment.IGNORE_NULLS()
                     ),
                     spec = windowSpecification(
                         null,
-                        listOf(windowPartition(Identifier.of(regular("department")))),
+                        listOf(windowPartition(v("department"))),
                         orderBy(listOf(sort(v("age"), Order.DESC(), Nulls.LAST())))
                     )
                 )
             ),
             expect(
-                "LAG(partner, 3, 'FALLBACK') OVER (ORDER BY age ASC NULLS LAST, name ASC NULLS LAST)",
+                "LAG(partner, 3, 'FALLBACK') IGNORE NULLS OVER (ORDER BY age ASC NULLS LAST, name ASC NULLS LAST)",
                 exprWindowFunction(
                     type = WindowFunctionType.Lag(
                         v("partner"),
                         3L,
                         exprLit(string("FALLBACK")),
-                        null
+                        WindowFunctionNullTreatment.IGNORE_NULLS()
                     ),
                     spec = windowSpecification(
                         null,
@@ -4306,13 +4307,13 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "LAG(name, 1, 'UNKNOWN') OVER w",
+                "LAG(name, 1, 'UNKNOWN') RESPECT NULLS OVER w",
                 exprWindowFunction(
                     type = WindowFunctionType.Lag(
                         v("name"),
                         1L,
                         exprLit(string("UNKNOWN")),
-                        null
+                        WindowFunctionNullTreatment.RESPECT_NULLS()
                     ),
                     spec = windowSpecification(
                         regular("w"),
@@ -4322,13 +4323,13 @@ class SqlDialectTest {
                 )
             ),
             expect(
-                "LEAD(name, 1, 'UNKNOWN') OVER w",
+                "LEAD(name, 1, 'UNKNOWN') IGNORE NULLS OVER w",
                 exprWindowFunction(
                     type = WindowFunctionType.Lead(
                         v("name"),
                         1L,
                         exprLit(string("UNKNOWN")),
-                        null
+                        WindowFunctionNullTreatment.IGNORE_NULLS()
                     ),
                     spec = windowSpecification(
                         regular("w"),
@@ -4357,8 +4358,8 @@ class SqlDialectTest {
                     spec = windowSpecification(
                         null,
                         listOf(
-                            windowPartition(Identifier.of(regular("ticker"))),
-                            windowPartition(Identifier.of(regular("month")))
+                            windowPartition(v("ticker")),
+                            windowPartition(v("month"))
                         ),
                         orderBy(listOf(sort(v("date"), Order.ASC(), Nulls.LAST())))
                     )
@@ -4401,7 +4402,7 @@ class SqlDialectTest {
                                     regular("w"),
                                     windowSpecification(
                                         null,
-                                        listOf(windowPartition(Identifier.of(regular("dept")))),
+                                        listOf(windowPartition(v("dept"))),
                                         orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
                                     )
                                 ),
@@ -4447,8 +4448,8 @@ class SqlDialectTest {
                                     windowSpecification(
                                         null,
                                         listOf(
-                                            windowPartition(Identifier.of(regular("dept"))),
-                                            windowPartition(Identifier.of(regular("region")))
+                                            windowPartition(v("dept")),
+                                            windowPartition(v("region"))
                                         ),
                                         orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
                                     )
@@ -4496,7 +4497,7 @@ class SqlDialectTest {
                                     regular("w1"),
                                     windowSpecification(
                                         null,
-                                        listOf(windowPartition(Identifier.of(regular("dept")))),
+                                        listOf(windowPartition(v("dept"))),
                                         orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
                                     )
                                 )
@@ -4543,7 +4544,7 @@ class SqlDialectTest {
                                     regular("w1"),
                                     windowSpecification(
                                         null,
-                                        listOf(windowPartition(Identifier.of(regular("dept")))),
+                                        listOf(windowPartition(v("dept"))),
                                         orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
                                     )
                                 ),
