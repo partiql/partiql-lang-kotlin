@@ -94,7 +94,6 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.transforms.AggregationTransform.syntheticAgg
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
