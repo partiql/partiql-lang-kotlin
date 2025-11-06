@@ -137,4 +137,16 @@ internal object FnGte : DiadicComparisonOperator("gte") {
             Datum.bool(lhs >= rhs)
         }
     }
+
+    override fun getDateTimestampInstance(dateLhs: PType, timestampRhs: PType): Fn {
+        return basic(PType.bool(), dateLhs, timestampRhs) { args ->
+            TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
+        }
+    }
+
+    override fun getTimestampDateInstance(timestampLhs: PType, dateRhs: PType): Fn {
+        return basic(PType.bool(), timestampLhs, dateRhs) { args ->
+            TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
+        }
+    }
 }

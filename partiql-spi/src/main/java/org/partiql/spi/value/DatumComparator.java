@@ -543,6 +543,9 @@ abstract class DatumComparator implements Comparator<Datum> {
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillDateComparator(DatumComparison[] comps) {
         comps[DATE] = (self, date, comp) -> self.getLocalDate().compareTo(date.getLocalDate());
+
+        // We should register the comparison for timestamp and timestampz. some tests will fail if we leave it not implemented
+        // TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
         return comps;
     }
 
@@ -580,6 +583,8 @@ abstract class DatumComparator implements Comparator<Datum> {
      */
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimestampComparator(DatumComparison[] comps) {
+        // We should register the comparison for Date. some tests will fail if we leave it not implemented
+        // TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
         comps[TIMESTAMP] = (self, timestamp, comp) -> self.getLocalDateTime().compareTo(timestamp.getLocalDateTime());
         comps[TIMESTAMPZ] = (self, timestamp, comp) -> self.getOffsetDateTime().compareTo(timestamp.getOffsetDateTime());
         return comps;
