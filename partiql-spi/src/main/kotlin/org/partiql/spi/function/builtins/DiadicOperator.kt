@@ -153,6 +153,24 @@ internal abstract class DiadicOperator(
     }
 
     /**
+     * @param dateLhs a type of date
+     * @param timestampRhs a type of timestamp
+     * @return an instance of a function
+     */
+    open fun getDateTimestampInstance(dateLhs: PType, timestampRhs: PType): Fn? {
+        return null
+    }
+
+    /**
+     * @param timestampLhs a type of timestamp
+     * @param dateRhs a type of date
+     * @return an instance of a function
+     */
+    open fun getTimestampDateInstance(timestampLhs: PType, dateRhs: PType): Fn? {
+        return null
+    }
+
+    /**
      * @param integerLhs TODO
      * @param integerRhs TODO
      * @return TODO
@@ -408,6 +426,12 @@ internal abstract class DiadicOperator(
         fillTable(PType.TIMESTAMP, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIMESTAMPZ, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIMESTAMP, PType.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
+
+        // Date-timestamp combinations using specific methods
+        fillTable(PType.DATE, PType.TIMESTAMP, ::getDateTimestampInstance)
+        fillTable(PType.DATE, PType.TIMESTAMPZ, ::getDateTimestampInstance)
+        fillTable(PType.TIMESTAMP, PType.DATE, ::getTimestampDateInstance)
+        fillTable(PType.TIMESTAMPZ, PType.DATE, ::getTimestampDateInstance)
     }
 
     private fun fillTimeTable(instance: (PType, PType) -> Fn?) {

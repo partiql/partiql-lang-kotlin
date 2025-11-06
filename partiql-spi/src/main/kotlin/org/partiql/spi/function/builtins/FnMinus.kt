@@ -296,4 +296,16 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
             Datum.timestamp(result, lhsPrecision)
         }
     }
+
+    override fun getDateTimestampInstance(dateLhs: PType, timestampRhs: PType): Fn {
+        return basic(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION), dateLhs, timestampRhs) { args ->
+            TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
+        }
+    }
+
+    override fun getTimestampDateInstance(timestampLhs: PType, dateRhs: PType): Fn {
+        return basic(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION), timestampLhs, dateRhs) { args ->
+            TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
+        }
+    }
 }

@@ -68,6 +68,12 @@ class OpComparisonTest : PartiQLTyperTestBase() {
                 ) + cartesianProduct(
                     allTimeStampPType,
                     allTimeStampPType,
+                ) + cartesianProduct(
+                    allDatePType,
+                    allTimeStampPType,
+                ) + cartesianProduct(
+                    allTimeStampPType,
+                    allDatePType,
                 )
 
             val failureArgs = cartesianProduct(

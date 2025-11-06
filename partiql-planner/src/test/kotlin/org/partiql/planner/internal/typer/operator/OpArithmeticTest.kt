@@ -125,7 +125,9 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
                     cartesianProduct(allTimePType, allIntervalDTType) +
                     cartesianProduct(allTimeStampPType, allIntervalType) +
                     cartesianProduct(allIntervalYMType, allIntervalYMType) +
-                    cartesianProduct(allIntervalDTType, allIntervalDTType)
+                    cartesianProduct(allIntervalDTType, allIntervalDTType) +
+                    cartesianProduct(allDatePType, allTimeStampPType) +
+                    cartesianProduct(allTimeStampPType, allDatePType)
                 )
             val failureArgs = cartesianProduct(
                 allSupportedPType,
@@ -151,6 +153,8 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
                     // TODO arg1 == StaticType.DECIMAL && arg0 == StaticType.FLOAT -> arg0 // TODO: The cast table is wrong
                     castTablePType(arg1, arg0) == CastType.COERCION -> arg0
                     castTablePType(arg0, arg1) == CastType.COERCION -> arg1
+                    arg0 in allDatePType && arg1 in allTimeStampPType -> PType.intervalDaySecond(9, 0)
+                    arg0 in allTimeStampPType && arg1 in allDatePType -> PType.intervalDaySecond(9, 0)
                     else -> error("Arguments do not conform to parameters. Args: $args")
                 }
                 accumulateSuccess(output, args)
