@@ -40,7 +40,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 
-## [1.3.1](https://TODO.com) - 2025-11-06
+## [1.3.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.1) - 2025-11-06
 
 ### Added
 - Support aggregation function calls in the `ORDER BY` and `HAVING` clause
