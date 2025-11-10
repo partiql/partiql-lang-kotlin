@@ -253,7 +253,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowPartition(node: WindowPartition, tail: SqlBlock): SqlBlock {
-        return visitExprWrapped(node.columnReference, tail)
+        return visitIdentifier(node.columnReference, tail)
     }
 
     @Deprecated("This feature is experimental and is subject to change.")

@@ -94,6 +94,7 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.transforms.AggregationTransform.syntheticAgg
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
@@ -567,7 +568,8 @@ internal object RelConverter {
             val rel = windows.getAll().foldRight(input) { window, current ->
                 val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
                 val partitions = window.spec.partitionClause?.map {
-                    it.columnReference.toRex(env)
+                    val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
+                    rex(PType.dynamic().toCType(), op)
                 } ?: emptyList()
                 val functionNodes = window.functions.map { convertWindowFunction(it) }
                 val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }

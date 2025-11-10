@@ -4122,7 +4122,7 @@ class SqlDialectTest {
                                         type = WindowFunctionType.Rank(),
                                         spec = windowSpecification(
                                             null,
-                                            listOf(windowPartition(v("department"))),
+                                            listOf(windowPartition(Identifier.of(regular("department")))),
                                             orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.LAST())))
                                         )
                                     ),
@@ -4187,7 +4187,7 @@ class SqlDialectTest {
                     type = WindowFunctionType.Rank(),
                     spec = windowSpecification(
                         null,
-                        listOf(windowPartition(v("department"))),
+                        listOf(windowPartition(Identifier.of(regular("department")))),
                         orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
                     )
                 )
@@ -4198,7 +4198,7 @@ class SqlDialectTest {
                     type = WindowFunctionType.DenseRank(),
                     spec = windowSpecification(
                         null,
-                        listOf(windowPartition(v("department"))),
+                        listOf(windowPartition(Identifier.of(regular("department")))),
                         orderBy(
                             listOf(
                                 sort(v("age"), Order.ASC(), Nulls.LAST()),
@@ -4230,7 +4230,7 @@ class SqlDialectTest {
                     ),
                     spec = windowSpecification(
                         null,
-                        listOf(windowPartition(v("department"))),
+                        listOf(windowPartition(Identifier.regular("department"))),
                         orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
                     )
                 )
@@ -4246,7 +4246,7 @@ class SqlDialectTest {
                     ),
                     spec = windowSpecification(
                         null,
-                        listOf(windowPartition(v("department"))),
+                        listOf(windowPartition(Identifier.regular("department"))),
                         orderBy(listOf(sort(v("age"), Order.DESC(), Nulls.LAST())))
                     )
                 )
@@ -4358,8 +4358,8 @@ class SqlDialectTest {
                     spec = windowSpecification(
                         null,
                         listOf(
-                            windowPartition(v("ticker")),
-                            windowPartition(v("month"))
+                            windowPartition(Identifier.regular("ticker")),
+                            windowPartition(Identifier.regular("month"))
                         ),
                         orderBy(listOf(sort(v("date"), Order.ASC(), Nulls.LAST())))
                     )
@@ -4402,7 +4402,7 @@ class SqlDialectTest {
                                     regular("w"),
                                     windowSpecification(
                                         null,
-                                        listOf(windowPartition(v("dept"))),
+                                        listOf(windowPartition(Identifier.regular("dept"))),
                                         orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
                                     )
                                 ),
@@ -4448,8 +4448,8 @@ class SqlDialectTest {
                                     windowSpecification(
                                         null,
                                         listOf(
-                                            windowPartition(v("dept")),
-                                            windowPartition(v("region"))
+                                            windowPartition(Identifier.regular("dept")),
+                                            windowPartition(Identifier.regular("region"))
                                         ),
                                         orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
                                     )
@@ -4497,7 +4497,7 @@ class SqlDialectTest {
                                     regular("w1"),
                                     windowSpecification(
                                         null,
-                                        listOf(windowPartition(v("dept"))),
+                                        listOf(windowPartition(Identifier.regular("dept"))),
                                         orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
                                     )
                                 )
@@ -4544,7 +4544,7 @@ class SqlDialectTest {
                                     regular("w1"),
                                     windowSpecification(
                                         null,
-                                        listOf(windowPartition(v("dept"))),
+                                        listOf(windowPartition(Identifier.regular("dept"))),
                                         orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
                                     )
                                 ),

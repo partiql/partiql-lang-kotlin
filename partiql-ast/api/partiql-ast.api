@@ -219,7 +219,7 @@ public final class org/partiql/ast/Ast {
 	public static synthetic fun upsert$default (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/dml/InsertSource;ILjava/lang/Object;)Lorg/partiql/ast/dml/Upsert;
 	public static final fun windowClause (Ljava/util/List;)Lorg/partiql/ast/WindowClause;
 	public static final fun windowClauseDefinition (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/WindowSpecification;)Lorg/partiql/ast/WindowClause$Definition;
-	public static final fun windowPartition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/WindowPartition;
+	public static final fun windowPartition (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/WindowPartition;
 	public static final fun windowSpecification (Lorg/partiql/ast/Identifier$Simple;Ljava/util/List;Lorg/partiql/ast/OrderBy;)Lorg/partiql/ast/WindowSpecification;
 	public static final fun with (Ljava/util/List;Z)Lorg/partiql/ast/With;
 	public static final fun withListElement (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/expr/ExprQuerySet;Ljava/util/List;)Lorg/partiql/ast/WithListElement;
@@ -1753,18 +1753,18 @@ public class org/partiql/ast/WindowFunctionType$RowNumber$Builder {
 }
 
 public final class org/partiql/ast/WindowPartition : org/partiql/ast/AstNode {
-	public fun <init> (Lorg/partiql/ast/expr/Expr;)V
+	public fun <init> (Lorg/partiql/ast/Identifier;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/WindowPartition$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getColumnReference ()Lorg/partiql/ast/expr/Expr;
+	public fun getColumnReference ()Lorg/partiql/ast/Identifier;
 	public fun hashCode ()I
 }
 
 public class org/partiql/ast/WindowPartition$Builder {
 	public fun build ()Lorg/partiql/ast/WindowPartition;
-	public fun columnReference (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/WindowPartition$Builder;
+	public fun columnReference (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/WindowPartition$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
