@@ -39,14 +39,21 @@ public abstract class RelWindow extends RelBase {
      */
     @NotNull
     public static RelWindow create(
+            String name,
             @NotNull Rel input,
             @NotNull List<String> windowFunctionBindings,
             @NotNull List<WindowFunctionNode> windowFunctions,
             @NotNull List<Collation> collations,
             @NotNull List<Rex> partitions
     ) {
-        return new Impl(input, windowFunctionBindings, windowFunctions, collations, partitions);
+        return new Impl(name, input, windowFunctionBindings, windowFunctions, collations, partitions);
     }
+
+    /**
+     * Gets the optional window name.
+     * @return the window name.
+     */
+    public abstract String getName();
 
     /**
      * Gets the input (operand 0).
@@ -91,19 +98,24 @@ public abstract class RelWindow extends RelBase {
 
     private static class Impl extends RelWindow {
 
+        private final String name;
         private final Rel input;
         private final List<Collation> collations;
         private final List<String> windowFunctionBindings;
         private final List<WindowFunctionNode> windowFunctions;
         private final List<Rex> partitions;
 
-        private Impl(Rel input, List<String> windowFunctionBindings, List<WindowFunctionNode> windowFunctions, List<Collation> collations, List<Rex> partitions) {
+        private Impl(String name, Rel input, List<String> windowFunctionBindings, List<WindowFunctionNode> windowFunctions, List<Collation> collations, List<Rex> partitions) {
+            this.name  = name;
             this.input = input;
             this.collations = collations;
             this.windowFunctionBindings = windowFunctionBindings;
             this.windowFunctions = windowFunctions;
             this.partitions = partitions;
         }
+
+        @Override
+        public String getName() { return name; }
 
         @NotNull
         @Override

@@ -103,6 +103,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprWindow (Lorg/partiql/ast/expr/WindowFunction;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/ExprWindow$Over;)Lorg/partiql/ast/expr/ExprWindow;
 	public static final fun exprWindow (Lorg/partiql/ast/expr/WindowFunction;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/ExprWindow$Over;)Lorg/partiql/ast/expr/ExprWindow;
 	public static synthetic fun exprWindow$default (Lorg/partiql/ast/expr/WindowFunction;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/ExprWindow$Over;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprWindow;
+	public static final fun exprWindowFunction (Lorg/partiql/ast/WindowFunctionType;Lorg/partiql/ast/WindowSpecification;)Lorg/partiql/ast/expr/ExprWindowFunction;
 	public static final fun exprWindowOver (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/expr/ExprWindow$Over;
 	public static final fun from (Ljava/util/List;)Lorg/partiql/ast/From;
 	public static final fun fromExpr (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/FromType;)Lorg/partiql/ast/FromExpr;
@@ -216,6 +217,10 @@ public final class org/partiql/ast/Ast {
 	public static final fun upsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Upsert;
 	public static final fun upsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Upsert;
 	public static synthetic fun upsert$default (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/dml/InsertSource;ILjava/lang/Object;)Lorg/partiql/ast/dml/Upsert;
+	public static final fun windowClause (Ljava/util/List;)Lorg/partiql/ast/WindowClause;
+	public static final fun windowClauseDefinition (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/WindowSpecification;)Lorg/partiql/ast/WindowClause$Definition;
+	public static final fun windowPartition (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/WindowPartition;
+	public static final fun windowSpecification (Lorg/partiql/ast/Identifier$Simple;Ljava/util/List;Lorg/partiql/ast/OrderBy;)Lorg/partiql/ast/WindowSpecification;
 	public static final fun with (Ljava/util/List;Z)Lorg/partiql/ast/With;
 	public static final fun withListElement (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/expr/ExprQuerySet;Ljava/util/List;)Lorg/partiql/ast/WithListElement;
 }
@@ -3660,6 +3665,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitExprVarRef (Lorg/partiql/ast/expr/ExprVarRef;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprVariant (Lorg/partiql/ast/expr/ExprVariant;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprVariant (Lorg/partiql/ast/expr/ExprVariant;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprWindowFunction (Lorg/partiql/ast/expr/ExprWindowFunction;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprWindowFunction (Lorg/partiql/ast/expr/ExprWindowFunction;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public fun visitExprWrapped (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/sql/SqlBlock;Z)Lorg/partiql/ast/sql/SqlBlock;
 	public static synthetic fun visitExprWrapped$default (Lorg/partiql/ast/sql/SqlDialect;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/sql/SqlBlock;ZILjava/lang/Object;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitFrom (Lorg/partiql/ast/From;Ljava/lang/Object;)Ljava/lang/Object;
@@ -3724,6 +3731,30 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitUpdate (Lorg/partiql/ast/dml/Update;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowClause (Lorg/partiql/ast/WindowClause;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowClause (Lorg/partiql/ast/WindowClause;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$Definition;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$Definition;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionType (Lorg/partiql/ast/WindowFunctionType;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionType (Lorg/partiql/ast/WindowFunctionType;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeLag (Lorg/partiql/ast/WindowFunctionType$Lag;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeLag (Lorg/partiql/ast/WindowFunctionType$Lag;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeLead (Lorg/partiql/ast/WindowFunctionType$Lead;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeLead (Lorg/partiql/ast/WindowFunctionType$Lead;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypePercentRank (Lorg/partiql/ast/WindowFunctionType$PercentRank;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypePercentRank (Lorg/partiql/ast/WindowFunctionType$PercentRank;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeRank (Lorg/partiql/ast/WindowFunctionType$Rank;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeRank (Lorg/partiql/ast/WindowFunctionType$Rank;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeRowNumber (Lorg/partiql/ast/WindowFunctionType$RowNumber;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeRowNumber (Lorg/partiql/ast/WindowFunctionType$RowNumber;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowPartition (Lorg/partiql/ast/WindowPartition;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowPartition (Lorg/partiql/ast/WindowPartition;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowSpecification (Lorg/partiql/ast/WindowSpecification;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowSpecification (Lorg/partiql/ast/WindowSpecification;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWith (Lorg/partiql/ast/With;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWith (Lorg/partiql/ast/With;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWithListElement (Lorg/partiql/ast/WithListElement;Ljava/lang/Object;)Ljava/lang/Object;

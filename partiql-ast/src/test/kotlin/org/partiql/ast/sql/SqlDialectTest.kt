@@ -57,6 +57,7 @@ import org.partiql.ast.Ast.exprTrim
 import org.partiql.ast.Ast.exprValues
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.exprVariant
+import org.partiql.ast.Ast.exprWindowFunction
 import org.partiql.ast.Ast.from
 import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.fromJoin
@@ -74,6 +75,10 @@ import org.partiql.ast.Ast.selectStar
 import org.partiql.ast.Ast.selectValue
 import org.partiql.ast.Ast.setOp
 import org.partiql.ast.Ast.sort
+import org.partiql.ast.Ast.windowClause
+import org.partiql.ast.Ast.windowClauseDefinition
+import org.partiql.ast.Ast.windowPartition
+import org.partiql.ast.Ast.windowSpecification
 import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
 import org.partiql.ast.DatetimeField
@@ -103,6 +108,9 @@ import org.partiql.ast.QueryBody
 import org.partiql.ast.Select
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
+import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionNullTreatment
+import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.With
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.TrimSpec
@@ -254,6 +262,16 @@ class SqlDialectTest {
     @MethodSource("intervalArithCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testIntervalArithCast(case: Case) = case.assert()
+
+    @ParameterizedTest(name = "windowFunction #{index}")
+    @MethodSource("windowFunctionCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testWindowFunction(case: Case) = case.assert()
+
+    @ParameterizedTest(name = "windowClause #{index}")
+    @MethodSource("windowClauseCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testWindowClause(case: Case) = case.assert()
 
     companion object {
 
@@ -4065,6 +4083,486 @@ class SqlDialectTest {
             )
         )
 
+        @JvmStatic
+        private fun windowFunctionCases() = listOf(
+            // Window functions in SELECT statements
+            expect(
+                "SELECT ROW_NUMBER() OVER (ORDER BY id ASC NULLS LAST) FROM employees",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.RowNumber(),
+                                        spec = windowSpecification(
+                                            null,
+                                            emptyList(),
+                                            orderBy(listOf(sort(v("id"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("employees")
+                    )
+                )
+            ),
+            expect(
+                "SELECT name, RANK() OVER (PARTITION BY department ORDER BY salary DESC NULLS LAST) AS rank FROM employees",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(v("name"), asAlias = null),
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            null,
+                                            listOf(windowPartition(Identifier.of(regular("department")))),
+                                            orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    regular("rank")
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("employees")
+                    )
+                )
+            ),
+            expect(
+                "SELECT LAG(price, 1, NULL) OVER (ORDER BY date ASC NULLS LAST), LEAD(price, 1, NULL) OVER (ORDER BY date ASC NULLS LAST) FROM stocks",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Lag(
+                                            v("price"),
+                                            1L,
+                                            exprLit(nul()),
+                                            null
+                                        ),
+                                        spec = windowSpecification(
+                                            null,
+                                            emptyList(),
+                                            orderBy(listOf(sort(v("date"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                ),
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Lead(
+                                            v("price"),
+                                            1L,
+                                            exprLit(nul()),
+                                            null
+                                        ),
+                                        spec = windowSpecification(
+                                            null,
+                                            emptyList(),
+                                            orderBy(listOf(sort(v("date"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("stocks")
+                    )
+                )
+            ),
+            // Basic window functions with OVER clause
+            expect(
+                "RANK() OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Rank(),
+                    spec = windowSpecification(
+                        null,
+                        listOf(windowPartition(Identifier.of(regular("department")))),
+                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            expect(
+                "DENSE_RANK() OVER (PARTITION BY department ORDER BY age ASC NULLS LAST, name ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.DenseRank(),
+                    spec = windowSpecification(
+                        null,
+                        listOf(windowPartition(Identifier.of(regular("department")))),
+                        orderBy(
+                            listOf(
+                                sort(v("age"), Order.ASC(), Nulls.LAST()),
+                                sort(v("name"), Order.ASC(), Nulls.LAST())
+                            )
+                        )
+                    )
+                )
+            ),
+            expect(
+                "ROW_NUMBER() OVER (ORDER BY id ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.RowNumber(),
+                    spec = windowSpecification(
+                        null,
+                        emptyList(),
+                        orderBy(listOf(sort(v("id"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            expect(
+                "LAG(name, 1, 'UNKNOWN') RESPECT NULLS OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Lag(
+                        v("name"),
+                        1L,
+                        exprLit(string("UNKNOWN")),
+                        WindowFunctionNullTreatment.RESPECT_NULLS()
+                    ),
+                    spec = windowSpecification(
+                        null,
+                        listOf(windowPartition(Identifier.regular("department"))),
+                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            expect(
+                "LEAD(name, 1, 'UNKNOWN') IGNORE NULLS OVER (PARTITION BY department ORDER BY age DESC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Lead(
+                        v("name"),
+                        1L,
+                        exprLit(string("UNKNOWN")),
+                        WindowFunctionNullTreatment.IGNORE_NULLS()
+                    ),
+                    spec = windowSpecification(
+                        null,
+                        listOf(windowPartition(Identifier.regular("department"))),
+                        orderBy(listOf(sort(v("age"), Order.DESC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            expect(
+                "LAG(partner, 3, 'FALLBACK') IGNORE NULLS OVER (ORDER BY age ASC NULLS LAST, name ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Lag(
+                        v("partner"),
+                        3L,
+                        exprLit(string("FALLBACK")),
+                        WindowFunctionNullTreatment.IGNORE_NULLS()
+                    ),
+                    spec = windowSpecification(
+                        null,
+                        emptyList(),
+                        orderBy(
+                            listOf(
+                                sort(v("age"), Order.ASC(), Nulls.LAST()),
+                                sort(v("name"), Order.ASC(), Nulls.LAST())
+                            )
+                        )
+                    )
+                )
+            ),
+            // Window functions with named window reference
+            expect(
+                "RANK() OVER w",
+                exprWindowFunction(
+                    type = WindowFunctionType.Rank(),
+                    spec = windowSpecification(
+                        regular("w"),
+                        emptyList(),
+                        null
+                    )
+                )
+            ),
+            expect(
+                "DENSE_RANK() OVER w",
+                exprWindowFunction(
+                    type = WindowFunctionType.DenseRank(),
+                    spec = windowSpecification(
+                        regular("w"),
+                        emptyList(),
+                        null
+                    )
+                )
+            ),
+            expect(
+                "ROW_NUMBER() OVER w",
+                exprWindowFunction(
+                    type = WindowFunctionType.RowNumber(),
+                    spec = windowSpecification(
+                        regular("w"),
+                        emptyList(),
+                        null
+                    )
+                )
+            ),
+            expect(
+                "LAG(name, 1, 'UNKNOWN') RESPECT NULLS OVER w",
+                exprWindowFunction(
+                    type = WindowFunctionType.Lag(
+                        v("name"),
+                        1L,
+                        exprLit(string("UNKNOWN")),
+                        WindowFunctionNullTreatment.RESPECT_NULLS()
+                    ),
+                    spec = windowSpecification(
+                        regular("w"),
+                        emptyList(),
+                        null
+                    )
+                )
+            ),
+            expect(
+                "LEAD(name, 1, 'UNKNOWN') IGNORE NULLS OVER w",
+                exprWindowFunction(
+                    type = WindowFunctionType.Lead(
+                        v("name"),
+                        1L,
+                        exprLit(string("UNKNOWN")),
+                        WindowFunctionNullTreatment.IGNORE_NULLS()
+                    ),
+                    spec = windowSpecification(
+                        regular("w"),
+                        emptyList(),
+                        null
+                    )
+                )
+            ),
+            // Window functions without partition
+            expect(
+                "RANK() OVER (ORDER BY price ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Rank(),
+                    spec = windowSpecification(
+                        null,
+                        emptyList(),
+                        orderBy(listOf(sort(v("price"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            // Window functions with multiple partitions
+            expect(
+                "ROW_NUMBER() OVER (PARTITION BY ticker, month ORDER BY date ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.RowNumber(),
+                    spec = windowSpecification(
+                        null,
+                        listOf(
+                            windowPartition(Identifier.regular("ticker")),
+                            windowPartition(Identifier.regular("month"))
+                        ),
+                        orderBy(listOf(sort(v("date"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            )
+        )
+
+        @JvmStatic
+        private fun windowClauseCases() = listOf(
+            expect(
+                "SELECT a FROM T WINDOW w AS (ORDER BY x ASC NULLS LAST)",
+                qSet(
+                    body = sfw(
+                        select = select("a"),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w"),
+                                    windowSpecification(
+                                        null,
+                                        emptyList(),
+                                        orderBy(listOf(sort(v("x"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            expect(
+                "SELECT a FROM T WINDOW w AS (PARTITION BY dept ORDER BY age ASC NULLS LAST), v AS (ORDER BY name ASC NULLS LAST)",
+                qSet(
+                    body = sfw(
+                        select = select("a"),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                ),
+                                windowClauseDefinition(
+                                    regular("v"),
+                                    windowSpecification(
+                                        null,
+                                        emptyList(),
+                                        orderBy(listOf(sort(v("name"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            expect(
+                "SELECT a, RANK() OVER w FROM T WINDOW w AS (PARTITION BY dept, region ORDER BY salary DESC NULLS FIRST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(v("a"), asAlias = null),
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(
+                                            windowPartition(Identifier.regular("dept")),
+                                            windowPartition(Identifier.regular("region"))
+                                        ),
+                                        orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            expect(
+                "SELECT RANK() OVER w1, ROW_NUMBER() OVER (ORDER BY id ASC NULLS LAST) FROM T WINDOW w1 AS (PARTITION BY dept ORDER BY salary DESC NULLS FIRST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w1"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                ),
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.RowNumber(),
+                                        spec = windowSpecification(
+                                            null,
+                                            emptyList(),
+                                            orderBy(listOf(sort(v("id"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w1"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            expect(
+                "SELECT RANK() OVER w1, DENSE_RANK() OVER w2 FROM T WINDOW w1 AS (PARTITION BY dept ORDER BY salary DESC NULLS FIRST), w2 AS (ORDER BY age ASC NULLS LAST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w1"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                ),
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.DenseRank(),
+                                        spec = windowSpecification(
+                                            regular("w2"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w1"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        orderBy(listOf(sort(v("salary"), Order.DESC(), Nulls.FIRST())))
+                                    )
+                                ),
+                                windowClauseDefinition(
+                                    regular("w2"),
+                                    windowSpecification(
+                                        null,
+                                        emptyList(),
+                                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
         private fun interval(qualifier: IntervalQualifier, value: String) =
             exprLit(
                 typedString(DataType.INTERVAL(qualifier), value)
@@ -4099,14 +4597,15 @@ class SqlDialectTest {
             with = with
         )
 
-        private fun sfw(select: Select, from: From, exclude: Exclude? = null, let: Let? = null, where: Expr? = null, groupBy: GroupBy? = null, having: Expr? = null) = queryBodySFW(
+        private fun sfw(select: Select, from: From, exclude: Exclude? = null, let: Let? = null, where: Expr? = null, groupBy: GroupBy? = null, having: Expr? = null, window: WindowClause? = null) = queryBodySFW(
             select = select,
             exclude = exclude,
             from = from,
             let = let,
             where = where,
             groupBy = groupBy,
-            having = having
+            having = having,
+            window = window
         )
 
         private fun table(symbol: String) = from(

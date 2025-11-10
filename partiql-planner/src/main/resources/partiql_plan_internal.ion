@@ -245,6 +245,7 @@ rel::{
     },
 
     window::{
+      name: optional::string,
       input: rel,
       functions: list::[window_function],
       partitions: list::[rex],

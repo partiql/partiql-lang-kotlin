@@ -55,8 +55,8 @@ public final class WindowFunctionNullTreatment extends AstEnum {
     @Override
     public String name() {
         switch (code) {
-            case RESPECT_NULLS: return "RESPECT_NULLS";
-            case IGNORE_NULLS: return "DISTINCT";
+            case RESPECT_NULLS: return "RESPECT NULLS";
+            case IGNORE_NULLS: return "IGNORE NULLS";
             default: throw new IllegalStateException("Invalid code: " + code);
         }
     }
