@@ -49,6 +49,7 @@ import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowPartition
 import org.partiql.ast.WindowSpecification
@@ -201,6 +202,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     }
 
     // Window Function Methods
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitExprWindowFunction(node: ExprWindowFunction, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitWindowFunctionType(node.functionType, t)
@@ -209,73 +211,52 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         return t
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionType(node: WindowFunctionType, tail: SqlBlock): SqlBlock {
         return node.accept(this, tail)
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeRank(node: WindowFunctionType.Rank, tail: SqlBlock): SqlBlock {
         return tail concat "RANK()"
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeDenseRank(node: WindowFunctionType.DenseRank, tail: SqlBlock): SqlBlock {
         return tail concat "DENSE_RANK()"
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypePercentRank(node: WindowFunctionType.PercentRank, tail: SqlBlock): SqlBlock {
         return tail concat "PERCENT_RANK()"
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeCumeDist(node: WindowFunctionType.CumeDist, tail: SqlBlock): SqlBlock {
         return tail concat "CUME_DIST()"
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeRowNumber(node: WindowFunctionType.RowNumber, tail: SqlBlock): SqlBlock {
         return tail concat "ROW_NUMBER()"
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeLead(node: WindowFunctionType.Lead, tail: SqlBlock): SqlBlock {
-        var t = tail concat "LEAD("
-        t = visitExpr(node.extent, t)
-        node.offset?.let {
-            t = t concat ", $it"
-        }
-
-        node.defaultValue.let { defaultValue ->
-            t = t concat ", "
-            t = visitExpr(defaultValue, t)
-        }
-
-        t = t concat ")"
-        node.nullTreatment?.let { nullTreatment ->
-            t = t concat " ${nullTreatment.name()}"
-        }
-
-        return t
+        return visitWindowFunctionTypeLeadOrLag("LEAD(", node.extent, node.offset, node.defaultValue, node.nullTreatment, tail)
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeLag(node: WindowFunctionType.Lag, tail: SqlBlock): SqlBlock {
-        var t = tail concat "LAG("
-        t = visitExpr(node.extent, t)
-        node.offset?.let {
-            t = t concat ", $it"
-        }
-
-        node.defaultValue.let { defaultValue ->
-            t = t concat ", "
-            t = visitExpr(defaultValue, t)
-        }
-
-        t = t concat ")"
-        node.nullTreatment?.let { nullTreatment ->
-            t = t concat " ${nullTreatment.name()}"
-        }
-        return t
+        return visitWindowFunctionTypeLeadOrLag("LAG(", node.extent, node.offset, node.defaultValue, node.nullTreatment, tail)
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowPartition(node: WindowPartition, tail: SqlBlock): SqlBlock {
         return visitExprWrapped(node.columnReference, tail)
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowSpecification(node: WindowSpecification, tail: SqlBlock): SqlBlock {
         var t = tail
         if (node.existingName != null) {
@@ -302,12 +283,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         return t
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowClause(node: WindowClause, tail: SqlBlock): SqlBlock {
         var t = tail concat "WINDOW "
         t = t concat list(start = null, end = null) { node.definitions }
         return t
     }
 
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowDefinition(node: WindowClause.Definition, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitIdentifierSimple(node.name, t)
@@ -1061,6 +1044,32 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     private infix fun SqlBlock.concat(rhs: SqlBlock): SqlBlock {
         next = rhs
         return next!!
+    }
+
+    private fun visitWindowFunctionTypeLeadOrLag(
+        prefix: String,
+        extent: Expr,
+        offset: Long?,
+        defaultValue: Expr?,
+        nullTreatment: WindowFunctionNullTreatment?,
+        tail: SqlBlock
+    ): SqlBlock {
+        var t = tail concat prefix
+        t = visitExpr(extent, t)
+        offset?.let {
+            t = t concat ", $it"
+        }
+
+        defaultValue?.let { defaultValue ->
+            t = t concat ", "
+            t = visitExpr(defaultValue, t)
+        }
+
+        t = t concat ")"
+        nullTreatment?.let { nullTreatment ->
+            t = t concat " ${nullTreatment.name()}"
+        }
+        return t
     }
 
     private fun type(symbol: String, vararg args: Int?, gap: Boolean = false): SqlBlock {
