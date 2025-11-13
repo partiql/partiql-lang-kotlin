@@ -153,5 +153,4 @@ internal object FnGte : DiadicComparisonOperator("gte") {
             Datum.bool(lhs >= rhs)
         }
     }
-
 }

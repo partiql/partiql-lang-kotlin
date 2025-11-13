@@ -334,5 +334,4 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
             Datum.timestamp(result, lhsPrecision)
         }
     }
-
 }

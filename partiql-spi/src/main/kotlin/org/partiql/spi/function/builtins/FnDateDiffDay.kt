@@ -42,6 +42,6 @@ internal val Fn_DATE_DIFF_DAY__TIMESTAMPZ_TIMESTAMPZ__INT64 = FunctionUtils.hidd
         Parameter("datetime2", PType.timestampz()),
     ),
 
-    ) { args ->
+) { args ->
     TODO("Function date_diff_day not implemented")
 }

@@ -153,5 +153,4 @@ internal object FnLt : DiadicComparisonOperator("lt") {
             Datum.bool(lhs < rhs)
         }
     }
-
 }
