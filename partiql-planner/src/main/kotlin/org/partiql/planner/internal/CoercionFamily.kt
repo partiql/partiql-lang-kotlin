@@ -16,6 +16,7 @@ internal enum class CoercionFamily {
     BOOLEAN,
     STRUCTURE,
     DATE,
+    DATE_TIMESTAMP,
     TIME,
     TIMESTAMP,
     COLLECTION,
@@ -48,9 +49,9 @@ internal enum class CoercionFamily {
                 PType.BOOL -> BOOLEAN
                 PType.TIMEZ -> TIME
                 PType.TIME -> TIME
-                PType.TIMESTAMPZ -> TIMESTAMP
-                PType.TIMESTAMP -> TIMESTAMP
-                PType.DATE -> DATE
+                PType.TIMESTAMPZ -> DATE_TIMESTAMP
+                PType.TIMESTAMP -> DATE_TIMESTAMP
+                PType.DATE -> DATE_TIMESTAMP
                 PType.STRUCT -> STRUCTURE
                 PType.ARRAY -> COLLECTION
                 PType.BAG -> COLLECTION

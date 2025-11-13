@@ -5,7 +5,6 @@ import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.helpers.PErrors
-import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.function.Fn
@@ -121,6 +120,7 @@ internal class ExprCallDynamic(
         BOOLEAN,
         STRUCTURE,
         DATE,
+        DATE_TIMESTAMP,
         TIME,
         TIMESTAMP,
         COLLECTION,
@@ -154,9 +154,9 @@ internal class ExprCallDynamic(
                 PType.BOOL -> CoercionFamily.BOOLEAN
                 PType.TIMEZ -> CoercionFamily.TIME
                 PType.TIME -> CoercionFamily.TIME
-                PType.TIMESTAMPZ -> CoercionFamily.TIMESTAMP
-                PType.TIMESTAMP -> CoercionFamily.TIMESTAMP
-                PType.DATE -> CoercionFamily.DATE
+                PType.TIMESTAMPZ -> CoercionFamily.DATE_TIMESTAMP
+                PType.TIMESTAMP -> CoercionFamily.DATE_TIMESTAMP
+                PType.DATE -> CoercionFamily.DATE_TIMESTAMP
                 PType.STRUCT -> CoercionFamily.STRUCTURE
                 PType.ARRAY -> CoercionFamily.COLLECTION
                 PType.BAG -> CoercionFamily.COLLECTION

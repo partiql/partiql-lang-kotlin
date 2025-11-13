@@ -32,3 +32,29 @@ internal val Fn_DATE_DIFF_HOUR__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidde
 ) { args ->
     TODO("Function date_diff_hour not implemented")
 }
+
+internal val Fn_DATE_DIFF_HOUR__TIMESTAMPZ_TIMESTAMPZ__INT64 = FunctionUtils.hidden(
+
+    name = "date_diff_hour",
+    returns = PType.bigint(),
+    parameters = arrayOf(
+        Parameter("datetime1", PType.timestampz()),
+        Parameter("datetime2", PType.timestampz()),
+    ),
+
+) { args ->
+    TODO("Function date_diff_hour not implemented")
+}
+
+internal val Fn_DATE_DIFF_HOUR__TIMEZ_TIMEZ__INT64 = FunctionUtils.hidden(
+
+    name = "date_diff_hour",
+    returns = PType.bigint(),
+    parameters = arrayOf(
+        Parameter("datetime1", PType.timez(6)),
+        Parameter("datetime2", PType.timez(6)),
+    ),
+
+) { args ->
+    TODO("Function date_diff_hour not implemented")
+}

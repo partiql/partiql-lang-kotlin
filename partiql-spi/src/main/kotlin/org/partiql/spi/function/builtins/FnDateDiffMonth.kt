@@ -32,3 +32,16 @@ internal val Fn_DATE_DIFF_MONTH__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidd
 ) { args ->
     TODO("Function date_diff_month not implemented")
 }
+
+internal val Fn_DATE_DIFF_MONTH__TIMESTAMPZ_TIMESTAMPZ__INT64 = FunctionUtils.hidden(
+
+    name = "date_diff_month",
+    returns = PType.bigint(),
+    parameters = arrayOf(
+        Parameter("datetime1", PType.timestampz()),
+        Parameter("datetime2", PType.timestampz()),
+    ),
+
+) { args ->
+    TODO("Function date_diff_month not implemented")
+}

@@ -32,3 +32,16 @@ internal val Fn_DATE_DIFF_YEAR__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidde
 ) { args ->
     TODO("Function date_diff_year not implemented")
 }
+
+internal val Fn_DATE_DIFF_YEAR__TIMESTAMPZ_TIMESTAMPZ__INT64 = FunctionUtils.hidden(
+
+    name = "date_diff_year",
+    returns = PType.bigint(),
+    parameters = arrayOf(
+        Parameter("datetime1", PType.timestampz()),
+        Parameter("datetime2", PType.timestampz()),
+    ),
+
+) { args ->
+    TODO("Function date_diff_year not implemented")
+}
