@@ -6,6 +6,8 @@ import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.time.Duration
+import kotlin.time.toKotlinDuration
 
 internal object IntervalUtils {
     // According to SQL1992, whether to truncate or round in the least significant
@@ -116,6 +118,21 @@ internal object IntervalUtils {
             }
 
             else -> throw IllegalArgumentException("Unable to calculate multiplication for INTERVAL expression")
+        }
+    }
+
+    fun ofDuration(duration: Duration): Datum {
+        val kotlinDuration = duration.toKotlinDuration()
+        kotlinDuration.toComponents { days, hours, minutes, seconds, nanoseconds ->
+            return Datum.intervalDaySecond(
+                days.toInt(),
+                hours,
+                minutes,
+                seconds,
+                nanoseconds,
+                INTERVAL_MAX_PRECISION,
+                INTERVAL_DEFAULT_FRACTIONAL_PRECISION
+            )
         }
     }
 

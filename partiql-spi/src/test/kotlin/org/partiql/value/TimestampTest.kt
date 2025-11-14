@@ -581,7 +581,7 @@ class TimestampTest {
                     OffsetDateTime.of(1234, 5, 6, 8, 8, 9, 0, ZoneOffset.ofHours(1)), 6
                 ),
                 false,
-                LESS
+                EQUALS
             ),
             EqualsAndCompareToTest(
                 Datum.timestampz(
@@ -591,7 +591,7 @@ class TimestampTest {
                     OffsetDateTime.of(1234, 5, 6, 8, 8, 9, 0, ZoneOffset.ofHours(1)), 6
                 ),
                 false,
-                LESS
+                EQUALS
             ),
             // Time zone hour minute
             EqualsAndCompareToTest(
@@ -602,7 +602,7 @@ class TimestampTest {
                     OffsetDateTime.of(1234, 5, 6, 8, 38, 9, 0, ZoneOffset.ofHoursMinutes(1, 30)), 6
                 ),
                 false,
-                LESS
+                EQUALS
             ),
             EqualsAndCompareToTest(
                 Datum.timestampz(
@@ -612,7 +612,7 @@ class TimestampTest {
                     OffsetDateTime.of(1234, 5, 6, 8, 38, 9, 0, ZoneOffset.ofHoursMinutes(1, 30)), 6
                 ),
                 false,
-                LESS
+                EQUALS
             ),
 
             // larger

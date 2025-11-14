@@ -4,6 +4,11 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -319,10 +324,14 @@ abstract class DatumComparator implements Comparator<Datum> {
                     fillDateComparator(row);
                     break;
                 case TIMEZ:
+                    fillTimezComparator(row);
+                    break;
                 case TIME:
                     fillTimeComparator(row);
                     break;
                 case TIMESTAMPZ:
+                    fillTimestampzComparator(row);
+                    break;
                 case TIMESTAMP:
                     fillTimestampComparator(row);
                     break;
@@ -540,17 +549,8 @@ abstract class DatumComparator implements Comparator<Datum> {
         return comps;
     }
 
-    @SuppressWarnings({"UnusedReturnValue"})
-    private static DatumComparison[] fillDateComparator(DatumComparison[] comps) {
-        comps[DATE] = (self, date, comp) -> self.getLocalDate().compareTo(date.getLocalDate());
-
-        // We should register the comparison for timestamp and timestampz. some tests will fail if we leave it not implemented
-        // TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
-        return comps;
-    }
-
     /**
-     * Used for both {@link PType#TIME} and {@link PType#TIMEZ}
+     * Used for {@link PType#TIME}
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
      * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
@@ -558,7 +558,28 @@ abstract class DatumComparator implements Comparator<Datum> {
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimeComparator(DatumComparison[] comps) {
         comps[TIME] = (self, time, comp) -> self.getLocalTime().compareTo(time.getLocalTime());
-        comps[TIMEZ] = (self, time, comp) -> self.getOffsetTime().compareTo(time.getOffsetTime());
+        comps[TIMEZ] = (self, timez, comp) -> {
+            // Convert TIME to UTC for comparison with TIMEZ
+            OffsetTime selfOffsetTime = self.getLocalTime().atOffset(ZoneOffset.UTC);
+            return Duration.between(timez.getOffsetTime(), selfOffsetTime).compareTo(Duration.ZERO);
+        };
+        return comps;
+    }
+
+    /**
+     * Used for {@link PType#TIMEZ}
+     * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
+     * {@link Datum}'s {@link PType#code()}.
+     * @return the modified array
+     */
+    @SuppressWarnings({"UnusedReturnValue"})
+    private static DatumComparison[] fillTimezComparator(DatumComparison[] comps) {
+        comps[TIME] = (self, time, comp) -> {
+            // Convert TIME to UTC for comparison with TIMEZ
+            OffsetTime timeOffsetTime = time.getLocalTime().atOffset(ZoneOffset.UTC);
+            return Duration.between(timeOffsetTime, self.getOffsetTime()).compareTo(Duration.ZERO);
+        };
+        comps[TIMEZ] = (self, timez, comp) -> Duration.between(timez.getOffsetTime(), self.getOffsetTime()).compareTo(Duration.ZERO);
         return comps;
     }
 
@@ -575,18 +596,41 @@ abstract class DatumComparator implements Comparator<Datum> {
         return comps;
     }
 
-    /**
-     * Used for both {@link PType#TIMESTAMP} and {@link PType#TIMESTAMPZ}
-     * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType#code()}.
-     * @return the modified array
-     */
+    @SuppressWarnings({"UnusedReturnValue"})
+    private static DatumComparison[] fillDateComparator(DatumComparison[] comps) {
+        comps[DATE] = (self, date, comp) -> self.getLocalDate().compareTo(date.getLocalDate());
+        comps[TIMESTAMP] = (self, timestamp, comp) -> self.getLocalDate().atTime(LocalTime.MIN).compareTo(timestamp.getLocalDateTime());
+        comps[TIMESTAMPZ] = (self, timestampz, comp) -> {
+            OffsetDateTime selfOffsetDateTime = self.getLocalDate().atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
+            return Duration.between(timestampz.getOffsetDateTime(), selfOffsetDateTime).compareTo(Duration.ZERO);
+        };
+
+        return comps;
+    }
+
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimestampComparator(DatumComparison[] comps) {
-        // We should register the comparison for Date. some tests will fail if we leave it not implemented
-        // TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
+        comps[DATE] = (self, date, comp) -> self.getLocalDateTime().compareTo(date.getLocalDate().atTime(LocalTime.MIN));
         comps[TIMESTAMP] = (self, timestamp, comp) -> self.getLocalDateTime().compareTo(timestamp.getLocalDateTime());
-        comps[TIMESTAMPZ] = (self, timestamp, comp) -> self.getOffsetDateTime().compareTo(timestamp.getOffsetDateTime());
+        comps[TIMESTAMPZ] = (self, timestampz, comp) -> {
+            OffsetDateTime selfOffsetDateTime = self.getLocalDateTime().atOffset(ZoneOffset.UTC);
+            return Duration.between(timestampz.getOffsetDateTime(), selfOffsetDateTime).compareTo(Duration.ZERO);
+        };
+        return comps;
+    }
+
+    @SuppressWarnings({"UnusedReturnValue"})
+    private static DatumComparison[] fillTimestampzComparator(DatumComparison[] comps) {
+        comps[DATE] = (self, date, comp) -> {
+            OffsetDateTime dateOffsetDateTime = date.getLocalDate().atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
+            return Duration.between(dateOffsetDateTime, self.getOffsetDateTime()).compareTo(Duration.ZERO);
+        };
+        comps[TIMESTAMP] = (self, timestamp, comp) -> {
+            OffsetDateTime timestampOffsetDateTime = timestamp.getLocalDateTime().atOffset(ZoneOffset.UTC);
+            return Duration.between(timestampOffsetDateTime, self.getOffsetDateTime()).compareTo(Duration.ZERO);
+        };
+        comps[TIMESTAMPZ] = (self, timestampz, comp) -> Duration.between(timestampz.getOffsetDateTime(), self.getOffsetDateTime()).compareTo(Duration.ZERO);
+
         return comps;
     }
 

@@ -7,6 +7,7 @@ import org.partiql.spi.function.Fn
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.NumberUtils.compareTo
 import org.partiql.spi.value.Datum
+import java.time.Duration
 
 internal object FnGte : DiadicComparisonOperator("gte") {
 
@@ -134,7 +135,7 @@ internal object FnGte : DiadicComparisonOperator("gte") {
         return basic(PType.bool(), timezLhs, timezRhs) { args ->
             val lhs = args[0].offsetTime
             val rhs = args[1].offsetTime
-            Datum.bool(lhs >= rhs)
+            Datum.bool(Duration.between(rhs, lhs) >= Duration.ZERO)
         }
     }
 
@@ -142,7 +143,7 @@ internal object FnGte : DiadicComparisonOperator("gte") {
         return basic(PType.bool(), timestampzLhs, timestampzRhs) { args ->
             val lhs = args[0].offsetDateTime
             val rhs = args[1].offsetDateTime
-            Datum.bool(lhs >= rhs)
+            Datum.bool(Duration.between(rhs, lhs) >= Duration.ZERO)
         }
     }
 

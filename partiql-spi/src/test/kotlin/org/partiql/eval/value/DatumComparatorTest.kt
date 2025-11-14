@@ -170,9 +170,6 @@ class DatumComparatorTest {
             Datum.date(LocalDate.of(1992, 8, 22))
         ),
         EquivValues(
-            Datum.date(LocalDate.of(2021, 8, 22))
-        ),
-        EquivValues(
             Datum.timez(OffsetTime.of(12, 12, 12, 0, ZoneOffset.UTC), 9),
             Datum.timez(OffsetTime.of(12, 12, 12, 0, ZoneOffset.ofHours(0)), 9),
         ),

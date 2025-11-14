@@ -6,6 +6,8 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
+import org.partiql.spi.value.Datum
+import java.time.temporal.ChronoUnit
 
 internal val Fn_DATE_DIFF_HOUR__TIME_TIME__INT64 = FunctionUtils.hidden(
 
@@ -17,7 +19,10 @@ internal val Fn_DATE_DIFF_HOUR__TIME_TIME__INT64 = FunctionUtils.hidden(
     ),
 
 ) { args ->
-    TODO("Function date_diff_hour not implemented")
+    val time1 = args[0].localTime
+    val time2 = args[1].localTime
+    val hourDiff = ChronoUnit.HOURS.between(time1, time2)
+    Datum.bigint(hourDiff)
 }
 
 internal val Fn_DATE_DIFF_HOUR__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidden(
@@ -30,7 +35,10 @@ internal val Fn_DATE_DIFF_HOUR__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidde
     ),
 
 ) { args ->
-    TODO("Function date_diff_hour not implemented")
+    val timestamp1 = args[0].localDateTime
+    val timestamp2 = args[1].localDateTime
+    val hourDiff = ChronoUnit.HOURS.between(timestamp1, timestamp2)
+    Datum.bigint(hourDiff)
 }
 
 internal val Fn_DATE_DIFF_HOUR__TIMESTAMPZ_TIMESTAMPZ__INT64 = FunctionUtils.hidden(
@@ -43,7 +51,10 @@ internal val Fn_DATE_DIFF_HOUR__TIMESTAMPZ_TIMESTAMPZ__INT64 = FunctionUtils.hid
     ),
 
 ) { args ->
-    TODO("Function date_diff_hour not implemented")
+    val timestampz1 = args[0].offsetDateTime
+    val timestampz2 = args[1].offsetDateTime
+    val hourDiff = ChronoUnit.HOURS.between(timestampz1, timestampz2)
+    Datum.bigint(hourDiff)
 }
 
 internal val Fn_DATE_DIFF_HOUR__TIMEZ_TIMEZ__INT64 = FunctionUtils.hidden(
@@ -56,5 +67,8 @@ internal val Fn_DATE_DIFF_HOUR__TIMEZ_TIMEZ__INT64 = FunctionUtils.hidden(
     ),
 
 ) { args ->
-    TODO("Function date_diff_hour not implemented")
+    val timez1 = args[0].offsetTime
+    val timez2 = args[1].offsetTime
+    val hourDiff = ChronoUnit.HOURS.between(timez1, timez2)
+    Datum.bigint(hourDiff)
 }

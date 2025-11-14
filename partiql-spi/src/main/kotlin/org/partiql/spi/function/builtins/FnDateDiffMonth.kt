@@ -6,6 +6,8 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
+import org.partiql.spi.value.Datum
+import java.time.temporal.ChronoUnit
 
 internal val Fn_DATE_DIFF_MONTH__DATE_DATE__INT64 = FunctionUtils.hidden(
 
@@ -17,7 +19,10 @@ internal val Fn_DATE_DIFF_MONTH__DATE_DATE__INT64 = FunctionUtils.hidden(
     ),
 
 ) { args ->
-    TODO("Function date_diff_month not implemented")
+    val date1 = args[0].localDate
+    val date2 = args[1].localDate
+    val monthDiff = ChronoUnit.MONTHS.between(date1, date2)
+    Datum.bigint(monthDiff)
 }
 
 internal val Fn_DATE_DIFF_MONTH__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidden(
@@ -30,7 +35,10 @@ internal val Fn_DATE_DIFF_MONTH__TIMESTAMP_TIMESTAMP__INT64 = FunctionUtils.hidd
     ),
 
 ) { args ->
-    TODO("Function date_diff_month not implemented")
+    val timestamp1 = args[0].localDateTime
+    val timestamp2 = args[1].localDateTime
+    val monthDiff = ChronoUnit.MONTHS.between(timestamp1, timestamp2)
+    Datum.bigint(monthDiff)
 }
 
 internal val Fn_DATE_DIFF_MONTH__TIMESTAMPZ_TIMESTAMPZ__INT64 = FunctionUtils.hidden(
@@ -43,5 +51,8 @@ internal val Fn_DATE_DIFF_MONTH__TIMESTAMPZ_TIMESTAMPZ__INT64 = FunctionUtils.hi
     ),
 
 ) { args ->
-    TODO("Function date_diff_month not implemented")
+    val timestampz1 = args[0].offsetDateTime
+    val timestampz2 = args[1].offsetDateTime
+    val monthDiff = ChronoUnit.MONTHS.between(timestampz1, timestampz2)
+    Datum.bigint(monthDiff)
 }

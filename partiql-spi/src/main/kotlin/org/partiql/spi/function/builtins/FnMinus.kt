@@ -279,9 +279,9 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
             else -> return null
         }
         return basic(PType.date(), lhs, rhs) { args ->
-            val arg0 = args[0].localDate
-            val arg1 = args[1]
-            val result: LocalDate = op(arg0, arg1)
+            val lhs = args[0].localDate
+            val rhs = args[1]
+            val result: LocalDate = op(lhs, rhs)
             Datum.date(result)
         }
     }
@@ -304,10 +304,16 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
         val lhsPrecision = lhs.precision
         return basic(lhs, lhs, rhs) { args ->
-            val arg0 = args[0].localTime
-            val arg1 = args[1]
-            val result: LocalTime = op(arg0, arg1)
-            Datum.time(result, lhsPrecision)
+            val time = args[0].localTime
+            val interval = args[1]
+            val result: LocalTime = op(time, interval)
+
+            if (lhs.code() == PType.TIMEZ) {
+                val originalOffset = args[0].offsetTime.offset
+                Datum.timez(result.atOffset(originalOffset), lhs.precision)
+            } else {
+                Datum.time(result, lhs.precision)
+            }
         }
     }
 
@@ -328,10 +334,15 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
         val lhsPrecision = lhs.precision
         return basic(lhs, lhs, rhs) { args ->
-            val arg0 = args[0].localDateTime
-            val arg1 = args[1]
-            val result: LocalDateTime = op(arg0, arg1)
-            Datum.timestamp(result, lhsPrecision)
+            val timestamp = args[0].localDateTime
+            val interval = args[1]
+            val result: LocalDateTime = op(timestamp, interval)
+            if (lhs.code() == PType.TIMESTAMPZ) {
+                val originalOffset = args[0].offsetTime.offset
+                Datum.timestampz(result.atOffset(originalOffset), lhs.precision)
+            } else {
+                Datum.timestamp(result, lhs.precision)
+            }
         }
     }
 }
