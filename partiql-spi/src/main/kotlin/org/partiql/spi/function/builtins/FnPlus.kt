@@ -185,9 +185,9 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
 
             if (rhs.code() == PType.TIMEZ) {
                 val originalOffset = args[1].offsetTime.offset
-                Datum.timez(result.atOffset(originalOffset), lhs.precision)
+                Datum.timez(result.atOffset(originalOffset), rhs.precision)
             } else {
-                Datum.time(result, lhs.precision)
+                Datum.time(result, rhs.precision)
             }
         }
     }
@@ -200,7 +200,7 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             val result: LocalDateTime = op(timestamp, interval)
 
             if (lhs.code() == PType.TIMESTAMPZ) {
-                val originalOffset = args[0].offsetTime.offset
+                val originalOffset = args[0].offsetDateTime.offset
                 Datum.timestampz(result.atOffset(originalOffset), lhs.precision)
             } else {
                 Datum.timestamp(result, lhs.precision)
@@ -215,10 +215,10 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             val timestamp = args[1].localDateTime
             val result: LocalDateTime = op(timestamp, interval)
             if (rhs.code() == PType.TIMESTAMPZ) {
-                val originalOffset = args[1].offsetTime.offset
-                Datum.timestampz(result.atOffset(originalOffset), lhs.precision)
+                val originalOffset = args[1].offsetDateTime.offset
+                Datum.timestampz(result.atOffset(originalOffset), rhs.precision)
             } else {
-                Datum.timestamp(result, lhs.precision)
+                Datum.timestamp(result, rhs.precision)
             }
         }
     }

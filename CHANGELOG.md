@@ -26,6 +26,9 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Add auto cast support for `TIME` ↔ `TIME WITH TIME ZONE`, `DATE` ↔ `TIMESTAMP` ↔ `TIMESTAMP WITH TIME ZONE`
+- Implement DATE_DIFF function
+- Add `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE` support to some datetime operators `+` and `-`.
 
 ### Changed
 
@@ -39,6 +42,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @xd1313113
 
 ## [1.3.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.1) - 2025-11-06
 
