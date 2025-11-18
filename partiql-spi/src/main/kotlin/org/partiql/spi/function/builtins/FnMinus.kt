@@ -9,6 +9,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.IntervalUtils.INTERVAL_DEFAULT_FRACTIONAL_PRECISION
 import org.partiql.spi.utils.IntervalUtils.INTERVAL_MAX_PRECISION
 import org.partiql.spi.utils.IntervalUtils.NANO_MAX_PRECISION
 import org.partiql.spi.utils.NumberUtils.byteOverflows
@@ -20,6 +21,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.max
+import kotlin.time.toKotlinDuration
 
 internal object FnMinus : DiadicArithmeticOperator("minus") {
 
@@ -182,8 +184,8 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         return basic(PType.intervalDay(INTERVAL_MAX_PRECISION), dateLhs, dateRhs) { args ->
             val arg0 = args[0].localDate
             val arg1 = args[1].localDate
-            val dayDiff = arg0.toEpochDay() - arg1.toEpochDay()
-            Datum.intervalDay(dayDiff.toInt(), INTERVAL_MAX_PRECISION)
+            val dayDiff = ChronoUnit.DAYS.between(arg1, arg0)
+            Datum.intervalDaySecond(dayDiff.toInt(), 0, 0, 0, 0, INTERVAL_MAX_PRECISION, 0)
         }
     }
 
@@ -191,13 +193,17 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         return basic(PType.intervalSecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION), timeLhs, timeRhs) { args ->
             val arg0 = args[0].localTime
             val arg1 = args[1].localTime
-            val result = arg0
-                .minus(arg1.hour.toLong(), ChronoUnit.HOURS)
-                .minus(arg1.minute.toLong(), ChronoUnit.MINUTES)
-                .minus(arg1.second.toLong(), ChronoUnit.SECONDS)
-                .minus(arg1.nano.toLong(), ChronoUnit.NANOS)
-            val resultSeconds = result.toSecondOfDay()
-            Datum.intervalSecond(resultSeconds, result.nano, INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION)
+            val result = Duration.between(arg1, arg0)
+            ofDuration(result)
+        }
+    }
+
+    override fun getTimezInstance(timezLhs: PType, timezRhs: PType): Fn {
+        return basic(PType.intervalSecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION), timezLhs, timezRhs) { args ->
+            val arg0 = args[0].offsetTime
+            val arg1 = args[1].offsetTime
+            val result = Duration.between(arg1, arg0)
+            ofDuration(result)
         }
     }
 
@@ -205,23 +211,17 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         return basic(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION), timestampLhs, timestampRhs) { args ->
             val arg0 = args[0].localDateTime
             val arg1 = args[1].localDateTime
-            val days = ChronoUnit.DAYS.between(arg1, arg0)
-            val arg0Time = arg0.toLocalTime()
-            val arg1Time = arg1.toLocalTime()
-            val resultTime = arg0Time
-                .minus(arg1Time.hour.toLong(), ChronoUnit.HOURS)
-                .minus(arg1Time.minute.toLong(), ChronoUnit.MINUTES)
-                .minus(arg1Time.second.toLong(), ChronoUnit.SECONDS)
-                .minus(arg1Time.nano.toLong(), ChronoUnit.NANOS)
-            Datum.intervalDaySecond(
-                days.toInt(),
-                resultTime.hour,
-                resultTime.minute,
-                resultTime.second,
-                resultTime.nano,
-                INTERVAL_MAX_PRECISION,
-                NANO_MAX_PRECISION
-            )
+            val result = Duration.between(arg1, arg0)
+            ofDuration(result)
+        }
+    }
+
+    override fun getTimestampzInstance(timestampzLhs: PType, timestampzRhs: PType): Fn {
+        return basic(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION), timestampzLhs, timestampzRhs) { args ->
+            val arg0 = args[0].offsetDateTime
+            val arg1 = args[1].offsetDateTime
+            val result = Duration.between(arg1, arg0)
+            ofDuration(result)
         }
     }
 
@@ -241,9 +241,9 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
             else -> return null
         }
         return basic(PType.date(), lhs, rhs) { args ->
-            val arg0 = args[0].localDate
-            val arg1 = args[1]
-            val result: LocalDate = op(arg0, arg1)
+            val lhs = args[0].localDate
+            val rhs = args[1]
+            val result: LocalDate = op(lhs, rhs)
             Datum.date(result)
         }
     }
@@ -264,12 +264,17 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
             }
             else -> return null
         }
-        val lhsPrecision = lhs.precision
         return basic(lhs, lhs, rhs) { args ->
-            val arg0 = args[0].localTime
-            val arg1 = args[1]
-            val result: LocalTime = op(arg0, arg1)
-            Datum.time(result, lhsPrecision)
+            val time = args[0].localTime
+            val interval = args[1]
+            val result: LocalTime = op(time, interval)
+
+            if (lhs.code() == PType.TIMEZ) {
+                val originalOffset = args[0].offsetTime.offset
+                Datum.timez(result.atOffset(originalOffset), lhs.precision)
+            } else {
+                Datum.time(result, lhs.precision)
+            }
         }
     }
 
@@ -288,24 +293,31 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
             IntervalCode.MINUTE_SECOND -> { time, i -> time - Duration.ofSeconds(i.totalSeconds, i.nanos.toLong()) }
             else -> return null
         }
-        val lhsPrecision = lhs.precision
         return basic(lhs, lhs, rhs) { args ->
-            val arg0 = args[0].localDateTime
-            val arg1 = args[1]
-            val result: LocalDateTime = op(arg0, arg1)
-            Datum.timestamp(result, lhsPrecision)
+            val timestamp = args[0].localDateTime
+            val interval = args[1]
+            val result: LocalDateTime = op(timestamp, interval)
+            if (lhs.code() == PType.TIMESTAMPZ) {
+                val originalOffset = args[0].offsetDateTime.offset
+                Datum.timestampz(result.atOffset(originalOffset), lhs.precision)
+            } else {
+                Datum.timestamp(result, lhs.precision)
+            }
         }
     }
 
-    override fun getDateTimestampInstance(dateLhs: PType, timestampRhs: PType): Fn {
-        return basic(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION), dateLhs, timestampRhs) { args ->
-            TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
-        }
-    }
-
-    override fun getTimestampDateInstance(timestampLhs: PType, dateRhs: PType): Fn {
-        return basic(PType.intervalDaySecond(INTERVAL_MAX_PRECISION, NANO_MAX_PRECISION), timestampLhs, dateRhs) { args ->
-            TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
+    private fun ofDuration(duration: Duration): Datum {
+        val kotlinDuration = duration.toKotlinDuration()
+        kotlinDuration.toComponents { days, hours, minutes, seconds, nanoseconds ->
+            return Datum.intervalDaySecond(
+                days.toInt(),
+                hours,
+                minutes,
+                seconds,
+                nanoseconds,
+                INTERVAL_MAX_PRECISION,
+                INTERVAL_DEFAULT_FRACTIONAL_PRECISION
+            )
         }
     }
 }

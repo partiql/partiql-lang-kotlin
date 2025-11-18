@@ -12,7 +12,7 @@ internal object IntervalUtils {
     // field of the result is implementation-defined. We implemented as truncation for Interval as most database systems do.
     private val INTERVAL_ROUNDING_MODE = RoundingMode.DOWN
     internal const val INTERVAL_MAX_PRECISION = 9
-    private const val INTERVAL_DEFAULT_FRACTIONAL_PRECISION = 6
+    internal const val INTERVAL_DEFAULT_FRACTIONAL_PRECISION = 6
     internal const val NANO_MAX_PRECISION = 9
     private const val MONTHS_PER_YEAR = 12L
     internal const val SECONDS_PER_MINUTE = 60L

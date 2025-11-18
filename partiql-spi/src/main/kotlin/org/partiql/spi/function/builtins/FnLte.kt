@@ -7,6 +7,7 @@ import org.partiql.spi.function.Fn
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.NumberUtils.compareTo
 import org.partiql.spi.value.Datum
+import java.time.Duration
 
 internal object FnLte : DiadicComparisonOperator("lte") {
 
@@ -106,6 +107,22 @@ internal object FnLte : DiadicComparisonOperator("lte") {
         }
     }
 
+    override fun getTimezInstance(timezLhs: PType, timezRhs: PType): Fn {
+        return basic(PType.bool(), timezLhs, timezRhs) { args ->
+            val lhs = args[0].offsetTime
+            val rhs = args[1].offsetTime
+            Datum.bool(Duration.between(rhs, lhs) <= Duration.ZERO)
+        }
+    }
+
+    override fun getTimestampzInstance(timestampzLhs: PType, timestampzRhs: PType): Fn {
+        return basic(PType.bool(), timestampzLhs, timestampzRhs) { args ->
+            val lhs = args[0].offsetDateTime
+            val rhs = args[1].offsetDateTime
+            Datum.bool(Duration.between(rhs, lhs) <= Duration.ZERO)
+        }
+    }
+
     override fun getBooleanInstance(booleanLhs: PType, booleanRhs: PType): Fn {
         return basic(PType.bool()) { args ->
             val lhs = args[0].boolean
@@ -135,18 +152,6 @@ internal object FnLte : DiadicComparisonOperator("lte") {
             val lhs = args[0].bytes.toString()
             val rhs = args[1].bytes.toString()
             Datum.bool(lhs <= rhs)
-        }
-    }
-
-    override fun getDateTimestampInstance(dateLhs: PType, timestampRhs: PType): Fn {
-        return basic(PType.bool(), dateLhs, timestampRhs) { args ->
-            TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
-        }
-    }
-
-    override fun getTimestampDateInstance(timestampLhs: PType, dateRhs: PType): Fn {
-        return basic(PType.bool(), timestampLhs, dateRhs) { args ->
-            TODO("https://github.com/partiql/partiql-lang-kotlin/issues/1852")
         }
     }
 }

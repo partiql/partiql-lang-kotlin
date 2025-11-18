@@ -166,7 +166,13 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             val time = args[0].localTime
             val interval = args[1]
             val result: LocalTime = op(time, interval)
-            Datum.time(result, lhs.precision)
+
+            if (lhs.code() == PType.TIMEZ) {
+                val originalOffset = args[0].offsetTime.offset
+                Datum.timez(result.atOffset(originalOffset), lhs.precision)
+            } else {
+                Datum.time(result, lhs.precision)
+            }
         }
     }
 
@@ -176,7 +182,13 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             val interval = args[0]
             val time = args[1].localTime
             val result: LocalTime = op(time, interval)
-            Datum.time(result, rhs.precision)
+
+            if (rhs.code() == PType.TIMEZ) {
+                val originalOffset = args[1].offsetTime.offset
+                Datum.timez(result.atOffset(originalOffset), rhs.precision)
+            } else {
+                Datum.time(result, rhs.precision)
+            }
         }
     }
 
@@ -186,7 +198,13 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             val timestamp = args[0].localDateTime
             val interval = args[1]
             val result: LocalDateTime = op(timestamp, interval)
-            Datum.timestamp(result, lhs.precision)
+
+            if (lhs.code() == PType.TIMESTAMPZ) {
+                val originalOffset = args[0].offsetDateTime.offset
+                Datum.timestampz(result.atOffset(originalOffset), lhs.precision)
+            } else {
+                Datum.timestamp(result, lhs.precision)
+            }
         }
     }
 
@@ -196,7 +214,12 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             val interval = args[0]
             val timestamp = args[1].localDateTime
             val result: LocalDateTime = op(timestamp, interval)
-            Datum.timestamp(result, rhs.precision)
+            if (rhs.code() == PType.TIMESTAMPZ) {
+                val originalOffset = args[1].offsetDateTime.offset
+                Datum.timestampz(result.atOffset(originalOffset), rhs.precision)
+            } else {
+                Datum.timestamp(result, rhs.precision)
+            }
         }
     }
 

@@ -144,6 +144,15 @@ internal abstract class DiadicOperator(
     }
 
     /**
+     * @param timezLhs TODO
+     * @param timezRhs TODO
+     * @return TODO
+     */
+    open fun getTimezInstance(timezLhs: PType, timezRhs: PType): Fn? {
+        return null
+    }
+
+    /**
      * @param timestampLhs TODO
      * @param timestampRhs TODO
      * @return TODO
@@ -153,20 +162,11 @@ internal abstract class DiadicOperator(
     }
 
     /**
-     * @param dateLhs a type of date
-     * @param timestampRhs a type of timestamp
-     * @return an instance of a function
+     * @param timestampzLhs TODO
+     * @param timestampzRhs TODO
+     * @return TODO
      */
-    open fun getDateTimestampInstance(dateLhs: PType, timestampRhs: PType): Fn? {
-        return null
-    }
-
-    /**
-     * @param timestampLhs a type of timestamp
-     * @param dateRhs a type of date
-     * @return an instance of a function
-     */
-    open fun getTimestampDateInstance(timestampLhs: PType, dateRhs: PType): Fn? {
+    open fun getTimestampzInstance(timestampzLhs: PType, timestampzRhs: PType): Fn? {
         return null
     }
 
@@ -399,15 +399,19 @@ internal abstract class DiadicOperator(
     }
 
     protected fun fillNumberTable(highPrecedence: Int, instance: (PType, PType) -> Fn?) {
-        return fillPrioritizedTable(highPrecedence, SqlTypeFamily.NUMBER, instance)
+        return fillPrioritizedTable(highPrecedence, arrayOf(SqlTypeFamily.NUMBER), instance)
     }
 
     private fun fillCharacterStringTable(highPrecedence: Int, instance: (PType, PType) -> Fn?) {
-        return fillPrioritizedTable(highPrecedence, SqlTypeFamily.TEXT, instance)
+        return fillPrioritizedTable(highPrecedence, arrayOf(SqlTypeFamily.TEXT), instance)
     }
 
-    protected fun fillPrioritizedTable(highPrecedence: Int, family: SqlTypeFamily, instance: (PType, PType) -> Fn?) {
-        val members = family.members
+    private fun fillDateTimeStampTable(highPrecedence: Int, instance: (PType, PType) -> Fn?) {
+        return fillPrioritizedTable(highPrecedence, arrayOf(SqlTypeFamily.DATE, SqlTypeFamily.TIMESTAMP), instance)
+    }
+
+    protected fun fillPrioritizedTable(highPrecedence: Int, families: Array<SqlTypeFamily>, instance: (PType, PType) -> Fn?) {
+        val members = families.flatMap { it.members }
         members.filter {
             (TYPE_PRECEDENCE[highPrecedence]!! > TYPE_PRECEDENCE[it]!!)
         }.forEach {
@@ -421,28 +425,18 @@ internal abstract class DiadicOperator(
         fillTable(PType.BOOL, PType.BOOL) { lhs, rhs -> instance(lhs, rhs) }
     }
 
-    private fun fillTimestampTable(instance: (PType, PType) -> Fn?) {
-        fillTable(PType.TIMESTAMPZ, PType.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMESTAMP, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMESTAMPZ, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMESTAMP, PType.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
-
-        // Date-timestamp combinations using specific methods
-        fillTable(PType.DATE, PType.TIMESTAMP, ::getDateTimestampInstance)
-        fillTable(PType.DATE, PType.TIMESTAMPZ, ::getDateTimestampInstance)
-        fillTable(PType.TIMESTAMP, PType.DATE, ::getTimestampDateInstance)
-        fillTable(PType.TIMESTAMPZ, PType.DATE, ::getTimestampDateInstance)
+    private fun fillDateTable() {
+        fillTable(PType.DATE, PType.DATE, ::getDateInstance)
     }
 
-    private fun fillTimeTable(instance: (PType, PType) -> Fn?) {
-        fillTable(PType.TIMEZ, PType.TIMEZ) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIME, PType.TIME) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIMEZ, PType.TIME) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.TIME, PType.TIMEZ) { lhs, rhs -> instance(lhs, rhs) }
+    private fun fillTimeTable() {
+        fillTable(PType.TIME, PType.TIME, ::getTimeInstance)
+        fillPrioritizedTable(PType.TIMEZ, arrayOf(SqlTypeFamily.TIME), ::getTimezInstance)
     }
 
-    private fun fillDateTable(instance: (PType, PType) -> Fn?) {
-        fillTable(PType.DATE, PType.DATE) { lhs, rhs -> instance(lhs, rhs) }
+    private fun fillTimestampTable() {
+        fillDateTimeStampTable(PType.TIMESTAMP, ::getTimestampInstance)
+        fillDateTimeStampTable(PType.TIMESTAMPZ, ::getTimestampzInstance)
     }
 
     private fun fillIntervalTable() {
@@ -466,10 +460,10 @@ internal abstract class DiadicOperator(
         fillTable(PType.TIME, PType.INTERVAL_DT, ::getTimeIntervalInstance)
 
         // TIMEZ
-        fillTable(PType.INTERVAL_DT, PType.TIMEZ, ::getIntervalTimeInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.INTERVAL_YM, PType.TIMEZ, ::getIntervalTimeInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.TIMEZ, PType.INTERVAL_YM, ::getTimeIntervalInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.TIMEZ, PType.INTERVAL_DT, ::getTimeIntervalInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.INTERVAL_DT, PType.TIMEZ, ::getIntervalTimeInstance)
+        fillTable(PType.INTERVAL_YM, PType.TIMEZ, ::getIntervalTimeInstance)
+        fillTable(PType.TIMEZ, PType.INTERVAL_YM, ::getTimeIntervalInstance)
+        fillTable(PType.TIMEZ, PType.INTERVAL_DT, ::getTimeIntervalInstance)
 
         // TIMESTAMP
         fillTable(PType.INTERVAL_YM, PType.TIMESTAMP, ::getIntervalTimestampInstance)
@@ -478,10 +472,10 @@ internal abstract class DiadicOperator(
         fillTable(PType.TIMESTAMP, PType.INTERVAL_DT, ::getTimestampIntervalInstance)
 
         // TIMESTAMPZ
-        fillTable(PType.INTERVAL_YM, PType.TIMESTAMPZ, ::getIntervalTimestampInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.INTERVAL_DT, PType.TIMESTAMPZ, ::getIntervalTimestampInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_YM, ::getTimestampIntervalInstance) // TODO: Create a specific timezone impl
-        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_DT, ::getTimestampIntervalInstance) // TODO: Create a specific timezone impl
+        fillTable(PType.INTERVAL_YM, PType.TIMESTAMPZ, ::getIntervalTimestampInstance)
+        fillTable(PType.INTERVAL_DT, PType.TIMESTAMPZ, ::getIntervalTimestampInstance)
+        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_YM, ::getTimestampIntervalInstance)
+        fillTable(PType.TIMESTAMPZ, PType.INTERVAL_DT, ::getTimestampIntervalInstance)
 
         // INTERVAL
         fillTable(PType.INTERVAL_YM, PType.INTERVAL_YM, ::getIntervalInstance)
@@ -554,11 +548,11 @@ internal abstract class DiadicOperator(
         fillNumericTable()
         fillNumberTable(PType.REAL, ::getRealInstance)
         fillNumberTable(PType.DOUBLE, ::getDoubleInstance)
-        fillTimeTable(::getTimeInstance)
-        fillDateTable(::getDateInstance)
+        fillTimeTable()
+        fillDateTable()
+        fillTimestampTable()
         fillIntervalTable()
         fillBlobTable(::getBlobInstance)
-        fillTimestampTable(::getTimestampInstance)
         fillCharacterStringTable(PType.STRING, ::getStringInstance)
         fillCharacterStringTable(PType.CHAR, ::getCharInstance)
         fillCharacterStringTable(PType.VARCHAR, ::getVarcharInstance)

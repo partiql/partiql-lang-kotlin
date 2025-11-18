@@ -167,30 +167,30 @@ class DatumComparatorTest {
             Datum.doublePrecision(Double.POSITIVE_INFINITY),
         ),
         EquivValues(
-            Datum.date(LocalDate.of(1992, 8, 22))
-        ),
-        EquivValues(
-            Datum.date(LocalDate.of(2021, 8, 22))
-        ),
-        EquivValues(
-            Datum.timez(OffsetTime.of(12, 12, 12, 0, ZoneOffset.UTC), 9),
-            Datum.timez(OffsetTime.of(12, 12, 12, 0, ZoneOffset.ofHours(0)), 9),
+            Datum.timez(OffsetTime.of(12, 12, 12, 100000000, ZoneOffset.ofHours(1)), 9),
         ),
         EquivValues(
             Datum.time(LocalTime.of(12, 12, 12, 100000000), 9),
+            Datum.timez(OffsetTime.of(12, 12, 12, 100000000, ZoneOffset.UTC), 9),
         ),
         EquivValues(
-            Datum.timez(OffsetTime.of(12, 12, 12, 100000000, ZoneOffset.ofHours(-9)), 9),
+            Datum.timez(OffsetTime.of(12, 12, 12, 100000000, ZoneOffset.ofHours(-1)), 9),
+        ),
+        EquivValues(
+            Datum.date(LocalDate.of(1992, 8, 22))
+        ),
+        EquivValues(
+            Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 0, 0, 0, 0, ZoneOffset.ofHours(1)), 6), // `2017-01-01T00:00+01:00`
         ),
         EquivValues(
             Datum.timestamp(LocalDateTime.of(2017, 1, 1, 0, 0, 0), 6),
+            Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 0, 0, 0, 0, ZoneOffset.ofHours(0)), 6), // `2017-01-01T00:00+00`
         ),
         EquivValues(
-            Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 0, 0, 0, 0, ZoneOffset.ofHours(0)), 6), // `2017-01-01T00:00+00`
-            Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 0, 0, 0, 0, ZoneOffset.ofHoursMinutes(0, 0)), 6), // `2017-01-01T00:00+00:00`
-            // equality with different offsets not defined in partiql
-            // Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 1, 0, 0, 0, ZoneOffset.ofHours(1)), 6), // `2017-01-01T01:00+01`
-            // Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 1, 0, 0, 0, ZoneOffset.ofHoursMinutes(-1, 0)), 6), // `2017-01-01T01:00+01:00`
+            Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 1, 0, 0, 0, ZoneOffset.ofHours(-1)), 6), // `2017-01-01T01:00-01:00`
+        ),
+        EquivValues(
+            Datum.date(LocalDate.of(2021, 8, 22))
         ),
         EquivValues(
             Datum.string(""),
