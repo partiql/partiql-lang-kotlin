@@ -9,7 +9,6 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
-import org.partiql.spi.utils.IntervalUtils
 import org.partiql.spi.utils.IntervalUtils.INTERVAL_DEFAULT_FRACTIONAL_PRECISION
 import org.partiql.spi.utils.IntervalUtils.INTERVAL_MAX_PRECISION
 import org.partiql.spi.utils.IntervalUtils.NANO_MAX_PRECISION
@@ -302,7 +301,7 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
                 val originalOffset = args[0].offsetDateTime.offset
                 Datum.timestampz(result.atOffset(originalOffset), lhs.precision)
             } else {
-                Datum.timestamp(result, rhs.precision)
+                Datum.timestamp(result, lhs.precision)
             }
         }
     }

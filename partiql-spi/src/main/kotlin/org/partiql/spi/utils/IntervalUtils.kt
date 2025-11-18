@@ -6,8 +6,6 @@ import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.time.Duration
-import kotlin.time.toKotlinDuration
 
 internal object IntervalUtils {
     // According to SQL1992, whether to truncate or round in the least significant

@@ -229,14 +229,13 @@ abstract class DatumComparator implements Comparator<Datum> {
         precedence.put(DECIMAL, 1);
         precedence.put(REAL, 1);
         precedence.put(DOUBLE, 1);
-        // Date Type
-        precedence.put(DATE, 2);
         // Time Type
-        precedence.put(TIMEZ, 3);
         precedence.put(TIME, 3);
+        precedence.put(TIMEZ, 3);
         // Timestamp Types
-        precedence.put(TIMESTAMPZ, 4);
+        precedence.put(DATE, 4);
         precedence.put(TIMESTAMP, 4);
+        precedence.put(TIMESTAMPZ, 4);
         // Interval Type
         // TODO: Is this the right place to put it? This should be formalized.
         precedence.put(INTERVAL_YM, 5);
@@ -559,7 +558,8 @@ abstract class DatumComparator implements Comparator<Datum> {
     private static DatumComparison[] fillTimeComparator(DatumComparison[] comps) {
         comps[TIME] = (self, time, comp) -> self.getLocalTime().compareTo(time.getLocalTime());
         comps[TIMEZ] = (self, timez, comp) -> {
-            // Convert TIME to UTC for comparison with TIMEZ
+            // TODO we may want to time to timez based on sql session timezone instead of UTC per sql1999 section 4.7.1
+            // offsetTime.compareTo is not consistently with sql spec <comparison predicate>, use Duration to comparison
             OffsetTime selfOffsetTime = self.getLocalTime().atOffset(ZoneOffset.UTC);
             return Duration.between(timez.getOffsetTime(), selfOffsetTime).compareTo(Duration.ZERO);
         };
@@ -575,7 +575,8 @@ abstract class DatumComparator implements Comparator<Datum> {
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimezComparator(DatumComparison[] comps) {
         comps[TIME] = (self, time, comp) -> {
-            // Convert TIME to UTC for comparison with TIMEZ
+            // TODO we may want to time to timez based on sql session timezone instead of UTC per sql1999 section 4.7.1
+            // offsetTime.compareTo is not consistently with sql spec <comparison predicate>, use Duration to comparison
             OffsetTime timeOffsetTime = time.getLocalTime().atOffset(ZoneOffset.UTC);
             return Duration.between(timeOffsetTime, self.getOffsetTime()).compareTo(Duration.ZERO);
         };
@@ -601,6 +602,8 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[DATE] = (self, date, comp) -> self.getLocalDate().compareTo(date.getLocalDate());
         comps[TIMESTAMP] = (self, timestamp, comp) -> self.getLocalDate().atTime(LocalTime.MIN).compareTo(timestamp.getLocalDateTime());
         comps[TIMESTAMPZ] = (self, timestampz, comp) -> {
+            // TODO we may want to time to timez based on sql session timezone instead of UTC per sql1999 section 4.7.1
+            // offsetDateTime.compareTo is not consistently with sql spec <comparison predicate>, use Duration to comparison
             OffsetDateTime selfOffsetDateTime = self.getLocalDate().atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
             return Duration.between(timestampz.getOffsetDateTime(), selfOffsetDateTime).compareTo(Duration.ZERO);
         };
@@ -613,6 +616,8 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[DATE] = (self, date, comp) -> self.getLocalDateTime().compareTo(date.getLocalDate().atTime(LocalTime.MIN));
         comps[TIMESTAMP] = (self, timestamp, comp) -> self.getLocalDateTime().compareTo(timestamp.getLocalDateTime());
         comps[TIMESTAMPZ] = (self, timestampz, comp) -> {
+            // TODO we may want to time to timez based on sql session timezone instead of UTC per sql1999 section 4.7.1
+            // offsetDateTime.compareTo is not consistently with sql spec <comparison predicate>, use Duration to comparison
             OffsetDateTime selfOffsetDateTime = self.getLocalDateTime().atOffset(ZoneOffset.UTC);
             return Duration.between(timestampz.getOffsetDateTime(), selfOffsetDateTime).compareTo(Duration.ZERO);
         };
@@ -622,10 +627,14 @@ abstract class DatumComparator implements Comparator<Datum> {
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimestampzComparator(DatumComparison[] comps) {
         comps[DATE] = (self, date, comp) -> {
+            // TODO we may want to time to timez based on sql session timezone instead of UTC per sql1999 section 4.7.1
+            // offsetDateTime.compareTo is not consistently with sql spec <comparison predicate>, use Duration to comparison
             OffsetDateTime dateOffsetDateTime = date.getLocalDate().atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
             return Duration.between(dateOffsetDateTime, self.getOffsetDateTime()).compareTo(Duration.ZERO);
         };
         comps[TIMESTAMP] = (self, timestamp, comp) -> {
+            // TODO we may want to time to timez based on sql session timezone instead of UTC per sql1999 section 4.7.1
+            // offsetDateTime.compareTo is not consistently with sql spec <comparison predicate>, use Duration to comparison
             OffsetDateTime timestampOffsetDateTime = timestamp.getLocalDateTime().atOffset(ZoneOffset.UTC);
             return Duration.between(timestampOffsetDateTime, self.getOffsetDateTime()).compareTo(Duration.ZERO);
         };
