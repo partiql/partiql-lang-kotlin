@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.2](https://TODO.com) - 2025-11-19
+
+### Added
 - Add auto cast support for `TIME` ↔ `TIME WITH TIME ZONE`, `DATE` ↔ `TIMESTAMP` ↔ `TIMESTAMP WITH TIME ZONE`
 - Implement DATE_DIFF function
 - Add `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE` support to some datetime operators `+` and `-`.
