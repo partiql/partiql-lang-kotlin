@@ -40,7 +40,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 
-## [1.3.2](https://TODO.com) - 2025-11-19
+## [1.3.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.2) - 2025-11-19
 
 ### Added
 - Add auto cast support for `TIME` ↔ `TIME WITH TIME ZONE`, `DATE` ↔ `TIMESTAMP` ↔ `TIMESTAMP WITH TIME ZONE`
