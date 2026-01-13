@@ -30,6 +30,7 @@ import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprCast
 import org.partiql.ast.expr.ExprCoalesce
+import org.partiql.ast.expr.ExprError
 import org.partiql.ast.expr.ExprExtract
 import org.partiql.ast.expr.ExprInCollection
 import org.partiql.ast.expr.ExprIsType
@@ -129,6 +130,11 @@ public object Ast {
     @JvmStatic
     public fun exprCoalesce(args: List<Expr>): ExprCoalesce {
         return ExprCoalesce(args)
+    }
+
+    @JvmStatic
+    public fun exprError(message: String, code: Int): ExprError {
+        return ExprError(message, code)
     }
 
     @JvmStatic

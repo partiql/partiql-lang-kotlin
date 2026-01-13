@@ -51,6 +51,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprCaseBranch (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprCase$Branch;
 	public static final fun exprCast (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/DataType;)Lorg/partiql/ast/expr/ExprCast;
 	public static final fun exprCoalesce (Ljava/util/List;)Lorg/partiql/ast/expr/ExprCoalesce;
+	public static final fun exprError (Ljava/lang/String;I)Lorg/partiql/ast/expr/ExprError;
 	public static final fun exprExtract (Lorg/partiql/ast/DatetimeField;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprExtract;
 	public static final fun exprInCollection (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Z)Lorg/partiql/ast/expr/ExprInCollection;
 	public static final fun exprIsType (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/DataType;Z)Lorg/partiql/ast/expr/ExprIsType;
@@ -520,6 +521,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitExprCaseBranch (Lorg/partiql/ast/expr/ExprCase$Branch;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCast (Lorg/partiql/ast/expr/ExprCast;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCoalesce (Lorg/partiql/ast/expr/ExprCoalesce;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprError (Lorg/partiql/ast/expr/ExprError;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprExtract (Lorg/partiql/ast/expr/ExprExtract;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprInCollection (Lorg/partiql/ast/expr/ExprInCollection;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprIsType (Lorg/partiql/ast/expr/ExprIsType;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2501,6 +2503,25 @@ public final class org/partiql/ast/expr/ExprCoalesce : org/partiql/ast/expr/Expr
 public class org/partiql/ast/expr/ExprCoalesce$Builder {
 	public fun args (Ljava/util/List;)Lorg/partiql/ast/expr/ExprCoalesce$Builder;
 	public fun build ()Lorg/partiql/ast/expr/ExprCoalesce;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/expr/ExprError : org/partiql/ast/expr/Expr {
+	public static final field DATETIME_FIELD_KEYWORD I
+	public fun <init> (Ljava/lang/String;I)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/expr/ExprError$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getCode ()I
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/expr/ExprError$Builder {
+	public fun build ()Lorg/partiql/ast/expr/ExprError;
+	public fun code (I)Lorg/partiql/ast/expr/ExprError$Builder;
+	public fun message (Ljava/lang/String;)Lorg/partiql/ast/expr/ExprError$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 

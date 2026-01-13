@@ -58,6 +58,7 @@ import org.partiql.ast.Ast.exprCase
 import org.partiql.ast.Ast.exprCaseBranch
 import org.partiql.ast.Ast.exprCast
 import org.partiql.ast.Ast.exprCoalesce
+import org.partiql.ast.Ast.exprError
 import org.partiql.ast.Ast.exprExtract
 import org.partiql.ast.Ast.exprInCollection
 import org.partiql.ast.Ast.exprIsType
@@ -191,6 +192,7 @@ import org.partiql.ast.dml.UpdateTargetStep
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag
+import org.partiql.ast.expr.ExprError
 import org.partiql.ast.expr.ExprLit
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
@@ -1805,6 +1807,19 @@ internal class PartiQLParserDefault : PartiQLParser {
             translate(ctx) {
                 exprSessionAttribute(SessionAttribute.CURRENT_DATE())
             }
+
+        override fun visitExprTermDatetimeField(ctx: GeneratedParser.ExprTermDatetimeFieldContext) = translate(ctx) {
+            val datetimeFieldCtx = ctx.primaryDatetimeField()
+            val fieldText = datetimeFieldCtx.text.uppercase()
+            val location = SourceLocation(
+                ctx.start.line.toLong(),
+                ctx.start.charPositionInLine + 1L,
+                fieldText.length.toLong()
+            )
+            val error = PErrors.datetimeFieldAsExpression(location, fieldText)
+            listener.report(error)
+            exprError(fieldText, ExprError.DATETIME_FIELD_KEYWORD)
+        }
 
         /**
          *

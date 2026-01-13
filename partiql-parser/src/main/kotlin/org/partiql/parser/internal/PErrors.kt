@@ -72,6 +72,33 @@ internal object PErrors {
         )
     }
 
+    /**
+     * Creates an error for datetime field keywords (YEAR, MONTH, DAY, HOUR, MINUTE, SECOND)
+     * used in expression contexts where they are reserved tokens.
+     *
+     * Uses UNEXPECTED_TOKEN error code since the token is valid but not expected in expression context.
+     * The ExprError AST node preserves the keyword for target-specific recovery.
+     *
+     * @param location the source location of the datetime field keyword
+     * @param fieldName the name of the datetime field keyword (e.g., "YEAR", "MONTH")
+     * @return an error representing [PError.UNEXPECTED_TOKEN]
+     */
+    internal fun datetimeFieldAsExpression(
+        location: SourceLocation?,
+        fieldName: String
+    ): PError {
+        return PError(
+            PError.UNEXPECTED_TOKEN,
+            Severity.ERROR(),
+            PErrorKind.SYNTAX(),
+            location,
+            mapOf(
+                "TOKEN_NAME" to fieldName,
+                "EXPECTED_TOKENS" to null
+            )
+        )
+    }
+
     private fun ctxToLocation(ctx: ParserRuleContext): SourceLocation? {
         val start = ctx.start
         val stop = ctx.stop
