@@ -29,6 +29,7 @@ import org.partiql.ast.expr.ExprCall;
 import org.partiql.ast.expr.ExprCase;
 import org.partiql.ast.expr.ExprCast;
 import org.partiql.ast.expr.ExprCoalesce;
+import org.partiql.ast.expr.ExprError;
 import org.partiql.ast.expr.ExprExtract;
 import org.partiql.ast.expr.ExprInCollection;
 import org.partiql.ast.expr.ExprMissingPredicate;
@@ -247,6 +248,10 @@ public abstract class AstVisitor<R, C> {
 
     public R visitExpr(Expr node, C ctx) {
         return node.accept(this, ctx);
+    }
+
+    public R visitExprError(ExprError node, C ctx) {
+        return defaultVisit(node, ctx);
     }
 
     public R visitExprLit(ExprLit node, C ctx) {

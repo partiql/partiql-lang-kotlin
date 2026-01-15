@@ -35,6 +35,7 @@ import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprCast
 import org.partiql.ast.expr.ExprCoalesce
+import org.partiql.ast.expr.ExprError
 import org.partiql.ast.expr.ExprExtract
 import org.partiql.ast.expr.ExprInCollection
 import org.partiql.ast.expr.ExprIsType
@@ -78,6 +79,7 @@ import org.partiql.planner.internal.ir.rexOpCallUnresolved
 import org.partiql.planner.internal.ir.rexOpCastUnresolved
 import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
+import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpNullif
 import org.partiql.planner.internal.ir.rexOpPathIndex
@@ -152,6 +154,15 @@ internal object RexConverter {
 
         override fun defaultReturn(node: AstNode, context: Env): Rex =
             throw IllegalArgumentException("unsupported rex $node")
+
+        override fun visitExprError(node: ExprError, ctx: Env): Rex {
+            // Emit error for downstream
+            val cause = IllegalStateException("ExprError node encountered: ${node.text}")
+            ctx.listener.report(PErrors.internalError(cause))
+
+            val type = CompilerType(PType.dynamic())
+            return rex(type, rexOpErr())
+        }
 
         override fun visitExprRowValue(node: ExprRowValue, ctx: Env): Rex {
             val values = node.values.map { visitExprCoerce(it, ctx) }

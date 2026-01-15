@@ -191,7 +191,7 @@ simpleTable
  * Returns a QueryBody.SFW.
  * EBNF 1999:
  * <query specification> ::= SELECT [ <set quantifier> ] <select list> <table expression>
- * <table expression> ::= <from clause> [ <where clause> ] [ <group by clause> ] [ <having clause> ] 
+ * <table expression> ::= <from clause> [ <where clause> ] [ <group by clause> ] [ <having clause> ]
  */
 querySpecification
     : select=selectClause
@@ -335,11 +335,11 @@ partitionBy
  * TODO: Determine future of FROM (INSERT, SET, REMOVE) statements: https://github.com/partiql/partiql-lang-kotlin/issues/1669
  * TODO: Implement the RETURNING clause for INSERT/UPDATE. See https://github.com/partiql/partiql-lang-kotlin/issues/1667
  */
- 
+
 //
 //
 // DML Statements
-// 
+//
 //
 
 /**
@@ -506,7 +506,7 @@ letBinding
  *
  * EBNF 1999:
  * <with clause>    ::=   WITH [ RECURSIVE ] <with list>
- * <with list>    ::=   <with list element> [ { <comma> <with list element> }... ] 
+ * <with list>    ::=   <with list element> [ { <comma> <with list element> }... ]
  */
 withClause
     : WITH RECURSIVE? elements+=withListElement ( COMMA elements+=withListElement)*
@@ -723,7 +723,7 @@ joinedTable
 
 /**
  * Returns a (FromJoin).
- * 
+ *
  * NOTE: The EBNF is different here, since the PartiQL Specification allows for the use of a joinType
  * before the CROSS token.
  *
@@ -905,7 +905,7 @@ exprPrimary
  * PRIMARY EXPRESSIONS
  *
  */
- 
+
 /**
  * From SQL:1999:
  * <contextually typed table value constructor> ::= VALUES <contextually typed row value expression list>
@@ -945,6 +945,7 @@ exprTerm
     | PAREN_LEFT queryExpression PAREN_RIGHT    # Subquery
     | CURRENT_USER                   # ExprTermCurrentUser
     | CURRENT_DATE                   # ExprTermCurrentDate
+    | primaryDatetimeField           # ExprTermDatetimeField
     | parameter                      # ExprTermBase
     | varRefExpr                     # ExprTermBase
     | literal                        # ExprTermBase
@@ -1111,7 +1112,7 @@ extractField
     ;
 
 /**
- * <primary datetime field> ::= <non-second primary datetime field> | SECOND 
+ * <primary datetime field> ::= <non-second primary datetime field> | SECOND
  */
 primaryDatetimeField
     : nonSecondPrimaryDatetimeField
@@ -1119,7 +1120,7 @@ primaryDatetimeField
     ;
 
 /**
- * <time zone field> ::= TIMEZONE_HOUR | TIMEZONE_MINUTE 
+ * <time zone field> ::= TIMEZONE_HOUR | TIMEZONE_MINUTE
  */
 timeZoneField
     : TIMEZONE_HOUR
