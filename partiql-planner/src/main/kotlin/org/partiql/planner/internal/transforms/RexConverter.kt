@@ -156,6 +156,10 @@ internal object RexConverter {
             throw IllegalArgumentException("unsupported rex $node")
 
         override fun visitExprError(node: ExprError, ctx: Env): Rex {
+            // Emit error for downstream
+            val cause = IllegalStateException("ExprError node encountered: ${node.text}")
+            ctx.listener.report(PErrors.internalError(cause))
+
             val type = CompilerType(PType.dynamic())
             return rex(type, rexOpErr())
         }

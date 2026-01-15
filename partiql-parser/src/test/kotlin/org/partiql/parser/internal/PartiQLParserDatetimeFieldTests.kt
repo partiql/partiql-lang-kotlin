@@ -58,13 +58,13 @@ class PartiQLParserDatetimeFieldTests {
      * Test that lowercase datetime field keywords also produce ExprError nodes.
      */
     @Test
-    fun lowercaseDatetimeFieldAsExpression() = assertDatetimeFieldExpression("year", "YEAR")
+    fun lowercaseDatetimeFieldAsExpression() = assertDatetimeFieldExpression("year", "year")
 
     /**
      * Test that mixed case datetime field keywords also produce ExprError nodes.
      */
     @Test
-    fun mixedCaseDatetimeFieldAsExpression() = assertDatetimeFieldExpression("YeAr", "YEAR")
+    fun mixedCaseDatetimeFieldAsExpression() = assertDatetimeFieldExpression("YeAr", "YeAr")
 
     /**
      * Test that error listener receives UNEXPECTED_TOKEN error for datetime field keywords.
@@ -102,6 +102,83 @@ class PartiQLParserDatetimeFieldTests {
     }
 
     /**
+     * Test that datetime field keywords in custom function calls produce ExprError nodes.
+     * This covers the case where a user might try to pass datetime field keywords as arguments
+     * to custom or user-defined functions.
+     */
+    @Test
+    fun datetimeFieldAsCustomFunctionArgument() {
+        // Test single argument: my_function(YEAR)
+        val query1 = "my_function(YEAR)"
+        val errors1 = mutableListOf<PError>()
+        val listener1 = PErrorListener { error -> errors1.add(error) }
+        val ctx1 = Context.of(listener1)
+        parser.parse(query1, ctx1)
+
+        // Should have one error for YEAR
+        assertEquals(1, errors1.size, "Expected one error for YEAR in custom function")
+        assertEquals(PError.UNEXPECTED_TOKEN, errors1[0].code())
+        assertEquals("YEAR", errors1[0].getOrNull("TOKEN_NAME", String::class.java))
+    }
+
+    /**
+     * Test multiple datetime field keywords as arguments to custom functions.
+     */
+    @Test
+    fun multipleDatetimeFieldsAsCustomFunctionArguments() {
+        // Test multiple arguments: custom_func(MONTH, DAY)
+        val query = "custom_func(MONTH, DAY)"
+        val errors = mutableListOf<PError>()
+        val listener = PErrorListener { error -> errors.add(error) }
+        val ctx = Context.of(listener)
+        parser.parse(query, ctx)
+
+        // Should have two errors, one for MONTH and one for DAY
+        assertEquals(2, errors.size, "Expected two errors for MONTH and DAY")
+        assertTrue(errors.all { it.code() == PError.UNEXPECTED_TOKEN }, "All errors should be UNEXPECTED_TOKEN")
+
+        val tokenNames = errors.map { it.getOrNull("TOKEN_NAME", String::class.java) }
+        assertTrue(tokenNames.contains("MONTH"), "Expected MONTH in error tokens")
+        assertTrue(tokenNames.contains("DAY"), "Expected DAY in error tokens")
+    }
+
+    /**
+     * Test datetime field keywords mixed with valid expressions in custom function calls.
+     */
+    @Test
+    fun datetimeFieldMixedWithValidArgumentsInCustomFunction() {
+        // Test mixed arguments: my_func(1, HOUR, 'test')
+        val query = "my_func(1, HOUR, 'test')"
+        val errors = mutableListOf<PError>()
+        val listener = PErrorListener { error -> errors.add(error) }
+        val ctx = Context.of(listener)
+        parser.parse(query, ctx)
+
+        // Should have one error for HOUR
+        assertEquals(1, errors.size, "Expected one error for HOUR")
+        assertEquals(PError.UNEXPECTED_TOKEN, errors[0].code())
+        assertEquals("HOUR", errors[0].getOrNull("TOKEN_NAME", String::class.java))
+    }
+
+    /**
+     * Test datetime field keywords in nested custom function calls.
+     */
+    @Test
+    fun datetimeFieldInNestedCustomFunctionCalls() {
+        // Test nested: outer_func(inner_func(SECOND))
+        val query = "outer_func(inner_func(SECOND))"
+        val errors = mutableListOf<PError>()
+        val listener = PErrorListener { error -> errors.add(error) }
+        val ctx = Context.of(listener)
+        parser.parse(query, ctx)
+
+        // Should have one error for SECOND
+        assertEquals(1, errors.size, "Expected one error for SECOND in nested function")
+        assertEquals(PError.UNEXPECTED_TOKEN, errors[0].code())
+        assertEquals("SECOND", errors[0].getOrNull("TOKEN_NAME", String::class.java))
+    }
+
+    /**
      * Helper function to assert that a datetime field keyword produces an ExprError node.
      */
     private fun assertDatetimeFieldExpression(input: String, expectedFieldName: String = input.uppercase()) {
@@ -120,8 +197,7 @@ class PartiQLParserDatetimeFieldTests {
         assertTrue(expr is ExprError, "Expected ExprError expression, got ${expr::class.simpleName}")
 
         val exprError = expr
-        assertEquals(expectedFieldName, exprError.message, "Expected message to be '$expectedFieldName'")
-        assertEquals(ExprError.DATETIME_FIELD_KEYWORD, exprError.code, "Expected DATETIME_FIELD_KEYWORD error code")
+        assertEquals(expectedFieldName, exprError.text, "Expected text to be '$expectedFieldName'")
 
         // Verify error was reported to listener
         assertEquals(1, errors.size, "Expected exactly one error to be reported")

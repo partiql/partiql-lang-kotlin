@@ -133,8 +133,8 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun exprError(message: String, code: Int): ExprError {
-        return ExprError(message, code)
+    public fun exprError(text: String): ExprError {
+        return ExprError(text)
     }
 
     @JvmStatic
