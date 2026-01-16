@@ -26,6 +26,24 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.3](https://TODO.com) - 2026-01-16
+
+
+### Added
 - Added ExprError AST node and error handling for datetime field keywords (YEAR, MONTH, DAY, HOUR, MINUTE, SECOND) used in expression contexts
 
 ### Changed
@@ -40,6 +58,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @XuechunHHH
 
 ## [1.3.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.2) - 2025-11-19
 
