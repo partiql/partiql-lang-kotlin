@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed `SIZE` function compilation to properly handle `SELECT` expressions instead of coercing them to scalars
 
 ### Removed
 
@@ -39,6 +40,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @XuechunHHH
 
 ## [1.3.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.3) - 2026-01-16
 
