@@ -659,7 +659,12 @@ internal object RexConverter {
             }
 
             // Args
-            val args = node.args.map { visitExprCoerce(it, context) }
+            // SIZE() function should receive collections, not scalars - don't apply scalar coercion
+            val args = if (id.matches("SIZE", ignoreCase = true)) {
+                node.args.map { arg -> arg.accept(this, context) }
+            } else {
+                node.args.map { visitExprCoerce(it, context) }
+            }
 
             // Check if function is actually coll_<agg>
             if (isCollAgg(node)) {
