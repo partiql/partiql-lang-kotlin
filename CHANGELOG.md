@@ -32,6 +32,23 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.4](https://TODO.com) - 2026-02-16
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
 - Fixed `SIZE` function compilation to properly handle `SELECT` expressions instead of coercing them to scalars
 
 ### Removed
@@ -43,7 +60,6 @@ Thank you to all who have contributed!
 - @XuechunHHH
 
 ## [1.3.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.3) - 2026-01-16
-
 
 ### Added
 - Added ExprError AST node and error handling for datetime field keywords (YEAR, MONTH, DAY, HOUR, MINUTE, SECOND) used in expression contexts
