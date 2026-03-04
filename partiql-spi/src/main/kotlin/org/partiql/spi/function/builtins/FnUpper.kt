@@ -80,7 +80,7 @@ internal object FnUpper : FnOverload() {
                 val result = string.uppercase()
                 Datum.string(result)
             }
-            else -> error("Unsupported type for UPPER function: ${inputType.code()}")
+            else -> null
         }
     }
 }

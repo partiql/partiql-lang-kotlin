@@ -30,6 +30,11 @@ public abstract class FnOverload {
 
     /**
      * Returns an instance of the function for the given argument types.
+     * <p>
+     * <b>Important:</b> Implementations should return {@code null} when the function cannot be resolved for the
+     * given argument types. The PartiQL engine is responsible for deciding when to throw errors, not the function
+     * implementation. Thrown exceptions will cause the query to fail.
+     * </p>
      * @param args the argument types.
      * @return an instance of the function for the given argument types, or {@code null} if no such function exists.
      */

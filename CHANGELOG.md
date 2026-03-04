@@ -32,6 +32,8 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Incorrectly throwing errors in PERMISSIVE mode
+- String functions unexpectedly fail with evaluation errors
 
 ### Removed
 
@@ -39,6 +41,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @XuechunHHH
 
 ## [1.3.4](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.4) - 2026-02-16
 

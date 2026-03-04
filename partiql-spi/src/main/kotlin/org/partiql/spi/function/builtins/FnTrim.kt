@@ -71,7 +71,7 @@ internal object FnTrim : FnOverload() {
                 val result = value.codepointTrim()
                 Datum.string(result)
             }
-            else -> error("Unsupported type for TRIM function: ${inputType.code()}")
+            else -> null
         }
     }
 }
