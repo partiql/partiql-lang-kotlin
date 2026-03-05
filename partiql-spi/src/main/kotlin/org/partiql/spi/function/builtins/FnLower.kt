@@ -80,7 +80,7 @@ internal object FnLower : FnOverload() {
                 val result = string.lowercase()
                 Datum.string(result)
             }
-            else -> error("Unsupported type for LOWER function: ${inputType.code()}")
+            else -> null
         }
     }
 }

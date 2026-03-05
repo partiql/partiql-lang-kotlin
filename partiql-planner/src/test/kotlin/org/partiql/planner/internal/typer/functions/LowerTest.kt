@@ -1,8 +1,6 @@
 package org.partiql.planner.internal.typer.functions
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import kotlin.test.assertEquals
 
@@ -36,9 +34,8 @@ class LowerTest {
     }
 
     @Test
-    fun `lower with unsupported type throws exception`() {
-        assertThrows<PRuntimeException> {
-            FnTestUtils.getQueryResultType("LOWER(42)")
-        }
+    fun `lower with unsupported type returns DYNAMIC`() {
+        val actualType = FnTestUtils.getQueryResultType("LOWER(42)")
+        assertEquals(PType.DYNAMIC, actualType.code())
     }
 }

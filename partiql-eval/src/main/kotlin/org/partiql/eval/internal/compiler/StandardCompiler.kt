@@ -280,7 +280,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitIterate(rel: RelIterate, ctx: Unit): ExprRelation {
             val input = compile(rel.getRex(), ctx)
             return when (MODE) {
-                Mode.PERMISSIVE -> RelOpIteratePermissive(input)
+                Mode.PERMISSIVE -> RelOpIteratePermissive(input.catch())
                 Mode.STRICT -> RelOpIterate(input)
                 else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
@@ -325,7 +325,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitScan(rel: RelScan, ctx: Unit): ExprRelation {
             val input = compile(rel.rex, ctx)
             return when (MODE) {
-                Mode.PERMISSIVE -> RelOpScanPermissive(input)
+                Mode.PERMISSIVE -> RelOpScanPermissive(input.catch())
                 Mode.STRICT -> RelOpScan(input)
                 else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
