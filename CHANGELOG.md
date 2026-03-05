@@ -40,7 +40,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 
-## [1.3.5](https://TODO.com) - 2026-03-04
+## [1.3.5](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.5) - 2026-03-04
 
 ### Added
 
