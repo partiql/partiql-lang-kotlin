@@ -32,6 +32,23 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.5](https://TODO.com) - 2026-03-04
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
 - Incorrectly throwing errors in PERMISSIVE mode
 - String functions unexpectedly fail with evaluation errors
 
