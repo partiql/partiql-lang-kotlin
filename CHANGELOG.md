@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed the `--format` flag in partiql-cli, which was non-functional
 
 ### Removed
 
@@ -39,6 +40,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @jobarr-amzn
 
 ## [1.3.6](https://TODO.com) - 2026-03-05
 
@@ -189,13 +191,13 @@ Thank you to all who have contributed!
 
 ### Added
 - partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
-- **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the 
+- **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the
 `OperatorVisitor`
-- **EXPERIMENTAL** partiql-planner: add planner builder function to control whether `With` table references are 
+- **EXPERIMENTAL** partiql-planner: add planner builder function to control whether `With` table references are
 rewritten to their query representation
   - **NOTE** evaluating plans without the inlined `With` rewrite will not work as expected. Users trying to evaluate
   `With` should use the default planner.
-- Signed `INTERVAL` literals support 
+- Signed `INTERVAL` literals support
 - Metas attached to `INTERVAL` `PType`s if an `INTERVAL` has an unspecified precision or fractional precision
 - `EXTRACT` function support on `INTERVAL` datum
 - `ABS` function support on `INTERVAL` values
@@ -203,7 +205,7 @@ rewritten to their query representation
 - Add cli option -e to load PartiQL literal data as default catalog data
 - Add toString() support for all datum types
 - Add optional `distinguishNullMissing` parameter to `Datum.comparator()` to control whether `null` and `missing` are treated as equivalent or distinct in comparisons
-- Remove the extra non-character Unicode in the function name when displaying cli errors 
+- Remove the extra non-character Unicode in the function name when displaying cli errors
 - **EXPERIMENTAL** Add `Datum.getTotalMonths` to retrieve the total number of months from a year-month `Datum`
 - **EXPERIMENTAL** Add `Datum.getTotalSeconds` to retrieve the total number of seconds from a day-time `Datum`
 - fix the parsing of DATE_ADD/DATE_DIFF with an uncapitalized datetime field argument.
@@ -434,7 +436,7 @@ Thank you to all who have contributed!
 - **Behavioral change**: The COUNT aggregate function now returns INT64.
 
 ### Deprecated
-- The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release. 
+- The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release.
 - Deprecates constructor and properties `variableName` and `caseSensitive` of `org.partiql.planner.PlanningProblemDetails.UndefinedVariable`
   in favor of newly added constructor and properties `name` and `inScopeVariables`.
 
@@ -1071,7 +1073,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - README.md badges for GitHub Actions status, codecov, and license
 - An experimental (pending [#15](https://github.com/partiql/partiql-docs/issues/15)) embedding of a subset of
   the [GPML (Graph Pattern Matching Language)](https://arxiv.org/abs/2112.06217) graph query, as a new expression
-  form `<expr> MATCH <gpml_pattern>`, which can be used as a bag-of-structs data source in the `FROM` clause.   
+  form `<expr> MATCH <gpml_pattern>`, which can be used as a bag-of-structs data source in the `FROM` clause.
   The use within the grammar is based on the assumption of a new graph data type being added to the
   specification of data types within PartiQL, and should be considered experimental until the semantics of the graph
   data type are specified.
@@ -1083,7 +1085,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
   - path quantifiers  (section 4.4 of the GPML paper)
   - restrictors and selector  (section 5.1 of the GPML paper)
   - pre-filters and post-filters (section 5.2 of the GPML paper)
-- Added EvaluatonSession.context: A string-keyed map of arbitrary values which provides a way to make  
+- Added EvaluatonSession.context: A string-keyed map of arbitrary values which provides a way to make
   session state such as current user and transaction details available to custom [ExprFunction] implementations
   and custom physical operator implementations.
 - Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
