@@ -19,7 +19,7 @@ internal enum class Format {
             if (value == null) {
                 return PARTIQL to PARTIQL
             }
-            if (value.matches(Regex(PATTERN))) {
+            if (!value.matches(Regex(PATTERN))) {
                 error("Format argument does not match $PATTERN")
             }
             val str = value.trim().uppercase()
