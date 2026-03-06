@@ -32,6 +32,23 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.6](https://TODO.com) - 2026-03-05
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
 - Fixed comparison operators returning wrong type when one argument is NULL/MISSING, breaking boolean expressions.
 
 ### Removed
