@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed comparison operators returning wrong type when one argument is NULL/MISSING, breaking boolean expressions.
 
 ### Removed
 
@@ -39,6 +40,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @XuechunHHH
 
 ## [1.3.5](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.5) - 2026-03-04
 
