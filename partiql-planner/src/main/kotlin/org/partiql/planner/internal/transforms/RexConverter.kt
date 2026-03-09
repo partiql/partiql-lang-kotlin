@@ -458,7 +458,14 @@ internal object RexConverter {
 
         override fun visitExprPath(node: ExprPath, context: Env): Rex {
             // Args
-            val root = visitExprCoerce(node.root, context)
+            // If the path contains wildcard steps ([*] or .*), don't apply scalar subquery coercion
+            // to the root — we need the collection to remain iterable.
+            val hasWildcardStep = node.steps.any { it is PathStep.AllElements || it is PathStep.AllFields }
+            val root = if (hasWildcardStep) {
+                node.root.accept(this, context)
+            } else {
+                visitExprCoerce(node.root, context)
+            }
 
             // Attempt to create qualified identifier
             val (newRoot, newSteps) = when (val op = root.op) {
