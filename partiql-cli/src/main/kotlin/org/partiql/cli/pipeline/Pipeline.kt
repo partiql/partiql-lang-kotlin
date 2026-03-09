@@ -22,6 +22,8 @@ internal class Pipeline private constructor(
     private val compiler: PartiQLCompiler,
     private val ctx: Context,
     private val mode: Mode,
+    private val debug: Boolean,
+    private val out: PrintStream
 ) {
 
     /**
@@ -49,7 +51,11 @@ internal class Pipeline private constructor(
         val result = listen(ctx.errorListener as AppPErrorListener) {
             planner.plan(statement, session, ctx)
         }
-        return result.plan
+        val plan = result.plan
+        if (debug) {
+            PlanPrinter.print(plan, out)
+        }
+        return plan
     }
 
     private fun execute(plan: Plan, session: Session): Datum {
@@ -79,21 +85,21 @@ internal class Pipeline private constructor(
 
     companion object {
 
-        fun default(out: PrintStream, config: Config): Pipeline {
-            return create(Mode.PERMISSIVE(), out, config)
+        fun default(out: PrintStream, config: Config, debug: Boolean = false): Pipeline {
+            return create(Mode.PERMISSIVE(), out, config, debug)
         }
 
-        fun strict(out: PrintStream, config: Config): Pipeline {
-            return create(Mode.STRICT(), out, config)
+        fun strict(out: PrintStream, config: Config, debug: Boolean = false): Pipeline {
+            return create(Mode.STRICT(), out, config, debug)
         }
 
-        private fun create(mode: Mode, out: PrintStream, config: Config): Pipeline {
+        private fun create(mode: Mode, out: PrintStream, config: Config, debug: Boolean = false): Pipeline {
             val listener = config.getErrorListener(out)
             val ctx = Context.of(listener)
             val parser = PartiQLParser.Builder().build()
             val planner = PartiQLPlanner.builder().build()
             val compiler = PartiQLCompiler.builder().build()
-            return Pipeline(parser, planner, compiler, ctx, mode)
+            return Pipeline(parser, planner, compiler, ctx, mode, debug, out)
         }
     }
 

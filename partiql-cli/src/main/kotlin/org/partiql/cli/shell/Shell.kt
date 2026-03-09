@@ -121,7 +121,7 @@ internal class Shell(
     private val debug: Boolean,
 ) {
 
-    private var state: State = State(false)
+    private var state: State = State(debug)
 
     private class State(
         @JvmField var debug: Boolean,
