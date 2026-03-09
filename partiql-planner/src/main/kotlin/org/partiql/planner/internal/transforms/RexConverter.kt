@@ -876,8 +876,17 @@ internal object RexConverter {
             val arg0 = visitExprCoerce(node.lhs, ctx)
             val arg1 = node.rhs.accept(this, ctx) // !! don't insert scalar subquery coercions
 
+            // Use SQL-aware IN function when RHS is a SQL SELECT (SelectList/SelectStar),
+            // because NormalizeSelect wraps each row as a struct. The sql_in_collection
+            // function extracts field values from the struct before comparison.
+            val fnName = if (isSqlSelect(node.rhs)) {
+                FunctionUtils.OP_SQL_IN_COLLECTION
+            } else {
+                FunctionUtils.OP_IN_COLLECTION
+            }
+
             // Call
-            var call = call(FunctionUtils.OP_IN_COLLECTION, arg0, arg1)
+            var call = call(fnName, arg0, arg1)
             // NOT?
             if (node.isNot) {
                 call = negate(call)
