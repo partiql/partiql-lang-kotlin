@@ -32,7 +32,6 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
-- Fixed the `--format` flag in partiql-cli, which was non-functional
 
 ### Removed
 
@@ -40,7 +39,18 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+
+## [1.3.7](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.7) - 2026-03-09
+
+### Fixed
+- Fixed the `--format` flag in partiql-cli, which was non-functional
+- Removed coercion of root expressions when applying wildcard path expressions
+- Fixed in-predicate behavior when RHS is a SQL-style SFW query
+g
+### Contributors
+Thank you to all who have contributed!
 - @jobarr-amzn
+- @johnedquinn
 
 ## [1.3.6](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.6) - 2026-03-05
 
