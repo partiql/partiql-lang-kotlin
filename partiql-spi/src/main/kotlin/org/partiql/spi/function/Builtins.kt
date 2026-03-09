@@ -110,6 +110,7 @@ internal object Builtins {
         FnGt,
         FnGte,
         FnInCollection,
+        FnSqlInCollection,
 
         Fn_IS_TRUE__ANY__BOOL,
         Fn_IS_FALSE__ANY__BOOL,

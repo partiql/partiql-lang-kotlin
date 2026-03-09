@@ -53,6 +53,7 @@ internal object FunctionUtils {
     val OP_BETWEEN: String = hide("between")
     val OP_OVERLAPS: String = hide("overlaps")
     val OP_IN_COLLECTION: String = hide("in_collection")
+    val OP_SQL_IN_COLLECTION: String = hide("sql_in_collection")
     val OP_IS_NULL: String = hide("is_null")
     val OP_IS_MISSING: String = hide("is_missing")
     val OP_IS_CHAR: String = hide("is_char")
