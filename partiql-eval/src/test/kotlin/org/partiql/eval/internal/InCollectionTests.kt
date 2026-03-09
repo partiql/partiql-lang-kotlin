@@ -4,6 +4,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
 /**
@@ -32,6 +33,16 @@ class InCollectionTests {
     @MethodSource("multiColumnSqlInCollectionCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun multiColumnSqlInCollectionTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("nullMissingInCollectionCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun nullMissingInCollectionTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("nestedQueryInCollectionCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun nestedQueryInCollectionTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("inCollectionWithGlobalsCases")
@@ -325,6 +336,161 @@ class InCollectionTests {
                 name = "Multi-column SQL IN — 3 columns, no match",
                 input = "(1, 2, 6) IN (SELECT t.a, t.b, t.c FROM <<{'a': 1, 'b': 2, 'c': 3}, {'a': 4, 'b': 5, 'c': 6}>> AS t);",
                 expected = Datum.bool(false)
+            ),
+        )
+
+        // =============================================================================
+        // Null/Missing values in IN collection — literal, SELECT VALUE, and SQL SELECT styles
+        // =============================================================================
+        @JvmStatic
+        fun nullMissingInCollectionCases() = listOf(
+            // --- Literal (non-SQL) style: NULL/MISSING on LHS ---
+            // Null LHS: every comparison is Unknown → result is null
+            SuccessTestCase(
+                name = "Null LHS — literal bag with values",
+                input = "NULL IN <<1, 2, 3>>;",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            // Missing LHS: treated as null, every comparison Unknown → null
+            SuccessTestCase(
+                name = "Missing LHS — literal bag with values",
+                input = "MISSING IN <<1, 2, 3>>;",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            // Per SQL spec: empty T → False, even if LHS is null
+            SuccessTestCase(
+                name = "Null LHS — empty literal bag",
+                input = "NULL IN <<>>;",
+                expected = Datum.bool(false)
+            ),
+            // --- Literal style: NULL/MISSING in RHS collection ---
+            SuccessTestCase(
+                name = "Match found despite null in literal bag",
+                input = "1 IN <<1, NULL, 3>>;",
+                expected = Datum.bool(true)
+            ),
+            // No match but null element in collection → Unknown
+            SuccessTestCase(
+                name = "No match with null in literal bag",
+                input = "2 IN <<1, NULL, 3>>;",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            // LHS is null → all comparisons Unknown → null
+            SuccessTestCase(
+                name = "Null LHS — null in literal bag (null=null is unknown)",
+                input = "NULL IN <<NULL>>;",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            // --- SELECT VALUE style: NULL/MISSING on LHS ---
+            SuccessTestCase(
+                name = "Null LHS — SELECT VALUE",
+                input = "NULL IN (SELECT VALUE t.a FROM <<{'a': 1}, {'a': 2}>> AS t);",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            SuccessTestCase(
+                name = "Missing LHS — SELECT VALUE",
+                input = "MISSING IN (SELECT VALUE t.a FROM <<{'a': 1}>> AS t);",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            // --- SELECT VALUE style: NULL in RHS ---
+            SuccessTestCase(
+                name = "Match found despite null in SELECT VALUE result",
+                input = "1 IN (SELECT VALUE t.a FROM <<{'a': 1}, {'a': NULL}>> AS t);",
+                expected = Datum.bool(true)
+            ),
+            // --- SQL SELECT style: NULL/MISSING on LHS ---
+            SuccessTestCase(
+                name = "Null LHS — SQL SELECT",
+                input = "NULL IN (SELECT t.a FROM <<{'a': 1}, {'a': 2}>> AS t);",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            SuccessTestCase(
+                name = "Missing LHS — SQL SELECT",
+                input = "MISSING IN (SELECT t.a FROM <<{'a': 1}>> AS t);",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            // --- SQL SELECT style: NULL values in subquery ---
+            SuccessTestCase(
+                name = "Match found despite null in SQL SELECT",
+                input = "1 IN (SELECT t.a FROM <<{'a': 1}, {'a': NULL}>> AS t);",
+                expected = Datum.bool(true)
+            ),
+            // No match but null field value → Unknown
+            SuccessTestCase(
+                name = "No match — only null in SQL SELECT",
+                input = "2 IN (SELECT t.a FROM <<{'a': NULL}>> AS t);",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            // --- Multi-column SQL IN with NULL on LHS — row comparison is Unknown ---
+            SuccessTestCase(
+                name = "Multi-column — null in first LHS position",
+                input = "(NULL, 2) IN (SELECT t.a, t.b FROM <<{'a': 1, 'b': 2}>> AS t);",
+                expected = Datum.nullValue(PType.bool())
+            ),
+            SuccessTestCase(
+                name = "Multi-column — null in second LHS position",
+                input = "(1, NULL) IN (SELECT t.a, t.b FROM <<{'a': 1, 'b': 2}>> AS t);",
+                expected = Datum.nullValue(PType.bool())
+            ),
+        )
+
+        // =============================================================================
+        // Nested queries with IN collection
+        // =============================================================================
+        @JvmStatic
+        fun nestedQueryInCollectionCases() = listOf(
+            // Nested SELECT * wrapping SQL SELECT — match
+            SuccessTestCase(
+                name = "Nested query — SELECT * wrapping SELECT, match",
+                input = "1 IN (SELECT * FROM (SELECT t.a FROM <<{'a': 1}>> AS t));",
+                expected = Datum.bool(true)
+            ),
+            // Nested SELECT * wrapping SQL SELECT — no match
+            SuccessTestCase(
+                name = "Nested query — SELECT * wrapping SELECT, no match",
+                input = "5 IN (SELECT * FROM (SELECT t.a FROM <<{'a': 1}>> AS t));",
+                expected = Datum.bool(false)
+            ),
+            // SELECT VALUE wrapping nested SQL SELECT — match
+            SuccessTestCase(
+                name = "Nested query — SELECT VALUE wrapping SQL SELECT, match",
+                input = "1 IN (SELECT VALUE s.a FROM (SELECT t.a FROM <<{'a': 1}, {'a': 2}>> AS t) AS s);",
+                expected = Datum.bool(true)
+            ),
+            // SELECT VALUE wrapping nested SQL SELECT — no match
+            SuccessTestCase(
+                name = "Nested query — SELECT VALUE wrapping SQL SELECT, no match",
+                input = "5 IN (SELECT VALUE s.a FROM (SELECT t.a FROM <<{'a': 1}, {'a': 2}>> AS t) AS s);",
+                expected = Datum.bool(false)
+            ),
+            // Nested query with filter on outer — match
+            SuccessTestCase(
+                name = "Nested query — outer filter, match",
+                input = "1 IN (SELECT * FROM (SELECT t.a FROM <<{'a': 1}, {'a': 2}>> AS t) WHERE a = 1);",
+                expected = Datum.bool(true)
+            ),
+            // Nested query with filter on outer — no match (empty after filter)
+            SuccessTestCase(
+                name = "Nested query — outer filter, no match",
+                input = "1 IN (SELECT * FROM (SELECT t.a FROM <<{'a': 1}, {'a': 2}>> AS t) WHERE a > 10);",
+                expected = Datum.bool(false)
+            ),
+            // Double nesting
+            SuccessTestCase(
+                name = "Nested query — double nesting, match",
+                input = "1 IN (SELECT * FROM (SELECT * FROM (SELECT t.a FROM <<{'a': 1}>> AS t)));",
+                expected = Datum.bool(true)
+            ),
+            // NOT IN with nested query
+            SuccessTestCase(
+                name = "Nested query — NOT IN, value present",
+                input = "1 NOT IN (SELECT * FROM (SELECT t.a FROM <<{'a': 1}, {'a': 2}>> AS t));",
+                expected = Datum.bool(false)
+            ),
+            SuccessTestCase(
+                name = "Nested query — NOT IN, value absent",
+                input = "5 NOT IN (SELECT * FROM (SELECT t.a FROM <<{'a': 1}, {'a': 2}>> AS t));",
+                expected = Datum.bool(true)
             ),
         )
 
