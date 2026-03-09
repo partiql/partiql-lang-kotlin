@@ -196,8 +196,8 @@ internal class MainCommand : Runnable {
     private fun pipeline(): Pipeline {
         val config = getPipelineConfig()
         return when (strict) {
-            true -> Pipeline.strict(System.out, config)
-            else -> Pipeline.default(System.out, config)
+            true -> Pipeline.strict(System.out, config, debug)
+            else -> Pipeline.default(System.out, config, debug)
         }
     }
 
