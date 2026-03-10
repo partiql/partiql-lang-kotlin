@@ -15,6 +15,7 @@
 
 package org.partiql.cli
 
+import org.partiql.cli.io.DatumIonReaderBuilder
 import org.partiql.cli.io.DatumWriterTextPretty
 import org.partiql.cli.io.Format
 import org.partiql.cli.pipeline.ErrorMessageFormatter
@@ -26,7 +27,6 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.Datum
-import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.InvalidOperationException
 import picocli.CommandLine
 import java.io.File
@@ -83,6 +83,7 @@ internal class MainCommand : Runnable {
     @CommandLine.Option(
         names = ["-d", "--dir"],
         description = ["Path to the database directory"],
+        hidden = true
     )
     var dir: File? = null
 
@@ -107,11 +108,13 @@ internal class MainCommand : Runnable {
 
     @CommandLine.Option(
         names = ["-f", "--format"],
-        description = ["The data format, using the form <input>[:<output>]."],
+        description = ["The data format, using the form <input>[:<output>]. Supported input: partiql, ion. Supported output: partiql."],
         paramLabel = "<input[:output]>",
         converter = [Format.Converter::class],
+        defaultValue = "partiql",
+        showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
     )
-    lateinit var format: Pair<Format, Format>
+    var format: Pair<Format, Format> = Format.PARTIQL to Format.PARTIQL
 
     @CommandLine.Option(
         names = ["-i", "--include"],
@@ -145,7 +148,7 @@ internal class MainCommand : Runnable {
         help = true,
         fallbackValue = "ALL",
     )
-    lateinit var warningsAsErrors: Array<ErrorCodeString>
+    var warningsAsErrors: Array<ErrorCodeString>? = null
 
     @CommandLine.Parameters(
         index = "0",
@@ -160,13 +163,38 @@ internal class MainCommand : Runnable {
         index = "1..*",
         arity = "0..*",
         description = ["An optional list of files to execute the statement against."],
+        hidden = true
     )
     var files: Array<File>? = null
+
+    /**
+     * Print a debug message to stderr, prefixed with \[DEBUG].
+     */
+    private fun debug(msg: String) {
+        if (debug) System.err.println("[DEBUG] $msg")
+    }
 
     /**
      * Run the CLI or Shell (default).
      */
     override fun run() {
+        if (debug) {
+            System.err.println("========================================")
+            System.err.println("  PartiQL DEBUG MODE")
+            System.err.println("========================================")
+            debug("--dir         = $dir")
+            debug("--env         = $env")
+            debug("--strict      = $strict")
+            debug("--debug       = $debug")
+            debug("--format      = ${format.first}:${format.second}")
+            debug("--include     = $include")
+            debug("--max-errors  = $maxErrors")
+            debug("-w            = $inhibitWarnings")
+            debug("-Werror       = ${warningsAsErrors?.joinToString() ?: "[]"}")
+            debug("program       = ${program?.first ?: program?.second?.path ?: "null"}")
+            debug("files         = ${files?.joinToString { it.path } ?: "null"}")
+            System.err.println("========================================")
+        }
         when (val statement = statement()) {
             null -> shell()
             else -> run(statement)
@@ -174,8 +202,7 @@ internal class MainCommand : Runnable {
     }
 
     private fun getPipelineConfig(): Pipeline.Config {
-        warningsAsErrors = if (this::warningsAsErrors.isInitialized) warningsAsErrors else emptyArray()
-        return Pipeline.Config(maxErrors!!, inhibitWarnings, warningsAsErrors)
+        return Pipeline.Config(maxErrors!!, inhibitWarnings, warningsAsErrors ?: emptyArray())
     }
 
     /**
@@ -196,8 +223,8 @@ internal class MainCommand : Runnable {
     private fun pipeline(): Pipeline {
         val config = getPipelineConfig()
         return when (strict) {
-            true -> Pipeline.strict(System.out, config)
-            else -> Pipeline.default(System.out, config)
+            true -> Pipeline.strict(System.out, config, debug)
+            else -> Pipeline.default(System.out, config, debug)
         }
     }
 
@@ -212,8 +239,6 @@ internal class MainCommand : Runnable {
             return
         }
 
-        // TODO add format support
-        checkFormat(format)
         try {
             val writer = DatumWriterTextPretty(System.out)
             writer.write(result)
@@ -245,35 +270,36 @@ internal class MainCommand : Runnable {
             // return mapOf("default" to connector)
         }
 
+        checkFormat(format)
         if (env != null) {
-            return listOf(loadPartiQL(env!!))
+            return when (format.first) {
+                Format.PARTIQL -> listOf(loadEnvPartiQL(env!!))
+                Format.ION -> listOf(loadEnvIon(env!!))
+                else -> error("Unsupported input format: ${format.first}")
+            }
         }
 
-        // Derive a `default catalog from stdin (or file streams)
-        return listOf(loadIon())
+        // Derive a default catalog from stdin (or file streams)
+        return when (format.first) {
+            Format.PARTIQL -> listOf(loadPartiQLData())
+            Format.ION -> listOf(loadIon())
+            else -> error("Unsupported input format: ${format.first}")
+        }
     }
 
-    private fun loadPartiQL(env: File): Catalog {
+    /**
+     * Load an environment file as PartiQL data.
+     *
+     * The environment file is expected to be a PartiQL struct literal where each key-value pair
+     * corresponds to a new table in the default catalog.
+     */
+    private fun loadEnvPartiQL(env: File): Catalog {
         try {
             val stream = env.inputStream()
             val pipeline = pipeline()
             val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
-            // The PartiQL environment files are formatted as PartiQL literal and expected to be a single struct
-            // where each key-value pair corresponds to a new table in the default catalog.
             val datum = pipeline.execute(data, Session.empty())
-            return Catalog.builder()
-                .name("default").apply {
-                    datum.fields.forEach { it ->
-                        define(
-                            Table.standard(
-                                name = Name.of(it.name),
-                                schema = it.value.type,
-                                datum = it.value
-                            )
-                        )
-                    }
-                }
-                .build()
+            return envCatalog(datum)
         } catch (e: FileNotFoundException) {
             error("The environment file does not exist: ${env.path}")
         } catch (e: IOException) {
@@ -287,10 +313,90 @@ internal class MainCommand : Runnable {
         }
     }
 
-    private fun loadIon(): Catalog {
+    /**
+     * Load an environment file as Ion data (with PartiQL annotation support).
+     *
+     * The environment file is expected to be an Ion struct where each key-value pair
+     * corresponds to a new table in the default catalog.
+     */
+    private fun loadEnvIon(env: File): Catalog {
+        try {
+            val stream = env.inputStream()
+            val reader = DatumIonReaderBuilder.standard().build(stream)
+            val datum = reader.read()
+            return envCatalog(datum)
+        } catch (e: FileNotFoundException) {
+            error("The environment file does not exist: ${env.path}")
+        } catch (e: IOException) {
+            error("Failed to read the environment file: ${e.message}")
+        } catch (e: InvalidOperationException) {
+            error("The environment file must contain a struct with table definitions")
+        } catch (e: Exception) {
+            error("Unexpected error occurs when loading the environment file: ${e.message}")
+        }
+    }
+
+    /**
+     * Build a catalog from an environment datum (expected to be a struct).
+     */
+    private fun envCatalog(datum: Datum): Catalog {
+        val catalogName = "default"
+        return Catalog.builder()
+            .name(catalogName).apply {
+                datum.fields.forEach {
+                    define(
+                        Table.standard(
+                            name = Name.of(it.name),
+                            schema = it.value.type,
+                            datum = it.value
+                        )
+                    )
+                    debug("Loaded table '${it.name}' under catalog '$catalogName'")
+                }
+            }
+            .build().also {
+                debug("Finished loading catalog '$catalogName'")
+            }
+    }
+
+    private fun loadPartiQLData(): Catalog {
+        val catalogName = "default"
         val stream = stream()
         val datum = if (stream != null) {
-            val reader = DatumReader.ion(stream)
+            try {
+                val pipeline = pipeline()
+                val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
+                pipeline.execute(data, Session.empty())
+            } catch (e: Pipeline.PipelineException) {
+                error("Failed to parse input as PartiQL: ${e.message}")
+            }
+        } else {
+            Datum.nullValue()
+        }
+
+        return Catalog.builder()
+            .name(catalogName)
+            .define(
+                Table.standard(
+                    name = Name.of("stdin"),
+                    schema = datum.type,
+                    datum = datum,
+                )
+            )
+            .build().also {
+                debug("Loaded table 'stdin' under catalog '$catalogName'")
+                debug("Finished loading catalog '$catalogName'")
+            }
+    }
+
+    /**
+     * Load Ion data from stdin/files (with PartiQL annotation support).
+     */
+    private fun loadIon(): Catalog {
+        val catalogName = "default"
+        val stream = stream()
+        val datum = if (stream != null) {
+            val reader = DatumIonReaderBuilder.standard().build(stream)
             val values = reader.readAll()
             when (values.size) {
                 0 -> Datum.nullValue()
@@ -301,8 +407,8 @@ internal class MainCommand : Runnable {
             Datum.nullValue()
         }
 
-        val catalog = Catalog.builder()
-            .name("default")
+        return Catalog.builder()
+            .name(catalogName)
             .define(
                 Table.standard(
                     name = Name.of("stdin"),
@@ -310,21 +416,10 @@ internal class MainCommand : Runnable {
                     datum = datum,
                 )
             )
-            .build()
-        return catalog
-    }
-
-    /**
-     * Consider making "readAll" a static method of DatumReader.
-     *
-     */
-    private fun DatumReader.readAll(): List<Datum> {
-        val values = mutableListOf<Datum>()
-        val next = next()
-        while (next != null) {
-            values.add(next)
-        }
-        return values
+            .build().also {
+                debug("Loaded table 'stdin' under catalog '$catalogName'")
+                debug("Finished loading catalog '$catalogName'")
+            }
     }
 
     /**
@@ -373,15 +468,14 @@ internal class MainCommand : Runnable {
         }
     }
 
-    /**
-     * TODO support additional input/output formats.
-     */
     private fun checkFormat(format: Pair<Format, Format>) {
-        if (format.first != Format.ION) {
-            error("Unsupported input format: ${format.first}")
+        val supportedInput = setOf(Format.PARTIQL, Format.ION)
+        val supportedOutput = setOf(Format.PARTIQL)
+        if (format.first !in supportedInput) {
+            error("Unsupported input format: ${format.first}. Supported: ${supportedInput.joinToString()}")
         }
-        if (format.second != Format.ION) {
-            error("Unsupported output format: ${format.second}")
+        if (format.second !in supportedOutput) {
+            error("Unsupported output format: ${format.second}. Supported: ${supportedOutput.joinToString()}")
         }
     }
 }
