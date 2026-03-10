@@ -148,7 +148,7 @@ internal class MainCommand : Runnable {
         help = true,
         fallbackValue = "ALL",
     )
-    lateinit var warningsAsErrors: Array<ErrorCodeString>
+    var warningsAsErrors: Array<ErrorCodeString>? = null
 
     @CommandLine.Parameters(
         index = "0",
@@ -168,7 +168,7 @@ internal class MainCommand : Runnable {
     var files: Array<File>? = null
 
     /**
-     * Print a debug message to stderr, prefixed with [DEBUG].
+     * Print a debug message to stderr, prefixed with \[DEBUG].
      */
     private fun debug(msg: String) {
         if (debug) System.err.println("[DEBUG] $msg")
@@ -190,7 +190,7 @@ internal class MainCommand : Runnable {
             debug("--include     = $include")
             debug("--max-errors  = $maxErrors")
             debug("-w            = $inhibitWarnings")
-            debug("-Werror       = ${if (this::warningsAsErrors.isInitialized) warningsAsErrors.joinToString() else "[]"}")
+            debug("-Werror       = ${warningsAsErrors?.joinToString() ?: "[]"}")
             debug("program       = ${program?.first ?: program?.second?.path ?: "null"}")
             debug("files         = ${files?.joinToString { it.path } ?: "null"}")
             System.err.println("========================================")
@@ -202,8 +202,7 @@ internal class MainCommand : Runnable {
     }
 
     private fun getPipelineConfig(): Pipeline.Config {
-        warningsAsErrors = if (this::warningsAsErrors.isInitialized) warningsAsErrors else emptyArray()
-        return Pipeline.Config(maxErrors!!, inhibitWarnings, warningsAsErrors)
+        return Pipeline.Config(maxErrors!!, inhibitWarnings, warningsAsErrors ?: emptyArray())
     }
 
     /**

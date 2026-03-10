@@ -53,7 +53,7 @@ internal class Pipeline private constructor(
         }
         val plan = result.plan
         if (debug) {
-            PlanPrinter.print(plan, out)
+            PlanPrinter.print(plan, System.err)
         }
         return plan
     }

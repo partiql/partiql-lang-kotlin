@@ -26,6 +26,9 @@ import java.time.ZoneOffset
  * For example:
  * In `IonForPartiQL` mode: if the input is $time::$day::$time{...}
  * The reader will attempt to create a time value
+ *
+ * NOTE: This is copied from test/partiql-test-runner. This can and should be consolidated and
+ * vended to customers via an official API. Maybe via [Datum.ion] or a dedicated API if functionality differs.
  */
 class DatumIonReader(
     private val ionReader: IonReader,
