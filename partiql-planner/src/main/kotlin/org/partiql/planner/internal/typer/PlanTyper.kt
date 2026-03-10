@@ -388,18 +388,106 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
-            val size = max(lhs.type.schema.size, rhs.type.schema.size)
-            val schema = List(size) {
-                val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", CompilerType(PType.dynamic(), isMissingValue = true))
-                val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", CompilerType(PType.dynamic(), isMissingValue = true))
-                val bindingName = when (lhsBinding.name == rhsBinding.name) {
-                    true -> lhsBinding.name
-                    false -> "_$it"
+
+            return computeUnionSchema(node, lhs, rhs)
+        }
+
+        /**
+         * For UNION, compute the common supertype for each column pair and apply casts
+         * to the lhs/rhs operands where needed.
+         */
+        private fun computeUnionSchema(node: Rel.Op.Union, lhs: Rel, rhs: Rel): Rel {
+            if (!node.isOuter) {
+                val size = max(lhs.type.schema.size, rhs.type.schema.size)
+                val commonTypes = mutableListOf<CompilerType>()
+                val bindingNames = mutableListOf<String>()
+                for (i in 0 until size) {
+                    val lhsBinding = lhs.type.schema.getOrNull(i)
+                    val rhsBinding = rhs.type.schema.getOrNull(i)
+                    val lhsType = lhsBinding?.type ?: PType.dynamic()
+                    val rhsType = rhsBinding?.type ?: PType.dynamic()
+                    val superType = DynamicTyper.getCommonSuperType(lhsType, rhsType)
+                        ?: PType.dynamic()
+                    commonTypes.add(superType.toCType())
+                    bindingNames.add(
+                        when {
+                            lhsBinding == null || rhsBinding == null -> "_$i"
+                            lhsBinding.name == rhsBinding.name -> lhsBinding.name
+                            else -> "_$i"
+                        }
+                    )
                 }
-                Rel.Binding(bindingName, CompilerType(anyOf(lhsBinding.type, rhsBinding.type)!!))
+                val newLhs = applyCoercionsToRel(lhs, commonTypes)
+                val newRhs = applyCoercionsToRel(rhs, commonTypes)
+                val schema = List(size) { i ->
+                    Rel.Binding(bindingNames[i], commonTypes[i])
+                }
+                val type = Rel.Type(schema, props = emptySet())
+                return Rel(type, node.copy(lhs = newLhs, rhs = newRhs))
+            } else {
+                val size = max(lhs.type.schema.size, rhs.type.schema.size)
+                val schema = List(size) {
+                    val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding(
+                        "_$it",
+                        CompilerType(PType.dynamic(), isMissingValue = true)
+                    )
+                    val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding(
+                        "_$it",
+                        CompilerType(PType.dynamic(), isMissingValue = true)
+                    )
+                    val bindingName = when (lhsBinding.name == rhsBinding.name) {
+                        true -> lhsBinding.name
+                        false -> "_$it"
+                    }
+                    Rel.Binding(bindingName, CompilerType(anyOf(lhsBinding.type, rhsBinding.type)!!))
+                }
+                val type = Rel.Type(schema, props = emptySet())
+                return Rel(type, node.copy(lhs = lhs, rhs = rhs))
             }
-            val type = Rel.Type(schema, props = emptySet())
-            return Rel(type, node.copy(lhs = lhs, rhs = rhs))
+        }
+
+        /**
+         * Applies casts to each column of a [Rel] to match the [targetTypes].
+         * If the operand is a [Rel.Op.Project] or [Rel.Op.Scan], wraps each Rex with a CAST when the type differs.
+         */
+        private fun applyCoercionsToRel(rel: Rel, targetTypes: List<CompilerType>): Rel {
+            val op = rel.op
+            return when (op) {
+                is Rel.Op.Project -> {
+                    val newProjections = op.projections.mapIndexed { i, rex ->
+                        coerceRex(rex, targetTypes.getOrNull(i))
+                    }
+                    val newOp = op.copy(projections = newProjections)
+                    val schema = newProjections.mapIndexed { i, rex ->
+                        val binding = rel.type.schema.getOrNull(i)
+                        Rel.Binding(binding?.name ?: "_$i", rex.type)
+                    }
+                    Rel(Rel.Type(schema, rel.type.props), newOp)
+                }
+                is Rel.Op.Scan -> {
+                    // Wrap scan in a project with casts
+                    val projections = rel.type.schema.mapIndexed { i, binding ->
+                        val varRef = Rex(binding.type, Rex.Op.Var.Local(0, i))
+                        coerceRex(varRef, targetTypes.getOrNull(i))
+                    }
+                    val projectOp = relOpProject(rel, projections)
+                    val schema = projections.mapIndexed { i, rex ->
+                        Rel.Binding(rel.type.schema.getOrNull(i)?.name ?: "_$i", rex.type)
+                    }
+                    Rel(Rel.Type(schema, rel.type.props), projectOp)
+                }
+                else -> rel
+            }
+        }
+
+        /**
+         * Wraps a [Rex] with a CAST to [targetType] if the types differ. Returns the original [Rex] if
+         * no coercion is needed or if the cast cannot be resolved.
+         */
+        private fun coerceRex(rex: Rex, targetType: CompilerType?): Rex {
+            if (targetType == null || rex.type == targetType) return rex
+            val cast = env.resolveCast(rex, targetType) ?: return rex
+            return Rex(targetType, cast)
         }
 
         /**
@@ -408,13 +496,10 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          * @param rhs should be typed already
          */
         private fun setOpSchemaTypesMatch(lhs: Rel, rhs: Rel): Boolean {
-            // TODO: [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md)
-            //  states that the types must be "comparable". The below code ONLY makes sure that types need to be
-            //  the same. In the future, we need to add support for checking comparable types.
             for (i in 0..lhs.type.schema.lastIndex) {
                 val lhsBindingType = lhs.type.schema[i].type
                 val rhsBindingType = rhs.type.schema[i].type
-                if (lhsBindingType != rhsBindingType) {
+                if (!DynamicTyper.isCompatible(lhsBindingType, rhsBindingType)) {
                     return false
                 }
             }
@@ -431,11 +516,17 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         private fun createRelErrForSetOpMismatchSizes(): Rel {
-            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same number of bindings."))
+            val errorMsg = "LHS and RHS of SET OP do not have the same number of columns."
+            val cause = IllegalStateException(errorMsg)
+            _listener.report(PErrors.internalError(cause))
+            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err(errorMsg))
         }
 
         private fun createRelErrForSetOpMismatchTypes(): Rel {
-            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same type."))
+            val errorMsg = "LHS and RHS of SET OP do not have the same type."
+            val cause = IllegalStateException(errorMsg)
+            _listener.report(PErrors.internalError(cause))
+            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err(errorMsg))
         }
 
         override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?): Rel {

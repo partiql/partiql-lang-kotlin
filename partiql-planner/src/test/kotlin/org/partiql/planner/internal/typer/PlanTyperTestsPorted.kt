@@ -2861,7 +2861,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-44"),
                 catalog = "pql",
-                expected = PType.decimal(38, 0)
+                expected = PType.decimal(15, 5)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-45"),
@@ -2984,22 +2984,22 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-02"),
                 catalog = "pql",
-                expected = PType.decimal(38, 0)
+                expected = PType.decimal(12, 2)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-03"),
                 catalog = "pql",
-                expected = PType.decimal(38, 0)
+                expected = PType.decimal(12, 2)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-04"),
                 catalog = "pql",
-                expected = PType.decimal(38, 0)
+                expected = PType.decimal(12, 2)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-05"),
                 catalog = "pql",
-                expected = PType.decimal(38, 0)
+                expected = PType.decimal(12, 2)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-06"),
