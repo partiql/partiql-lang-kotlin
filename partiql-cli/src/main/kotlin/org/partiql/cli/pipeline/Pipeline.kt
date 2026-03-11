@@ -5,6 +5,7 @@ import org.partiql.cli.ErrorCodeString
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Action
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Context
@@ -13,6 +14,7 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.io.PrintStream
 
@@ -35,6 +37,18 @@ internal class Pipeline private constructor(
         val ast = parse(statement)
         val plan = plan(ast, session)
         return execute(plan, session)
+    }
+
+    /**
+     * Parses, plans, and executes the statement, returning both the result datum and the planner-inferred type.
+     */
+    @Throws(PipelineException::class)
+    fun executeWithType(statement: String, session: Session): Pair<Datum, PType> {
+        val ast = parse(statement)
+        val plan = plan(ast, session)
+        val datum = execute(plan, session)
+        val type = (plan.action as Action.Query).rex.type.pType
+        return datum to type
     }
 
     private fun parse(source: String): Statement {
