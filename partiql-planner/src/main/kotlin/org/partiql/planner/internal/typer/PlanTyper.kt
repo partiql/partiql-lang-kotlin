@@ -487,17 +487,17 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 }
                 is Rel.Op.Scan -> {
                     // Wrap scan in a project with casts
-                    val projections = rel.type.schema.mapIndexed { i, binding ->
-                        val varRef = Rex(binding.type, Rex.Op.Var.Local(0, i))
-                        coerceRex(varRef, targetTypes.getOrNull(i))
-                    }
-                    val projectOp = relOpProject(rel, projections)
-                    val schema = projections.mapIndexed { i, rex ->
-                        Rel.Binding(rel.type.schema.getOrNull(i)?.name ?: "_$i", rex.type)
-                    }
-                    Rel(Rel.Type(schema, rel.type.props), projectOp)
+                    val newRexScan = coerceRex(op.rex, targetTypes.getOrNull(0))
+                    val scanOp = relOpScan(newRexScan)
+                    val schema = listOf(
+                        Rel.Binding(rel.type.schema.getOrNull(0)?.name ?: "_$0", newRexScan.type)
+                    )
+                    Rel(Rel.Type(schema, rel.type.props), scanOp)
                 }
-                else -> rel
+                else -> {
+                    _listener.report(PErrors.experimental("Coercion not implemented for ${rel.javaClass.simpleName}"))
+                    rel
+                }
             }
         }
 
