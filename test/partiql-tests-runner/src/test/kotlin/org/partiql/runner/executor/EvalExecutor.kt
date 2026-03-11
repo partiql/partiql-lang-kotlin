@@ -136,7 +136,7 @@ class EvalExecutor(
             }
             return Catalog.builder()
                 .name("default")
-                .apply { load(env) }
+                .apply { load(env, map) }
                 .build()
         }
 
@@ -164,13 +164,13 @@ class EvalExecutor(
          *
          * Test data is "PartiQL encoded as Ion" hence we need the DatumIonReader.
          */
-        private fun Catalog.Builder.load(env: StructElement) {
+        private fun Catalog.Builder.load(env: StructElement, schemas: Map<String, PType>) {
             for (f in env.fields) {
                 val name = Name.of(f.name)
                 val datum = DatumIonReaderBuilder.standard().build(f.value).read()
                 val table = Table.standard(
                     name = name,
-                    schema = PType.dynamic(),
+                    schema = schemas[f.name] ?: PType.dynamic(),
                     datum = datum,
                 )
                 define(table)

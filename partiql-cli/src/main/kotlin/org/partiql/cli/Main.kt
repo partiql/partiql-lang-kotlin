@@ -26,6 +26,7 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PRuntimeException
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.InvalidOperationException
 import picocli.CommandLine
@@ -298,8 +299,8 @@ internal class MainCommand : Runnable {
             val stream = env.inputStream()
             val pipeline = pipeline()
             val data = stream.bufferedReader(charset("UTF-8")).use { it.readText() }
-            val datum = pipeline.execute(data, Session.empty())
-            return envCatalog(datum)
+            val (datum, type) = pipeline.executeWithType(data, Session.empty())
+            return envCatalog(datum, type)
         } catch (e: FileNotFoundException) {
             error("The environment file does not exist: ${env.path}")
         } catch (e: IOException) {
@@ -339,15 +340,20 @@ internal class MainCommand : Runnable {
     /**
      * Build a catalog from an environment datum (expected to be a struct).
      */
-    private fun envCatalog(datum: Datum): Catalog {
+    private fun envCatalog(datum: Datum, inferredType: PType? = null): Catalog {
         val catalogName = "default"
+        val schemas = if (inferredType != null && inferredType.code() == PType.ROW) {
+            inferredType.fields.associate { it.name to it.type }
+        } else {
+            emptyMap()
+        }
         return Catalog.builder()
             .name(catalogName).apply {
                 datum.fields.forEach {
                     define(
                         Table.standard(
                             name = Name.of(it.name),
-                            schema = it.value.type,
+                            schema = schemas[it.name] ?: it.value.type,
                             datum = it.value
                         )
                     )
