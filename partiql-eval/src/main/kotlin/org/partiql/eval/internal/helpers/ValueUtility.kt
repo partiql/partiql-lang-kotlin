@@ -49,6 +49,9 @@ internal object ValueUtility {
      * Specifically checks for struct, or coerce rows to structs. Same functionality as [check].
      */
     fun Datum.checkStruct(): Datum {
+        if (this.isNull || this.isMissing) {
+            return this
+        }
         if (this.type.code() == PType.VARIANT) {
             return this.lower().checkStruct()
         }
