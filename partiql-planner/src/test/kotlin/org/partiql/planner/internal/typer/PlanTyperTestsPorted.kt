@@ -3585,6 +3585,236 @@ internal class PlanTyperTestsPorted {
         )
 
         @JvmStatic
+        fun unionSchemaCases() = listOf<TestCase>(
+            // Same types
+            SuccessTestCase(
+                name = "UNION INT and INT",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': 2}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+            ),
+            SuccessTestCase(
+                name = "UNION STRING and STRING",
+                query = "SELECT a FROM <<{'a': 'x'}>> UNION SELECT a FROM <<{'a': 'y'}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.string())))
+            ),
+            SuccessTestCase(
+                name = "UNION BOOL and BOOL",
+                query = "SELECT a FROM <<{'a': TRUE}>> UNION SELECT a FROM <<{'a': FALSE}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.bool())))
+            ),
+            // Compatible numeric coercions
+            SuccessTestCase(
+                name = "UNION INT and BIGINT",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': CAST(1 AS BIGINT)}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.bigint())))
+            ),
+            SuccessTestCase(
+                name = "UNION INT and DECIMAL",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': 1.0}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.decimal(11, 1))))
+            ),
+            SuccessTestCase(
+                name = "UNION INT and DOUBLE",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': 1.0e0}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.doublePrecision())))
+            ),
+            // Compatible temporal coercions
+            SuccessTestCase(
+                name = "UNION DATE and TIMESTAMP",
+                query = "SELECT a FROM <<{'a': DATE '2024-01-01'}>> UNION SELECT a FROM <<{'a': TIMESTAMP '2024-01-01 00:00:00'}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.timestamp(6))))
+            ),
+            SuccessTestCase(
+                name = "UNION TIMESTAMP and TIMESTAMPZ",
+                query = "SELECT a FROM <<{'a': TIMESTAMP '2024-01-01 00:00:00'}>> UNION SELECT a FROM <<{'a': TIMESTAMP WITH TIME ZONE '2024-01-01 00:00:00+00:00'}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.timestampz(6))))
+            ),
+            // Incompatible types — error
+            ErrorTestCase(
+                name = "UNION INT and STRING",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': 'x'}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same type."))
+                )
+            ),
+            ErrorTestCase(
+                name = "UNION INT and BOOL",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': TRUE}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same type."))
+                )
+            ),
+            ErrorTestCase(
+                name = "UNION INT and DATE",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': DATE '2024-01-01'}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same type."))
+                )
+            ),
+            // Multi-column
+            SuccessTestCase(
+                name = "UNION multi-column same types",
+                query = "SELECT a, b FROM <<{'a': 1, 'b': 'x'}>> UNION SELECT a, b FROM <<{'a': 2, 'b': 'y'}>>",
+                expected = PType.bag(
+                    PType.row(
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("b", PType.string())
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "UNION multi-column with coercion",
+                query = "SELECT a, b FROM <<{'a': 1, 'b': 1.0}>> UNION SELECT a, b FROM <<{'a': CAST(1 AS BIGINT), 'b': 2.0}>>",
+                expected = PType.bag(
+                    PType.row(
+                        PTypeField.of("a", PType.bigint()),
+                        PTypeField.of("b", PType.decimal(2, 1))
+                    )
+                )
+            ),
+            // Schema size mismatch
+            ErrorTestCase(
+                name = "UNION column count mismatch",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a, b FROM <<{'a': 1, 'b': 2}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same number of columns."))
+                )
+            ),
+            // Dynamic type — error
+            ErrorTestCase(
+                name = "UNION INT and DYNAMIC",
+                query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': 1}, {'a': 'hello'}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same type."))
+                )
+            ),
+        )
+
+        @JvmStatic
+        fun intersectSchemaCases() = listOf<TestCase>(
+            // Same types
+            SuccessTestCase(
+                name = "INTERSECT INT and INT",
+                query = "SELECT a FROM <<{'a': 1}>> INTERSECT SELECT a FROM <<{'a': 2}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+            ),
+            // Compatible numeric coercions — uses LHS schema
+            SuccessTestCase(
+                name = "INTERSECT INT and BIGINT",
+                query = "SELECT a FROM <<{'a': 1}>> INTERSECT SELECT a FROM <<{'a': CAST(1 AS BIGINT)}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+            ),
+            SuccessTestCase(
+                name = "INTERSECT INT and DECIMAL",
+                query = "SELECT a FROM <<{'a': 1}>> INTERSECT SELECT a FROM <<{'a': 1.0}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+            ),
+            // Compatible temporal coercions — uses LHS schema
+            SuccessTestCase(
+                name = "INTERSECT DATE and TIMESTAMP",
+                query = "SELECT a FROM <<{'a': DATE '2024-01-01'}>> INTERSECT SELECT a FROM <<{'a': TIMESTAMP '2024-01-01 00:00:00'}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.date())))
+            ),
+            // Incompatible types — error
+            ErrorTestCase(
+                name = "INTERSECT INT and STRING",
+                query = "SELECT a FROM <<{'a': 1}>> INTERSECT SELECT a FROM <<{'a': 'x'}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same type."))
+                )
+            ),
+            // Multi-column — uses LHS schema
+            SuccessTestCase(
+                name = "INTERSECT multi-column with coercion",
+                query = "SELECT a, b FROM <<{'a': 1, 'b': 1.0}>> INTERSECT SELECT a, b FROM <<{'a': CAST(1 AS BIGINT), 'b': 2.0}>>",
+                expected = PType.bag(
+                    PType.row(
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("b", PType.decimal(2, 1))
+                    )
+                )
+            ),
+            // Schema size mismatch
+            ErrorTestCase(
+                name = "INTERSECT column count mismatch",
+                query = "SELECT a FROM <<{'a': 1}>> INTERSECT SELECT a, b FROM <<{'a': 1, 'b': 2}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same number of columns."))
+                )
+            ),
+            // Dynamic type — error
+            ErrorTestCase(
+                name = "INTERSECT INT and DYNAMIC",
+                query = "SELECT a FROM <<{'a': 1}>> INTERSECT SELECT a FROM <<{'a': 1}, {'a': 'hello'}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same type."))
+                )
+            ),
+        )
+
+        @JvmStatic
+        fun exceptSchemaCases() = listOf<TestCase>(
+            // Same types
+            SuccessTestCase(
+                name = "EXCEPT INT and INT",
+                query = "SELECT a FROM <<{'a': 1}>> EXCEPT SELECT a FROM <<{'a': 2}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+            ),
+            // Compatible numeric coercions — uses LHS schema
+            SuccessTestCase(
+                name = "EXCEPT INT and BIGINT",
+                query = "SELECT a FROM <<{'a': 1}>> EXCEPT SELECT a FROM <<{'a': CAST(1 AS BIGINT)}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+            ),
+            SuccessTestCase(
+                name = "EXCEPT INT and DECIMAL",
+                query = "SELECT a FROM <<{'a': 1}>> EXCEPT SELECT a FROM <<{'a': 1.0}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+            ),
+            // Compatible temporal coercions — uses LHS schema
+            SuccessTestCase(
+                name = "EXCEPT DATE and TIMESTAMP",
+                query = "SELECT a FROM <<{'a': DATE '2024-01-01'}>> EXCEPT SELECT a FROM <<{'a': TIMESTAMP '2024-01-01 00:00:00'}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.date())))
+            ),
+            // Incompatible types — error
+            ErrorTestCase(
+                name = "EXCEPT INT and STRING",
+                query = "SELECT a FROM <<{'a': 1}>> EXCEPT SELECT a FROM <<{'a': 'x'}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same type."))
+                )
+            ),
+            // Multi-column — uses LHS schema
+            SuccessTestCase(
+                name = "EXCEPT multi-column with coercion",
+                query = "SELECT a, b FROM <<{'a': 1, 'b': 1.0}>> EXCEPT SELECT a, b FROM <<{'a': CAST(1 AS BIGINT), 'b': 2.0}>>",
+                expected = PType.bag(
+                    PType.row(
+                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("b", PType.decimal(2, 1))
+                    )
+                )
+            ),
+            // Schema size mismatch
+            ErrorTestCase(
+                name = "EXCEPT column count mismatch",
+                query = "SELECT a FROM <<{'a': 1}>> EXCEPT SELECT a, b FROM <<{'a': 1, 'b': 2}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same number of columns."))
+                )
+            ),
+            // Dynamic type — error
+            ErrorTestCase(
+                name = "EXCEPT INT and DYNAMIC",
+                query = "SELECT a FROM <<{'a': 1}>> EXCEPT SELECT a FROM <<{'a': 1}, {'a': 'hello'}>>",
+                problemHandler = assertProblemExists(
+                    PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same type."))
+                )
+            ),
+        )
+
+        @JvmStatic
         fun subqueryCases() = listOf(
             SuccessTestCase(
                 name = "Subquery IN collection",
@@ -3886,6 +4116,21 @@ internal class PlanTyperTestsPorted {
     @MethodSource("coalesce")
     @Execution(ExecutionMode.CONCURRENT)
     fun testCoalesce(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("unionSchemaCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testUnionSchema(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("intersectSchemaCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testIntersectSchema(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("exceptSchemaCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testExceptSchema(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
     @MethodSource("subqueryCases")

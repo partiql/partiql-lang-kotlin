@@ -53,6 +53,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.typer.DynamicTyper.Companion.getCommonSuperType
 import org.partiql.planner.internal.util.FunctionUtils
 import org.partiql.planner.internal.util.TypeUtils.exclude
 import org.partiql.spi.Context
@@ -388,8 +389,19 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
-
             return computeUnionSchema(node, lhs, rhs)
+        }
+
+        /**
+         * Returns true if [fromType] and [toType] have a common super type.
+         */
+        fun isCompatible(fromType: PType, toType: PType): Boolean {
+            val superType = getCommonSuperType(fromType, toType)
+            if (superType == null || containsDynamic(superType)) {
+                return false
+            }
+
+            return true
         }
 
         /**
@@ -398,25 +410,34 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          */
         private fun computeUnionSchema(node: Rel.Op.Union, lhs: Rel, rhs: Rel): Rel {
             if (!node.isOuter) {
-                val size = max(lhs.type.schema.size, rhs.type.schema.size)
+                assert(lhs.type.schema.size == rhs.type.schema.size) {
+                    "LHS and RHS of SET OP do not have the same number of columns."
+                }
+                val size = lhs.type.schema.size
                 val commonTypes = mutableListOf<CompilerType>()
                 val bindingNames = mutableListOf<String>()
                 for (i in 0 until size) {
-                    val lhsBinding = lhs.type.schema.getOrNull(i)
-                    val rhsBinding = rhs.type.schema.getOrNull(i)
-                    val lhsType = lhsBinding?.type ?: PType.dynamic()
-                    val rhsType = rhsBinding?.type ?: PType.dynamic()
+                    val lhsBinding = lhs.type.schema.getOrNull(i)!!
+                    val rhsBinding = rhs.type.schema.getOrNull(i)!!
+                    val lhsType = lhsBinding.type
+                    val rhsType = rhsBinding.type
                     val superType = DynamicTyper.getCommonSuperType(lhsType, rhsType)
-                        ?: PType.dynamic()
+
+                    // We cannot validate dynamic schema type in UNION
+                    if (superType == null || containsDynamic(superType)) {
+                        return createRelErrForSetOpMismatchTypes()
+                    }
+
                     commonTypes.add(superType.toCType())
                     bindingNames.add(
                         when {
-                            lhsBinding == null || rhsBinding == null -> "_$i"
                             lhsBinding.name == rhsBinding.name -> lhsBinding.name
                             else -> "_$i"
                         }
                     )
                 }
+
+                // Apply coercions to each column when needed
                 val newLhs = applyCoercionsToRel(lhs, commonTypes)
                 val newRhs = applyCoercionsToRel(rhs, commonTypes)
                 val schema = List(size) { i ->
@@ -499,7 +520,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             for (i in 0..lhs.type.schema.lastIndex) {
                 val lhsBindingType = lhs.type.schema[i].type
                 val rhsBindingType = rhs.type.schema[i].type
-                if (!DynamicTyper.isCompatible(lhsBindingType, rhsBindingType)) {
+                if (!isCompatible(lhsBindingType, rhsBindingType)) {
                     return false
                 }
             }
@@ -512,7 +533,20 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          * @param rhs should be typed already
          */
         private fun setOpSchemaSizesMatch(lhs: Rel, rhs: Rel): Boolean {
-            return lhs.type.schema.size == rhs.type.schema.size
+            if (lhs.type.schema.size != rhs.type.schema.size) {
+                return false
+            }
+            // Also check that ROW-typed columns have the same number of fields
+            for (i in lhs.type.schema.indices) {
+                val lhsType = lhs.type.schema[i].type
+                val rhsType = rhs.type.schema[i].type
+                if (lhsType.code() == PType.ROW && rhsType.code() == PType.ROW) {
+                    if (lhsType.fields.size != rhsType.fields.size) {
+                        return false
+                    }
+                }
+            }
+            return true
         }
 
         private fun createRelErrForSetOpMismatchSizes(): Rel {
@@ -527,6 +561,19 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             val cause = IllegalStateException(errorMsg)
             _listener.report(PErrors.internalError(cause))
             return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err(errorMsg))
+        }
+
+        /**
+         * Recursively checks whether a [PType] contains DYNAMIC anywhere in its structure
+         * (e.g. ARRAY<DYNAMIC>, BAG<DYNAMIC>, ROW<DYNAMIC, INT>).
+         */
+        private fun containsDynamic(type: PType): Boolean {
+            return when (type.code()) {
+                PType.DYNAMIC -> true
+                PType.ARRAY, PType.BAG -> containsDynamic(type.typeParameter)
+                PType.ROW -> type.fields.any { containsDynamic(it.type) }
+                else -> false
+            }
         }
 
         override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?): Rel {
@@ -703,7 +750,6 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 }
             }
             val groups = node.groups.map { typer.visitRex(it, null) }
-
             // Compute schema using order (calls...groups...)
             val schema = mutableListOf<CompilerType>()
             schema += calls.map { it.second }

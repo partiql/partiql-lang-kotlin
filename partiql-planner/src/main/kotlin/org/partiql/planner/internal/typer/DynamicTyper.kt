@@ -4,6 +4,7 @@ import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.typer.PlanTyper.Companion.anyOf
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.types.PType
+import org.partiql.spi.types.PTypeField
 import org.partiql.spi.value.Datum
 
 /**
@@ -178,7 +179,7 @@ internal class DynamicTyper {
     companion object {
 
         /**
-         * Returns the common super type of [fromType] and [toType], or null if incompatible.
+         * Returns the common super type of [lType] and [rType], or null if incompatible.
          *
          * Follows the pattern from Trino's TypeCoercion.compatibility:
          * 1. Equal types → return as-is
@@ -188,32 +189,24 @@ internal class DynamicTyper {
          * 5. Different base types → try coerceTypeBase in both directions, recurse
          */
         @JvmStatic
-        fun getCommonSuperType(fromType: PType, toType: PType): PType? {
-            if (fromType.code() == toType.code()) {
-                return mergeParameterized(fromType, toType)
+        fun getCommonSuperType(lType: PType, rType: PType): PType? {
+            if (lType.code() == rType.code()) {
+                return mergeParameterized(lType, rType)
             }
-            if (fromType.code() == PType.UNKNOWN) return toType
-            if (toType.code() == PType.UNKNOWN) return fromType
-            if (fromType.code() == PType.DYNAMIC || toType.code() == PType.DYNAMIC) return PType.dynamic()
+            if (lType.code() == PType.UNKNOWN) return rType
+            if (rType.code() == PType.UNKNOWN) return lType
+            if (lType.code() == PType.DYNAMIC || rType.code() == PType.DYNAMIC) return PType.dynamic()
             // Try coercing fromType → toType's base
-            val coerced = coerceTypeBase(fromType, toType.code())
+            val coerced = coerceTypeBase(lType, rType.code())
             if (coerced != null) {
-                return getCommonSuperType(coerced, toType)
+                return getCommonSuperType(coerced, rType)
             }
             // Try coercing toType → fromType's base
-            val coercedReverse = coerceTypeBase(toType, fromType.code())
+            val coercedReverse = coerceTypeBase(rType, lType.code())
             if (coercedReverse != null) {
-                return getCommonSuperType(fromType, coercedReverse)
+                return getCommonSuperType(lType, coercedReverse)
             }
             return null
-        }
-
-        /**
-         * Returns true if [fromType] and [toType] have a common super type.
-         */
-        @JvmStatic
-        fun isCompatible(fromType: PType, toType: PType): Boolean {
-            return getCommonSuperType(fromType, toType) != null
         }
 
         /**
@@ -315,7 +308,7 @@ internal class DynamicTyper {
         /**
          * Merges two types with the same base type code, handling parameterized types.
          */
-        private fun mergeParameterized(a: PType, b: PType): PType {
+        private fun mergeParameterized(a: PType, b: PType): PType? {
             return when (a.code()) {
                 PType.DECIMAL, PType.NUMERIC -> {
                     val scale = maxOf(a.scale, b.scale)
@@ -330,6 +323,25 @@ internal class DynamicTyper {
                 PType.TIMEZ -> PType.timez(maxOf(a.precision, b.precision))
                 PType.TIMESTAMP -> PType.timestamp(maxOf(a.precision, b.precision))
                 PType.TIMESTAMPZ -> PType.timestampz(maxOf(a.precision, b.precision))
+                PType.ARRAY -> {
+                    val elementType = getCommonSuperType(a.typeParameter, b.typeParameter) ?: return null
+                    PType.array(elementType)
+                }
+                PType.BAG -> {
+                    val elementType = getCommonSuperType(a.typeParameter, b.typeParameter) ?: return null
+                    PType.bag(elementType)
+                }
+                PType.ROW -> {
+                    val aFields = a.fields.toList()
+                    val bFields = b.fields.toList()
+                    if (aFields.size != bFields.size) return null
+                    val mergedFields = aFields.zip(bFields).map { (af, bf) ->
+                        val fieldType = getCommonSuperType(af.type, bf.type) ?: return null
+                        val fieldName = if (af.name == bf.name) af.name else "_"
+                        PTypeField.of(fieldName, fieldType)
+                    }
+                    PType.row(mergedFields)
+                }
                 else -> a
             }
         }
