@@ -423,10 +423,10 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         /**
-         * Returns true if [fromType] and [toType] have a common super type.
+         * Returns true if [lType] and [rType] have a common super type.
          */
-        fun isCompatible(fromType: PType, toType: PType): Boolean {
-            val superType = getCommonSuperType(fromType, toType)
+        fun isCompatible(lType: CompilerType, rType: CompilerType): Boolean {
+            val superType = getCommonSuperType(lType, rType)
             if (superType == null || containsDynamic(superType)) {
                 return false
             }
@@ -505,7 +505,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 is Rel.Op.Intersect -> applyCoercionsToSetOp(rel, op, targetTypes) { lhs, rhs -> op.copy(lhs = lhs, rhs = rhs) }
                 is Rel.Op.Except -> applyCoercionsToSetOp(rel, op, targetTypes) { lhs, rhs -> op.copy(lhs = lhs, rhs = rhs) }
                 else -> {
-                    _listener.report(PErrors.notImplemented("Set operation: coercion not implemented for rel Type ${rel.javaClass.simpleName}"))
+                    _listener.report(PErrors.notImplemented("Set operation: coercion not implemented for rel op Type ${op.javaClass.simpleName}"))
                     rel
                 }
             }
