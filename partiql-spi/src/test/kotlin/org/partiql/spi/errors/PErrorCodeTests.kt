@@ -37,6 +37,8 @@ class PErrorCodeTests {
             "DIVISION_BY_ZERO" to 19,
             "DEGREE_VIOLATION_SCALAR_SUBQUERY" to 20,
             "EXPERIMENTAL" to 21,
+            "SET_OP_SCHEMA_INCOMPATIBLE" to 22,
+            "NOT_IMPLEMENTED" to 23,
         )
 
         // Preparation

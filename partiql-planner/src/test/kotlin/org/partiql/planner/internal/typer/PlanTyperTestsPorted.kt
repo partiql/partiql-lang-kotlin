@@ -3702,18 +3702,18 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "INTERSECT INT and BIGINT",
                 query = "SELECT a FROM <<{'a': 1}>> INTERSECT SELECT a FROM <<{'a': CAST(1 AS BIGINT)}>>",
-                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.bigint())))
             ),
             SuccessTestCase(
                 name = "INTERSECT INT and DECIMAL",
                 query = "SELECT a FROM <<{'a': 1}>> INTERSECT SELECT a FROM <<{'a': 1.0}>>",
-                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.decimal(11, 1))))
             ),
             // Compatible temporal coercions — uses LHS schema
             SuccessTestCase(
                 name = "INTERSECT DATE and TIMESTAMP",
                 query = "SELECT a FROM <<{'a': DATE '2024-01-01'}>> INTERSECT SELECT a FROM <<{'a': TIMESTAMP '2024-01-01 00:00:00'}>>",
-                expected = PType.bag(PType.row(PTypeField.of("a", PType.date())))
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.timestamp(6))))
             ),
             // Incompatible types — error
             ErrorTestCase(
@@ -3729,7 +3729,7 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT a, b FROM <<{'a': 1, 'b': 1.0}>> INTERSECT SELECT a, b FROM <<{'a': CAST(1 AS BIGINT), 'b': 2.0}>>",
                 expected = PType.bag(
                     PType.row(
-                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("a", PType.bigint()),
                         PTypeField.of("b", PType.decimal(2, 1))
                     )
                 )
@@ -3764,18 +3764,18 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "EXCEPT INT and BIGINT",
                 query = "SELECT a FROM <<{'a': 1}>> EXCEPT SELECT a FROM <<{'a': CAST(1 AS BIGINT)}>>",
-                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.bigint())))
             ),
             SuccessTestCase(
                 name = "EXCEPT INT and DECIMAL",
                 query = "SELECT a FROM <<{'a': 1}>> EXCEPT SELECT a FROM <<{'a': 1.0}>>",
-                expected = PType.bag(PType.row(PTypeField.of("a", PType.integer())))
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.decimal(11, 1))))
             ),
             // Compatible temporal coercions — uses LHS schema
             SuccessTestCase(
                 name = "EXCEPT DATE and TIMESTAMP",
                 query = "SELECT a FROM <<{'a': DATE '2024-01-01'}>> EXCEPT SELECT a FROM <<{'a': TIMESTAMP '2024-01-01 00:00:00'}>>",
-                expected = PType.bag(PType.row(PTypeField.of("a", PType.date())))
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.timestamp(6))))
             ),
             // Incompatible types — error
             ErrorTestCase(
@@ -3791,7 +3791,7 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT a, b FROM <<{'a': 1, 'b': 1.0}>> EXCEPT SELECT a, b FROM <<{'a': CAST(1 AS BIGINT), 'b': 2.0}>>",
                 expected = PType.bag(
                     PType.row(
-                        PTypeField.of("a", PType.integer()),
+                        PTypeField.of("a", PType.bigint()),
                         PTypeField.of("b", PType.decimal(2, 1))
                     )
                 )

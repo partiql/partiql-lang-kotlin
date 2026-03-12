@@ -223,6 +223,12 @@ public final class PError extends Enum {
                 return "DIVISION_BY_ZERO";
             case DEGREE_VIOLATION_SCALAR_SUBQUERY:
                 return "DEGREE_VIOLATION_SCALAR_SUBQUERY";
+            case EXPERIMENTAL:
+                return "EXPERIMENTAL";
+            case SET_OP_SCHEMA_INCOMPATIBLE:
+                return "SET_OP_SCHEMA_INCOMPATIBLE";
+            case NOT_IMPLEMENTED:
+                return "NOT_IMPLEMENTED";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -580,4 +586,38 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int EXPERIMENTAL = 21;
+
+    /**
+     * <p>
+     * This is a semantic error, where the left and right operands of a set operation (UNION, INTERSECT, EXCEPT)
+     * are not compatible — either the number of columns differs or the column types are not compatible.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>MESSAGE</b> ({@link String}): A description of the incompatibility.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Incompatible operands for set operation.</code>
+     * </p>
+     */
+    public static final int SET_OP_SCHEMA_INCOMPATIBLE = 22;
+
+    /**
+     * <p>
+     * This is a semantic/compilation/runtime error indicating that a particular feature or code path
+     * has not yet been implemented.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>FEATURE</b> ({@link String}): A description of the unimplemented feature.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Not implemented: [feature].</code>
+     * </p>
+     */
+    public static final int NOT_IMPLEMENTED = 23;
 }

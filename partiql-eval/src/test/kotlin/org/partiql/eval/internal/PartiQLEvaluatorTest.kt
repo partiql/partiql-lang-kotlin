@@ -1152,7 +1152,7 @@ class PartiQLEvaluatorTest {
             ),
             SuccessTestCase(
                 input = "'foo' IS FALSE",
-                expected = Datum.nullValue(),
+                expected = Datum.missing(),
                 mode = Mode.PERMISSIVE()
             ),
             // IS NOT FALSE
@@ -1196,7 +1196,7 @@ class PartiQLEvaluatorTest {
             ),
             SuccessTestCase(
                 input = "'foo' IS UNKNOWN",
-                expected = Datum.nullValue(),
+                expected = Datum.missing(),
                 mode = Mode.PERMISSIVE()
             ),
             // IS NOT UNKNOWN
@@ -1218,7 +1218,7 @@ class PartiQLEvaluatorTest {
             ),
             SuccessTestCase(
                 input = "'foo' IS NOT UNKNOWN",
-                expected = Datum.missing(),
+                expected = Datum.nullValue(),
                 mode = Mode.PERMISSIVE()
             ),
             SuccessTestCase(
