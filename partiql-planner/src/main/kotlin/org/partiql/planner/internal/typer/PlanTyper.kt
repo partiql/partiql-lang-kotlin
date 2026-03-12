@@ -462,12 +462,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 }
 
                 commonTypes.add(superType.toCType())
-                bindingNames.add(
-                    when {
-                        lhsBinding.name == rhsBinding.name -> lhsBinding.name
-                        else -> "_$i"
-                    }
-                )
+                bindingNames.add(lhsBinding.name)
             }
 
             // Apply coercions to each column when needed
@@ -547,6 +542,9 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          */
         private fun coerceRex(rex: Rex, targetType: CompilerType?): Rex {
             if (targetType == null || rex.type == targetType) return rex
+
+            // TODO: We should error if we cannot resolve the cast.
+            // Currently PartiQL does not support cast row type, error here will cause unexpected failure.
             val cast = env.resolveCast(rex, targetType) ?: return rex
             return Rex(targetType, cast)
         }

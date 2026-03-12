@@ -337,7 +337,7 @@ internal class DynamicTyper {
                     if (aFields.size != bFields.size) return null
                     val mergedFields = aFields.zip(bFields).map { (af, bf) ->
                         val fieldType = getCommonSuperType(af.type, bf.type) ?: return null
-                        val fieldName = if (af.name == bf.name) af.name else "_"
+                        val fieldName = af.name
                         PTypeField.of(fieldName, fieldType)
                     }
                     PType.row(mergedFields)
