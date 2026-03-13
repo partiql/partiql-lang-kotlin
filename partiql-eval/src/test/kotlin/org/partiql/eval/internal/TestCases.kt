@@ -78,7 +78,8 @@ public class SuccessTestCase(
         val result = DatumMaterialize.materialize(compiler.prepare(plan, mode).execute())
         val comparison = when (jvmEquality) {
             true -> expected == result
-            false -> Datum.comparator().compare(expected, result) == 0
+            // We should distinguish null and missing in our tests
+            false -> Datum.comparator(true, true).compare(expected, result) == 0
         }
         assert(comparison) {
             comparisonString(expected, result, plan)

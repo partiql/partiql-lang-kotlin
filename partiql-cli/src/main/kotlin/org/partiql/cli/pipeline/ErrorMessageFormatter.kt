@@ -38,6 +38,8 @@ object ErrorMessageFormatter {
             ErrorCodeString.TYPE_UNEXPECTED -> typeUnexpected(error)
             ErrorCodeString.DEGREE_VIOLATION_SCALAR_SUBQUERY -> degreeViolationScalarSubquery(error)
             ErrorCodeString.EXPERIMENTAL -> experimental(error)
+            ErrorCodeString.SET_OP_SCHEMA_INCOMPATIBLE -> setOpSchemaIncompatible(error)
+            ErrorCodeString.NOT_IMPLEMENTED -> notImplemented(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -149,6 +151,24 @@ object ErrorMessageFormatter {
         val actualType = error.getOrNull("FEATURE", String::class.java)
         val actualTypeStr = prepare(actualType.toString(), " (", ")")
         return "Feature$actualTypeStr is experimental and is subject to change."
+    }
+
+    /**
+     * @see PError.SET_OP_SCHEMA_INCOMPATIBLE
+     */
+    private fun setOpSchemaIncompatible(error: PError): String {
+        val message = error.getOrNull("MESSAGE", String::class.java)
+        val messageStr = prepare(message, " ")
+        return "Set operation schema incompatible.$messageStr"
+    }
+
+    /**
+     * @see PError.NOT_IMPLEMENTED
+     */
+    private fun notImplemented(error: PError): String {
+        val feature = error.getOrNull("FEATURE", String::class.java)
+        val featureStr = prepare(feature, " ")
+        return "Not implemented.$featureStr"
     }
 
     /**

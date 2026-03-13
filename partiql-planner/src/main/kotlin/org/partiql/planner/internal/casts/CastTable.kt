@@ -299,6 +299,9 @@ internal class CastTable private constructor(
             graph[PType.INTERVAL_DT] = relationships {
                 cast(PType.INTERVAL_DT)
             }
+            graph[PType.ROW] = relationships {
+                cast(PType.ROW)
+            }
             CastTable(types, graph.requireNoNulls())
         }
     }

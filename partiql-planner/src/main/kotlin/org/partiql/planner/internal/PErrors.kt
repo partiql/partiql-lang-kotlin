@@ -276,4 +276,30 @@ internal object PErrors {
         null,
         mapOf("CAUSE" to cause),
     )
+
+    internal fun setOpSchemaIncompatible(
+        message: String,
+        location: SourceLocation? = null
+    ): PError {
+        return PError(
+            PError.SET_OP_SCHEMA_INCOMPATIBLE,
+            Severity.ERROR(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("MESSAGE" to message)
+        )
+    }
+
+    internal fun notImplemented(
+        feature: String,
+        location: SourceLocation? = null
+    ): PError {
+        return PError(
+            PError.NOT_IMPLEMENTED,
+            Severity.ERROR(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("FEATURE" to feature)
+        )
+    }
 }

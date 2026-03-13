@@ -53,6 +53,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.typer.DynamicTyper.Companion.getCommonSuperType
 import org.partiql.planner.internal.util.FunctionUtils
 import org.partiql.planner.internal.util.TypeUtils.exclude
 import org.partiql.spi.Context
@@ -358,8 +359,12 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
-            val type = Rel.Type(lhs.type.schema, props = emptySet())
-            return Rel(type, node.copy(lhs = lhs, rhs = rhs))
+            if (!node.isOuter) {
+                return computeSetOpSchema(lhs, rhs) { l, r -> node.copy(lhs = l, rhs = r) }
+            } else {
+                val type = Rel.Type(lhs.type.schema, props = emptySet())
+                return Rel(type, node.copy(lhs = lhs, rhs = rhs))
+            }
         }
 
         override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: Rel.Type?): Rel {
@@ -372,9 +377,14 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchTypes()
             }
+
             // Compute Schema
-            val type = Rel.Type(lhs.type.schema, props = emptySet())
-            return Rel(type, node.copy(lhs = lhs, rhs = rhs))
+            if (!node.isOuter) {
+                return computeSetOpSchema(lhs, rhs) { l, r -> node.copy(lhs = l, rhs = r) }
+            } else {
+                val type = Rel.Type(lhs.type.schema, props = emptySet())
+                return Rel(type, node.copy(lhs = lhs, rhs = rhs))
+            }
         }
 
         override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
@@ -388,18 +398,176 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
-            val size = max(lhs.type.schema.size, rhs.type.schema.size)
-            val schema = List(size) {
-                val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", CompilerType(PType.dynamic(), isMissingValue = true))
-                val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", CompilerType(PType.dynamic(), isMissingValue = true))
-                val bindingName = when (lhsBinding.name == rhsBinding.name) {
-                    true -> lhsBinding.name
-                    false -> "_$it"
+            if (!node.isOuter) {
+                return computeSetOpSchema(lhs, rhs) { l, r -> node.copy(lhs = l, rhs = r) }
+            } else {
+                val size = max(lhs.type.schema.size, rhs.type.schema.size)
+                val schema = List(size) {
+                    val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding(
+                        "_$it",
+                        CompilerType(PType.dynamic(), isMissingValue = true)
+                    )
+                    val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding(
+                        "_$it",
+                        CompilerType(PType.dynamic(), isMissingValue = true)
+                    )
+                    val bindingName = when (lhsBinding.name == rhsBinding.name) {
+                        true -> lhsBinding.name
+                        false -> "_$it"
+                    }
+                    Rel.Binding(bindingName, CompilerType(anyOf(lhsBinding.type, rhsBinding.type)!!))
                 }
-                Rel.Binding(bindingName, CompilerType(anyOf(lhsBinding.type, rhsBinding.type)!!))
+                val type = Rel.Type(schema, props = emptySet())
+                return Rel(type, node.copy(lhs = lhs, rhs = rhs))
+            }
+        }
+
+        /**
+         * Returns true if [lType] and [rType] have a common super type.
+         */
+        private fun isCompatible(lType: CompilerType, rType: CompilerType): Boolean {
+            val superType = getCommonSuperType(lType, rType)
+            if (superType == null || containsDynamic(superType)) {
+                return false
+            }
+
+            return true
+        }
+
+        /**
+         * For set operations (UNION, INTERSECT, EXCEPT), compute the common supertype for each
+         * column pair and apply casts to the lhs/rhs operands where needed.
+         */
+        private fun computeSetOpSchema(
+            lhs: Rel,
+            rhs: Rel,
+            copyOp: (Rel, Rel) -> Rel.Op,
+        ): Rel {
+            assert(lhs.type.schema.size == rhs.type.schema.size) {
+                "LHS and RHS of SET OP do not have the same number of columns."
+            }
+            val size = lhs.type.schema.size
+            val commonTypes = mutableListOf<CompilerType>()
+            val bindingNames = mutableListOf<String>()
+            for (i in 0 until size) {
+                val lhsBinding = lhs.type.schema.getOrNull(i)!!
+                val rhsBinding = rhs.type.schema.getOrNull(i)!!
+                val lhsType = lhsBinding.type
+                val rhsType = rhsBinding.type
+                val superType = DynamicTyper.getCommonSuperType(lhsType, rhsType)
+
+                // We cannot validate dynamic schema type in UNION
+                if (superType == null || containsDynamic(superType)) {
+                    return createRelErrForSetOpMismatchTypes()
+                }
+
+                commonTypes.add(superType.toCType())
+                bindingNames.add(lhsBinding.name)
+            }
+
+            // Apply coercions to each column when needed
+            val newLhs = applyCoercionsToRel(lhs, commonTypes)
+            val newRhs = applyCoercionsToRel(rhs, commonTypes)
+            val schema = List(size) { i ->
+                Rel.Binding(bindingNames[i], commonTypes[i])
             }
             val type = Rel.Type(schema, props = emptySet())
-            return Rel(type, node.copy(lhs = lhs, rhs = rhs))
+            return Rel(type, copyOp(newLhs, newRhs))
+        }
+
+        /**
+         * Applies casts to each column of a [Rel] to match the [targetTypes].
+         * If the operand is a [Rel.Op.Project] or [Rel.Op.Scan], wraps each Rex with a CAST when the type differs.
+         */
+        private fun applyCoercionsToRel(rel: Rel, targetTypes: List<CompilerType>): Rel {
+            val op = rel.op
+            return when (op) {
+                is Rel.Op.Project -> {
+                    val newProjections = op.projections.mapIndexed { i, rex ->
+                        coerceRex(rex, targetTypes.getOrNull(i))
+                    }
+                    val newOp = op.copy(projections = newProjections)
+                    val schema = newProjections.mapIndexed { i, rex ->
+                        val binding = rel.type.schema.getOrNull(i)
+                        Rel.Binding(binding?.name ?: "_$i", rex.type)
+                    }
+                    Rel(Rel.Type(schema, rel.type.props), newOp)
+                }
+                is Rel.Op.Scan -> {
+                    val newRexScan = coerceRex(op.rex, targetTypes.getOrNull(0))
+                    val scanOp = relOpScan(newRexScan)
+                    val schema = listOf(
+                        Rel.Binding(rel.type.schema.getOrNull(0)?.name ?: "_$0", newRexScan.type)
+                    )
+                    Rel(Rel.Type(schema, rel.type.props), scanOp)
+                }
+                is Rel.Op.Union -> applyCoercionsToSetOp(rel, op, targetTypes) { lhs, rhs -> op.copy(lhs = lhs, rhs = rhs) }
+                is Rel.Op.Intersect -> applyCoercionsToSetOp(rel, op, targetTypes) { lhs, rhs -> op.copy(lhs = lhs, rhs = rhs) }
+                is Rel.Op.Except -> applyCoercionsToSetOp(rel, op, targetTypes) { lhs, rhs -> op.copy(lhs = lhs, rhs = rhs) }
+                else -> {
+                    _listener.report(PErrors.notImplemented("Set operation: coercion not implemented for rel op Type ${op.javaClass.simpleName}"))
+                    rel
+                }
+            }
+        }
+
+        /**
+         * Helper method to apply coercions to set operations (Union, Intersect, Except).
+         */
+        private fun applyCoercionsToSetOp(
+            rel: Rel,
+            op: Rel.Op,
+            targetTypes: List<CompilerType>,
+            copyOp: (Rel, Rel) -> Rel.Op
+        ): Rel {
+            val (lhs, rhs) = when (op) {
+                is Rel.Op.Union -> op.lhs to op.rhs
+                is Rel.Op.Intersect -> op.lhs to op.rhs
+                is Rel.Op.Except -> op.lhs to op.rhs
+                else -> error("Unsupported set operation type")
+            }
+            val newLhs = applyCoercionsToRel(lhs, targetTypes)
+            val newRhs = applyCoercionsToRel(rhs, targetTypes)
+            val newOp = copyOp(newLhs, newRhs)
+
+            val schema = targetTypes.mapIndexed { i, type ->
+                Rel.Binding(rel.type.schema.getOrNull(i)?.name ?: "_$i", type)
+            }
+            return Rel(Rel.Type(schema, rel.type.props), newOp)
+        }
+
+        /**
+         * Wraps a [Rex] with a CAST to [targetType] if the types differ. Returns the original [Rex] if
+         * no coercion is needed or if the cast cannot be resolved.
+         */
+        private fun coerceRex(rex: Rex, targetType: CompilerType?): Rex {
+            if (targetType == null || rex.type == targetType) return rex
+
+            val cast = env.resolveCast(rex, targetType) ?: return rex
+
+            // Handle ROW → ROW coercion by decomposing into per-field casts
+            if (rex.type.code() == PType.ROW && targetType.code() == PType.ROW) {
+                return coerceRow(rex, targetType)
+            }
+            return Rex(targetType, cast)
+        }
+
+        /**
+         * Coerces a ROW-typed [rex] to [targetType] by extracting each field, casting it, and
+         * reconstructing the struct.
+         */
+        private fun coerceRow(rex: Rex, targetType: CompilerType): Rex {
+            val sourceFields = rex.type.fields.toList()
+            val targetFields = targetType.fields.toList()
+            if (sourceFields.size != targetFields.size) return rex
+            val structFields = targetFields.mapIndexed { i, targetField ->
+                val sourceField = sourceFields[i]
+                val key = Rex(CompilerType(PType.string()), Rex.Op.Lit(Datum.string(targetField.name)))
+                val extracted = Rex(CompilerType(sourceField.type), rexOpPathKey(rex, key))
+                val coerced = coerceRex(extracted, targetField.type.toCType())
+                rexOpStructField(key, coerced)
+            }
+            return Rex(targetType, rexOpStruct(structFields))
         }
 
         /**
@@ -408,13 +576,10 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          * @param rhs should be typed already
          */
         private fun setOpSchemaTypesMatch(lhs: Rel, rhs: Rel): Boolean {
-            // TODO: [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md)
-            //  states that the types must be "comparable". The below code ONLY makes sure that types need to be
-            //  the same. In the future, we need to add support for checking comparable types.
             for (i in 0..lhs.type.schema.lastIndex) {
                 val lhsBindingType = lhs.type.schema[i].type
                 val rhsBindingType = rhs.type.schema[i].type
-                if (lhsBindingType != rhsBindingType) {
+                if (!isCompatible(lhsBindingType, rhsBindingType)) {
                     return false
                 }
             }
@@ -431,11 +596,29 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         private fun createRelErrForSetOpMismatchSizes(): Rel {
-            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same number of bindings."))
+            val msg = "LHS and RHS of SET OP do not have the same number of columns."
+            _listener.report(PErrors.setOpSchemaIncompatible(msg))
+            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err(msg))
         }
 
         private fun createRelErrForSetOpMismatchTypes(): Rel {
-            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same type."))
+            val msg = "LHS and RHS of SET OP do not have compatible types."
+            _listener.report(PErrors.setOpSchemaIncompatible(msg))
+            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err(msg))
+        }
+
+        /**
+         * Recursively checks whether a [PType] contains DYNAMIC anywhere in its structure
+         * (e.g. ARRAY<DYNAMIC>, BAG<DYNAMIC>, ROW<DYNAMIC, INT>).
+         */
+        private fun containsDynamic(type: PType): Boolean {
+            return when (type.code()) {
+                PType.DYNAMIC -> true
+                PType.ARRAY, PType.BAG -> containsDynamic(type.typeParameter)
+                PType.ROW -> type.fields.any { containsDynamic(it.type) }
+                PType.STRUCT -> type.fields.any { containsDynamic(it.type) }
+                else -> false
+            }
         }
 
         override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?): Rel {
@@ -612,7 +795,6 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 }
             }
             val groups = node.groups.map { typer.visitRex(it, null) }
-
             // Compute schema using order (calls...groups...)
             val schema = mutableListOf<CompilerType>()
             schema += calls.map { it.second }

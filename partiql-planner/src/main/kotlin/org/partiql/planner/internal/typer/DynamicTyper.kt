@@ -4,12 +4,8 @@ import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.typer.PlanTyper.Companion.anyOf
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.types.PType
+import org.partiql.spi.types.PTypeField
 import org.partiql.spi.value.Datum
-
-/**
- * Graph of super types for quick lookup because we don't have a tree.
- */
-internal typealias SuperGraph = Array<Array<Int?>>
 
 /**
  * For lack of a better name, this is the "dynamic typer" which implements the typing rules of SQL-99 9.3.
@@ -173,222 +169,183 @@ internal class DynamicTyper {
         }
         // Don't bother calculating the new supertype, we've already hit `dynamic`.
         if (s.code() == PType.DYNAMIC) return
-        // Lookup and set the new minimum common supertype
         supertype = when {
             type.code() == PType.DYNAMIC -> type
-            s == type -> return // skip
-            else -> graph[s.code()][type.code()]?.toPType() ?: CompilerType(PType.dynamic()) // lookup, if missing then go to top.
+            s == type -> return
+            else -> getCommonSuperType(s, type)?.toCType() ?: CompilerType(PType.dynamic())
         }
     }
 
-    /**
-     * !! IMPORTANT !!
-     *
-     * This is duplicated from the TypeLattice because that was removed in v1.0.0. I wanted to implement this as
-     * a standalone component so that it is easy to merge (and later merge with CastTable) into v1.0.0.
-     */
     companion object {
 
-        @JvmStatic
-        private val N = PType.codes().size
-
-        @JvmStatic
-        private fun edges(vararg edges: Pair<Int, Int>): Array<Int?> {
-            val arr = arrayOfNulls<Int?>(N)
-            for (type in edges) {
-                arr[type.first] = type.second
-            }
-            return arr
-        }
-
         /**
-         * This table defines the rules in the SQL-99 section 9.3 BUT we don't have type constraints yet.
+         * Returns the common super type of [lType] and [rType], or null if incompatible.
          *
-         * TODO collection supertypes
-         * TODO datetime supertypes
+         * Follows the pattern from Trino's TypeCoercion.compatibility:
+         * 1. Equal types → return as-is
+         * 2. UNKNOWN is compatible with everything
+         * 3. DYNAMIC absorbs everything
+         * 4. Same base type → merge parameters (precision, scale, length)
+         * 5. Different base types → try coerceTypeBase in both directions, recurse
          */
         @JvmStatic
-        internal val graph: SuperGraph = run {
-            val graph = arrayOfNulls<Array<Int?>>(N)
-            for (type in PType.codes()) {
-                // initialize all with empty edges
-                graph[type] = arrayOfNulls(N)
+        fun getCommonSuperType(lType: PType, rType: PType): PType? {
+            if (lType.code() == rType.code()) {
+                return mergeParameterized(lType, rType)
             }
-            graph[PType.DYNAMIC] = edges()
-            graph[PType.BOOL] = edges(
-                PType.BOOL to PType.BOOL
-            )
-            graph[PType.TINYINT] = edges(
-                PType.TINYINT to PType.TINYINT,
-                PType.SMALLINT to PType.SMALLINT,
-                PType.INTEGER to PType.INTEGER,
-                PType.BIGINT to PType.BIGINT,
-                PType.NUMERIC to PType.NUMERIC,
-                PType.DECIMAL to PType.DECIMAL,
-                PType.REAL to PType.REAL,
-                PType.DOUBLE to PType.DOUBLE,
-            )
-            graph[PType.SMALLINT] = edges(
-                PType.TINYINT to PType.SMALLINT,
-                PType.SMALLINT to PType.SMALLINT,
-                PType.INTEGER to PType.INTEGER,
-                PType.BIGINT to PType.BIGINT,
-                PType.NUMERIC to PType.NUMERIC,
-                PType.DECIMAL to PType.DECIMAL,
-                PType.REAL to PType.REAL,
-                PType.DOUBLE to PType.DOUBLE,
-            )
-            graph[PType.INTEGER] = edges(
-                PType.TINYINT to PType.INTEGER,
-                PType.SMALLINT to PType.INTEGER,
-                PType.INTEGER to PType.INTEGER,
-                PType.BIGINT to PType.BIGINT,
-                PType.NUMERIC to PType.NUMERIC,
-                PType.DECIMAL to PType.DECIMAL,
-                PType.REAL to PType.REAL,
-                PType.DOUBLE to PType.DOUBLE,
-            )
-            graph[PType.BIGINT] = edges(
-                PType.TINYINT to PType.BIGINT,
-                PType.SMALLINT to PType.BIGINT,
-                PType.INTEGER to PType.BIGINT,
-                PType.BIGINT to PType.BIGINT,
-                PType.NUMERIC to PType.NUMERIC,
-                PType.DECIMAL to PType.DECIMAL,
-                PType.REAL to PType.REAL,
-                PType.DOUBLE to PType.DOUBLE,
-            )
-            graph[PType.NUMERIC] = edges(
-                PType.TINYINT to PType.NUMERIC,
-                PType.SMALLINT to PType.NUMERIC,
-                PType.INTEGER to PType.NUMERIC,
-                PType.BIGINT to PType.NUMERIC,
-                PType.NUMERIC to PType.NUMERIC,
-                PType.DECIMAL to PType.DECIMAL,
-                PType.REAL to PType.REAL,
-                PType.DOUBLE to PType.DOUBLE,
-            )
-            graph[PType.DECIMAL] = edges(
-                PType.TINYINT to PType.DECIMAL,
-                PType.SMALLINT to PType.DECIMAL,
-                PType.INTEGER to PType.DECIMAL,
-                PType.BIGINT to PType.DECIMAL,
-                PType.NUMERIC to PType.DECIMAL,
-                PType.DECIMAL to PType.DECIMAL,
-                PType.REAL to PType.REAL,
-                PType.DOUBLE to PType.DOUBLE,
-            )
-            graph[PType.REAL] = edges(
-                PType.TINYINT to PType.REAL,
-                PType.SMALLINT to PType.REAL,
-                PType.INTEGER to PType.REAL,
-                PType.BIGINT to PType.REAL,
-                PType.NUMERIC to PType.REAL,
-                PType.DECIMAL to PType.REAL,
-                PType.REAL to PType.REAL,
-                PType.DOUBLE to PType.DOUBLE,
-            )
-            graph[PType.DOUBLE] = edges(
-                PType.TINYINT to PType.DOUBLE,
-                PType.SMALLINT to PType.DOUBLE,
-                PType.INTEGER to PType.DOUBLE,
-                PType.BIGINT to PType.DOUBLE,
-                PType.NUMERIC to PType.DOUBLE,
-                PType.DECIMAL to PType.DOUBLE,
-                PType.REAL to PType.DOUBLE,
-                PType.DOUBLE to PType.DOUBLE,
-            )
-            graph[PType.CHAR] = edges(
-                PType.CHAR to PType.CHAR,
-                PType.STRING to PType.STRING,
-                PType.VARCHAR to PType.STRING,
-                PType.CLOB to PType.CLOB,
-            )
-            graph[PType.STRING] = edges(
-                PType.CHAR to PType.STRING,
-                PType.STRING to PType.STRING,
-                PType.VARCHAR to PType.STRING,
-                PType.CLOB to PType.CLOB,
-            )
-            graph[PType.VARCHAR] = edges(
-                PType.CHAR to PType.VARCHAR,
-                PType.STRING to PType.STRING,
-                PType.VARCHAR to PType.VARCHAR,
-                PType.CLOB to PType.CLOB,
-            )
-            graph[PType.BLOB] = edges(
-                PType.BLOB to PType.BLOB,
-            )
-            graph[PType.DATE] = edges(
-                PType.DATE to PType.DATE,
-            )
-            graph[PType.CLOB] = edges(
-                PType.CHAR to PType.CLOB,
-                PType.STRING to PType.CLOB,
-                PType.VARCHAR to PType.CLOB,
-                PType.CLOB to PType.CLOB,
-            )
-            graph[PType.TIME] = edges(
-                PType.TIME to PType.TIME,
-            )
-            graph[PType.TIMEZ] = edges(
-                PType.TIMEZ to PType.TIMEZ,
-            )
-            graph[PType.TIMESTAMP] = edges(
-                PType.TIMESTAMP to PType.TIMESTAMP,
-            )
-            graph[PType.TIMESTAMPZ] = edges(
-                PType.TIMESTAMPZ to PType.TIMESTAMPZ,
-            )
-            graph[PType.ARRAY] = edges(
-                PType.ARRAY to PType.ARRAY,
-                PType.BAG to PType.BAG,
-            )
-            graph[PType.BAG] = edges(
-                PType.ARRAY to PType.BAG,
-                PType.BAG to PType.BAG,
-            )
-            graph[PType.STRUCT] = edges(
-                PType.STRUCT to PType.STRUCT,
-            )
-            graph[PType.ROW] = edges(
-                PType.ROW to PType.ROW,
-            )
-            graph.requireNoNulls()
+            if (lType.code() == PType.UNKNOWN) return rType
+            if (rType.code() == PType.UNKNOWN) return lType
+            if (lType.code() == PType.DYNAMIC || rType.code() == PType.DYNAMIC) return PType.dynamic()
+            // Try coercing fromType → toType's base
+            val coerced = coerceTypeBase(lType, rType.code())
+            if (coerced != null) {
+                return getCommonSuperType(coerced, rType)
+            }
+            // Try coercing toType → fromType's base
+            val coercedReverse = coerceTypeBase(rType, lType.code())
+            if (coercedReverse != null) {
+                return getCommonSuperType(lType, coercedReverse)
+            }
+            return null
         }
 
         /**
-         * TODO: We need to update the logic of this whole file. We are currently limited by not using parameters
-         *  of types.
+         * Attempts to coerce [sourceType] to the target type base [targetCode].
+         * Returns the coerced type with appropriate parameters, or null if not coercible.
+         *
+         * This follows the rules in the SQL-99 section 9.3.
+         * Each source type declares which target base types it can be coerced to, returning the result type
+         * with proper precision/scale/length.
          */
-        private fun Int.toPType(): CompilerType = when (this) {
-            PType.BOOL -> PType.bool()
-            PType.DYNAMIC -> PType.dynamic()
-            PType.TINYINT -> PType.tinyint()
-            PType.SMALLINT -> PType.smallint()
-            PType.INTEGER -> PType.integer()
-            PType.BIGINT -> PType.bigint()
-            PType.NUMERIC -> PType.numeric(38, 0) // TODO: To be updated
-            PType.DECIMAL -> PType.decimal(38, 0) // TODO: To be updated.
-            PType.REAL -> PType.real()
-            PType.DOUBLE -> PType.doublePrecision()
-            PType.CHAR -> PType.character(255) // TODO: To be updated
-            PType.VARCHAR -> PType.varchar(255) // TODO: To be updated
-            PType.STRING -> PType.string()
-            PType.BLOB -> PType.blob(Int.MAX_VALUE) // TODO: To be updated
-            PType.CLOB -> PType.clob(Int.MAX_VALUE) // TODO: To be updated
-            PType.DATE -> PType.date()
-            PType.TIMEZ -> PType.timez(6) // TODO: To be updated
-            PType.TIME -> PType.time(6) // TODO: To be updated
-            PType.TIMESTAMPZ -> PType.timestampz(6) // TODO: To be updated
-            PType.TIMESTAMP -> PType.timestamp(6) // TODO: To be updated
-            PType.BAG -> PType.bag() // TODO: To be updated
-            PType.ARRAY -> PType.array() // TODO: To be updated
-            PType.ROW -> PType.row(emptyList()) // TODO: To be updated
-            PType.STRUCT -> PType.struct() // TODO: To be updated
-            PType.UNKNOWN -> PType.unknown() // TODO: To be updated
-            PType.VARIANT -> TODO("variant in dynamic typer")
-            else -> error("Unknown type: $this")
-        }.toCType()
+        private fun coerceTypeBase(sourceType: PType, targetCode: Int): PType? {
+            if (sourceType.code() == targetCode) return sourceType
+            return when (sourceType.code()) {
+                PType.TINYINT -> when (targetCode) {
+                    PType.SMALLINT -> PType.smallint()
+                    PType.INTEGER -> PType.integer()
+                    PType.BIGINT -> PType.bigint()
+                    PType.NUMERIC -> PType.numeric(3, 0)
+                    PType.DECIMAL -> PType.decimal(3, 0)
+                    PType.REAL -> PType.real()
+                    PType.DOUBLE -> PType.doublePrecision()
+                    else -> null
+                }
+                PType.SMALLINT -> when (targetCode) {
+                    PType.INTEGER -> PType.integer()
+                    PType.BIGINT -> PType.bigint()
+                    PType.NUMERIC -> PType.numeric(5, 0)
+                    PType.DECIMAL -> PType.decimal(5, 0)
+                    PType.REAL -> PType.real()
+                    PType.DOUBLE -> PType.doublePrecision()
+                    else -> null
+                }
+                PType.INTEGER -> when (targetCode) {
+                    PType.BIGINT -> PType.bigint()
+                    PType.NUMERIC -> PType.numeric(10, 0)
+                    PType.DECIMAL -> PType.decimal(10, 0)
+                    PType.REAL -> PType.real()
+                    PType.DOUBLE -> PType.doublePrecision()
+                    else -> null
+                }
+                PType.BIGINT -> when (targetCode) {
+                    PType.NUMERIC -> PType.numeric(19, 0)
+                    PType.DECIMAL -> PType.decimal(19, 0)
+                    PType.REAL -> PType.real()
+                    PType.DOUBLE -> PType.doublePrecision()
+                    else -> null
+                }
+                PType.NUMERIC -> when (targetCode) {
+                    PType.DECIMAL -> PType.decimal(sourceType.precision, sourceType.scale)
+                    PType.REAL -> PType.real()
+                    PType.DOUBLE -> PType.doublePrecision()
+                    else -> null
+                }
+                PType.DECIMAL -> when (targetCode) {
+                    PType.REAL -> PType.real()
+                    PType.DOUBLE -> PType.doublePrecision()
+                    else -> null
+                }
+                PType.REAL -> when (targetCode) {
+                    PType.DOUBLE -> PType.doublePrecision()
+                    else -> null
+                }
+                PType.CHAR -> when (targetCode) {
+                    PType.VARCHAR -> PType.varchar(sourceType.length)
+                    PType.STRING -> PType.string()
+                    PType.CLOB -> PType.clob(sourceType.length)
+                    else -> null
+                }
+                PType.VARCHAR -> when (targetCode) {
+                    PType.STRING -> PType.string()
+                    PType.CLOB -> PType.clob(sourceType.length)
+                    else -> null
+                }
+                PType.STRING -> when (targetCode) {
+                    PType.CLOB -> PType.clob(Int.MAX_VALUE)
+                    else -> null
+                }
+                PType.DATE -> when (targetCode) {
+                    PType.TIMESTAMP -> PType.timestamp(0)
+                    PType.TIMESTAMPZ -> PType.timestampz(0)
+                    else -> null
+                }
+                PType.TIME -> when (targetCode) {
+                    PType.TIMEZ -> PType.timez(sourceType.precision)
+                    else -> null
+                }
+                PType.TIMESTAMP -> when (targetCode) {
+                    PType.TIMESTAMPZ -> PType.timestampz(sourceType.precision)
+                    else -> null
+                }
+                PType.ARRAY -> when (targetCode) {
+                    PType.BAG -> PType.bag()
+                    else -> null
+                }
+                else -> null
+            }
+        }
+
+        /**
+         * Merges two types with the same base type code, handling parameterized types.
+         */
+        private fun mergeParameterized(a: PType, b: PType): PType? {
+            return when (a.code()) {
+                PType.DECIMAL, PType.NUMERIC -> {
+                    val scale = maxOf(a.scale, b.scale)
+                    val precision = minOf(38, maxOf(a.precision - a.scale, b.precision - b.scale) + scale)
+                    if (a.code() == PType.DECIMAL) PType.decimal(precision, scale) else PType.numeric(precision, scale)
+                }
+                PType.CHAR -> PType.character(maxOf(a.length, b.length))
+                PType.VARCHAR -> PType.varchar(maxOf(a.length, b.length))
+                PType.CLOB -> PType.clob(maxOf(a.length, b.length))
+                PType.BLOB -> PType.blob(maxOf(a.length, b.length))
+                PType.TIME -> PType.time(maxOf(a.precision, b.precision))
+                PType.TIMEZ -> PType.timez(maxOf(a.precision, b.precision))
+                PType.TIMESTAMP -> PType.timestamp(maxOf(a.precision, b.precision))
+                PType.TIMESTAMPZ -> PType.timestampz(maxOf(a.precision, b.precision))
+                PType.ARRAY -> {
+                    val elementType = getCommonSuperType(a.typeParameter, b.typeParameter) ?: return null
+                    PType.array(elementType)
+                }
+                PType.BAG -> {
+                    val elementType = getCommonSuperType(a.typeParameter, b.typeParameter) ?: return null
+                    PType.bag(elementType)
+                }
+                PType.ROW -> {
+                    val aFields = a.fields.toList()
+                    val bFields = b.fields.toList()
+                    if (aFields.size != bFields.size) return null
+                    val mergedFields = aFields.zip(bFields).map { (af, bf) ->
+                        val fieldType = getCommonSuperType(af.type, bf.type) ?: return null
+                        // We ignore name match in super type calculation for now.
+                        // Likely in the future, we passed a flag whether to ignore name
+                        val fieldName = if (af.name == bf.name) af.name else "_"
+                        PTypeField.of(fieldName, fieldType)
+                    }
+                    PType.row(mergedFields)
+                }
+                else -> a
+            }
+        }
     }
 }
