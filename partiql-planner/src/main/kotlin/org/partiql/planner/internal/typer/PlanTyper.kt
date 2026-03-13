@@ -425,7 +425,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         /**
          * Returns true if [lType] and [rType] have a common super type.
          */
-        fun isCompatible(lType: CompilerType, rType: CompilerType): Boolean {
+        private fun isCompatible(lType: CompilerType, rType: CompilerType): Boolean {
             val superType = getCommonSuperType(lType, rType)
             if (superType == null || containsDynamic(superType)) {
                 return false
@@ -543,10 +543,31 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         private fun coerceRex(rex: Rex, targetType: CompilerType?): Rex {
             if (targetType == null || rex.type == targetType) return rex
 
-            // TODO: We should error if we cannot resolve the cast.
-            // Currently PartiQL does not support cast row type, error here will cause unexpected failure.
             val cast = env.resolveCast(rex, targetType) ?: return rex
+
+            // Handle ROW → ROW coercion by decomposing into per-field casts
+            if (rex.type.code() == PType.ROW && targetType.code() == PType.ROW) {
+                return coerceRow(rex, targetType)
+            }
             return Rex(targetType, cast)
+        }
+
+        /**
+         * Coerces a ROW-typed [rex] to [targetType] by extracting each field, casting it, and
+         * reconstructing the struct.
+         */
+        private fun coerceRow(rex: Rex, targetType: CompilerType): Rex {
+            val sourceFields = rex.type.fields.toList()
+            val targetFields = targetType.fields.toList()
+            if (sourceFields.size != targetFields.size) return rex
+            val structFields = targetFields.mapIndexed { i, targetField ->
+                val sourceField = sourceFields[i]
+                val key = Rex(CompilerType(PType.string()), Rex.Op.Lit(Datum.string(targetField.name)))
+                val extracted = Rex(CompilerType(sourceField.type), rexOpPathKey(rex, key))
+                val coerced = coerceRex(extracted, targetField.type.toCType())
+                rexOpStructField(key, coerced)
+            }
+            return Rex(targetType, rexOpStruct(structFields))
         }
 
         /**

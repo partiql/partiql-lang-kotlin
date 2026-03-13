@@ -123,6 +123,21 @@ class SetOpTests {
                     Datum.integer(2)
                 )
             ),
+            SuccessTestCase(
+                name = "UNION INT and DECIMAL",
+                input = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': 1.0}>>",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("a", Datum.decimal(java.math.BigDecimal("1.0"), 11, 1))),
+                )
+            ),
+            SuccessTestCase(
+                name = "UNION DECIMAL and DECIMAL with different precision",
+                input = "SELECT a FROM <<{'a': 12.234}>> UNION SELECT a FROM <<{'a': 1.23}>>",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("a", Datum.decimal(java.math.BigDecimal("12.234"), 5, 3))),
+                    Datum.struct(Field.of("a", Datum.decimal(java.math.BigDecimal("1.230"), 5, 3)))
+                )
+            ),
         )
 
         @JvmStatic
@@ -476,6 +491,21 @@ class SetOpTests {
                 expected = Datum.bagVararg(
                     Datum.struct(Field.of("a", Datum.integer(1))),
                     Datum.struct(Field.of("a", Datum.string("x")))
+                )
+            ),
+            SuccessTestCase(
+                name = "Outer UNION INT and DECIMAL",
+                input = "SELECT a FROM <<{'a': 1}>> OUTER UNION SELECT a FROM <<{'a': 1.0}>>",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("a", Datum.integer(1)))
+                )
+            ),
+            SuccessTestCase(
+                name = "Outer UNION DECIMAL and DECIMAL with different precision",
+                input = "SELECT a FROM <<{'a': 12.234}>> OUTER UNION SELECT a FROM <<{'a': 1.23}>>",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("a", Datum.decimal(java.math.BigDecimal("12.234"), 5, 3))),
+                    Datum.struct(Field.of("a", Datum.decimal(java.math.BigDecimal("1.23"), 3, 2)))
                 )
             ),
         )

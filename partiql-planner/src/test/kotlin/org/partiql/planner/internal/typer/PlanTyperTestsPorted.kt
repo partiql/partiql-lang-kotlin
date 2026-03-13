@@ -3618,6 +3618,11 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT a FROM <<{'a': 1}>> UNION SELECT a FROM <<{'a': 1.0e0}>>",
                 expected = PType.bag(PType.row(PTypeField.of("a", PType.doublePrecision())))
             ),
+            SuccessTestCase(
+                name = "UNION DECIMAL and DECIMAL with different precision",
+                query = "SELECT a FROM <<{'a': 12.234}>> UNION SELECT a FROM <<{'a': 1.23}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.decimal(5, 3))))
+            ),
             // Compatible temporal coercions
             SuccessTestCase(
                 name = "UNION DATE and TIMESTAMP",
@@ -3742,6 +3747,12 @@ internal class PlanTyperTestsPorted {
                     PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same number of columns."))
                 )
             ),
+            // DECIMAL precision coercion
+            SuccessTestCase(
+                name = "INTERSECT DECIMAL and DECIMAL with different precision",
+                query = "SELECT a FROM <<{'a': 12.234}>> INTERSECT SELECT a FROM <<{'a': 1.23}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.decimal(5, 3))))
+            ),
             // Dynamic type — error
             ErrorTestCase(
                 name = "INTERSECT INT and DYNAMIC",
@@ -3803,6 +3814,12 @@ internal class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists(
                     PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same number of columns."))
                 )
+            ),
+            // DECIMAL precision coercion
+            SuccessTestCase(
+                name = "EXCEPT DECIMAL and DECIMAL with different precision",
+                query = "SELECT a FROM <<{'a': 12.234}>> EXCEPT SELECT a FROM <<{'a': 1.23}>>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.decimal(5, 3))))
             ),
             // Dynamic type — error
             ErrorTestCase(
