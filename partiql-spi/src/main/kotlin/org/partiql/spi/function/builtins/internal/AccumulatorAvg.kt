@@ -3,6 +3,7 @@ package org.partiql.spi.function.builtins.internal
 import org.partiql.spi.function.builtins.DefaultDecimal
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils.checkIsNumberType
+import org.partiql.spi.utils.FunctionUtils.unWrap
 import org.partiql.spi.utils.NumberUtils.AccumulatorType
 import org.partiql.spi.utils.NumberUtils.MATH_CONTEXT
 import org.partiql.spi.utils.NumberUtils.add
@@ -18,11 +19,12 @@ internal class AccumulatorAvgDecimal : Accumulator() {
     private var init = false
 
     override fun nextValue(value: Datum) {
-        checkIsNumberType(funcName = "AVG", value = value)
+        val v = unWrap(value)
+        checkIsNumberType(funcName = "AVG", value = v)
         if (!init) {
             init = true
         }
-        val arg1 = bigDecimalOf(value.numberValue(), MATH_CONTEXT)
+        val arg1 = bigDecimalOf(v.numberValue(), MATH_CONTEXT)
         sum = sum.add(arg1, MATH_CONTEXT)
         count += 1L
     }

@@ -83,7 +83,6 @@ internal object FunctionUtils {
             }
         }
 
-    // TODO: this should likely return the value of the datum so that if it is a variant, we don't need to lower again
     internal fun checkIsNumberType(funcName: String, value: Datum) {
         if (value.type.code() == PType.VARIANT) {
             return checkIsNumberType(funcName, value.lower())
@@ -91,6 +90,11 @@ internal object FunctionUtils {
         if (!value.type.isNumber()) {
             throw PErrors.unexpectedTypeException(value.type, listOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint(), PType.decimal(), PType.numeric(), PType.real(), PType.doublePrecision()))
         }
+    }
+
+    internal fun unWrap(datum: Datum): Datum = when (datum.type.code()) {
+        PType.VARIANT -> datum.lower()
+        else -> datum
     }
 
     internal fun isDateTimeType(type: PType): Boolean {
