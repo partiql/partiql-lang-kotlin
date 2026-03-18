@@ -40,6 +40,25 @@ class PathNavigationTests {
                     Datum.struct(Field.of("result", Datum.string("fallback")))
                 )
             ),
+            // COALESCE with valid fallback path
+            SuccessTestCase(
+                name = "COALESCE with non-existent nested path",
+                input = "SELECT COALESCE(t.a.x, t.a.y) AS result FROM  [{'a': {'x': 1, 'y': 'str'}}, {'a': {'x': NULL, 'y': 'str'}}] AS t",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("result", Datum.integer(1))),
+                    Datum.struct(Field.of("result", Datum.string("str")))
+                )
+            ),
+            // COALESCE with existing fallback path
+            SuccessTestCase(
+                name = "COALESCE with non-existent nested path",
+                input = "SELECT COALESCE(t.a.x, t.a.z) AS result FROM  [{'a': {'x': 1, 'y': 'str'}}, {'a': {'x': NULL, 'y': 'str'}}, {'a': {'x': MISSING, 'y': 'str'}}] AS t",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("result", Datum.integer(1))),
+                    Datum.struct(Field.of("result", Datum.nullValue())),
+                    Datum.struct(Field.of("result", Datum.nullValue())),
+                )
+            ),
         )
 
         @JvmStatic
@@ -60,6 +79,25 @@ class PathNavigationTests {
                 expected = Datum.bagVararg(
                     Datum.struct(Field.of("result", Datum.integer(1))),
                     Datum.struct(Field.of("result", Datum.nullValue()))
+                )
+            ),
+            // NULLIF with a valid nullifier path
+            SuccessTestCase(
+                name = "NULLIF with valid nullifier path",
+                input = "SELECT NULLIF(t.a.x, t.a.y) AS result FROM  [{'a': {'x': 1, 'y': 1}}, {'a': {'x': -1, 'y': 1}}] AS t",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("result", Datum.nullValue())),
+                    Datum.struct(Field.of("result", Datum.integer(-1)))
+                )
+            ),
+            // NULLIF with a non-existent nullifier path
+            SuccessTestCase(
+                name = "NULLIF with non-existent nullifier path",
+                input = "SELECT NULLIF(t.a.x, t.a.z) AS result FROM  [{'a': {'x': 1, 'y': 'str'}}, {'a': {'x': NULL, 'y': 'str'}}, {'a': {'x': MISSING, 'y': 'str'}}] AS t",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("result", Datum.integer(1))),
+                    Datum.struct(),
+                    Datum.struct(),
                 )
             ),
         )
