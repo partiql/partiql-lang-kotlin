@@ -33,7 +33,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
-
+- Fix `AVG` and `SUM` aggregation function throws IllegalStateException on VARIANT typed inputs instead of lowering
 ### Removed
 
 ### Security
