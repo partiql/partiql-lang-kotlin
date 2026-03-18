@@ -92,7 +92,7 @@ internal object FunctionUtils {
         }
     }
 
-    internal fun unWrap(datum: Datum): Datum = when (datum.type.code()) {
+    internal fun unwrap(datum: Datum): Datum = when (datum.type.code()) {
         PType.VARIANT -> datum.lower()
         else -> datum
     }
