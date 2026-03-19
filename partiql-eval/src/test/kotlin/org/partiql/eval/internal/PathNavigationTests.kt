@@ -23,35 +23,31 @@ class PathNavigationTests {
 
         @JvmStatic
         fun coalesceCases() = listOf(
-            // COALESCE with non-existent path — t.a.b.c does not exist, result column is missing
             SuccessTestCase(
-                name = "COALESCE with non-existent nested path",
+                name = "COALESCE with non-existent path",
                 input = "SELECT COALESCE(t.a.b.c, 'fallback') AS result FROM << {'a': {'x': 1}} >> AS t",
                 expected = Datum.bagVararg(
                     Datum.struct(Field.of("result", Datum.string("fallback")))
                 )
             ),
-            // COALESCE with valid path — t.a.x resolves to 1
             SuccessTestCase(
-                name = "COALESCE with valid nested path",
+                name = "COALESCE with valid path",
                 input = "SELECT COALESCE(t.a.x, 'fallback') AS result FROM [{'a': {'x': 1}}, {'a': {'x': NULL}}] AS t",
                 expected = Datum.bagVararg(
                     Datum.struct(Field.of("result", Datum.integer(1))),
                     Datum.struct(Field.of("result", Datum.string("fallback")))
                 )
             ),
-            // COALESCE with valid fallback path
             SuccessTestCase(
-                name = "COALESCE with non-existent nested path",
+                name = "COALESCE with valid fallback path",
                 input = "SELECT COALESCE(t.a.x, t.a.y) AS result FROM  [{'a': {'x': 1, 'y': 'str'}}, {'a': {'x': NULL, 'y': 'str'}}] AS t",
                 expected = Datum.bagVararg(
                     Datum.struct(Field.of("result", Datum.integer(1))),
                     Datum.struct(Field.of("result", Datum.string("str")))
                 )
             ),
-            // COALESCE with existing fallback path
             SuccessTestCase(
-                name = "COALESCE with non-existent nested path",
+                name = "COALESCE with non-existent fallback path",
                 input = "SELECT COALESCE(t.a.x, t.a.z) AS result FROM  [{'a': {'x': 1, 'y': 'str'}}, {'a': {'x': NULL, 'y': 'str'}}, {'a': {'x': MISSING, 'y': 'str'}}] AS t",
                 expected = Datum.bagVararg(
                     Datum.struct(Field.of("result", Datum.integer(1))),
@@ -63,16 +59,14 @@ class PathNavigationTests {
 
         @JvmStatic
         fun nullIfCases() = listOf(
-            // NULLIF with non-existent path — t.a.b.c does not exist, result column is missing
             SuccessTestCase(
-                name = "NULLIF with non-existent nested path",
+                name = "NULLIF with non-existent path",
                 input = "SELECT NULLIF(t.a.b.c, '-1') AS result FROM << {'a': {'x': 1}}, {'a': {'x': -1}} >> AS t",
                 expected = Datum.bagVararg(
                     Datum.struct(),
                     Datum.struct()
                 )
             ),
-            // NULLIF with valid path — t.a.x resolves; string '-1' does not match integer so values pass through
             SuccessTestCase(
                 name = "NULLIF with valid nested path",
                 input = "SELECT NULLIF(t.a.x, -1) AS result FROM [{'a': {'x': 1}}, {'a': {'x': -1}}] AS t",
@@ -81,7 +75,6 @@ class PathNavigationTests {
                     Datum.struct(Field.of("result", Datum.nullValue()))
                 )
             ),
-            // NULLIF with a valid nullifier path
             SuccessTestCase(
                 name = "NULLIF with valid nullifier path",
                 input = "SELECT NULLIF(t.a.x, t.a.y) AS result FROM  [{'a': {'x': 1, 'y': 1}}, {'a': {'x': -1, 'y': 1}}] AS t",
@@ -90,7 +83,6 @@ class PathNavigationTests {
                     Datum.struct(Field.of("result", Datum.integer(-1)))
                 )
             ),
-            // NULLIF with a non-existent nullifier path
             SuccessTestCase(
                 name = "NULLIF with non-existent nullifier path",
                 input = "SELECT NULLIF(t.a.x, t.a.z) AS result FROM  [{'a': {'x': 1, 'y': 'str'}}, {'a': {'x': NULL, 'y': 'str'}}, {'a': {'x': MISSING, 'y': 'str'}}] AS t",

@@ -449,7 +449,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitNullIf(rex: RexNullIf, ctx: Unit): ExprValue {
             val value = compile(rex.getV1(), ctx).catch()
-            val nullifier = compile(rex.getV2(), ctx)
+            val nullifier = compile(rex.getV2(), ctx).catch()
             return ExprNullIf(value, nullifier)
         }
 
