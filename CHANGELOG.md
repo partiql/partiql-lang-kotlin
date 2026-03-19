@@ -33,7 +33,8 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
-- Fix `AVG` and `SUM` aggregation functions throwing IllegalStateException on VARIANT-typed inputs
+- Fixed `AVG` and `SUM` aggregation functions throwing IllegalStateException on VARIANT-typed inputs
+- Fixed path navigation errors for `COALESCE` and `NULLIF` function
 
 ### Removed
 
