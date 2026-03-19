@@ -439,7 +439,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): ExprValue {
-            val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
+            val args = rex.getArgs().map { compile(it, ctx).catch() }.toTypedArray()
             return ExprCoalesce(args)
         }
 
@@ -448,8 +448,8 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitNullIf(rex: RexNullIf, ctx: Unit): ExprValue {
-            val value = compile(rex.getV1(), ctx)
-            val nullifier = compile(rex.getV2(), ctx)
+            val value = compile(rex.getV1(), ctx).catch()
+            val nullifier = compile(rex.getV2(), ctx).catch()
             return ExprNullIf(value, nullifier)
         }
 
