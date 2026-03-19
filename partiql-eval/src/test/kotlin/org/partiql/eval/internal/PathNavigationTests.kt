@@ -61,7 +61,7 @@ class PathNavigationTests {
         fun nullIfCases() = listOf(
             SuccessTestCase(
                 name = "NULLIF with non-existent path",
-                input = "SELECT NULLIF(t.a.b.c, '-1') AS result FROM << {'a': {'x': 1}}, {'a': {'x': -1}} >> AS t",
+                input = "SELECT NULLIF(t.a.b.c, -1) AS result FROM << {'a': {'x': 1}}, {'a': {'x': -1}} >> AS t",
                 expected = Datum.bagVararg(
                     Datum.struct(),
                     Datum.struct()
