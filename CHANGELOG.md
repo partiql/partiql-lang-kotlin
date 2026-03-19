@@ -28,6 +28,23 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.8](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.8) - 2026-03-19
+
+### Added
+
+### Changed
 - Relax type match check for set operations `UNION/INTERSECT/EXCEPT`
 
 ### Deprecated
