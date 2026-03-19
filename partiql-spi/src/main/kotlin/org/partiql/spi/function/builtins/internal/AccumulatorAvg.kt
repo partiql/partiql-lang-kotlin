@@ -3,6 +3,7 @@ package org.partiql.spi.function.builtins.internal
 import org.partiql.spi.function.builtins.DefaultDecimal
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils.checkIsNumberType
+import org.partiql.spi.utils.FunctionUtils.unwrap
 import org.partiql.spi.utils.NumberUtils.AccumulatorType
 import org.partiql.spi.utils.NumberUtils.MATH_CONTEXT
 import org.partiql.spi.utils.NumberUtils.add
@@ -59,11 +60,11 @@ internal class AccumulatorAvgDynamic : Accumulator() {
     private var count: Long = 0L
     private var accumulatorType: AccumulatorType? = null
 
-    // TODO: need to take another look at variant lowering and casing here
     override fun nextValue(value: Datum) {
-        checkIsNumberType(funcName = "AVG", value = value)
+        val v = unwrap(value)
+        checkIsNumberType(funcName = "AVG", value = v)
         if (sum == null) {
-            sum = when (value.type.code()) {
+            sum = when (v.type.code()) {
                 PType.REAL, PType.DOUBLE -> {
                     accumulatorType = AccumulatorType.APPROX
                     0.0
@@ -74,11 +75,11 @@ internal class AccumulatorAvgDynamic : Accumulator() {
                 }
             }
         } else {
-            if (value.type.code() == PType.REAL || value.type.code() == PType.DOUBLE) {
+            if (v.type.code() == PType.REAL || v.type.code() == PType.DOUBLE) {
                 accumulatorType = AccumulatorType.APPROX
             }
         }
-        sum = add(sum!!, value, accumulatorType!!)
+        sum = add(sum!!, v, accumulatorType!!)
         count += 1L
     }
 

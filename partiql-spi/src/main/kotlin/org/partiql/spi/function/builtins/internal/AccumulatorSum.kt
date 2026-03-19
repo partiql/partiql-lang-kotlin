@@ -2,6 +2,7 @@ package org.partiql.spi.function.builtins.internal
 
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils.checkIsNumberType
+import org.partiql.spi.utils.FunctionUtils.unwrap
 import org.partiql.spi.utils.NumberUtils.AccumulatorType
 import org.partiql.spi.utils.NumberUtils.MATH_CONTEXT
 import org.partiql.spi.utils.NumberUtils.add
@@ -74,12 +75,12 @@ internal class AccumulatorSumDynamic : Accumulator() {
     var sum: Number? = null
     private var accumulatorType: AccumulatorType? = null
 
-    // TODO: need to take another look at variant lowering and casing here
     override fun nextValue(value: Datum) {
-        checkIsNumberType(funcName = "SUM", value = value)
+        val v = unwrap(value)
+        checkIsNumberType(funcName = "SUM", value = v)
         // Initialize `sum` and `accumulatorType`
         if (sum == null) {
-            sum = when (value.type.code()) {
+            sum = when (v.type.code()) {
                 PType.TINYINT, PType.SMALLINT, PType.INTEGER -> {
                     accumulatorType = AccumulatorType.INTEGRAL
                     0L
@@ -92,11 +93,11 @@ internal class AccumulatorSumDynamic : Accumulator() {
                     accumulatorType = AccumulatorType.DECIMAL
                     BigDecimal.ZERO
                 }
-                else -> error("Unexpected type: ${value.type}")
+                else -> error("Unexpected type: ${v.type}")
             }
         } else {
-            // Update our `accumulatorType` if value is decimal or approximate
-            when (value.type.code()) {
+            // Update our `accumulatorType` if v is decimal or approximate
+            when (v.type.code()) {
                 PType.REAL, PType.DOUBLE -> {
                     accumulatorType = AccumulatorType.APPROX
                 }
@@ -107,7 +108,7 @@ internal class AccumulatorSumDynamic : Accumulator() {
                 }
             }
         }
-        sum = add(sum!!, value, accumulatorType!!)
+        sum = add(sum!!, v, accumulatorType!!)
     }
 
     override fun value(): Datum {
