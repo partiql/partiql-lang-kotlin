@@ -138,6 +138,14 @@ class SetOpTests {
                     Datum.struct(Field.of("a", Datum.decimal(java.math.BigDecimal("1.230"), 5, 3)))
                 )
             ),
+            SuccessTestCase(
+                name = "UNION DISTINCT INT and DECIMAL",
+                input = "SELECT DISTINCT a FROM << {'a': 1}, {'a': 1} >> UNION SELECT DISTINCT a FROM << {'a': 4.0} >>",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("a", Datum.decimal(java.math.BigDecimal("1.0"), 11, 1))),
+                    Datum.struct(Field.of("a", Datum.decimal(java.math.BigDecimal("4.0"), 11, 1)))
+                )
+            ),
         )
 
         @JvmStatic

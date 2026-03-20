@@ -3685,6 +3685,12 @@ internal class PlanTyperTestsPorted {
                     PErrors.internalError(IllegalStateException("LHS and RHS of SET OP do not have the same number of columns."))
                 )
             ),
+            // DISTINCT with numeric coercion
+            SuccessTestCase(
+                name = "UNION DISTINCT INT and DECIMAL",
+                query = "SELECT DISTINCT a FROM << {'a': 1} >> UNION SELECT DISTINCT a FROM << {'a': 4.0} >>",
+                expected = PType.bag(PType.row(PTypeField.of("a", PType.decimal(11, 1))))
+            ),
             // Dynamic type — error
             ErrorTestCase(
                 name = "UNION INT and DYNAMIC",

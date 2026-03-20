@@ -504,6 +504,11 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 is Rel.Op.Union -> applyCoercionsToSetOp(rel, op, targetTypes) { lhs, rhs -> op.copy(lhs = lhs, rhs = rhs) }
                 is Rel.Op.Intersect -> applyCoercionsToSetOp(rel, op, targetTypes) { lhs, rhs -> op.copy(lhs = lhs, rhs = rhs) }
                 is Rel.Op.Except -> applyCoercionsToSetOp(rel, op, targetTypes) { lhs, rhs -> op.copy(lhs = lhs, rhs = rhs) }
+                is Rel.Op.Distinct -> {
+                    val inner = applyCoercionsToRel(op.input, targetTypes)
+                    val distinctOp = op.copy(inner)
+                    Rel(Rel.Type(inner.type.schema, inner.type.props), distinctOp)
+                }
                 else -> {
                     _listener.report(PErrors.notImplemented("Set operation: coercion not implemented for rel op Type ${op.javaClass.simpleName}"))
                     rel
