@@ -32,6 +32,23 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.9](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.9) - 2026-03-20
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
 - Fixed the issue that Set Op throws "Not Implemented error" SELECT DISTINCT
 
 ### Removed
