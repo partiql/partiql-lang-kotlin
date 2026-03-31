@@ -260,7 +260,6 @@ rewritten to their query representation
 - **EXPERIMENTAL** Add `Datum.getTotalSeconds` to retrieve the total number of seconds from a day-time `Datum`
 - fix the parsing of DATE_ADD/DATE_DIFF with an uncapitalized datetime field argument.
 - fix that wrong offset is set when parsing Ion timestamp with time zone into Datum.
-- Reimplemented DATE_ADD with interval plus arithmetic.
 - Fix ORDER BY statement does not recognize alias from SELECT statement
 
 ### Changed
