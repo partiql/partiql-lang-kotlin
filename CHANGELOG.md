@@ -40,6 +40,18 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 
+## [1.3.10](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.10) - 2026-04-01
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Reverted
+Redefine DATE_ADD and DATE_DIFF to be special syntax for the standard SQL datetime arithmetic operators:
+- [#1819](https://github.com/partiql/partiql-lang-kotlin/pull/1819)
+
 ## [1.3.9](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.9) - 2026-03-20
 
 ### Added
