@@ -3,6 +3,7 @@ package org.partiql.plan;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.rel.*;
 import org.partiql.plan.rel.RelAggregate.Measure;
+import org.partiql.plan.rel.RelWith;
 import org.partiql.plan.rex.*;
 import org.partiql.plan.rex.RexCase.Branch;
 import org.partiql.plan.rex.RexStruct.Field;
@@ -336,6 +337,32 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
             return newOp;
         }
         return rel;
+    }
+
+    @Override
+    public Operator visitWith(@NotNull RelWith rel, C ctx) {
+        // rewrite input
+        Rel input = rel.getInput();
+        Rel input_new = visit(input, ctx, Rel.class);
+        // rewrite elements
+        List<WithListElement> elements = rel.getElements();
+        List<WithListElement> elements_new = visitAll(elements, ctx, this::visitWithListElement);
+        // rewrite with
+        if (input != input_new || elements != elements_new) {
+            RelWith newOp = operators.with(input_new, elements_new);
+            newOp.setType(rel.getType());
+            return newOp;
+        }
+        return rel;
+    }
+
+    public WithListElement visitWithListElement(@NotNull WithListElement element, C ctx) {
+        Rex representation = element.getRepresentation();
+        Rex representation_new = visit(representation, ctx, Rex.class);
+        if (representation != representation_new) {
+            return new WithListElement(element.getName(), representation_new);
+        }
+        return element;
     }
 
     @Override

@@ -242,6 +242,9 @@ public abstract class org/partiql/plan/OperatorRewriter : org/partiql/plan/Opera
 	public fun visitUnpivot (Lorg/partiql/plan/rel/RelUnpivot;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public synthetic fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public synthetic fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public fun visitWithListElement (Lorg/partiql/plan/WithListElement;Ljava/lang/Object;)Lorg/partiql/plan/WithListElement;
 }
 
 public abstract interface class org/partiql/plan/OperatorRewriter$Mapper {
