@@ -25,7 +25,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 /**
- * Tests for [OperatorRewriter] using a plan-and-compare approach:
+ * Tests for [OperatorRewriter] by planning an original query, applying a rewriter, then comparing
+ * the plan against a target query's plan.
+ *
  * 1. Plan the [SuccessTestCase.originalQuery]
  * 2. Apply the per-case [SuccessTestCase.rewriter] to the original plan's root rex
  * 3. Plan the [SuccessTestCase.targetQuery]
