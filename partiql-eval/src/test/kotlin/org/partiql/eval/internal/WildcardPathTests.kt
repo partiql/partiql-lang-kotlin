@@ -378,7 +378,62 @@ class WildcardPathTests {
                 mode = Mode.PERMISSIVE()
             ),
         )
+
+        // =====================================================================
+        // 9. Wildcard on missing field — Issue 2 regression tests
+        // =====================================================================
+        @JvmStatic
+        fun wildcardOnMissingFieldCases() = listOf(
+            // SIZE of SELECT from missing_field.* should return 0
+            SuccessTestCase(
+                name = "SIZE of SELECT from missing_field.* returns 0",
+                input = "SIZE(SELECT x FROM payload.barcode_knowledge.* AS x)",
+                expected = Datum.integer(0),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            // true OR (SIZE(...missing_field.*...) > 0) should return true
+            SuccessTestCase(
+                name = "true OR expr with missing_field.* does not poison OR",
+                input = "true OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
+                expected = Datum.bool(true),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            // Pathing into a missing field should return missing, not throw
+            SuccessTestCase(
+                name = ".* on missing field returns empty bag",
+                input = "SELECT x FROM payload.no_such_field.* AS x",
+                expected = Datum.bag(emptyList()),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ a: 1 }"
+                    )
+                )
+            ),
+        )
     }
+
+    // =====================================================================
+    // 9. Wildcard on missing field — Issue 2 regression tests
+    //    When a struct field is missing, .* should produce an empty bag,
+    //    not a poisoning error that overrides boolean logic.
+    // =====================================================================
+    @ParameterizedTest
+    @MethodSource("wildcardOnMissingFieldCases")
+    fun wildcardOnMissingField(tc: SuccessTestCase) = tc.run()
 
     // =====================================================================
     // Strict mode failure cases

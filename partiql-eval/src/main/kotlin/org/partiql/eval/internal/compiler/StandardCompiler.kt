@@ -160,7 +160,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         fun compile(action: Action.Query) = object : Statement {
 
             // compile the query root
-            private val root = compile(action.getRex(), Unit).catch()
+            private val root = compile(action.getRex(), Unit)
 
             // execute with no parameters
             override fun execute(): Datum {
@@ -199,8 +199,26 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         // TODO REMOVE ME
         private fun compile(rel: Rel, ctx: Unit): ExprRelation = compileWithStrategies(rel) as ExprRelation
 
-        // TODO REMOVE ME
-        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex) as ExprValue
+        /**
+         * Compiles a [Rex] and wraps the result with [catch] so that runtime errors are converted to MISSING in
+         * permissive mode. This is the default and should be used for all rex compilation unless you have explicitly
+         * verified that the expression can never throw (e.g., literals, variable references, table references).
+         *
+         * @see compileUnchecked for the unwrapped variant.
+         */
+        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileUnchecked(rex, ctx).catch()
+
+        /**
+         * Compiles a [Rex] WITHOUT wrapping in [catch]. Use this only for expressions that are guaranteed to never
+         * throw a [PRuntimeException] at runtime, such as:
+         * - [ExprLit] (literal values)
+         * - [ExprVar] (variable references)
+         * - [ExprTable] (table references)
+         * - [ExprMissing]/[ExprError] (error nodes that already handle their own semantics)
+         *
+         * For all other expressions, use [compile] instead.
+         */
+        private fun compileUnchecked(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex) as ExprValue
 
         override fun defaultReturn(operator: Operator, ctx: Unit): Expr {
             error("No compiler strategy matches the operator: ${operator::class.java.simpleName}")
@@ -212,11 +230,11 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             val input = compile(rel.getInput(), ctx)
             val aggs = rel.getMeasures().map { call ->
                 val agg = call.getAgg()
-                val args = call.getArgs().map { compile(it, ctx).catch() }
+                val args = call.getArgs().map { compile(it, ctx) }
                 val distinct = call.isDistinct()
                 Aggregate(agg, args, distinct)
             }
-            val groups = rel.getGroups().map { compile(it, ctx).catch() }
+            val groups = rel.getGroups().map { compile(it, ctx) }
             return RelOpAggregate(input, aggs, groups)
         }
 
@@ -228,7 +246,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitWindow(rel: RelWindow, ctx: Unit): Expr {
             val input = compile(rel.getInput(), ctx)
             val functions = rel.windowFunctions.map {
-                val args = it.arguments.map { arg -> compile(arg, Unit).catch() }
+                val args = it.arguments.map { arg -> compile(arg, Unit) }
                 WindowBuiltIns.get(it.signature, args)
             }
             val partitionBy = rel.partitions.map { compile(it, Unit) }
@@ -264,7 +282,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitFilter(rel: RelFilter, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
-            val predicate = compile(rel.getPredicate(), ctx).catch()
+            val predicate = compile(rel.getPredicate(), ctx)
             return RelOpFilter(input, predicate)
         }
 
@@ -280,7 +298,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitIterate(rel: RelIterate, ctx: Unit): ExprRelation {
             val input = compile(rel.getRex(), ctx)
             return when (MODE) {
-                Mode.PERMISSIVE -> RelOpIteratePermissive(input.catch())
+                Mode.PERMISSIVE -> RelOpIteratePermissive(input)
                 Mode.STRICT -> RelOpIterate(input)
                 else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
@@ -318,14 +336,14 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitProject(rel: RelProject, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
-            val projections = rel.getProjections().map { compile(it, ctx).catch() }
+            val projections = rel.getProjections().map { compile(it, ctx) }
             return RelOpProject(input, projections)
         }
 
         override fun visitScan(rel: RelScan, ctx: Unit): ExprRelation {
             val input = compile(rel.rex, ctx)
             return when (MODE) {
-                Mode.PERMISSIVE -> RelOpScanPermissive(input.catch())
+                Mode.PERMISSIVE -> RelOpScanPermissive(input)
                 Mode.STRICT -> RelOpScan(input)
                 else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
@@ -372,12 +390,12 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         // OPERATORS
 
         override fun visitArray(rex: RexArray, ctx: Unit): ExprValue {
-            val values = rex.getValues().map { compile(it, ctx).catch() }
+            val values = rex.getValues().map { compile(it, ctx) }
             return ExprArray(values)
         }
 
         override fun visitBag(rex: RexBag, ctx: Unit): ExprValue {
-            val values = rex.getValues().map { compile(it, ctx).catch() }
+            val values = rex.getValues().map { compile(it, ctx) }
             return ExprBag(values)
         }
 
@@ -405,18 +423,14 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 // make a candidate
                 fn
             }
-            val args = rex.getArgs().map { compile(it, ctx).catch() }.toTypedArray()
+            val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
             return ExprCallDynamic(name, candidates, args)
         }
 
         override fun visitCall(rex: RexCall, ctx: Unit): ExprValue {
             val func = rex.getFunction()
             val args = rex.getArgs()
-            val catch = func.signature.parameters.any { it.type.code() == PType.DYNAMIC }
-            return when (catch) {
-                true -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit).catch() })
-                else -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit) })
-            }
+            return ExprCall(func, Array(args.size) { i -> compile(args[i], Unit) })
         }
 
         override fun visitCase(rex: RexCase, ctx: Unit): ExprValue {
@@ -424,7 +438,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 TODO("<case> expression")
             }
             val branches = rex.getBranches().map {
-                val value = compile(it.getCondition(), ctx).catch()
+                val value = compile(it.getCondition(), ctx)
                 val result = compile(it.getResult(), ctx)
                 ExprCaseBranch(value, result)
             }
@@ -439,17 +453,17 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): ExprValue {
-            val args = rex.getArgs().map { compile(it, ctx).catch() }.toTypedArray()
+            val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
             return ExprCoalesce(args)
         }
 
         override fun visitLit(rex: RexLit, ctx: Unit): ExprValue {
-            return ExprLit(rex.getDatum())
+            return ExprLit(rex.getDatum()) // safe: literals never throw
         }
 
         override fun visitNullIf(rex: RexNullIf, ctx: Unit): ExprValue {
-            val value = compile(rex.getV1(), ctx).catch()
-            val nullifier = compile(rex.getV2(), ctx).catch()
+            val value = compile(rex.getV1(), ctx)
+            val nullifier = compile(rex.getV2(), ctx)
             return ExprNullIf(value, nullifier)
         }
 
@@ -484,7 +498,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitSelect(rex: RexSelect, ctx: Unit): ExprValue {
             val input = compile(rex.getInput(), ctx)
-            val constructor = compile(rex.getConstructor(), ctx).catch()
+            val constructor = compile(rex.getConstructor(), ctx)
             val ordered = rex.getInput().type.isOrdered
             return ExprSelect(input, constructor, ordered)
         }
@@ -492,7 +506,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitStruct(rex: RexStruct, ctx: Unit): ExprValue {
             val fields = rex.getFields().map {
                 val k = compile(it.key, ctx)
-                val v = compile(it.value, ctx).catch()
+                val v = compile(it.value, ctx)
                 ExprStructField(k, v)
             }
             return when (MODE) {
@@ -539,12 +553,13 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         /**
-         * Some places "catch" an error and return the MISSING value.
+         * Wraps an [ExprValue] so that runtime errors are caught and converted to MISSING in permissive mode.
+         * If the expression is already wrapped, this is a no-op to avoid redundant try/catch frames.
          */
-        private fun ExprValue.catch(): ExprValue = when (MODE) {
-            Mode.PERMISSIVE -> ExprPermissive(this)
-            Mode.STRICT -> this
-            else -> throw IllegalStateException("Unsupported execution mode: $MODE")
+        private fun ExprValue.catch(): ExprValue = when {
+            MODE != Mode.PERMISSIVE -> this
+            this is ExprPermissive -> this
+            else -> ExprPermissive(this)
         }
     }
 }

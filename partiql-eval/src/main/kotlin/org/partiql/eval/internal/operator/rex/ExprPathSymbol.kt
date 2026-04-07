@@ -13,6 +13,9 @@ internal class ExprPathSymbol(
 
     override fun eval(env: Environment): Datum {
         val struct = root.eval(env).checkStruct()
+        if (struct.isMissing) {
+            return Datum.missing()
+        }
         if (struct.isNull) {
             return Datum.nullValue()
         }
