@@ -21,6 +21,7 @@ plugins {
 
 dependencies {
     api(Deps.ionElement)
+    implementation(Deps.jacksonDatabind)
     implementation(Deps.kotlinxCollections)
     testImplementation(Deps.kasechange)
     testImplementation(Deps.snapshotTest)
