@@ -1,4 +1,4 @@
-package org.partiql.types
+package org.partiql.cli.pipeline
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -9,7 +9,7 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 
 /**
- * Tests for [PType.toDDL] and [PType.fromDDL] round-trip serialization.
+ * Tests for [PTypeSerde.toDDL] and [PTypeSerde.fromDDL] round-trip serialization.
  */
 class PTypeDDLTest {
 
@@ -84,31 +84,31 @@ class PTypeDDLTest {
     @ParameterizedTest
     @MethodSource("simpleCases")
     fun `toDDL simple types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, case.pType.toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(case.pType))
     }
 
     @ParameterizedTest
     @MethodSource("parameterizedCases")
     fun `toDDL parameterized types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, case.pType.toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(case.pType))
     }
 
     @ParameterizedTest
     @MethodSource("collectionCases")
     fun `toDDL collection types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, case.pType.toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(case.pType))
     }
 
     @ParameterizedTest
     @MethodSource("intervalYmCases")
     fun `toDDL INTERVAL_YM types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, case.pType.toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(case.pType))
     }
 
     @ParameterizedTest
     @MethodSource("intervalDtCases")
     fun `toDDL INTERVAL_DT types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, case.pType.toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(case.pType))
     }
 
     @Test
@@ -118,7 +118,7 @@ class PTypeDDLTest {
             PTypeField.of("name", PType.string()),
             PTypeField.of("score", PType.decimal(10, 2)),
         )
-        assertEquals("ROW(id INTEGER, name STRING, score DECIMAL(10, 2))", row.toDDL())
+        assertEquals("ROW(id INTEGER, name STRING, score DECIMAL(10, 2))", PTypeSerde.toDDL(row))
     }
 
     @Test
@@ -127,7 +127,7 @@ class PTypeDDLTest {
             PTypeField.of("tags", PType.array(PType.string())),
             PTypeField.of("active", PType.bool()),
         )
-        assertEquals("ROW(tags ARRAY<STRING>, active BOOL)", row.toDDL())
+        assertEquals("ROW(tags ARRAY<STRING>, active BOOL)", PTypeSerde.toDDL(row))
     }
 
     // -----------------------------------------------
@@ -137,14 +137,14 @@ class PTypeDDLTest {
     @ParameterizedTest
     @MethodSource("simpleCases")
     fun `fromDDL simple types`(case: DDLCase) {
-        val restored = PType.fromDDL(case.expectedDDL)
+        val restored = PTypeSerde.fromDDL(case.expectedDDL)
         assertEquals(case.pType.code(), restored.code())
     }
 
     @ParameterizedTest
     @MethodSource("parameterizedCases")
     fun `fromDDL parameterized types`(case: DDLCase) {
-        val restored = PType.fromDDL(case.expectedDDL)
+        val restored = PTypeSerde.fromDDL(case.expectedDDL)
         assertEquals(case.pType.code(), restored.code())
         when (case.pType.code()) {
             PType.DECIMAL, PType.NUMERIC -> {
@@ -163,7 +163,7 @@ class PTypeDDLTest {
     @ParameterizedTest
     @MethodSource("collectionCases")
     fun `fromDDL collection types`(case: DDLCase) {
-        val restored = PType.fromDDL(case.expectedDDL)
+        val restored = PTypeSerde.fromDDL(case.expectedDDL)
         assertEquals(case.pType.code(), restored.code())
         assertEquals(case.pType.typeParameter.code(), restored.typeParameter.code())
     }
@@ -171,7 +171,7 @@ class PTypeDDLTest {
     @ParameterizedTest
     @MethodSource("intervalYmCases")
     fun `fromDDL INTERVAL_YM types`(case: DDLCase) {
-        val restored = PType.fromDDL(case.expectedDDL)
+        val restored = PTypeSerde.fromDDL(case.expectedDDL)
         assertEquals(PType.INTERVAL_YM, restored.code())
         assertEquals(case.pType.intervalCode, restored.intervalCode)
         assertEquals(case.pType.precision, restored.precision)
@@ -180,7 +180,7 @@ class PTypeDDLTest {
     @ParameterizedTest
     @MethodSource("intervalDtCases")
     fun `fromDDL INTERVAL_DT types`(case: DDLCase) {
-        val restored = PType.fromDDL(case.expectedDDL)
+        val restored = PTypeSerde.fromDDL(case.expectedDDL)
         assertEquals(PType.INTERVAL_DT, restored.code())
         assertEquals(case.pType.intervalCode, restored.intervalCode)
         assertEquals(case.pType.precision, restored.precision)
@@ -189,7 +189,7 @@ class PTypeDDLTest {
 
     @Test
     fun `fromDDL ROW type`() {
-        val restored = PType.fromDDL("ROW(id INTEGER, name STRING, score DECIMAL(10, 2))")
+        val restored = PTypeSerde.fromDDL("ROW(id INTEGER, name STRING, score DECIMAL(10, 2))")
         assertEquals(PType.ROW, restored.code())
         val fields = restored.fields.toList()
         assertEquals(3, fields.size)
@@ -205,7 +205,7 @@ class PTypeDDLTest {
 
     @Test
     fun `fromDDL ROW with nested collection`() {
-        val restored = PType.fromDDL("ROW(tags ARRAY<STRING>, active BOOL)")
+        val restored = PTypeSerde.fromDDL("ROW(tags ARRAY<STRING>, active BOOL)")
         assertEquals(PType.ROW, restored.code())
         val fields = restored.fields.toList()
         assertEquals(2, fields.size)
@@ -223,43 +223,43 @@ class PTypeDDLTest {
     @ParameterizedTest
     @MethodSource("simpleCases")
     fun `round-trip simple types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, PType.fromDDL(case.expectedDDL).toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(PTypeSerde.fromDDL(case.expectedDDL)))
     }
 
     @ParameterizedTest
     @MethodSource("parameterizedCases")
     fun `round-trip parameterized types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, PType.fromDDL(case.expectedDDL).toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(PTypeSerde.fromDDL(case.expectedDDL)))
     }
 
     @ParameterizedTest
     @MethodSource("collectionCases")
     fun `round-trip collection types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, PType.fromDDL(case.expectedDDL).toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(PTypeSerde.fromDDL(case.expectedDDL)))
     }
 
     @ParameterizedTest
     @MethodSource("intervalYmCases")
     fun `round-trip INTERVAL_YM types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, PType.fromDDL(case.expectedDDL).toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(PTypeSerde.fromDDL(case.expectedDDL)))
     }
 
     @ParameterizedTest
     @MethodSource("intervalDtCases")
     fun `round-trip INTERVAL_DT types`(case: DDLCase) {
-        assertEquals(case.expectedDDL, PType.fromDDL(case.expectedDDL).toDDL())
+        assertEquals(case.expectedDDL, PTypeSerde.toDDL(PTypeSerde.fromDDL(case.expectedDDL)))
     }
 
     @Test
     fun `round-trip ROW`() {
         val ddl = "ROW(id INTEGER, name STRING, score DECIMAL(10, 2))"
-        assertEquals(ddl, PType.fromDDL(ddl).toDDL())
+        assertEquals(ddl, PTypeSerde.toDDL(PTypeSerde.fromDDL(ddl)))
     }
 
     @Test
     fun `round-trip nested ROW in ARRAY`() {
         val ddl = "ARRAY<ROW(x INTEGER, y STRING)>"
-        assertEquals(ddl, PType.fromDDL(ddl).toDDL())
+        assertEquals(ddl, PTypeSerde.toDDL(PTypeSerde.fromDDL(ddl)))
     }
 
     // -----------------------------------------------
@@ -268,17 +268,17 @@ class PTypeDDLTest {
 
     @Test
     fun `fromDDL BOOLEAN alias`() {
-        assertEquals(PType.BOOL, PType.fromDDL("BOOLEAN").code())
+        assertEquals(PType.BOOL, PTypeSerde.fromDDL("BOOLEAN").code())
     }
 
     @Test
     fun `fromDDL INT alias`() {
-        assertEquals(PType.INTEGER, PType.fromDDL("INT").code())
+        assertEquals(PType.INTEGER, PTypeSerde.fromDDL("INT").code())
     }
 
     @Test
     fun `fromDDL bare DECIMAL defaults to 38 0`() {
-        val restored = PType.fromDDL("DECIMAL")
+        val restored = PTypeSerde.fromDDL("DECIMAL")
         assertEquals(PType.DECIMAL, restored.code())
         assertEquals(38, restored.precision)
         assertEquals(0, restored.scale)
@@ -286,7 +286,7 @@ class PTypeDDLTest {
 
     @Test
     fun `fromDDL bare NUMERIC defaults to 38 0`() {
-        val restored = PType.fromDDL("NUMERIC")
+        val restored = PTypeSerde.fromDDL("NUMERIC")
         assertEquals(PType.NUMERIC, restored.code())
         assertEquals(38, restored.precision)
         assertEquals(0, restored.scale)
@@ -294,14 +294,14 @@ class PTypeDDLTest {
 
     @Test
     fun `fromDDL bare TIME defaults to precision 6`() {
-        val restored = PType.fromDDL("TIME")
+        val restored = PTypeSerde.fromDDL("TIME")
         assertEquals(PType.TIME, restored.code())
         assertEquals(6, restored.precision)
     }
 
     @Test
     fun `fromDDL bare TIMESTAMP defaults to precision 6`() {
-        val restored = PType.fromDDL("TIMESTAMP")
+        val restored = PTypeSerde.fromDDL("TIMESTAMP")
         assertEquals(PType.TIMESTAMP, restored.code())
         assertEquals(6, restored.precision)
     }
@@ -313,28 +313,28 @@ class PTypeDDLTest {
     @Test
     fun `fromDDL rejects empty string`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromDDL("")
+            PTypeSerde.fromDDL("")
         }
     }
 
     @Test
     fun `fromDDL rejects unknown type`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromDDL("FAKETYPE")
+            PTypeSerde.fromDDL("FAKETYPE")
         }
     }
 
     @Test
     fun `fromDDL rejects DECIMAL with wrong arity`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromDDL("DECIMAL(10)")
+            PTypeSerde.fromDDL("DECIMAL(10)")
         }
     }
 
     @Test
     fun `fromDDL rejects ROW field without type`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromDDL("ROW(id)")
+            PTypeSerde.fromDDL("ROW(id)")
         }
     }
 }

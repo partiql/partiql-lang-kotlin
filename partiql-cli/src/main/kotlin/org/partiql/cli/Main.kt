@@ -108,6 +108,27 @@ internal class MainCommand : Runnable {
     var debug: Boolean = false
 
     @CommandLine.Option(
+        names = ["--schema-format"],
+        description = ["Debug schema output format: JSON or DDL. Only effective with --debug."],
+        hidden = true
+    )
+    var schemaFormat: Pipeline.SchemaFormat = Pipeline.SchemaFormat.NONE
+
+    @CommandLine.Option(
+        names = ["--schema"],
+        description = ["Override the schema for environment data. Value is a DDL type string (default) or JSON, controlled by --schema-type."],
+        hidden = true
+    )
+    var schema: String? = null
+
+    @CommandLine.Option(
+        names = ["--schema-type"],
+        description = ["Format of the --schema value: DDL (default) or JSON."],
+        hidden = true
+    )
+    var schemaType: Pipeline.SchemaFormat = Pipeline.SchemaFormat.DDL
+
+    @CommandLine.Option(
         names = ["-f", "--format"],
         description = ["The data format, using the form <input>[:<output>]. Supported input: partiql, ion. Supported output: partiql."],
         paramLabel = "<input[:output]>",
@@ -187,6 +208,7 @@ internal class MainCommand : Runnable {
             debug("--env         = $env")
             debug("--strict      = $strict")
             debug("--debug       = $debug")
+            debug("--schema-fmt  = $schemaFormat")
             debug("--format      = ${format.first}:${format.second}")
             debug("--include     = $include")
             debug("--max-errors  = $maxErrors")
@@ -224,8 +246,8 @@ internal class MainCommand : Runnable {
     private fun pipeline(): Pipeline {
         val config = getPipelineConfig()
         return when (strict) {
-            true -> Pipeline.strict(System.out, config, debug)
-            else -> Pipeline.default(System.out, config, debug)
+            true -> Pipeline.strict(System.out, config, debug, schemaFormat)
+            else -> Pipeline.default(System.out, config, debug, schemaFormat)
         }
     }
 
@@ -342,6 +364,7 @@ internal class MainCommand : Runnable {
      */
     private fun envCatalog(datum: Datum, inferredType: PType? = null): Catalog {
         val catalogName = "default"
+        val schemaOverride = schema?.let { Pipeline.parseSchema(it, schemaType) }
         val schemas = if (inferredType != null && inferredType.code() == PType.ROW) {
             inferredType.fields.associate { it.name to it.type }
         } else {
@@ -353,7 +376,7 @@ internal class MainCommand : Runnable {
                     define(
                         Table.standard(
                             name = Name.of(it.name),
-                            schema = schemas[it.name] ?: it.value.type,
+                            schema = schemaOverride ?: schemas[it.name] ?: it.value.type,
                             datum = it.value
                         )
                     )
@@ -380,12 +403,13 @@ internal class MainCommand : Runnable {
             Datum.nullValue()
         }
 
+        val schemaOverride = schema?.let { Pipeline.parseSchema(it, schemaType) }
         return Catalog.builder()
             .name(catalogName)
             .define(
                 Table.standard(
                     name = Name.of("stdin"),
-                    schema = datum.type,
+                    schema = schemaOverride ?: datum.type,
                     datum = datum,
                 )
             )
@@ -413,12 +437,13 @@ internal class MainCommand : Runnable {
             Datum.nullValue()
         }
 
+        val schemaOverride = schema?.let { Pipeline.parseSchema(it, schemaType) }
         return Catalog.builder()
             .name(catalogName)
             .define(
                 Table.standard(
                     name = Name.of("stdin"),
-                    schema = datum.type,
+                    schema = schemaOverride ?: datum.type,
                     datum = datum,
                 )
             )

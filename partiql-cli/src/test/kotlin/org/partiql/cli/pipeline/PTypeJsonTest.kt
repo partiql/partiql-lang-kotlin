@@ -1,4 +1,4 @@
-package org.partiql.types
+package org.partiql.cli.pipeline
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -10,7 +10,7 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 
 /**
- * Tests for [PType.toJson] and [PType.fromJson] round-trip serialization.
+ * Tests for [PTypeSerde.toJson] and [PTypeSerde.fromJson] round-trip serialization.
  */
 class PTypeJsonTest {
 
@@ -92,16 +92,16 @@ class PTypeJsonTest {
     @ParameterizedTest
     @MethodSource("primitiveCases")
     fun `round-trip primitive types`(original: PType) {
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(original.code(), restored.code())
     }
 
     @ParameterizedTest
     @MethodSource("parameterizedCases")
     fun `round-trip parameterized types`(original: PType) {
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(original.code(), restored.code())
         when (original.code()) {
             PType.DECIMAL, PType.NUMERIC -> {
@@ -120,8 +120,8 @@ class PTypeJsonTest {
     @ParameterizedTest
     @MethodSource("defaultParameterCases")
     fun `round-trip default parameter types preserve metas`(original: PType) {
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(original.code(), restored.code())
         assertEquals(original.metas, restored.metas)
     }
@@ -129,8 +129,8 @@ class PTypeJsonTest {
     @ParameterizedTest
     @MethodSource("collectionCases")
     fun `round-trip collection types`(original: PType) {
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(original.code(), restored.code())
         assertEquals(original.typeParameter.code(), restored.typeParameter.code())
     }
@@ -138,8 +138,8 @@ class PTypeJsonTest {
     @ParameterizedTest
     @MethodSource("intervalYmCases")
     fun `round-trip INTERVAL_YM types`(original: PType) {
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.INTERVAL_YM, restored.code())
         assertEquals(original.intervalCode, restored.intervalCode)
         assertEquals(original.precision, restored.precision)
@@ -149,8 +149,8 @@ class PTypeJsonTest {
     @ParameterizedTest
     @MethodSource("intervalDtCases")
     fun `round-trip INTERVAL_DT types`(original: PType) {
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.INTERVAL_DT, restored.code())
         assertEquals(original.intervalCode, restored.intervalCode)
         assertEquals(original.precision, restored.precision)
@@ -161,8 +161,8 @@ class PTypeJsonTest {
     @Test
     fun `round-trip nested array in bag`() {
         val original = PType.bag(PType.array(PType.integer()))
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.BAG, restored.code())
         assertEquals(PType.ARRAY, restored.typeParameter.code())
         assertEquals(PType.INTEGER, restored.typeParameter.typeParameter.code())
@@ -175,8 +175,8 @@ class PTypeJsonTest {
             PTypeField.of("name", PType.string()),
             PTypeField.of("score", PType.decimal(10, 2)),
         )
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.ROW, restored.code())
         val fields = restored.fields.toList()
         assertEquals(3, fields.size)
@@ -196,8 +196,8 @@ class PTypeJsonTest {
             PTypeField.of("tags", PType.array(PType.string())),
             PTypeField.of("active", PType.bool()),
         )
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.ROW, restored.code())
         val fields = restored.fields.toList()
         assertEquals(2, fields.size)
@@ -209,15 +209,15 @@ class PTypeJsonTest {
     @Test
     fun `round-trip VARIANT type`() {
         val original = PType.variant("ion")
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.VARIANT, restored.code())
     }
 
     @Test
     fun `INTERVAL_YM JSON contains intervalCode and precision`() {
         val original = PType.intervalYearMonth(5)
-        val json = original.toJson()
+        val json = PTypeSerde.toJson(original)
         assert(json.contains("\"intervalCode\""))
         assert(json.contains("\"YEAR_MONTH\""))
         assert(json.contains("\"precision\""))
@@ -226,7 +226,7 @@ class PTypeJsonTest {
     @Test
     fun `INTERVAL_DT JSON contains intervalCode precision and fractionalPrecision`() {
         val original = PType.intervalDaySecond(4, 6)
-        val json = original.toJson()
+        val json = PTypeSerde.toJson(original)
         assert(json.contains("\"intervalCode\""))
         assert(json.contains("\"DAY_SECOND\""))
         assert(json.contains("\"precision\""))
@@ -237,8 +237,8 @@ class PTypeJsonTest {
     fun `INTERVAL_DT with custom metas round-trips`() {
         val original = PType.intervalSecond(5, 3)
         original.metas["custom_key"] = "custom_value"
-        val json = original.toJson()
-        val restored = PType.fromJson(json)
+        val json = PTypeSerde.toJson(original)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.INTERVAL_DT, restored.code())
         assertEquals(IntervalCode.SECOND, restored.intervalCode)
         assertEquals(5, restored.precision)
@@ -249,90 +249,90 @@ class PTypeJsonTest {
     @Test
     fun `fromJson with BOOLEAN alias`() {
         val json = """{"type": "BOOLEAN"}"""
-        val restored = PType.fromJson(json)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.BOOL, restored.code())
     }
 
     @Test
     fun `fromJson with INT alias`() {
         val json = """{"type": "INT"}"""
-        val restored = PType.fromJson(json)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.INTEGER, restored.code())
     }
 
     @Test
     fun `fromJson with DOUBLE PRECISION alias`() {
         val json = """{"type": "DOUBLE PRECISION"}"""
-        val restored = PType.fromJson(json)
+        val restored = PTypeSerde.fromJson(json)
         assertEquals(PType.DOUBLE, restored.code())
     }
 
     @Test
     fun `fromJson rejects null node`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("null")
+            PTypeSerde.fromJson("null")
         }
     }
 
     @Test
     fun `fromJson rejects unsupported type`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("""{"type": "FAKETYPE"}""")
+            PTypeSerde.fromJson("""{"type": "FAKETYPE"}""")
         }
     }
 
     @Test
     fun `fromJson rejects ROW without fields`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("""{"type": "ROW"}""")
+            PTypeSerde.fromJson("""{"type": "ROW"}""")
         }
     }
 
     @Test
     fun `fromJson rejects ARRAY without element`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("""{"type": "ARRAY"}""")
+            PTypeSerde.fromJson("""{"type": "ARRAY"}""")
         }
     }
 
     @Test
     fun `fromJson rejects DECIMAL without precision`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("""{"type": "DECIMAL"}""")
+            PTypeSerde.fromJson("""{"type": "DECIMAL"}""")
         }
     }
 
     @Test
     fun `fromJson BLOB without length returns default`() {
-        val restored = PType.fromJson("""{"type": "BLOB"}""")
+        val restored = PTypeSerde.fromJson("""{"type": "BLOB"}""")
         assertEquals(PType.BLOB, restored.code())
     }
 
     @Test
     fun `fromJson rejects INTERVAL_YM without intervalCode`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("""{"type": "INTERVAL_YM", "precision": 4}""")
+            PTypeSerde.fromJson("""{"type": "INTERVAL_YM", "precision": 4}""")
         }
     }
 
     @Test
     fun `fromJson rejects INTERVAL_DT without intervalCode`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("""{"type": "INTERVAL_DT", "precision": 4, "fractionalPrecision": 0}""")
+            PTypeSerde.fromJson("""{"type": "INTERVAL_DT", "precision": 4, "fractionalPrecision": 0}""")
         }
     }
 
     @Test
     fun `fromJson rejects INTERVAL_YM with invalid intervalCode`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("""{"type": "INTERVAL_YM", "intervalCode": "DAY", "precision": 4}""")
+            PTypeSerde.fromJson("""{"type": "INTERVAL_YM", "intervalCode": "DAY", "precision": 4}""")
         }
     }
 
     @Test
     fun `fromJson rejects INTERVAL_DT with invalid intervalCode`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PType.fromJson("""{"type": "INTERVAL_DT", "intervalCode": "YEAR", "precision": 4, "fractionalPrecision": 0}""")
+            PTypeSerde.fromJson("""{"type": "INTERVAL_DT", "intervalCode": "YEAR", "precision": 4, "fractionalPrecision": 0}""")
         }
     }
 }
