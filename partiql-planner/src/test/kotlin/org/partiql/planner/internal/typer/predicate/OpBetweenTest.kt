@@ -43,9 +43,9 @@ class OpBetweenTest : PartiQLTyperTestBase() {
                     allTimePType,
                     allTimePType,
                 ) + cartesianProduct(
-                    allTimeStampPType,
-                    allTimeStampPType,
-                    allTimeStampPType,
+                    allTimeStampPType + allDatePType,
+                    allTimeStampPType + allDatePType,
+                    allTimeStampPType + allDatePType,
                 )
 
             val failureArgs = cartesianProduct(
