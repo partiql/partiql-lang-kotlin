@@ -10,7 +10,7 @@ import java.io.File
  * A table that lazily loads its data from a file on first access to [getDatum].
  * Only the file path is stored at construction time; the file is read when data is needed.
  */
-internal class LazyTable(
+internal open class LazyTable(
     private val name: Name,
     private val file: File,
     private val loader: (File) -> Datum,
@@ -21,7 +21,7 @@ internal class LazyTable(
 
     override fun getName(): Name = name
 
-    // TODO: Infer schema from file metadata (e.g., CSV headers, Parquet footer) without consuming the lazy iterator.
+    // TODO: Infer schema from file metadata without consuming the lazy iterator.
     override fun getSchema(): PType = PType.dynamic()
 
     override fun getDatum(): Datum {

@@ -35,12 +35,15 @@ internal class LazyCatalog(
     override fun resolveTable(session: Session, identifier: Identifier): Name? {
         val target = identifier.first()
         val file = directory.listFiles()
-            ?.filter { it.isFile && it.extension in supportedExtensions }
+            ?.filter { it.isFile && it.extension.lowercase() in supportedExtensions }
             ?.firstOrNull { target.matches(it.nameWithoutExtension) }
         if (file != null) return Name.of(file.nameWithoutExtension)
         // Check if there's a file with a matching name but unsupported extension
         val unsupported = directory.listFiles()
-            ?.firstOrNull { it.isFile && it.extension !in supportedExtensions && target.matches(it.nameWithoutExtension) }
+            ?.firstOrNull {
+                it.isFile && it.extension.lowercase() !in supportedExtensions &&
+                    target.matches(it.nameWithoutExtension)
+            }
         if (unsupported != null) {
             System.err.println("Warning: '${unsupported.name}' has unsupported extension '.${unsupported.extension}'. Supported: $supportedExtensions")
         }
@@ -49,11 +52,11 @@ internal class LazyCatalog(
 
     private fun findFile(tableName: String): File? {
         return directory.listFiles()
-            ?.filter { it.isFile && it.extension in supportedExtensions }
+            ?.filter { it.isFile && it.extension.lowercase() in supportedExtensions }
             ?.firstOrNull { it.nameWithoutExtension.equals(tableName, ignoreCase = true) }
     }
 
-    private fun createTable(name: Name, file: File): Table = when (file.extension) {
+    private fun createTable(name: Name, file: File): Table = when (file.extension.lowercase()) {
         "parquet" -> ParquetTable(name, file)
         else -> LazyTable(name, file, loader)
     }

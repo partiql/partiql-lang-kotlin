@@ -16,6 +16,7 @@
 package org.partiql.cli
 
 import org.partiql.cli.io.DatumCsvReader
+import org.partiql.cli.io.DatumParquetReader
 import org.partiql.cli.io.DatumIonReaderBuilder
 import org.partiql.cli.io.DatumWriterTextPretty
 import org.partiql.cli.io.Format
@@ -479,7 +480,7 @@ internal class MainCommand : Runnable {
         val supportedExtensions = setOf("ion", "pql", "csv", "tsv", "json", "parquet")
         return LazyCatalog("default", directory, supportedExtensions) { file ->
             debug("Loading table '${file.nameWithoutExtension}' from ${file.name}")
-            when (file.extension) {
+            when (file.extension.lowercase()) {
                 "ion", "json" -> {
                     val reader = DatumIonReaderBuilder.standard().build(file.inputStream())
                     val first = try { reader.read() } catch (_: IOException) { return@LazyCatalog Datum.nullValue() }
@@ -508,6 +509,7 @@ internal class MainCommand : Runnable {
                 }
                 "csv" -> DatumCsvReader.read(file.inputStream(), ',')
                 "tsv" -> DatumCsvReader.read(file.inputStream(), '\t')
+                "parquet" -> DatumParquetReader.read(file)
                 "pql" -> {
                     val text = file.readText(Charsets.UTF_8)
                     pipeline().execute(text, Session.empty())
