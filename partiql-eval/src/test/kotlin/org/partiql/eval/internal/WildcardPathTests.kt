@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
+import org.partiql.eval.PTestCase
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 
@@ -384,7 +385,7 @@ class WildcardPathTests {
         // =====================================================================
         @JvmStatic
         fun wildcardOnMissingFieldCases() = listOf(
-            // SIZE of SELECT from missing_field.* should return 0
+            // SIZE of SELECT from missing_field.*
             SuccessTestCase(
                 name = "SIZE of SELECT from missing_field.* returns 0",
                 input = "SIZE(SELECT x FROM payload.barcode_knowledge.* AS x)",
@@ -397,9 +398,44 @@ class WildcardPathTests {
                     )
                 )
             ),
-            // true OR (SIZE(...missing_field.*...) > 0) should return true
+            FailureTestCase(
+                name = "SIZE of SELECT from missing_field.* in strict mode should error",
+                input = "SIZE(SELECT x FROM payload.barcode_knowledge.* AS x)",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            // false OR (SIZE(...missing_field.*...) > 0)
             SuccessTestCase(
-                name = "true OR expr with missing_field.* does not poison OR",
+                name = "false OR expr with missing_field.* does not poison OR",
+                input = "false OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
+                expected = Datum.bool(false),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            FailureTestCase(
+                name = "false OR expr with missing_field.* in strict mode should error",
+                input = "false OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            // true OR (SIZE(...missing_field.*...) > 0)
+            SuccessTestCase(
+                name = "true OR expr with missing_field.* returns true",
                 input = "true OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
                 expected = Datum.bool(true),
                 mode = Mode.PERMISSIVE(),
@@ -410,12 +446,34 @@ class WildcardPathTests {
                     )
                 )
             ),
-            // Pathing into a missing field should return missing, not throw
+            FailureTestCase(
+                name = "true OR expr with missing_field.* in strict mode should error",
+                input = "true OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            // .* on missing field
             SuccessTestCase(
                 name = ".* on missing field returns empty bag",
                 input = "SELECT x FROM payload.no_such_field.* AS x",
                 expected = Datum.bag(emptyList()),
                 mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ a: 1 }"
+                    )
+                )
+            ),
+            FailureTestCase(
+                name = ".* on missing field in strict mode should error",
+                input = "SELECT x FROM payload.no_such_field.* AS x",
+                mode = Mode.STRICT(),
                 globals = listOf(
                     Global(
                         name = "payload",
@@ -433,7 +491,7 @@ class WildcardPathTests {
     // =====================================================================
     @ParameterizedTest
     @MethodSource("wildcardOnMissingFieldCases")
-    fun wildcardOnMissingField(tc: SuccessTestCase) = tc.run()
+    fun wildcardOnMissingField(tc: PTestCase) = tc.run()
 
     // =====================================================================
     // Strict mode failure cases

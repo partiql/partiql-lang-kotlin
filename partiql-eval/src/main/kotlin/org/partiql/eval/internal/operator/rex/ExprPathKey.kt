@@ -15,9 +15,6 @@ internal class ExprPathKey(
 
     override fun eval(env: Environment): Datum {
         val rootEvaluated = root.eval(env).checkStruct()
-        if (rootEvaluated.isMissing) {
-            return Datum.missing()
-        }
         val keyEvaluated = key.eval(env).check(PType.string())
         if (rootEvaluated.isNull || keyEvaluated.isNull) {
             return Datum.nullValue()

@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed path expression on missing field causing errors in permissive mode instead of returning MISSING
 
 ### Removed
 
