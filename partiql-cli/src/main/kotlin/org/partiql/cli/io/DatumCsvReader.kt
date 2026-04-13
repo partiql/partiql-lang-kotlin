@@ -22,19 +22,21 @@ internal object DatumCsvReader {
             .withIgnoreEmptyLines()
             .withTrim()
         val parser = CSVParser.parse(input, Charsets.UTF_8, format)
-        return Datum.bag(Iterable {
-            val iter = parser.iterator()
-            object : Iterator<Datum> {
-                override fun hasNext(): Boolean = iter.hasNext()
-                override fun next(): Datum {
-                    val record = iter.next()
-                    val fields = record.toMap().map { (key, value) ->
-                        Field.of(key, inferDatum(value))
+        return Datum.bag(
+            Iterable {
+                val iter = parser.iterator()
+                object : Iterator<Datum> {
+                    override fun hasNext(): Boolean = iter.hasNext()
+                    override fun next(): Datum {
+                        val record = iter.next()
+                        val fields = record.toMap().map { (key, value) ->
+                            Field.of(key, inferDatum(value))
+                        }
+                        return Datum.struct(fields)
                     }
-                    return Datum.struct(fields)
                 }
             }
-        })
+        )
     }
 
     private fun inferDatum(value: String?): Datum {

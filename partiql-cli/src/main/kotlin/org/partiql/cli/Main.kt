@@ -487,25 +487,27 @@ internal class MainCommand : Runnable {
                     val reader = DatumIonReaderBuilder.standard().build(file.inputStream())
                     val first = try { reader.read() } catch (_: IOException) { return@LazyCatalog Datum.nullValue() }
                     val second = try { reader.read() } catch (_: IOException) { return@LazyCatalog first }
-                    Datum.bag(Iterable {
-                        var state = 0
-                        object : Iterator<Datum> {
-                            private var next: Datum? = null
-                            override fun hasNext(): Boolean {
-                                if (next != null) return true
-                                next = when (state) {
-                                    0 -> { state = 1; first }
-                                    1 -> { state = 2; second }
-                                    else -> try { reader.read() } catch (_: IOException) { null }
+                    Datum.bag(
+                        Iterable {
+                            var state = 0
+                            object : Iterator<Datum> {
+                                private var next: Datum? = null
+                                override fun hasNext(): Boolean {
+                                    if (next != null) return true
+                                    next = when (state) {
+                                        0 -> { state = 1; first }
+                                        1 -> { state = 2; second }
+                                        else -> try { reader.read() } catch (_: IOException) { null }
+                                    }
+                                    return next != null
                                 }
-                                return next != null
-                            }
-                            override fun next(): Datum {
-                                if (!hasNext()) throw NoSuchElementException()
-                                return next!!.also { next = null }
+                                override fun next(): Datum {
+                                    if (!hasNext()) throw NoSuchElementException()
+                                    return next!!.also { next = null }
+                                }
                             }
                         }
-                    })
+                    )
                 }
                 "csv" -> DatumCsvReader.read(file.inputStream(), ',')
                 "tsv" -> DatumCsvReader.read(file.inputStream(), '\t')
