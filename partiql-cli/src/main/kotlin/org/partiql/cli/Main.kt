@@ -477,9 +477,6 @@ internal class MainCommand : Runnable {
             error("Not a directory: ${directory.path}")
         }
         val supportedExtensions = setOf("ion", "pql", "csv", "tsv", "json", "parquet")
-        directory.listFiles()
-            ?.filter { it.isFile && it.extension !in supportedExtensions }
-            ?.forEach { System.err.println("Warning: skipping '${it.name}' (unsupported extension '.${it.extension}'). Supported: $supportedExtensions") }
         return LazyCatalog("default", directory, supportedExtensions) { file ->
             debug("Loading table '${file.nameWithoutExtension}' from ${file.name}")
             when (file.extension) {

@@ -9,8 +9,9 @@ import org.partiql.spi.value.Datum
 import java.io.File
 
 /**
- * A catalog backed by a directory of data files. Table metadata (names) is loaded eagerly
- * at construction time, but file contents are loaded lazily on first access.
+ * A catalog backed by a directory of data files. The directory is scanned on each
+ * [getTable]/[resolveTable] call so that file renames, additions, and deletions
+ * are picked up without restarting the CLI.
  *
  * @param name the catalog name
  * @param directory the directory containing data files
@@ -19,35 +20,41 @@ import java.io.File
  */
 internal class LazyCatalog(
     private val name: String,
-    directory: File,
-    supportedExtensions: Set<String>,
-    loader: (File) -> Datum,
+    private val directory: File,
+    private val supportedExtensions: Set<String>,
+    private val loader: (File) -> Datum,
 ) : Catalog {
-
-    private val tables: Map<Name, Table>
-
-    init {
-        val files = directory.listFiles()?.filter { it.isFile && it.extension in supportedExtensions } ?: emptyList()
-        tables = files.associate { file ->
-            val tableName = Name.of(file.nameWithoutExtension)
-            tableName to when (file.extension) {
-                "parquet" -> ParquetTable(tableName, file)
-                else -> LazyTable(tableName, file, loader)
-            }
-        }
-    }
 
     override fun getName(): String = name
 
-    override fun getTable(session: Session, name: Name): Table? = tables[name]
+    override fun getTable(session: Session, name: Name): Table? {
+        val file = findFile(name.getName()) ?: return null
+        return createTable(name, file)
+    }
 
     override fun resolveTable(session: Session, identifier: Identifier): Name? {
-        val first = identifier.first()
-        for ((name, _) in tables) {
-            if (first.matches(name.getName())) {
-                return name
-            }
+        val target = identifier.first()
+        val file = directory.listFiles()
+            ?.filter { it.isFile && it.extension in supportedExtensions }
+            ?.firstOrNull { target.matches(it.nameWithoutExtension) }
+        if (file != null) return Name.of(file.nameWithoutExtension)
+        // Check if there's a file with a matching name but unsupported extension
+        val unsupported = directory.listFiles()
+            ?.firstOrNull { it.isFile && it.extension !in supportedExtensions && target.matches(it.nameWithoutExtension) }
+        if (unsupported != null) {
+            System.err.println("Warning: '${unsupported.name}' has unsupported extension '.${unsupported.extension}'. Supported: $supportedExtensions")
         }
         return null
+    }
+
+    private fun findFile(tableName: String): File? {
+        return directory.listFiles()
+            ?.filter { it.isFile && it.extension in supportedExtensions }
+            ?.firstOrNull { it.nameWithoutExtension.equals(tableName, ignoreCase = true) }
+    }
+
+    private fun createTable(name: Name, file: File): Table = when (file.extension) {
+        "parquet" -> ParquetTable(name, file)
+        else -> LazyTable(name, file, loader)
     }
 }
