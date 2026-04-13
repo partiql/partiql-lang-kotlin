@@ -16,8 +16,8 @@
 package org.partiql.cli
 
 import org.partiql.cli.io.DatumCsvReader
-import org.partiql.cli.io.DatumParquetReader
 import org.partiql.cli.io.DatumIonReaderBuilder
+import org.partiql.cli.io.DatumParquetReader
 import org.partiql.cli.io.DatumWriterTextPretty
 import org.partiql.cli.io.Format
 import org.partiql.cli.io.LazyCatalog
