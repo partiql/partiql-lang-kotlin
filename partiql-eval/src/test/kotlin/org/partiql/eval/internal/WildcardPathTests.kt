@@ -481,6 +481,30 @@ class WildcardPathTests {
                     )
                 )
             ),
+            // [*] on missing field
+            SuccessTestCase(
+                name = "[*] on missing field returns bag with empty struct",
+                input = "SELECT x FROM payload.no_such_field[*] AS x",
+                expected = Datum.bag(listOf(Datum.struct(emptyList()))),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ a: 1 }"
+                    )
+                )
+            ),
+            FailureTestCase(
+                name = "[*] on missing field in strict mode should error",
+                input = "SELECT x FROM payload.no_such_field[*] AS x",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ a: 1 }"
+                    )
+                )
+            ),
         )
     }
 
