@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
+import org.partiql.eval.PTestCase
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 
@@ -378,7 +379,143 @@ class WildcardPathTests {
                 mode = Mode.PERMISSIVE()
             ),
         )
+
+        // =====================================================================
+        // 9. Wildcard on missing field — Issue 2 regression tests
+        // =====================================================================
+        @JvmStatic
+        fun wildcardOnMissingFieldCases() = listOf(
+            // SIZE of SELECT from missing_field.*
+            SuccessTestCase(
+                name = "SIZE of SELECT from missing_field.* returns 0",
+                input = "SIZE(SELECT x FROM payload.barcode_knowledge.* AS x)",
+                expected = Datum.integer(0),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            FailureTestCase(
+                name = "SIZE of SELECT from missing_field.* in strict mode should error",
+                input = "SIZE(SELECT x FROM payload.barcode_knowledge.* AS x)",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            // false OR (SIZE(...missing_field.*...) > 0)
+            SuccessTestCase(
+                name = "false OR expr with missing_field.* does not poison OR",
+                input = "false OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
+                expected = Datum.bool(false),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            FailureTestCase(
+                name = "false OR expr with missing_field.* in strict mode should error",
+                input = "false OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            // true OR (SIZE(...missing_field.*...) > 0)
+            SuccessTestCase(
+                name = "true OR expr with missing_field.* returns true",
+                input = "true OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
+                expected = Datum.bool(true),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            FailureTestCase(
+                name = "true OR expr with missing_field.* in strict mode should error",
+                input = "true OR (SIZE(SELECT x FROM payload.barcode_knowledge.* AS x) > 0)",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ name: \"test\" }"
+                    )
+                )
+            ),
+            // .* on missing field
+            SuccessTestCase(
+                name = ".* on missing field returns empty bag",
+                input = "SELECT x FROM payload.no_such_field.* AS x",
+                expected = Datum.bag(emptyList()),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ a: 1 }"
+                    )
+                )
+            ),
+            FailureTestCase(
+                name = ".* on missing field in strict mode should error",
+                input = "SELECT x FROM payload.no_such_field.* AS x",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ a: 1 }"
+                    )
+                )
+            ),
+            // [*] on missing field
+            SuccessTestCase(
+                name = "[*] on missing field returns bag with empty struct",
+                input = "SELECT x FROM payload.no_such_field[*] AS x",
+                expected = Datum.bag(listOf(Datum.struct(emptyList()))),
+                mode = Mode.PERMISSIVE(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ a: 1 }"
+                    )
+                )
+            ),
+            FailureTestCase(
+                name = "[*] on missing field in strict mode should error",
+                input = "SELECT x FROM payload.no_such_field[*] AS x",
+                mode = Mode.STRICT(),
+                globals = listOf(
+                    Global(
+                        name = "payload",
+                        value = "{ a: 1 }"
+                    )
+                )
+            ),
+        )
     }
+
+    // =====================================================================
+    // 9. Wildcard on missing field — Issue 2 regression tests
+    //    When a struct field is missing, .* should produce an empty bag,
+    //    not a poisoning error that overrides boolean logic.
+    // =====================================================================
+    @ParameterizedTest
+    @MethodSource("wildcardOnMissingFieldCases")
+    fun wildcardOnMissingField(tc: PTestCase) = tc.run()
 
     // =====================================================================
     // Strict mode failure cases
