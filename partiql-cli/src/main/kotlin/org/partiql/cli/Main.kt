@@ -15,9 +15,11 @@
 
 package org.partiql.cli
 
+import org.partiql.cli.io.DatumCsvReader
 import org.partiql.cli.io.DatumIonReaderBuilder
 import org.partiql.cli.io.DatumWriterTextPretty
 import org.partiql.cli.io.Format
+import org.partiql.cli.io.LazyCatalog
 import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
@@ -83,8 +85,7 @@ internal class MainCommand : Runnable {
 
     @CommandLine.Option(
         names = ["-d", "--dir"],
-        description = ["Path to the database directory"],
-        hidden = true
+        description = ["Path to the database directory. Each file becomes a table (e.g. users.ion -> table 'users')."],
     )
     var dir: File? = null
 
@@ -265,10 +266,7 @@ internal class MainCommand : Runnable {
             error("Cannot specify both a database directory and a list of files.")
         }
         if (dir != null) {
-            TODO("Local directory plugin not implemented")
-            // var root = dir!!
-            // val connector = LocalPlugin.create(root.toPath())
-            // return mapOf("default" to connector)
+            return listOf(loadDir(dir!!))
         }
 
         checkFormat(format)
@@ -470,6 +468,52 @@ internal class MainCommand : Runnable {
             } else {
                 // statement string
                 (str.trim('\'') to (null as File?))
+            }
+        }
+    }
+
+    private fun loadDir(directory: File): Catalog {
+        if (!directory.isDirectory) {
+            error("Not a directory: ${directory.path}")
+        }
+        val supportedExtensions = setOf("ion", "pql", "csv", "tsv", "json", "parquet")
+        directory.listFiles()
+            ?.filter { it.isFile && it.extension !in supportedExtensions }
+            ?.forEach { System.err.println("Warning: skipping '${it.name}' (unsupported extension '.${it.extension}'). Supported: $supportedExtensions") }
+        return LazyCatalog("default", directory, supportedExtensions) { file ->
+            debug("Loading table '${file.nameWithoutExtension}' from ${file.name}")
+            when (file.extension) {
+                "ion", "json" -> {
+                    val reader = DatumIonReaderBuilder.standard().build(file.inputStream())
+                    val first = try { reader.read() } catch (_: IOException) { return@LazyCatalog Datum.nullValue() }
+                    val second = try { reader.read() } catch (_: IOException) { return@LazyCatalog first }
+                    Datum.bag(Iterable {
+                        var state = 0
+                        object : Iterator<Datum> {
+                            private var next: Datum? = null
+                            override fun hasNext(): Boolean {
+                                if (next != null) return true
+                                next = when (state) {
+                                    0 -> { state = 1; first }
+                                    1 -> { state = 2; second }
+                                    else -> try { reader.read() } catch (_: IOException) { null }
+                                }
+                                return next != null
+                            }
+                            override fun next(): Datum {
+                                if (!hasNext()) throw NoSuchElementException()
+                                return next!!.also { next = null }
+                            }
+                        }
+                    })
+                }
+                "csv" -> DatumCsvReader.read(file.inputStream(), ',')
+                "tsv" -> DatumCsvReader.read(file.inputStream(), '\t')
+                "pql" -> {
+                    val text = file.readText(Charsets.UTF_8)
+                    pipeline().execute(text, Session.empty())
+                }
+                else -> Datum.nullValue()
             }
         }
     }

@@ -44,6 +44,8 @@ object Versions {
     const val kotlinxCoroutinesJdk8 = "1.8.1"
     const val ktlint = "0.42.1" // we're on an old version of ktlint. TODO upgrade https://github.com/partiql/partiql-lang-kotlin/issues/1418
     const val lombok = "1.18.34"
+    const val parquet = "1.14.1"
+    const val hadoop = "3.3.6"
 
     // Testing
     const val assertj = "3.11.0"
@@ -85,6 +87,9 @@ object Deps {
     const val kotlinxCoroutinesJdk8 = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${Versions.kotlinxCoroutinesJdk8}"
     const val ktlint = "com.pinterest.ktlint:ktlint-core:${Versions.ktlint}"
     const val lombok = "org.projectlombok:lombok:${Versions.lombok}"
+    const val parquetHadoop = "org.apache.parquet:parquet-hadoop:${Versions.parquet}"
+    const val hadoopCommon = "org.apache.hadoop:hadoop-common:${Versions.hadoop}"
+    const val hadoopMapreduceClient = "org.apache.hadoop:hadoop-mapreduce-client-core:${Versions.hadoop}"
 
     // Testing
     const val assertj = "org.assertj:assertj-core:${Versions.assertj}"

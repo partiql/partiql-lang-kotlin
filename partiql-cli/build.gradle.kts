@@ -36,6 +36,13 @@ dependencies {
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
     implementation(Deps.kotlinxCoroutines)
+    implementation(Deps.parquetHadoop)
+    implementation(Deps.hadoopCommon) {
+        exclude(group = "org.apache.curator")
+        exclude(group = "org.apache.zookeeper")
+        exclude(group = "org.apache.kerby")
+    }
+    implementation(Deps.hadoopMapreduceClient)
     testImplementation(Deps.mockito)
 }
 
