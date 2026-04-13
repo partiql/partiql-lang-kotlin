@@ -5,6 +5,7 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function.instance
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.TypePrecedence.TYPE_PRECEDENCE
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
@@ -29,17 +30,33 @@ internal object FnBetween : FnOverload() {
         if (args.all { SqlTypeFamily.TEXT.contains(it) }) {
             return getStringInstance(arg0, arg1, arg2)
         }
+
+        if (args.all { it.code() == PType.CLOB }) {
+            return getClobInstance(arg0, arg1, arg2)
+        }
+
+        // DATE_TIMESTAMP family: DATE, TIMESTAMP, TIMESTAMPZ
+        // Find the highest-precedence type and use it for all parameters to enable autocast.
+        if (args.all { SqlTypeFamily.DATE_TIMESTAMP.contains(it) }) {
+            val target = args.maxByOrNull { TYPE_PRECEDENCE[it.code()]!! }!!
+            return when (target.code()) {
+                PType.DATE -> getDateInstance(target, target, target)
+                PType.TIMESTAMP -> getTimestampInstance(target, target, target)
+                PType.TIMESTAMPZ -> getTimestampzInstance(target, target, target)
+                else -> null
+            }
+        }
+
         if (args.all { SqlTypeFamily.TIME.contains(it) }) {
-            return getTimeInstance(arg0, arg1, arg2)
+            val target = args.maxByOrNull { TYPE_PRECEDENCE[it.code()]!! }!!
+            return when (target.code()) {
+                PType.TIME -> getTimeInstance(target, target, target)
+                PType.TIMEZ -> getTimezInstance(target, target, target)
+                else -> null
+            }
         }
-        if (args.all { SqlTypeFamily.TIMESTAMP.contains(it) }) {
-            return getTimestampInstance(arg0, arg1, arg2)
-        }
-        return when (arg0.code() to arg1.code() to arg2.code()) {
-            (PType.CLOB to PType.CLOB to PType.CLOB) -> getClobInstance(arg0, arg1, arg2)
-            (PType.DATE to PType.DATE to PType.DATE) -> getDateInstance(arg0, arg1, arg2)
-            else -> null
-        }
+
+        return null
     }
 
     private fun getNumberInstance(arg0: PType, arg1: PType, arg2: PType): Fn {
@@ -146,6 +163,42 @@ internal object FnBetween : FnOverload() {
                 val l = args[1].localDateTime
                 val r = args[2].localDateTime
                 Datum.bool(v in l..r)
+            }
+        )
+    }
+
+    private fun getTimezInstance(arg0: PType, arg1: PType, arg2: PType): Fn {
+        return instance(
+            name = name,
+            returns = PType.bool(),
+            parameters = arrayOf(
+                Parameter("value", arg0),
+                Parameter("lower", arg1),
+                Parameter("upper", arg2)
+            ),
+            invoke = { args ->
+                val v = args[0].offsetTime
+                val l = args[1].offsetTime
+                val r = args[2].offsetTime
+                Datum.bool(v >= l && v <= r)
+            }
+        )
+    }
+
+    private fun getTimestampzInstance(arg0: PType, arg1: PType, arg2: PType): Fn {
+        return instance(
+            name = name,
+            returns = PType.bool(),
+            parameters = arrayOf(
+                Parameter("value", arg0),
+                Parameter("lower", arg1),
+                Parameter("upper", arg2)
+            ),
+            invoke = { args ->
+                val v = args[0].offsetDateTime
+                val l = args[1].offsetDateTime
+                val r = args[2].offsetDateTime
+                Datum.bool(v >= l && v <= r)
             }
         )
     }
