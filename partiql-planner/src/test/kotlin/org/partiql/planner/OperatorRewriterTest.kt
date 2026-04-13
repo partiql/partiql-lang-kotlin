@@ -21,8 +21,6 @@ import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.types.fromStaticType
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 /**
  * Tests for [OperatorRewriter] by planning an original query, applying a rewriter, then comparing
@@ -33,13 +31,17 @@ import kotlin.test.assertNotNull
  * 3. Plan the [SuccessTestCase.targetQuery]
  * 4. Assert equivalence via [PlanEquivalenceOperatorVisitor]
  */
+/**
+ * An operator rewriter that adds a validation step.
+ */
+
 internal class OperatorRewriterTest {
 
     data class SuccessTestCase(
         val name: String,
         val originalQuery: String,
         val targetQuery: String,
-        val rewriter: OperatorRewriter<Void?>,
+        val rewriter: RewriterWithValidation<Void?>,
         val catalog: String = "default",
         val catalogPath: List<String> = emptyList(),
     ) {
@@ -84,13 +86,34 @@ internal class OperatorRewriterTest {
             return planner.plan(ast, session).plan
         }
 
+        abstract class RewriterWithValidation<C> : OperatorRewriter<C>() {
+            abstract fun validate(actual: Plan, expected: Plan): Boolean
+        }
+
         /**
          * Rewriter that renames output struct field keys to col_0, col_1, ...
          *
          * In a SQL SELECT, the plan produces a RexStruct whose Field keys are RexLit strings
          * holding the column names. This rewriter replaces those keys with sequential names.
          */
-        private class ColumnRenamingRewriter : OperatorRewriter<Void?>() {
+        private class ColumnRenamingRewriter : RewriterWithValidation<Void?>() {
+            override fun validate(actual: Plan, expected: Plan): Boolean {
+                val originalAction = actual.action as Action.Query
+
+                // Apply the rewriter
+                val rewrittenRex = this.visitRex(originalAction.rex, null)
+                // Find the first RelProject in the rewritten tree
+                val rewrittenProject = findFirstRelProject(rewrittenRex)
+                val actualNames = extractColumnNames(rewrittenProject!!)
+
+                // Plan the target query and extract column names from its first RelProject
+                val targetAction = expected.action as Action.Query
+                val targetProject = findFirstRelProject(targetAction.rex)
+                val expectedNames = extractColumnNames(targetProject!!)
+                // TODO [PlanEquivalenceOperatorVisitor] is not fully implemented to compare plan.
+                return actualNames == expectedNames
+            }
+
             override fun visitStruct(rex: RexStruct, ctx: Void?): Operator {
                 val fields = rex.getFields()
                 val renamedFields = fields.mapIndexed { i, field ->
@@ -101,6 +124,36 @@ internal class OperatorRewriterTest {
                 val newStruct = RexStruct.create(renamedFields)
                 newStruct.setType(rex.getType())
                 return newStruct
+            }
+
+            /**
+             * Finds the first [RelProject] by walking the operator tree depth-first.
+             */
+            private fun findFirstRelProject(operator: Operator): RelProject? {
+                if (operator is RelProject) return operator
+                for (operand in operator.getOperands()) {
+                    for (child in operand) {
+                        val found = findFirstRelProject(child)
+                        if (found != null) return found
+                    }
+                }
+                return null
+            }
+
+            /**
+             * Extracts column names from the projections struct of a [RelProject].
+             *
+             * In a SQL SELECT, the projections list contains a single [RexStruct] whose [RexStruct.Field] keys
+             * are [RexLit] strings holding the column names.
+             */
+            private fun extractColumnNames(project: RelProject): List<String> {
+                return project.getProjections()
+                    .filterIsInstance<RexStruct>()
+                    .flatMap { it.getFields() }
+                    .map { field ->
+                        val key = field.getKey() as RexLit
+                        key.getDatum().getString()
+                    }
             }
         }
 
@@ -131,60 +184,10 @@ internal class OperatorRewriterTest {
         )
     }
 
-    /**
-     * Finds the first [RelProject] by walking the operator tree depth-first.
-     */
-    private fun findFirstRelProject(operator: Operator): RelProject? {
-        if (operator is RelProject) return operator
-        for (operand in operator.getOperands()) {
-            for (child in operand) {
-                val found = findFirstRelProject(child)
-                if (found != null) return found
-            }
-        }
-        return null
-    }
-
-    /**
-     * Extracts column names from the projections struct of a [RelProject].
-     *
-     * In a SQL SELECT, the projections list contains a single [RexStruct] whose [RexStruct.Field] keys
-     * are [RexLit] strings holding the column names.
-     */
-    private fun extractColumnNames(project: RelProject): List<String> {
-        return project.getProjections()
-            .filterIsInstance<RexStruct>()
-            .flatMap { it.getFields() }
-            .map { field ->
-                val key = field.getKey() as RexLit
-                key.getDatum().getString()
-            }
-    }
-
     private fun runTest(tc: SuccessTestCase) {
-        val originalPlan = plan(tc.originalQuery, tc.catalog, tc.catalogPath)
-        val originalAction = originalPlan.action as Action.Query
-
-        // Apply the rewriter
-        val rewrittenRex = tc.rewriter.visitRex(originalAction.rex, null)
-
-        // Find the first RelProject in the rewritten tree
-        val rewrittenProject = findFirstRelProject(rewrittenRex)
-        assertNotNull(rewrittenProject, "Expected a RelProject in the rewritten plan for '${tc.name}'")
-        val actualNames = extractColumnNames(rewrittenProject)
-
-        // Plan the target query and extract column names from its first RelProject
-        val targetPlan = plan(tc.targetQuery, tc.catalog, tc.catalogPath)
-        val targetAction = targetPlan.action as Action.Query
-        val targetProject = findFirstRelProject(targetAction.rex)
-        assertNotNull(targetProject, "Expected a RelProject in the target plan for '${tc.name}'")
-        val expectedNames = extractColumnNames(targetProject)
-        // TODO [PlanEquivalenceOperatorVisitor] is not fully implemented to compare plan.
-        // We should use PlanEquivalenceOperatorVisitor instead of column name extraction
-        assertEquals(
-            expectedNames, actualNames,
-            "Column names after rewrite for '${tc.name}'"
-        )
+        val o = plan(tc.originalQuery, tc.catalog, tc.catalogPath)
+        val t = plan(tc.targetQuery, tc.catalog, tc.catalogPath)
+        assert(tc.rewriter.validate(o, t), { tc.name })
     }
 
     @ParameterizedTest
