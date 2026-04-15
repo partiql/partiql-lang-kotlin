@@ -1,3 +1,6 @@
 # Ignore custom ktlint rules for tests
 [**/test/**.kt]
 disabled_rules = custom-ktlint-rules:top-level-internal,custom-ktlint-rules:top-level-public
+
+[partiql-planner/src/test/kotlin/org/partiql/planner/internal/typer/RelaxedSetOpTypeMatchingTest.kt]
+disabled_rules = indent
