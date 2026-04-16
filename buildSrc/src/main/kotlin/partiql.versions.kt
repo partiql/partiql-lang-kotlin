@@ -54,6 +54,7 @@ object Versions {
     const val junit4Params = "1.1.1"
     const val mockito = "4.5.0"
     const val snapshotTest = "4.0.8"
+    const val jackson = "2.17.2"
     const val slf4j = "2.0.17"
 }
 
@@ -99,6 +100,7 @@ object Deps {
     const val mockito = "org.mockito:mockito-junit-jupiter:${Versions.mockito}"
     const val ktlintTest = "com.pinterest.ktlint:ktlint-test:${Versions.ktlint}"
     const val snapshotTest = "io.github.origin-energy:java-snapshot-testing-junit5:${Versions.snapshotTest}"
+    const val jacksonDatabind = "com.fasterxml.jackson.core:jackson-databind:${Versions.jackson}"
     const val slf4j = "org.slf4j:slf4j-simple:${Versions.slf4j}"
 }
 
