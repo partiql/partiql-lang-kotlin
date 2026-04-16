@@ -483,8 +483,18 @@ internal class MainCommand : Runnable {
             when (file.extension.lowercase()) {
                 "ion", "json" -> {
                     val reader = DatumIonReaderBuilder.standard().build(file.inputStream())
-                    val first = try { reader.read() } catch (_: IOException) { return@LazyCatalog Datum.nullValue() }
-                    val second = try { reader.read() } catch (_: IOException) { return@LazyCatalog first }
+                    val first = try {
+                        reader.read()
+                    } catch (_: IOException) {
+                        reader.close()
+                        return@LazyCatalog Datum.nullValue()
+                    }
+                    val second = try {
+                        reader.read()
+                    } catch (_: IOException) {
+                        reader.close()
+                        return@LazyCatalog first
+                    }
                     Datum.bag(
                         Iterable {
                             var state = 0
@@ -495,7 +505,12 @@ internal class MainCommand : Runnable {
                                     next = when (state) {
                                         0 -> { state = 1; first }
                                         1 -> { state = 2; second }
-                                        else -> try { reader.read() } catch (_: IOException) { null }
+                                        else -> try {
+                                            reader.read()
+                                        } catch (_: IOException) {
+                                            reader.close()
+                                            null
+                                        }
                                     }
                                     return next != null
                                 }

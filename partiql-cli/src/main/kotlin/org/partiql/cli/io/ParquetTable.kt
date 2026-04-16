@@ -19,8 +19,9 @@ internal class ParquetTable(
     file: File,
 ) : LazyTable(name, file, { DatumParquetReader.read(it) }) {
 
-    private val parquetSchema: MessageType =
+    private val parquetSchema: MessageType by lazy {
         ParquetFileReader.open(LocalInputFile(file.toPath())).use { it.footer.fileMetaData.schema }
+    }
 
     override fun getSchema(): PType {
         val fields = parquetSchema.fields.map { PTypeField.of(it.name, parquetTypeToPType(it)) }

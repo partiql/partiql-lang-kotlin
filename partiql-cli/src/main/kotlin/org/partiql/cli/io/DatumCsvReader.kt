@@ -26,7 +26,11 @@ internal object DatumCsvReader {
             Iterable {
                 val iter = parser.iterator()
                 object : Iterator<Datum> {
-                    override fun hasNext(): Boolean = iter.hasNext()
+                    override fun hasNext(): Boolean {
+                        val has = iter.hasNext()
+                        if (!has) parser.close()
+                        return has
+                    }
                     override fun next(): Datum {
                         val record = iter.next()
                         val fields = record.toMap().map { (key, value) ->

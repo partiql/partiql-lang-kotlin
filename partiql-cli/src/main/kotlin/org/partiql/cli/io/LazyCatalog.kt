@@ -7,6 +7,7 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import java.io.File
+import java.io.FileFilter
 
 /**
  * A catalog backed by a directory of data files. The directory is scanned on each
@@ -25,6 +26,8 @@ internal class LazyCatalog(
     private val loader: (File) -> Datum,
 ) : Catalog {
 
+    private val supportedFilter = FileFilter { it.isFile && it.extension.lowercase() in supportedExtensions }
+
     override fun getName(): String = name
 
     override fun getTable(session: Session, name: Name): Table? {
@@ -34,25 +37,25 @@ internal class LazyCatalog(
 
     override fun resolveTable(session: Session, identifier: Identifier): Name? {
         val target = identifier.first()
-        val file = directory.listFiles()
-            ?.filter { it.isFile && it.extension.lowercase() in supportedExtensions }
+        val file = directory.listFiles(supportedFilter)
             ?.firstOrNull { target.matches(it.nameWithoutExtension) }
         if (file != null) return Name.of(file.nameWithoutExtension)
-        // Check if there's a file with a matching name but unsupported extension
-        val unsupported = directory.listFiles()
-            ?.firstOrNull {
-                it.isFile && it.extension.lowercase() !in supportedExtensions &&
-                    target.matches(it.nameWithoutExtension)
-            }
+
+        val unsupportedFilter = FileFilter {
+            it.isFile && it.extension.lowercase() !in supportedExtensions && target.matches(it.nameWithoutExtension)
+        }
+        val unsupported = directory.listFiles(unsupportedFilter)?.firstOrNull()
         if (unsupported != null) {
-            System.err.println("Warning: '${unsupported.name}' has unsupported extension '.${unsupported.extension}'. Supported: $supportedExtensions")
+            System.err.println(
+                "Warning: '${unsupported.name}' has unsupported extension " +
+                    "'.${unsupported.extension}'. Supported: $supportedExtensions"
+            )
         }
         return null
     }
 
     private fun findFile(tableName: String): File? {
-        return directory.listFiles()
-            ?.filter { it.isFile && it.extension.lowercase() in supportedExtensions }
+        return directory.listFiles(supportedFilter)
             ?.firstOrNull { it.nameWithoutExtension.equals(tableName, ignoreCase = true) }
     }
 

@@ -12,7 +12,7 @@ import java.io.File
  */
 internal open class LazyTable(
     private val name: Name,
-    private val file: File,
+    protected val file: File,
     private val loader: (File) -> Datum,
 ) : Table {
 
