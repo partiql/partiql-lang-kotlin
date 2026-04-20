@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Implemented `--dir` CLI option to load a directory of data files (.ion, .json, .csv, .tsv, .pql, .parquet) as tables with lazy loading
 
 ### Changed
 
@@ -42,6 +43,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @austnwil
+- @AugustineFu
 
 ## [1.3.10](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.10) - 2026-04-01
 
