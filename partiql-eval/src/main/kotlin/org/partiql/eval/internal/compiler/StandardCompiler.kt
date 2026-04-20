@@ -462,13 +462,13 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitPathKey(rex: RexPathKey, ctx: Unit): ExprValue {
             val operand = compile(rex.getOperand(), ctx)
             val key = compile(rex.getKey(), ctx)
-            return ExprPathKey(operand, key)
+            return ExprPathKey(operand, key).catch()
         }
 
         override fun visitPathSymbol(rex: RexPathSymbol, ctx: Unit): ExprValue {
             val operand = compile(rex.getOperand(), ctx)
             val symbol = rex.getSymbol()
-            return ExprPathSymbol(operand, symbol)
+            return ExprPathSymbol(operand, symbol).catch()
         }
 
         override fun visitPivot(rex: RexPivot, ctx: Unit): ExprValue {

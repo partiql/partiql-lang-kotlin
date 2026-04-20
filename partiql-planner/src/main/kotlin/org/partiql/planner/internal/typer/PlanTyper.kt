@@ -568,11 +568,25 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             val structFields = targetFields.mapIndexed { i, targetField ->
                 val sourceField = sourceFields[i]
                 val key = Rex(CompilerType(PType.string()), Rex.Op.Lit(Datum.string(targetField.name)))
-                val extracted = Rex(CompilerType(sourceField.type), rexOpPathKey(rex, key))
+                val extracted = extractRowMember(i, sourceField, targetField, rex)
                 val coerced = coerceRex(extracted, targetField.type.toCType())
                 rexOpStructField(key, coerced)
             }
             return Rex(targetType, rexOpStruct(structFields))
+        }
+
+        /**
+         * Extract the [Rex] representing member at [index] from ROW-typed [sourceRow]. For simple ROWs where op is a
+         * [Rex.Op.Struct], the [Rex] is extracted directly from the struct. In other cases, a [Rex.Op.Path.Key] is
+         * created that resolves to the member.
+         */
+        private fun extractRowMember(index: Int, sourceField: CompilerType.PTypeField, targetField: CompilerType.PTypeField, sourceRow: Rex): Rex {
+            if (sourceRow.op is Rex.Op.Struct) {
+                return sourceRow.op.fields[index].v
+            }
+
+            val key = Rex(CompilerType(PType.string()), Rex.Op.Lit(Datum.string(targetField.name)))
+            return Rex(CompilerType(sourceField.type), rexOpPathKey(sourceRow, key))
         }
 
         /**

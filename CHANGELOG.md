@@ -33,6 +33,8 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed path expression on missing field causing errors in permissive mode instead of returning MISSING
+- Fixed extraneous struct materialization in plan when `UNION/INTERSECT/EXCEPT` requires type coercion
 
 ### Removed
 
@@ -40,6 +42,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @austnwil
 - @AugustineFu
 
 ## [1.3.10](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.10) - 2026-04-01
