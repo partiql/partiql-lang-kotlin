@@ -35,6 +35,9 @@ Thank you to all who have contributed!
 ### Fixed
 - Fixed path expression on missing field causing errors in permissive mode instead of returning MISSING
 - Fixed extraneous struct materialization in plan when `UNION/INTERSECT/EXCEPT` requires type coercion
+- Fixed when `With` statement is present, the relproject is omitted in OperatorRewriter
+- Fixed path expression on missing field
+- Fixed type mismatch for `BETWEEN` `AND` statement
 
 ### Removed
 
@@ -44,6 +47,8 @@ Thank you to all who have contributed!
 Thank you to all who have contributed!
 - @austnwil
 - @AugustineFu
+- @xd1313113
+- @johnedquinn
 
 ## [1.3.10](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.10) - 2026-04-01
 
