@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.3.11](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.11) - 2026-04-21
+
+### Added
 - Implemented `--dir` CLI option to load a directory of data files (.ion, .json, .csv, .tsv, .pql, .parquet) as tables with lazy loading
 
 ### Changed
@@ -35,6 +52,9 @@ Thank you to all who have contributed!
 ### Fixed
 - Fixed path expression on missing field causing errors in permissive mode instead of returning MISSING
 - Fixed extraneous struct materialization in plan when `UNION/INTERSECT/EXCEPT` requires type coercion
+- Fixed when `WITH` statement is present, the relproject is omitted in OperatorRewriter
+- Fixed path expression on missing field
+- Fixed parameter type mismatch for `BETWEEN` `AND` statement
 
 ### Removed
 
@@ -44,6 +64,8 @@ Thank you to all who have contributed!
 Thank you to all who have contributed!
 - @austnwil
 - @AugustineFu
+- @xd1313113
+- @johnedquinn
 
 ## [1.3.10](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.10) - 2026-04-01
 
