@@ -52,9 +52,9 @@ Thank you to all who have contributed!
 ### Fixed
 - Fixed path expression on missing field causing errors in permissive mode instead of returning MISSING
 - Fixed extraneous struct materialization in plan when `UNION/INTERSECT/EXCEPT` requires type coercion
-- Fixed when `With` statement is present, the relproject is omitted in OperatorRewriter
+- Fixed when `WITH` statement is present, the relproject is omitted in OperatorRewriter
 - Fixed path expression on missing field
-- Fixed type mismatch for `BETWEEN` `AND` statement
+- Fixed parameter type mismatch for `BETWEEN` `AND` statement
 
 ### Removed
 
