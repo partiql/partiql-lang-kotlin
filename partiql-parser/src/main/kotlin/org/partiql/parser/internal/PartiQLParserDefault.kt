@@ -1826,17 +1826,6 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
-        override fun visitNullIf(ctx: GeneratedParser.NullIfContext) = translate(ctx) {
-            val v1 = visitExpr(ctx.expr(0))
-            val v2 = visitExpr(ctx.expr(1))
-            exprNullIf(v1, v2)
-        }
-
-        override fun visitCoalesce(ctx: GeneratedParser.CoalesceContext) = translate(ctx) {
-            val expressions = visitOrEmpty<Expr>(ctx.expr())
-            exprCoalesce(expressions)
-        }
-
         override fun visitCaseExpr(ctx: GeneratedParser.CaseExprContext) = translate(ctx) {
             val expr = ctx.case_?.let { visitExpr(it) }
             val branches = ctx.whens.indices.map { i ->
@@ -1897,6 +1886,12 @@ internal class PartiQLParserDefault : PartiQLParser {
                         exprCall(identifier(qualifier = path, identifier = name), args, setq = null)
                     }
                 }
+                GeneratedParser.COALESCE -> exprCoalesce(args)
+                GeneratedParser.NULLIF -> {
+                    if (args.size != 2) throw error(funcName, "NULLIF requires exactly 2 arguments")
+                    exprNullIf(args[0], args[1])
+                }
+
                 else -> exprCall(visitQualifiedName(funcName), args, setq)
             }
         }

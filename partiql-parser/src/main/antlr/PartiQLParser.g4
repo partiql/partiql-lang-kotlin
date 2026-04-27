@@ -880,24 +880,22 @@ valueExpr
 exprPrimary
     : exprTerm                   # ExprPrimaryBase
     | cast                       # ExprPrimaryBase
-    | sequenceConstructor        # ExprPrimaryBase
-    | substring                  # ExprPrimaryBase
-    | position                   # ExprPrimaryBase
-    | overlay                    # ExprPrimaryBase
+    | sequenceConstructor        # ExprPrimaryBase // TODO: Move to function call
+    | substring                  # ExprPrimaryBase // TODO: Move to function call
+    | position                   # ExprPrimaryBase // TODO: Move the standard form to function call
+    | overlay                    # ExprPrimaryBase // TODO: Move the standard form to function call
     | canCast                    # ExprPrimaryBase  // TODO remove ahead of `v1` release
     | canLosslessCast            # ExprPrimaryBase  // TODO remove ahead of `v1` release
     | extract                    # ExprPrimaryBase
-    | coalesce                   # ExprPrimaryBase
     | dateFunction               # ExprPrimaryBase
     | trimFunction               # ExprPrimaryBase
-    | nullIf                     # ExprPrimaryBase
     | functionCall               # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
     | exprGraphMatchMany         # ExprPrimaryBase
     | caseExpr                   # ExprPrimaryBase
     | windowFunction             # ExprPrimaryBase
-    | rowValueConstructor        # ExprPrimaryBase
-    | tableValueConstructor      # ExprPrimaryBase
+    | rowValueConstructor        # ExprPrimaryBase // TODO: Move the standard form to function call
+    | tableValueConstructor      # ExprPrimaryBase // TODO: Move to function call
     ;
 
 /**
