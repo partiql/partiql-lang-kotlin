@@ -28,6 +28,8 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
+- Route `NULLIF` and `COALESCE` to standard function call when parsing; 
+this change enables SLL parsing, allowing us to see significant performance improvement when parsing complicated `NULLIF`/`COALESCE` call. 
 
 ### Deprecated
 
@@ -39,6 +41,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @yliuuuu
 
 ## [1.3.11](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.11) - 2026-04-21
 
