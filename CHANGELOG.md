@@ -1,55 +1,58 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-<!-- Template: after a release, copy and paste out below
-## [Unreleased](https://TODO.com) - YYYY-MM-DD
+## [Unreleased]
+
+## [1.3.12] - 2026-04-28
 
 ### Added
+
+- Test changelog
 
 ### Changed
 
-### Deprecated
 
-### Fixed
-
-### Removed
-
-### Security
-
-### Contributors
-Thank you to all who have contributed!
--->
-
-## [Unreleased](https://TODO.com) - YYYY-MM-DD
-
-### Added
-
-### Changed
 
 ### Deprecated
 
+
+
 ### Fixed
+
+
 
 ### Removed
 
+
+
 ### Security
 
-### Contributors
-Thank you to all who have contributed!
 
-## [1.3.11](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.11) - 2026-04-21
+
+### Contributors
+
+- Thank you to all who have contributed!
+
+## [1.3.11] - 2026-04-21
 
 ### Added
+
 - Implemented `--dir` CLI option to load a directory of data files (.ion, .json, .csv, .tsv, .pql, .parquet) as tables with lazy loading
 
 ### Changed
 
+
+
 ### Deprecated
 
+
+
 ### Fixed
+
 - Fixed path expression on missing field causing errors in permissive mode instead of returning MISSING
 - Fixed extraneous struct materialization in plan when `UNION/INTERSECT/EXCEPT` requires type coercion
 - Fixed when `WITH` statement is present, the relproject is omitted in OperatorRewriter
@@ -58,227 +61,343 @@ Thank you to all who have contributed!
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @austnwil
 - @AugustineFu
 - @xd1313113
 - @johnedquinn
 
-## [1.3.10](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.10) - 2026-04-01
+## [1.3.10] - 2026-04-01
 
 ### Added
 
+
+
 ### Changed
+
+- Reverted [#1819](https://github.com/partiql/partiql-lang-kotlin/pull/1819) `Redefine DATE_ADD and DATE_DIFF to be special syntax for the standard SQL datetime arithmetic operators`
 
 ### Deprecated
 
-### Reverted
-Redefine DATE_ADD and DATE_DIFF to be special syntax for the standard SQL datetime arithmetic operators:
-- [#1819](https://github.com/partiql/partiql-lang-kotlin/pull/1819)
 
-## [1.3.9](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.9) - 2026-03-20
+
+### Removed
+
+## [1.3.9] - 2026-03-20
 
 ### Added
 
+
+
 ### Changed
 
+
+
 ### Deprecated
+
+
 
 ### Fixed
+
 - Fixed the issue that Set Op throws "Not Implemented error" SELECT DISTINCT
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @xd1313113
 
-## [1.3.8](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.8) - 2026-03-19
+## [1.3.8] - 2026-03-19
 
 ### Added
 
+
+
 ### Changed
+
 - Relax type match check for set operations `UNION/INTERSECT/EXCEPT`
 
 ### Deprecated
 
+
+
 ### Fixed
+
 - Fixed `AVG` and `SUM` aggregation functions throwing IllegalStateException on VARIANT-typed inputs
 - Fixed path navigation errors for `COALESCE` and `NULLIF` function
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @xd1313113
 
-## [1.3.7](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.7) - 2026-03-09
+## [1.3.7] - 2026-03-09
 
 ### Fixed
+
 - Fixed the `--format` flag in partiql-cli, which was non-functional
 - Removed coercion of root expressions when applying wildcard path expressions
 - Fixed in-predicate behavior when RHS is a SQL-style SFW query
-g
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @jobarr-amzn
 - @johnedquinn
 
-## [1.3.6](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.6) - 2026-03-05
+## [1.3.6] - 2026-03-05
 
 ### Added
 
+
+
 ### Changed
+
+
 
 ### Deprecated
 
+
+
 ### Fixed
+
 - Fixed comparison operators returning wrong type when one argument is NULL/MISSING, breaking boolean expressions.
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @XuechunHHH
 
-## [1.3.5](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.5) - 2026-03-04
+## [1.3.5] - 2026-03-04
 
 ### Added
 
+
+
 ### Changed
+
+
 
 ### Deprecated
 
+
+
 ### Fixed
+
 - Incorrectly throwing errors in PERMISSIVE mode
 - String functions unexpectedly fail with evaluation errors
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @XuechunHHH
 
-## [1.3.4](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.4) - 2026-02-16
+## [1.3.4] - 2026-02-16
 
 ### Added
 
+
+
 ### Changed
+
+
 
 ### Deprecated
 
+
+
 ### Fixed
+
 - Fixed `SIZE` function compilation to properly handle `SELECT` expressions instead of coercing them to scalars
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @XuechunHHH
 
-## [1.3.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.3) - 2026-01-16
+## [1.3.3] - 2026-01-16
 
 ### Added
+
 - Added ExprError AST node and error handling for datetime field keywords (YEAR, MONTH, DAY, HOUR, MINUTE, SECOND) used in expression contexts
 
 ### Changed
 
+
+
 ### Deprecated
+
+
 
 ### Fixed
 
+
+
 ### Removed
+
+
 
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @XuechunHHH
 
-## [1.3.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.2) - 2025-11-19
+## [1.3.2] - 2025-11-19
 
 ### Added
+
 - Add auto cast support for `TIME` ↔ `TIME WITH TIME ZONE`, `DATE` ↔ `TIMESTAMP` ↔ `TIMESTAMP WITH TIME ZONE`
 - Implement DATE_DIFF function
 - Add `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE` support to some datetime operators `+` and `-`.
 
 ### Changed
 
+
+
 ### Deprecated
+
+
 
 ### Fixed
 
+
+
 ### Removed
+
+
 
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @xd1313113
 
-## [1.3.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.1) - 2025-11-06
+## [1.3.1] - 2025-11-06
 
 ### Added
+
 - Support aggregation function calls in the `ORDER BY` and `HAVING` clause
 - Add Support to transcribe `Overlaps` function
 - Add planner support to compare DATE and TIMESTAMP(Z)
 
 ### Changed
 
+
+
 ### Deprecated
+
+
 
 ### Fixed
 
+
+
 ### Removed
+
+
 
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @xd1313113
 
-## [1.3.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.0) - 2025-10-13
+## [1.3.0] - 2025-10-13
 
 ### Added
+
 - **EXPERIMENTAL**: Adds end-to-end support for window functions including RANK, DENSE_RANK, LAG, LEAD, and ROW_NUMBER functions alongside the WINDOW clause.
 - `UPPER`, `LOWER`, `TRIM` functions support for `CHAR/VARCHAR`
 - `LIKE` and `LIKE_ESCAPE` functions support for `CHAR/VARCHAR/CLOB/STRING` with dynamic type coercion
 - `CLOB/BLOB` now supports length parameters with `CLOB(max_length)/BLOB(max_length)` syntax
 
 ### Changed
+
 - Formalize `UPPER`, `LOWER`, `TRIM` and `CONCAT` length and type handling on string types
 
 ### Deprecated
+
 - Deprecated previous modeling of window functions.
 
 ### Fixed
+
 - Datum return type for `LOWER` on a CLOB value
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @johnedquinn
 - @XuechunHHH
 
-## [1.2.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.3) - 2025-09-29
+## [1.2.3] - 2025-09-29
 
 ### Added
+
 - partiql-ast: add `With` and `WithListElement` to `AstVisitor` and `SqlDialect`
 - **EXPERIMENTAL** partiql-plan: add representation of `RelWith` and `WithListElement` to the plan and the
 `OperatorVisitor`
@@ -303,9 +422,14 @@ rewritten to their query representation
 
 ### Changed
 
+
+
 ### Deprecated
 
+
+
 ### Fixed
+
 - Specify the correct qualifier for `INTERVAL` datum with `MINUTE TO SECOND`
 - Handle the formatting when the nanoseconds of `INTERVAL` datum underflow
 - CLI printing of negative interval literals
@@ -320,18 +444,24 @@ rewritten to their query representation
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @zyfy29
 - @alancai98
 - @XuechunHHH
 - @xd1313113
 
-## [1.2.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.2) - 2025-06-26
+## [1.2.2] - 2025-06-26
 
 ### Added
+
 - **EXPERIMENTAL** add `metas` map for `PType`
 - partiql-planner: `ROW` or collection types with excluded fields resulting from `RelExclude` will include a meta
 `CONTAINS_EXCLUDED_FIELD` mapping to `true`
@@ -340,9 +470,14 @@ Thank you to all who have contributed!
 
 ### Changed
 
+
+
 ### Deprecated
 
+
+
 ### Fixed
+
 - `BETWEEN` operator function overloads in the partiql-planner
 - Mistyping of some Rex plan nodes
 - `OperatorRewriter` omitting types for rewritten nodes
@@ -352,119 +487,140 @@ Thank you to all who have contributed!
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @alancai98
 
-## [1.2.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.1) - 2025-05-07
+## [1.2.1] - 2025-05-07
 
 ### Added
+
 - added missing `NotNull` annotation for `RexPathIndex`'s `getIndex` function
 
 ### Changed
 
+
+
 ### Deprecated
 
+
+
 ### Fixed
+
 - fixed plan typing of function arguments which were previously typed the same as the function's return type
 - fixed pretty-printing of `TRIM` and binary operator parens
 - fixed the AST to plan conversion of `PathStep.Field` case-sensitivity
 - fixed the AST to plan resolving of `IS <type>` functions for `<type>`s with parameters
 
 ### Removed
+
 - redundant `CAST`s added for `CASE WHEN` branches
 
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @alancai98
 
-## [1.2.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.0) - 2025-03-12
+## [1.2.0] - 2025-03-12
 
 ### Added
+
 - Added parsing, planning, and execution of the interval type and interval values.
 - Added multiple operations involving datetime and interval values.
 - Added planning and evaluation of the LET clause
 
 ### Changed
 
+
+
 ### Deprecated
+
+
 
 ### Fixed
 
+
+
 ### Removed
+
+
 
 ### Security
 
+
+
 ### Contributors
 
-Thank you to all who have contributed!
+- Thank you to all who have contributed!
 - @johnedquinn
 - @lucaxchen
 - @mrugeshgharat
 
-## [1.1.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.1.0) - 2025-02-14
+## [1.1.0] - 2025-02-14
 
 ### Added
+
 - Added parsing, planning, and execution of basic Common Table Expressions (CTEs). These CTEs do not
   allow for the planning/execution of RECURSIVE nor the planning/execution of the column list. This addition
   also does not support the ability to reference CTEs from other CTEs. These may be added in a subsequent release.
 
 ### Fixed
+
 - Fixed the parsing of select statements and bag operations as they pertain to the expression tree.
 - Properly returns properties from `Session`
 
 ### Contributors
 
-Thank you to all who have contributed!
+- Thank you to all who have contributed!
 - @johnedquinn
 - @jpschorr
 
-**Full Changelog**: [v1.0.0...v1.1.0](https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0...v1.1.0)
+## [1.0.0] - 2025-01-23
 
-## [1.0.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.0.0) - 2025-01-23
+### Changed
 
-This is our biggest release yet, and we are incredibly excited to announce 1.0.
+- This is our biggest release yet, and we are incredibly excited to announce 1.0. Please refer to the [1.0 documentation](https://partiql.org/plk/1.0/) for more information. **Full Changelog**: [v0.14.9...v1.0.0](https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.9...v1.0.0)
 
-Please refer to the [1.0 documentation](https://partiql.org/plk/1.0/) for more information.
+### Contributors
 
-Thank you to all who have contributed!
+- Thank you to all who have contributed!
 - @alancai98
 - @am357
 - @johnedquinn
 - @rchowell
 - @yliuuuu
 
-**Full Changelog**: [v0.14.9...v1.0.0](https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.9...v1.0.0)
-
 ## [1.0.0-rc.3] - 2024-12-10
-
-Thank you to all who have contributed!
 
 ## [1.0.0-rc.2] - 2024-11-04
 
-Thank you to all who have contributed!
-
 ## [1.0.0-rc.1] - 2024-10-02
-
-Thank you to all who have contributed!
 
 ## [0.14.9] - 2024-09-26
 
 ### Changed
+
 - With full, closed schema, the planner will now give a plan-time warning when it can prove an exclude path will never
   exclude a value (relevant issue -- https://github.com/partiql/partiql-lang/issues/91).
-
-### Experimental Changes
 - **BREAKING**: For the _experimental_ `org.partiql.lang.domains` of `PartiqlLogical`, `PartiqlLogicalResolved`, and `PartiqlPhysical`,
   the modeling of DML has changed substantially. These changes, while considered breaking changes, are part of an
   experimental area of the PartiQL library and thus do not mandate a major-version bump of this library. Consumers
   of these experimental APIs should be wary of these changes.
 
 ### Contributors
+
+- Thank you to all who have contributed!
 - @alancai98
 - @dlurton
 - @johnedquinn
@@ -472,24 +628,29 @@ Thank you to all who have contributed!
 ## [0.14.8] - 2024-08-19
 
 ### Fixed
+
 - Case When Branch inference will preserve type constraint for String Type and Decimal Type, if no coercion is required.
 
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 
 ## [0.14.7] - 2024-08-05
 
 ### Fixed
+
 - `partiql-lang`'s `PartiQLParserBuilder.standard()` will use the ANTLR dependency from `partiql-parser` to
 prevent `NoSuchMethodError`s
 
 ## [0.14.6] - 2024-07-25
 
 ### Added
+
 - Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
 - Shades ANTLR dependency to avoid dependency conflicts.
 
 ### Changed
+
 - **Behavioral change**: The `INTEGER/INT` type is now an alias to the `INT4` type. Previously the INTEGER type was
 unconstrained which is not SQL-conformant and is causing issues in integrating with other systems. This release makes
 INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
@@ -502,11 +663,13 @@ org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 - partiql-ast: fixes missing parens from `bag_op` when printing using `SqlDialect`
 
 ### Fixed
+
 - Fixed classpath conflict for IsStaticTypeMeta
 - Fixes ANTLR parser grammar file naming.
 
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @rchowell
 - @alancai98
 - @johnedquinn
@@ -514,42 +677,46 @@ Thank you to all who have contributed!
 ## [0.14.5] - 2024-04-26
 
 ### Added
+
 - partiql-ast: adds warning not to implement `AstVisitor` interface directly. Please extend `AstBaseVisitor` instead.
 - partiql-plan: adds warning not to implement `PlanVisitor` interface directly. Please extend `PlanBaseVisitor` instead.
 
 ### Changed
+
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
 - Change modeling of `COALESCE` and `NULLIF` to dedicated nodes in logical plan
 - Function resolution logic: Now the function resolver would match all possible candidate (based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence.
 - **Behavioral change**: The COUNT aggregate function now returns INT64.
 
 ### Deprecated
+
 - The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release.
 - Deprecates constructor and properties `variableName` and `caseSensitive` of `org.partiql.planner.PlanningProblemDetails.UndefinedVariable`
   in favor of newly added constructor and properties `name` and `inScopeVariables`.
 
 ### Fixed
+
 - `StaticType.flatten()` on an `AnyOfType` with `AnyType` will return `AnyType`
 - Updates the default `.sql()` method to use a more efficient (internal) printer implementation.
 - Fixes aggregations of attribute references to values of union types. This fix also allows for proper error handling by passing the UnknownAggregateFunction problem to the ProblemCallback. Please note that, with this change, the planner will no longer immediately throw an IllegalStateException for this exact scenario.
 
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @rchowell
 - @alancai98
 - @johnedquinn
 
 ## [1.0.0-perf.1] - 2024-03-04
 
-This is a pre-release containing:
-- A new, experimental evaluator under `org.partiql.eval`.
-- Several breaking changes under `org.partiql.plan` and `org.partiql.types` and `org.partiql.spi`.
+### Changed
 
-Please note that these changes are subject to future breaking changes without warning.
+- This is a pre-release containing a new, experimental evaluator under `org.partiql.eval` and several breaking changes under `org.partiql.plan`, `org.partiql.types`, and `org.partiql.spi`. Please note that these changes are subject to future breaking changes without warning.
 
 ## [0.14.4] - 2024-03-14
 
 ### Added
+
 - Added constrained decimal as valid parameter type to functions that take in numeric parameters.
 - Added async version of physical plan evaluator `PartiQLCompilerAsync`.
   - The following related async APIs have been added:
@@ -562,10 +729,12 @@ Please note that these changes are subject to future breaking changes without wa
     - JMH benchmarks added to partiql-lang: `PartiQLCompilerPipelineBenchmark` and `PartiQLCompilerPipelineAsyncBenchmark`
 
 ### Changed
+
 - Function resolution logic: Now the function resolver would match all possible candidate(based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence.
 - partiql-cli -- experimental version of CLI now uses the async physical plan evaluator
 
 ### Deprecated
+
 - As part of the additions to make an async physical plan evaluator, the synchronous physical plan evaluator `PartiQLCompiler` has been deprecated.
   - The following related APIs have been deprecated
     - `org.partiql.lang.compiler` -- `PartiQLCompiler`, `PartiQLCompilerBuilder`, `PartiQLCompilerDefault`, `PartiQLCompilerPipeline`
@@ -575,25 +744,33 @@ Please note that these changes are subject to future breaking changes without wa
     - `org.partiql.lang.eval.physical.window` -- `NavigationWindowFunction`, `WindowFunction`
 
 ### Fixed
+
 - partiql-ast: `SqlDialect` will wrap unary ops (`NOT`, `+`, `-`) in parens
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @yliuuuu
 - @alancai98
 
 ## [0.14.3] - 2024-02-14
 
 ### Fixed
+
 - Return type of `partiql-ast`'s `SqlDialect` for `defaultReturn` to be a `SqlBlock` rather than `Nothing`
 - Flatten `CASE WHEN` branch type in `PlanTyper`
 
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @alancai98
 - @johnedquinn
 - @RCHowell
@@ -603,41 +780,65 @@ Thank you to all who have contributed!
 
 ### Added
 
+
+
 ### Changed
+
 - Upgrade IonJava dependency to v1.11.1
 
 ### Deprecated
 
+
+
 ### Fixed
+
+
 
 ### Removed
 
+
+
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @RCHowell
 - @alancai98
 
 ## [0.14.1] - 2024-01-03
 
 ### Added
+
 - Adds the ability to define a user-defined-function in `ConnectorMetadata`
 - Move `ConnectorMetadata` map from `PartiQLPlanner` to `PartiQLPlanner.Session` for planner re-use.
   - Deprecates 2 APIs in `org.partiql.planner.PartiQLPlannerBuilder` in favor of using the ConnectorMetadata map in `PartiQLPlanner.Session`.
 
 ### Changed
 
+
+
 ### Deprecated
+
+
 
 ### Fixed
 
+
+
 ### Removed
+
+
 
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @rchowell
 - @johnedquinn
 - @yliuuuu
@@ -645,6 +846,7 @@ Thank you to all who have contributed!
 ## [0.14.0-alpha] - 2023-12-15
 
 ### Added
+
 - Adds top-level IR node creation functions.
 - Adds `componentN` functions (destructuring) to IR nodes via Kotlin data classes
 - Adds public `tag` field to IR nodes for associating metadata
@@ -656,6 +858,7 @@ Thank you to all who have contributed!
 - **EXPERIMENTAL**: Adds support for EXCLUDE in the default SqlDialect.
 
 ### Changed
+
 - StaticTypeInferencer and PlanTyper will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`. In these cases the StaticTypeInferencer and PlanTyper will still raise the Problem Code `ExpressionAlwaysReturnsNullOrMissing` but the severity of the problem has been changed to warning. In the case an expression always returns `MISSING`, problem code `ExpressionAlwaysReturnsMissing` will be raised, which will have problem severity of error.
 - **Breaking** The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit.
 - **BREAKING** `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal.
@@ -672,13 +875,16 @@ Thank you to all who have contributed!
 ### Deprecated
 
 
+
 ### Fixed
+
 - Fixes the CLI hanging on invalid queries. See issue #1230.
 - Fixes Timestamp Type parsing issue. Previously Timestamp Type would get parsed to a Time type.
 - Fixes PIVOT parsing to assign the key and value as defined by spec section 14.
 - Fixes the physical plan compiler to return list when `DISTINCT` used with `ORDER BY`
 
 ### Removed
+
 - **Breaking** Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
   to `foo()`
 - **Breaking** Removed `org.partiql.lang.planner.transforms.AstToPlan`. Use `org.partiql.planner.PartiQLPlanner`.
@@ -687,8 +893,11 @@ Thank you to all who have contributed!
 
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @rchowell
 - @johnedquinn
 - @yliuuuu
@@ -697,6 +906,7 @@ Thank you to all who have contributed!
 ## [0.13.2-alpha] - 2023-09-29
 
 ### Added
+
 - Adds overridden `toString()` method for Sprout-generated code.
 - Adds CURRENT_DATE session variable to PartiQL.g4 and PartiQLParser
 - Adds configurable AST to SQL pretty printer. Usage in Java `AstKt.sql(ast)` or in Kotlin `ast.sql()`.
@@ -708,12 +918,14 @@ Thank you to all who have contributed!
   - NOTE: this feature is not currently implemented in the evaluator
 
 ### Fixed
+
 - Fixes typing of scalar subqueries in the PartiQLSchemaInferencer. Note that usage of `SELECT *` in subqueries
   is not fully supported. Please make sure to handle InferenceExceptions.
 - Fixes schema inferencer behavior for ORDER BY
 
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @johnedquinn
 - @RCHowell
 - @yliuuuu
@@ -722,18 +934,21 @@ Thank you to all who have contributed!
 ## [0.13.1-alpha] - 2023-09-19
 
 ### Added
+
 - Adds `isInterruptible` property to `CompileOptions`. The default value is `false`. Please see the KDocs for more information.
 - Adds support for thread interruption in compilation and execution. If you'd like to opt-in to this addition, please see
   the `isInterruptible` addition above for more information.
 - Adds support for CLI users to use CTRL-C to cancel long-running compilation/execution of queries
 
 ### Fixed
+
 - Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references
   to the candidate row on both sides.  Now it will correctly ignore such expressions.
 - Fixes build failure for version `0.13.0` by publishing `partiql-plan` as an independent artifact. Please note that `partiql-plan` is experimental.
 
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @dlurton
 - @yliuuuu
 - @am357
@@ -743,6 +958,7 @@ Thank you to all who have contributed!
 ## [0.13.0-alpha] - 2023-09-07
 
 ### Added
+
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL values
 - Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
 - Adds new method `getFunctions()` to `org.partiql.spi.Plugin`.
@@ -770,6 +986,7 @@ Thank you to all who have contributed!
 - Adds two new methods to `PartiQLResult`: `getCoverageData` and `getCoverageStructure`.
 
 ### Changed
+
 - **Breaking**: all product types defined by the internal Sprout tool no longer generate interfaces. They are now abstract
   classes due to the generation of `equals` and `hashCode` methods. This change impacts many generated interfaces exposed
   in `:partiql-ast` and `:partiql-plan`.
@@ -805,6 +1022,7 @@ Thank you to all who have contributed!
 - Modified timestamp static type to model precision and time zone.
 
 ### Deprecated
+
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes,
   along with the `callWithOptional()`, `callWithVariadic()`, and the overloaded `call()` methods in the `ExprFunction` class,
   marking them with a Deprecation Level of ERROR. Now, it's recommended to use
@@ -815,7 +1033,10 @@ Thank you to all who have contributed!
 
 ### Fixed
 
+
+
 ### Removed
+
 - **Breaking**: Removes `optionalParameter` and `variadicParameter` from `org.partiql.lang.types.FunctionSignature`. To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.
   As this changes coincides with the addition of function overloading, only `callWithRequired` will be invoked upon execution of an `ExprFunction`. Note: Function overloading is now allowed, which is the reason for the removal of `optionalParameter` and `variadicParameter`.
 - **Breaking**: Removes unused class `Arguments` from `org.partiql.lang.eval`.
@@ -823,8 +1044,11 @@ Thank you to all who have contributed!
 
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @howero
 - @yuxtang-amazon
 - @yliuuuu
@@ -854,9 +1078,14 @@ Thank you to all who have contributed!
 
 ### Deprecated
 
+
+
 ### Fixed
 
+
+
 ### Removed
+
 - **Breaking**: Removes deprecated `org.partiql.annotations.PartiQLExperimental`
 - **Breaking**: Removes deprecated/unused `blacklist()` and `denyList()` from `org.partiql.lang.eval`
 - **Breaking**: Removes deprecated enum `LEGACY` in `org.partiql.lang.eval.CompileOptions`
@@ -867,7 +1096,6 @@ Thank you to all who have contributed!
   `org.partiql.lang.eval.io.DelimitedValues`, a constructor for `org.partiql.lang.eval.physical.EvaluatorState`, and
   `valueFactory`, `build`, `builder`, `standard` in `org.partiql.lang.CompilerPipeline`
 - **Breaking**: Removes deprecated `org.partiql.lang.eval.visitors.GroupKeyReferencesVisitorTransform`
-
 - **Breaking**: Removes `org.partiql.lang.mappers.StaticTypeMapper`
 - **Breaking**: Removes `org.partiql.lang.mappers.IonSchemaMapper`
 - **Breaking**: Removes `org.partiql.lang.mappers.TypeNotFoundException`
@@ -918,8 +1146,11 @@ Thank you to all who have contributed!
 
 ### Security
 
+
+
 ### Contributors
-Thank you to all who have contributed!
+
+- Thank you to all who have contributed!
 - @johnedquinn
 - @RCHowell
 - @vgapeyev
@@ -948,17 +1179,22 @@ Thank you to all who have contributed!
 
 ### Deprecated
 
+
+
 ### Fixed
 
 - Fixes the ability for JOIN predicates to access the FROM source aliases and corresponding attributes.
 
 ### Removed
 
+
+
 ### Security
 
 ## [0.10.0-alpha] - 2023-05-05
 
 ### Added
+
 - Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
 - Added standard SQL built-in functions POSITION, OVERLAY, LENGTH, BIT_LENGTH, OCTET_LENGTH, CARDINALITY,
   an additional builtin TEXT_REPLACE, and standard SQL aggregations on booleans EVERY, ANY, SOME.
@@ -1034,16 +1270,20 @@ Thank you to all who have contributed!
 
 ## [0.9.4-alpha] - 2023-04-20
 
-This version reverts many accidental breaking changes introduced in v0.9.3. Its contents are equivalent to v0.9.2.
+### Changed
+
+- This version reverts many accidental breaking changes introduced in v0.9.3. Its contents are equivalent to v0.9.2.
 
 ## [0.9.3-alpha] - 2023-04-12
 
-This version accidentally released multiple breaking changes and is not recommended. Please use v0.9.4 to avoid
-breaking changes if migrating from v0.9.2. The breaking changes accidentally introduced in v0.9.3 can be found in v0.10.0.
+### Changed
+
+- This version accidentally released multiple breaking changes and is not recommended. Please use v0.9.4 to avoid breaking changes if migrating from v0.9.2. The breaking changes accidentally introduced in v0.9.3 can be found in v0.10.0.
 
 ## [0.9.2-alpha] - 2023-01-20
 
 ### Added
+
 - Adds ability to pipe queries to the CLI.
 - Adds ability to run PartiQL files as executables by adding support for shebangs.
 - Adds experimental syntax for CREATE TABLE, towards addressing
@@ -1051,15 +1291,21 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 
 ### Changed
 
+
+
 ### Deprecated
 
+
+
 ### Fixed
+
 - Fixes list/bag ExprValue creation in plan evaluator
 - Fixes gradle build issues.
 
 ## [0.9.1-alpha] - 2023-01-04
 
 ### Added
+
 - Makes the following `PartiQLCompilerBuilder` functions are moved to public
   - `customOperatorFactories`
   - `customFunctions`
@@ -1068,6 +1314,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ## [0.9.0-alpha] - 2022-12-13
 
 ### Added
+
 - Adds simple auto-completion to the CLI.
 - Adds the IsListParenthesizedMeta meta to aid in differentiating between parenthesized and non-parenthesized lists
 - Adds support for HAVING clause in planner
@@ -1083,6 +1330,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Added `ExprValue.of(value: IonValue)` method to construct an `ExprValue` from an `IonValue`.
 
 ### Changed
+
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
 - Updates the CLI Shell Highlighter to use the ANTLR generated lexer/parser for highlighting user queries
 - PartiQL MISSING in Ion representation now becomes ion null with annotation of `$missing`, instead of `$partiql_missing`
@@ -1098,6 +1346,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Changes the expected `Property`'s of `TOKEN_INFO` to use `Property.TOKEN_DESCRIPTION` instead of `Property.TOKEN_TYPE`
 
 ### Deprecated
+
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
 - Marks `ionValue` property in `ExprValue` interface as deprecated. The functional equivalent method is `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java.
 - Marks `Lexer`, `Token`, `TokenType`, `SourcePosition`, and `SourceSpan` as deprecated. These will be removed without
@@ -1106,10 +1355,12 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Marks `Property.TOKEN_TYPE` as deprecated. Please use `Property.TOKEN_DESCRIPTION`.
 
 ### Fixed
+
 - Fixes the ThreadInterruptedTests by modifying the time to interrupt parses. Also adds better exception exposure to
   facilitate debugging.
 
 ### Removed
+
 - Removes the deprecated V0 AST in the codebase.
 - Removes the deprecated MetaContainer in the codebase, removed interfaces and classes include:
   - [MetaContainer] Interface
@@ -1132,12 +1383,14 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 
 ### Security
 
-
 ## [0.8.2-alpha] - 2022-11-28
+
 ### Added
+
 - Adds simple auto-completion to the CLI.
 
 ### Changed
+
 - Increases the performance of the PartiQLParser by changing the parsing strategy
   - The PartiQLParser now attempts to parse queries using the SLL Prediction Mode set by ANTLR
   - If unable to parse via SLL Prediction Mode, it attempts to parse using the slower LL Prediction Mode
@@ -1147,12 +1400,13 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ## [0.8.1-alpha] - 2022-10-28
 
 ### Added
-- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
 
+- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
 
 ## [0.8.0-alpha] - 2022-10-14
 
 ### Added
+
 - `CHANGELOG.md` with back-filling of the previous releases to the change log to provide more visibility on unreleased
   changes and make the release process easier by using the `unreleased` section of change log. The `CONTRIBUTING.md`
   has also been updated to ensure this is part of the process.
@@ -1196,7 +1450,6 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Adds support for PIVOT in the planner consistent with `EvaluatingCompiler`
 
 #### Experimental Planner Additions
-
 - Renamed `PassResult` to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
 - The `PlannerPipeline` API now has experimental and partial support for `INSERT` and `DELETE` DML statements—
   tracking PartiQL specification issues are [partiql-docs/#4](https://github.com/partiql/partiql-docs/issues/4) (only
@@ -1224,18 +1477,21 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Adds support for ORDER BY in Planner
 
 ### Changed
+
 - The default parser for all components of PartiQL is now the PartiQLParser -- see the deprecation of `SqlParser`
 - Parsing of `ORDER BY` clauses will no longer populate the AST with defaults for the 'sort specification'
   (i.e., `ASC` or `DESC`) or 'nulls specification' (i.e., `NULLS FIRST` or `NULLS LAST`) when the are not provided in
   the query text. Defaulting of sort order is moved to the evaluator.
 
 ### Deprecated
+
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.
 - Deprecates helper method, `blacklist`, within `org.partiql.lang.eval` and introduced a functionally equivalent
   `org.partiql.lang.eval.denyList` method.
 - Deprecates `TypedOpParameter.LEGACY` to be replaced with `TypedOpParameter.HONOR_PARAMETERS`
 
 ### Fixed
+
 - Codecov report uploads in GitHub Actions workflow
 - GitHub Actions capability to run on forks
 - Negation overflow caused by minimum INT8
@@ -1244,6 +1500,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Changed Trim Function Specification handling(fixed error message, and now can take case-insensitive trim spec)
 
 ### Removed
+
 - README.md badge for travisci
 - **Breaking Change**: removed [ExprValueType.typeNames] as needed by the future work of legacy parser removal and OTS
 - **Breaking Change**: [PartiqlPhysical.Type.toTypedOpParameter()] now becomes an internal function
@@ -1256,11 +1513,12 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
   The related visitor transform `CustomTypeVisitorTransform` is also removed.
   See [Issue 510](https://github.com/partiql/partiql-lang-kotlin/issues/510) for more details.
 
-
 ### Security
 
 ## [0.7.0-alpha] - 2022-06-23
+
 ### Added
+
 - An experimental query planner API along with logical and physical plans structures with the support of non-default
   physical operator implementations.
 - An optional flag, `--wrap-ion`, to give users the old functionality of reading multiple Ion values (previous behavior).
@@ -1281,16 +1539,19 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - `DATE/TIME` formatting and the support for `DATE/TIME` in Ion data format
 
 ### Changed
+
 - `LIKE` matching via compilation to `java.util.regex.Pattern`
 - Run `ktlint` before tests.
 
 ### Removed
+
 - [breaking change] Removal of Field `EVALUATOR_SQL_EXCEPTION` from `ErrorCode` class:
   A client program may be interrupted by `NoSuchFieldError` exception.
 - [breaking change] Removal of `NodeMetadata` from `org.partiql.lang.eval`:
   A client program may be interrupted by `NoClassDefFoundError` exception.
 
 ### Fixed
+
 - Fix `write_file` CLI function; the old function required the input to be a `string`, but it must be a generic type.
 - Add `ktlint` task dependency to enable execution optimizations and reducing he build time by ~ `30%`.
 - Adjust handling of Ion input (requiring single value)
@@ -1299,12 +1560,15 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
   reporting.
 
 ## [0.6.0-alpha] - 2022-04-06
+
 ### Added
+
 - [cli] Add permissive mode evaluation option to CLI/REPL [#545](https://github.com/partiql/partiql-lang-kotlin/pull/545)
 - `ORDER BY` implementation in evaluator [#554](https://github.com/partiql/partiql-lang-kotlin/pull/554)
 - [build] Adds `ktlint` to gradle build [#542](https://github.com/partiql/partiql-lang-kotlin/pull/542)
 
 ### Changed
+
 - For `ExprFunction`, replace `Environment` with `EvaluationSession` [#559](https://github.com/partiql/partiql-lang-kotlin/pull/559)
 - Migrate to PIG `v0.5.0` [#563](https://github.com/partiql/partiql-lang-kotlin/pull/563)
 - [build] Increase build performance w/ Gradle upgrade to 7.4 [#539](https://github.com/partiql/partiql-lang-kotlin/pull/539)
@@ -1316,16 +1580,21 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
   classes containing implementation details made internal as part of [#559](https://github.com/partiql/partiql-lang-kotlin/pull/559).
 
 ### Deprecated
+
 - Deprecate `ExprNode` [#535](https://github.com/partiql/partiql-lang-kotlin/pull/535)
 
 ### Fixed
+
 - Fix all compiler warnings [#562](https://github.com/partiql/partiql-lang-kotlin/pull/562)
 
 ### Removed
+
 - Clean up `ExprFunction` test [#529](https://github.com/partiql/partiql-lang-kotlin/pull/529)
 
 ## [0.5.0-alpha] - 2022-02-11
+
 ### Added
+
 - Adds a static type inferencer for static query checks and query type inference
 - Adds multiple exception logging and severity level API
 - Adds the dataguide API which can be used to infer Ion schema from Ion data
@@ -1341,14 +1610,17 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - ability to read custom CSV configurations [#480](https://github.com/partiql/partiql-lang-kotlin/pull/480)
 
 ### Changed
+
 - Upgrades Kotlin version to `1.4`
 - Modeled `NULLIF` and `COALESCE` as `PartiqlAst` nodes rather than `ExprFunctions`
 - Started parameterization of evaluation tests
 
 ### Deprecated
+
 - Deprecate `ExprNode` in parser [#464](https://github.com/partiql/partiql-lang-kotlin/pull/464)
 
 ### Fixed
+
 - Fixes evaluator behavior to error for structs with non-text keys
 - Corrects the parser error for unexpected reserved keywords in a select list
 - Fixes static initializing cycle with lazy initialization of `SqlDataType`
@@ -1364,6 +1636,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - [cli] Fixes `CLI` bug when outputting `IONTEXT` to file [#479](https://github.com/partiql/partiql-lang-kotlin/pull/479)
 
 ### Removed
+
 - Removes wildcard imports in cli [#483](https://github.com/partiql/partiql-lang-kotlin/pull/483) and
   lang [#488](https://github.com/partiql/partiql-lang-kotlin/pull/488)
 - Removes `DateTimeType` `sealed` class [#489](https://github.com/partiql/partiql-lang-kotlin/pull/489)
@@ -1372,20 +1645,24 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ## [0.4.0-alpha] - 2021-10-07
 
 ### Added
+
 - Sets up JMH for PartiQL [#427](https://github.com/partiql/partiql-lang-kotlin/pull/427)
 - Allows for default timezone configuration [#449](https://github.com/partiql/partiql-lang-kotlin/pull/449)
 
 ### Changed
+
 - Uses new PIG major version `v0.4.0` [#454](https://github.com/partiql/partiql-lang-kotlin/pull/454)
 - Moves usage of default timezone from parser to evaluator [#448](https://github.com/partiql/partiql-lang-kotlin/pull/448)
 - [breaking-change] changes related to imported builders.
 
 ### Fixed
+
 - Fixes struct handling of non-text struct field keys [#450](https://github.com/partiql/partiql-lang-kotlin/pull/450)
 
 ## [0.2.7-alpha] - 2021-09-13
 
 ### Fixed
+
 - Cherry picks "Fix bug causing multiple nested nots to parse very slowly [#436](https://github.com/partiql/partiql-lang-kotlin/pull/436)
   for `v0.2.7` release [#439](https://github.com/partiql/partiql-lang-kotlin/pull/439)
 - Cherry picks "Use LazyThreadSafteyMode.PUBLICATION instead of NONE [#433](https://github.com/partiql/partiql-lang-kotlin/pull/433)
@@ -1394,25 +1671,34 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ## [0.1.7-alpha] - 2021-09-13
 
 ### Fixed
+
 - Cherry picks "Fix bug causing multiple nested nots to parse very slowly [#436](https://github.com/partiql/partiql-lang-kotlin/pull/436)
   for `v0.1.7` release [#441](https://github.com/partiql/partiql-lang-kotlin/pull/441)
 - Cherry picks "Use LazyThreadSafteyMode.PUBLICATION instead of NONE [#433](https://github.com/partiql/partiql-lang-kotlin/pull/433)
   for `v0.1.7` release [#442](https://github.com/partiql/partiql-lang-kotlin/pull/442)
 
 ## [0.3.4-alpha] - 2021-09-10
+
 ### Fixed
+
 - Bug causing multiple nested nots to parse very slowly [#436](https://github.com/partiql/partiql-lang-kotlin/pull/436)
 
 ## [0.3.3-alpha] - 2021-09-09
+
 ### Changed
+
 - Uses `LazyThreadSafteyMode.PUBLICATION` instead of NONE
 
 ## [0.3.1-alpha] - 2021-06-18
+
 ### Fixed
+
 - Prevent the `ORDER BY` clause from being dropped in visitor transforms [#420](https://github.com/partiql/partiql-lang-kotlin/pull/420)
 
 ## [0.3.0-alpha] - 2021-06-09
+
 ### Added
+
 - `DATE` and `TIME` data types
 - Enhancements made by/for DynamoDB
 - Compile-time `Thread.interrupted()` checks were added to help mitigate the impact of compiling extremely large SQL
@@ -1420,11 +1706,13 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Various performance improvements to the compiler were added.
 
 ### Changed
+
 - The modeling of `ExprNode` and `PartiqlAst` APIs has changed as needed to account for the enhancements to DML statements
   and `ORDER BY`. Customers using these APIs may be affected.
 - Other minor API changes.
 
 ### Fixed
+
 - Fixes parser for the top level tokens [#369](https://github.com/partiql/partiql-lang-kotlin/pull/369)
 - Make `SIZE` function work with s-expressions. [#379](https://github.com/partiql/partiql-lang-kotlin/pull/379)
 - A number of other minor bug fixes and technical debt has been addressed. For a complete list of PRs that made it into
@@ -1433,28 +1721,34 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ## [0.1.6-alpha] - 2021-05-13
 
 ### Fixed
+
 - Adds Compile-Time Thread.interrupted() checks [#398](https://github.com/partiql/partiql-lang-kotlin/pull/398)
 
 ## [0.1.5-alpha] - 2021-04-27
 
 ### Fixed
+
 - Fixes a severe performance issue relating the sanity checks performed on very large queries before compilation. [#391](https://github.com/partiql/partiql-lang-kotlin/pull/391)
 
 ## [0.2.6-alpha] - 2021-02-18
 
 ### Added
+
 - Functions to convert from UNIX epoch to TIMESTAMP and TIMESTAMP to UNIX epoch. [#330](https://github.com/partiql/partiql-lang-kotlin/pull/330)
 - Adds a Rewriter to VisitorTransform [guide](https://github.com/partiql/partiql-lang-kotlin/blob/feb84730c64a2ad0f12c57bef3b1c45e21279538/docs/dev/RewriterToVisitorTransformGuide.md)
 
 ### Changed
+
 - Migrates existing `AstRewriters` to PIG’s `VisitorTransform`. [#356](https://github.com/partiql/partiql-lang-kotlin/pull/356)
 
 ### Deprecated
+
 - Deprecates AstRewriter, AstRewriterBase, MetaStrippingRewriter, RewriterTestBase
 
 ## [0.2.5-alpha] - 2021-01-12
 
 ### Added
+
 - System stored procedure calls (`EXEC`) [#345](https://github.com/partiql/partiql-lang-kotlin/pull/345).
   More details on usage can be found [here](https://github.com/partiql/partiql-spec/issues/17)
 - CLI: version number and commit hash in REPL [#339](https://github.com/partiql/partiql-lang-kotlin/pull/339)
@@ -1462,6 +1756,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Document thread safety of `CompilerPipeline` [#334](https://github.com/partiql/partiql-lang-kotlin/pull/334)
 
 ### Fixed
+
 - Parsing of `TRIM` specification keywords (`BOTH`, `LEADING`, and `TRAILING`) [#326](https://github.com/partiql/partiql-lang-kotlin/pull/326)
 - Build failure of `TimestampTemporalAccessorTests` when given a negative year [#346](https://github.com/partiql/partiql-lang-kotlin/pull/346)
 - Running of parameterized tests and other test targets [#338](https://github.com/partiql/partiql-lang-kotlin/pull/338) and [#351](https://github.com/partiql/partiql-lang-kotlin/pull/351)
@@ -1469,84 +1764,120 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ## [0.2.4-alpha] - 2020-11-08
 
 ### Fixed
+
 - Fix `LIMIT` clause execution order #300
 - Stop treating date parts as if they are string literals #317
 
 ## [0.2.3-alpha] - 2020-10-09
 
 ### Added
+
 - `LET` (fom `FROM` clauses) implementation.
 
 ### Fixed
+
 - fix: bigDecimalOf no-ops when given an Ion decimal [#293](https://github.com/partiql/partiql-lang-kotlin/pull/293)
 
 ## [0.1.4-alpha] - 2020-09-30
 
 ### Fixed
+
 - This release is a backport of [#286](https://github.com/partiql/partiql-lang-kotlin/pull/286) which was applied on top
   of v0.1.3-alpha.
 
 ## [0.2.2-alpha] - 2020-09-29
 
 ### Changed
+
 - Improvements to LIKE pattern compilation performance. [#284](https://github.com/partiql/partiql-lang-kotlin/pull/284)
 
 ## [0.2.1-alpha] - 2020-06-09
 
 ### Fixed
+
 - Fixes [#246](https://github.com/partiql/partiql-lang-kotlin/pull/246)
 
 ## [0.2.0-alpha] - 2020-03-26
 
 ### Added
+
 - Adds support for `DISTINCT`
 - Initial set of DML features.  See [this](https://github.com/partiql/partiql-lang-kotlin/commit/16fefe0f096175a6a7b284313634dfad23858a38) for details.
 - New error codes for division by `0` and modulo `0`
 
 ### Changed
+
 - [breaking-change] `JOIN` is now **required** to provide an `ON` clause. In previous version an `ON` clause was optional
   which caused ambiguous parsing of multiple `JOIN` for which some had `ON` clause and some had not. The old behaviour
   was also out of Spec.
 
 ### Fixed
+
 - Close CLI Stream correctly
 - Preserve negative zero when writing values to the console in the REPL/CLI.
 - Fix float negative zero equality
 
 ### Removed
+
 - Removes invalid syntax check on case expressions with type parameters, e.g., `CAST(a AS DECIMAL(1, 2))` now does not
   throw
 
 ## [0.1.3-alpha] - 2020-03-26
 
 ### Fixed
+
 - Fix [#228](https://github.com/partiql/partiql-lang-kotlin/pull/228) by removing invalid sanity check.
 
 ## [0.1.2-alpha] - 2020-01-10
 
 ### Changed
+
 - Optimizes performance of IN operator when right side is used with many literals.
 
 ### Fixed
+
 - Fix issue causing the REPL's output stream to be prematurely closed
 
 ## [0.1.1-alpha] - 2019-11-21
 
 ### Added
+
 - Better printing support
 
 ### Changed
+
 - Refactors code in CLI
 
 ### Fixed
+
 - Fixes treatment of null values in JOIN conditions
 
 ## [0.1.0-alpha] - 2019-07-30
 
 ### Added
-Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0...HEAD
+- Initial alpha release of PartiQL.
+
+[Unreleased]: git@github.com:partiql/partiql-lang-kotlin/compare/1.3.12...main
+[1.3.12]: git@github.com:partiql/partiql-lang-kotlin/compare/1.3.11...1.3.12
+[1.3.11]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.10...v1.3.11
+[1.3.10]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.9...v1.3.10
+[1.3.9]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.8...v1.3.9
+[1.3.8]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.7...v1.3.8
+[1.3.7]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.6...v1.3.7
+[1.3.6]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.5...v1.3.6
+[1.3.5]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.4...v1.3.5
+[1.3.4]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.3...v1.3.4
+[1.3.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.2...v1.3.3
+[1.3.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.1...v1.3.2
+[1.3.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.2.3...v1.3.0
+[1.2.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.2.2...v1.2.3
+[1.2.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-rc.3...v1.0.0
 [1.0.0-rc.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-rc.2...v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-perf.1...v1.0.0-rc.1
@@ -1555,6 +1886,7 @@ Initial alpha release of PartiQL.
 [0.14.7]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.6...v0.14.7
 [0.14.6]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.5...v0.14.6
 [0.14.5]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...v0.14.5
+[1.0.0-perf.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...v1.0.0-perf.1
 [0.14.4]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.3...v0.14.4
 [0.14.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.2...v0.14.3
 [0.14.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.1...v0.14.2
@@ -1578,22 +1910,22 @@ Initial alpha release of PartiQL.
 [0.6.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.5.0-alpha...v0.6.0-alpha
 [0.5.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.4.0-alpha...v0.5.0-alpha
 [0.4.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.3.4-alpha...v0.4.0-alpha
+[0.2.7-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.6-alpha...v0.2.7-alpha
+[0.1.7-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.6-alpha...v0.1.7-alpha
 [0.3.4-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.3.3-alpha...v0.3.4-alpha
 [0.3.3-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.3.1-alpha...v0.3.3-alpha
 [0.3.1-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.3.0-alpha...v0.3.1-alpha
 [0.3.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.6-alpha...v0.3.0-alpha
-[0.2.7-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.6-alpha...v0.2.7-alpha
+[0.1.6-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.5-alpha...v0.1.6-alpha
+[0.1.5-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.4-alpha...v0.1.5-alpha
 [0.2.6-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.5-alpha...v0.2.6-alpha
 [0.2.5-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.4-alpha...v0.2.5-alpha
 [0.2.4-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.3-alpha...v0.2.4-alpha
 [0.2.3-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.2-alpha...v0.2.3-alpha
+[0.1.4-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.3-alpha...v0.1.4-alpha
 [0.2.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.1-alpha...v0.2.2-alpha
 [0.2.1-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.2.0-alpha...v0.2.1-alpha
 [0.2.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.7-alpha...v0.2.0-alpha
-[0.1.7-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.6-alpha...v0.1.7-alpha
-[0.1.6-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.5-alpha...v0.1.6-alpha
-[0.1.5-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.4-alpha...v0.1.5-alpha
-[0.1.4-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.3-alpha...v0.1.4-alpha
 [0.1.3-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.2-alpha...v0.1.3-alpha
 [0.1.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.1-alpha...v0.1.2-alpha
 [0.1.1-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.1.0-alpha...v0.1.1-alpha
