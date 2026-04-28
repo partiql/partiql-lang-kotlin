@@ -1872,7 +1872,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         /**
-         * Handles the reserved scalar function names (MOD, CHAR_LENGTH)
+         * Handles the reserved scalar function names (MOD, CHAR_LENGTH, COALESCE, NULLIF)
          */
         private fun exprCallHandleReserved(funcName: QualifiedNameContext, args: List<Expr>, setq: SetQuantifier?): Expr {
             return when (funcName.name.start.type) {
