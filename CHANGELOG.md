@@ -2,10 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.3.13] - 2026-04-28
+
+### Added
+
+- test
 
 ## [1.3.12] - 2026-04-28
 
@@ -1858,7 +1864,8 @@ org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 
 - Initial alpha release of PartiQL.
 
-[Unreleased]: git@github.com:partiql/partiql-lang-kotlin/compare/1.3.12...main
+[Unreleased]: git@github.com:partiql/partiql-lang-kotlin/compare/v1.3.13...main
+[1.3.13]: git@github.com:partiql/partiql-lang-kotlin/compare/v1.3.12...v1.3.13
 [1.3.12]: git@github.com:partiql/partiql-lang-kotlin/compare/1.3.11...1.3.12
 [1.3.11]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.10...v1.3.11
 [1.3.10]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.3.9...v1.3.10
