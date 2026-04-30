@@ -6,6 +6,7 @@ import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.helpers.RecordValueIterator
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.spi.types.PType
 
 internal class RelOpScanPermissive(
@@ -27,6 +28,7 @@ internal class RelOpScanPermissive(
     }
 
     override fun next(): Row {
+        checkInterrupted()
         return records.next()
     }
 

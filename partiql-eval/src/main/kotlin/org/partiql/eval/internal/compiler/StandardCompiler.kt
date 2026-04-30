@@ -197,10 +197,16 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         // TODO REMOVE ME
-        private fun compile(rel: Rel, ctx: Unit): ExprRelation = compileWithStrategies(rel) as ExprRelation
+        private fun compile(rel: Rel, ctx: Unit): ExprRelation {
+            if (Thread.interrupted()) throw InterruptedException()
+            return compileWithStrategies(rel) as ExprRelation
+        }
 
         // TODO REMOVE ME
-        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex) as ExprValue
+        private fun compile(rex: Rex, ctx: Unit): ExprValue {
+            if (Thread.interrupted()) throw InterruptedException()
+            return compileWithStrategies(rex) as ExprValue
+        }
 
         override fun defaultReturn(operator: Operator, ctx: Unit): Expr {
             error("No compiler strategy matches the operator: ${operator::class.java.simpleName}")

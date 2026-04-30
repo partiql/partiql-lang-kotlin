@@ -5,6 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.getBigIntCoerced
+import org.partiql.eval.internal.helpers.checkInterrupted
 import java.math.BigInteger
 
 internal class RelOpLimit(
@@ -28,6 +29,7 @@ internal class RelOpLimit(
     }
 
     override fun next(): Row {
+        checkInterrupted()
         val row = input.next()
         _seen = _seen.add(BigInteger.ONE)
         return row

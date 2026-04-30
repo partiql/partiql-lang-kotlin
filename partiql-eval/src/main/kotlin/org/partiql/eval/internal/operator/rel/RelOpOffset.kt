@@ -5,6 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.getBigIntCoerced
+import org.partiql.eval.internal.helpers.checkInterrupted
 import java.math.BigInteger
 
 internal class RelOpOffset(
@@ -28,6 +29,7 @@ internal class RelOpOffset(
     override fun hasNext(): Boolean {
         if (!init) {
             while (input.hasNext()) {
+                checkInterrupted()
                 if (_seen >= _offset) {
                     break
                 }
