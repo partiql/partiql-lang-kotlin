@@ -3,6 +3,7 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.spi.value.Datum
 
 /**
@@ -40,6 +41,7 @@ internal class ExprSelect(
                 }
 
                 override fun next(): Datum {
+                    checkInterrupted()
                     val r = input.next()
                     return constructor.eval(env.push(r))
                 }
