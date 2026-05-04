@@ -198,7 +198,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
     ) : PlanRewriter<Rel.Type?>() {
 
         override fun visitRel(node: Rel, ctx: Rel.Type?): Rel {
-            if (Thread.interrupted()) throw InterruptedException()
+            if (Thread.interrupted()) throw InterruptedException("thread interrupted during planning")
             return visitRelOp(node.op, node.type) as Rel
         }
 
@@ -848,7 +848,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
     ) : PlanRewriter<CompilerType?>() {
 
         override fun visitRex(node: Rex, ctx: CompilerType?): Rex {
-            if (Thread.interrupted()) throw InterruptedException()
+            if (Thread.interrupted()) throw InterruptedException("thread interrupted during planning")
             val rex = visitRexOp(node.op, node.type) as Rex
             return rex
         }
