@@ -5,6 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.spi.function.Accumulator
 import org.partiql.spi.value.Datum
@@ -35,6 +36,7 @@ internal class RelOpAggregate(
     override fun open(env: Environment) {
         input.open(env)
         for (inputRecord in input) {
+            checkInterrupted()
 
             // Initialize the AggregationMap
             val evaluatedGroupByKeys = Array(groups.size) { keyIndex ->

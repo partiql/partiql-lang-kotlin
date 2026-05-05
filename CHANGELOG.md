@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added thread interruption support to the V1 evaluation engine, planner, and compiler for cooperative query cancellation
 
 ### Changed
 - Route `NULLIF` and `COALESCE` to standard function call when parsing; 
@@ -42,6 +43,8 @@ this change enables SLL parsing, allowing us to see significant performance impr
 ### Contributors
 Thank you to all who have contributed!
 - @yliuuuu
+- @AugustineFu
+
 
 ## [1.3.11](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.11) - 2026-04-21
 

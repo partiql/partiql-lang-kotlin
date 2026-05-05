@@ -6,6 +6,7 @@ import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.helpers.PErrors
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -43,6 +44,7 @@ internal sealed class RelOpUnpivot : ExprRelation {
     }
 
     override fun next(): Row {
+        checkInterrupted()
         val f = _iterator.next()
         val k = Datum.string(f.name)
         val v = f.value

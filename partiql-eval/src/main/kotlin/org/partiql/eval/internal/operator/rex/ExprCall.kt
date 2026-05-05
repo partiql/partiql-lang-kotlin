@@ -2,6 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.spi.function.Fn
 import org.partiql.spi.value.Datum
 
@@ -22,6 +23,7 @@ internal class ExprCall(
     private var missing = { Datum.missing(function.signature.returns) }
 
     override fun eval(env: Environment): Datum {
+        checkInterrupted()
         val args = Array(args.size) { i -> args[i].eval(env) }
         if (isMissingCall && args.any { it.isMissing }) return missing()
         if (isNullCall && args.any { it.isNull }) return nil()
