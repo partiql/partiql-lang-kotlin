@@ -26,7 +26,6 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
-- Added thread interruption support to the V1 evaluation engine, planner, and compiler for cooperative query cancellation
 
 ### Changed
 
@@ -47,7 +46,9 @@ Thank you to all who have contributed!
 
 ### Changed
 - Route `NULLIF` and `COALESCE` to standard function call when parsing; 
-this change enables SLL parsing, allowing us to see significant performance improvement when parsing complicated `NULLIF`/`COALESCE` call. 
+this change enables SLL parsing, allowing us to see significant performance improvement when parsing complicated `NULLIF`/`COALESCE` call.
+- Added thread interruption support to the V1 evaluation engine, planner, and compiler for cooperative query cancellation
+
 
 ### Deprecated
 
