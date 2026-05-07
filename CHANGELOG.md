@@ -28,7 +28,7 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
-
+- Reverted [Add interruption check for V1](https://github.com/partiql/partiql-lang-kotlin/pull/1908) due to wrong exception handling
 ### Deprecated
 
 ### Fixed
@@ -39,6 +39,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @xd1313113
 
 ## [1.3.12](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.12) - 2026-05-05
 
@@ -46,7 +47,8 @@ Thank you to all who have contributed!
 
 ### Changed
 - Route `NULLIF` and `COALESCE` to standard function call when parsing; 
-this change enables SLL parsing, allowing us to see significant performance improvement when parsing complicated `NULLIF`/`COALESCE` call. 
+this change enables SLL parsing, allowing us to see significant performance improvement when parsing complicated `NULLIF`/`COALESCE` call.
+- Added thread interruption support to the V1 evaluation engine, planner, and compiler for cooperative query cancellation
 
 ### Deprecated
 
@@ -59,6 +61,8 @@ this change enables SLL parsing, allowing us to see significant performance impr
 ### Contributors
 Thank you to all who have contributed!
 - @yliuuuu
+- @AugustineFu
+
 
 ## [1.3.11](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.11) - 2026-04-21
 
