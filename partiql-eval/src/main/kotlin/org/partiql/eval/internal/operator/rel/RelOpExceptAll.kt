@@ -5,7 +5,6 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.spi.value.Datum
 import java.util.TreeMap
 
@@ -29,7 +28,6 @@ internal class RelOpExceptAll(
             seed()
         }
         for (row in lhs) {
-            checkInterrupted()
             row.values.coerceMissing()
             val remaining = seen[row.values] ?: 0
             if (remaining > 0) {
@@ -53,7 +51,6 @@ internal class RelOpExceptAll(
     private fun seed() {
         init = true
         for (row in rhs) {
-            checkInterrupted()
             row.values.coerceMissing()
             val n = seen[row.values] ?: 0
             seen[row.values] = n + 1

@@ -4,7 +4,6 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
-import org.partiql.eval.internal.helpers.checkInterrupted
 import java.util.TreeSet
 
 internal class RelOpDistinct(private val input: ExprRelation) : RelOpPeeking() {
@@ -17,7 +16,6 @@ internal class RelOpDistinct(private val input: ExprRelation) : RelOpPeeking() {
 
     override fun peek(): Row? {
         for (next in input) {
-            checkInterrupted()
             val transformed = Array(next.values.size) { next.values[it] }
             if (seen.contains(transformed).not()) {
                 seen.add(transformed)

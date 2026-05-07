@@ -7,7 +7,6 @@ import org.partiql.eval.Row
 import org.partiql.eval.WindowFunction
 import org.partiql.eval.WindowPartition
 import org.partiql.eval.internal.helpers.DatumArrayComparator
-import org.partiql.eval.internal.helpers.checkInterrupted
 
 /**
  * Assume input has been sorted.
@@ -81,7 +80,6 @@ internal class RelOpWindow(
 
         // Add partition's remaining rows
         while (input.hasNext()) {
-            checkInterrupted()
             partitionCreationIndex++
             val nextRow = input.next()
             val nextEnv = _env.push(nextRow)

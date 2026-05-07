@@ -4,7 +4,6 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.eval.internal.helpers.checkInterrupted
 
 internal class RelOpUnionAll(
     private val lhs: ExprRelation,
@@ -21,7 +20,6 @@ internal class RelOpUnionAll(
     }
 
     override fun next(): Row {
-        checkInterrupted()
         return when (lhs.hasNext()) {
             true -> {
                 val record = lhs.next()

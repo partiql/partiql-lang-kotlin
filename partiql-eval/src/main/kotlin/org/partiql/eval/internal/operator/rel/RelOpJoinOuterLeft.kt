@@ -5,7 +5,6 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
@@ -73,7 +72,6 @@ internal class RelOpJoinOuterLeft(
             var lhsMatched = false
             rhs.open(env.push(lhsRecord))
             for (rhsRecord in rhs) {
-                checkInterrupted()
                 val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
                 if (result.isTrue()) {
