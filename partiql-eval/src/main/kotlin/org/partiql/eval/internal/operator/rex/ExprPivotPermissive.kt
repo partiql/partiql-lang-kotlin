@@ -4,7 +4,6 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getText
-import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.Datum
@@ -20,7 +19,6 @@ internal class ExprPivotPermissive(
         input.open(env)
         val fields = mutableListOf<Field>()
         while (input.hasNext()) {
-            checkInterrupted()
             val row = input.next()
             val newEnv = env.push(row)
             val keyString = try {

@@ -4,7 +4,6 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
-import org.partiql.eval.internal.helpers.checkInterrupted
 
 internal class RelOpProject(
     private val input: ExprRelation,
@@ -23,7 +22,6 @@ internal class RelOpProject(
     }
 
     override fun next(): Row {
-        checkInterrupted()
         val r = input.next()
         val p = projections.map { it.eval(env.push(r)) }.toTypedArray()
         return Row(p)

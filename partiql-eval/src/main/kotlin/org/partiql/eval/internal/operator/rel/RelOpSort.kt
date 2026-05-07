@@ -3,7 +3,6 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
-import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.spi.value.Datum
 import java.util.Collections
 
@@ -54,7 +53,6 @@ internal class RelOpSort(
         if (!init) {
             val sortedRows = mutableListOf<Row>()
             for (row in input) {
-                checkInterrupted()
                 sortedRows.add(row)
             }
             sortedRows.sortWith(comparator)
