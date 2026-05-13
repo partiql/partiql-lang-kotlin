@@ -5,6 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
+import org.partiql.eval.internal.helpers.checkInterrupted
 import java.util.TreeSet
 
 internal class RelOpIntersectDistinct(
@@ -27,6 +28,7 @@ internal class RelOpIntersectDistinct(
             seed()
         }
         for (row in rhs) {
+            checkInterrupted()
             row.values.coerceMissing()
             if (seen.remove(row.values)) {
                 return Row(row.values)
@@ -47,6 +49,7 @@ internal class RelOpIntersectDistinct(
     private fun seed() {
         init = true
         for (row in lhs) {
+            checkInterrupted()
             row.values.coerceMissing()
             seen.add(row.values)
         }

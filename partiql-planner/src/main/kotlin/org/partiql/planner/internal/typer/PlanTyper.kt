@@ -197,7 +197,10 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         private val strategy: Strategy,
     ) : PlanRewriter<Rel.Type?>() {
 
-        override fun visitRel(node: Rel, ctx: Rel.Type?) = visitRelOp(node.op, node.type) as Rel
+        override fun visitRel(node: Rel, ctx: Rel.Type?): Rel {
+            if (Thread.interrupted()) throw InterruptedException("thread interrupted during planning")
+            return visitRelOp(node.op, node.type) as Rel
+        }
 
         /**
          * The output schema of a `rel.op.scan` is the single value binding.
@@ -845,6 +848,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
     ) : PlanRewriter<CompilerType?>() {
 
         override fun visitRex(node: Rex, ctx: CompilerType?): Rex {
+            if (Thread.interrupted()) throw InterruptedException("thread interrupted during planning")
             val rex = visitRexOp(node.op, node.type) as Rex
             return rex
         }

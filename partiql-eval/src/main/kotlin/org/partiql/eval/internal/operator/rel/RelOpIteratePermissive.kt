@@ -5,6 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -37,6 +38,7 @@ internal class RelOpIteratePermissive(
     }
 
     override fun next(): Row {
+        checkInterrupted()
         val v = iterator.next()
         return when (isIndexable) {
             true -> {

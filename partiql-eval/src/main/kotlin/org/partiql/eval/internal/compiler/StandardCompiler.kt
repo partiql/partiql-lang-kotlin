@@ -10,6 +10,7 @@ import org.partiql.eval.compiler.Match
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.eval.compiler.Strategy
 import org.partiql.eval.internal.helpers.PErrors
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
@@ -197,10 +198,16 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         // TODO REMOVE ME
-        private fun compile(rel: Rel, ctx: Unit): ExprRelation = compileWithStrategies(rel) as ExprRelation
+        private fun compile(rel: Rel, ctx: Unit): ExprRelation {
+            checkInterrupted("thread interrupted during compilation")
+            return compileWithStrategies(rel) as ExprRelation
+        }
 
         // TODO REMOVE ME
-        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex) as ExprValue
+        private fun compile(rex: Rex, ctx: Unit): ExprValue {
+            checkInterrupted("thread interrupted during compilation")
+            return compileWithStrategies(rex) as ExprValue
+        }
 
         override fun defaultReturn(operator: Operator, ctx: Unit): Expr {
             error("No compiler strategy matches the operator: ${operator::class.java.simpleName}")

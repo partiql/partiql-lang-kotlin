@@ -5,6 +5,7 @@ import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.helpers.PErrors
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.function.Fn
@@ -62,6 +63,7 @@ internal class ExprCallDynamic(
     }
 
     override fun eval(env: Environment): Datum {
+        checkInterrupted()
         val actualArgs = Array(args.size) { args[it].eval(env).lowerSafe() }
         val actualTypes = Array(actualArgs.size) { actualArgs[it].type }
         val paramTypes = ParameterTypes(actualTypes)

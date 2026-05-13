@@ -6,6 +6,7 @@ import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.IteratorChain
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
+import org.partiql.eval.internal.helpers.checkInterrupted
 import java.util.TreeSet
 
 internal class RelOpUnionDistinct(
@@ -26,6 +27,7 @@ internal class RelOpUnionDistinct(
 
     override fun peek(): Row? {
         for (record in input) {
+            checkInterrupted()
             val originalValues = record.values.copyOf()
             record.values.coerceMissing()
             if (!seen.contains(record.values)) {
