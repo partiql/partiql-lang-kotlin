@@ -5,6 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
+import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
@@ -87,6 +88,7 @@ internal class RelOpJoinOuterFull(
         for ((lhsIndex, lhsRecord) in lhs.withIndex()) {
             rhs.open(env)
             for ((rhsIndex, rhsRecord) in rhs.withIndex()) {
+                checkInterrupted()
                 val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
                 if (result.isTrue()) {
@@ -100,6 +102,7 @@ internal class RelOpJoinOuterFull(
         lhs.close()
         lhs.open(env)
         for ((lhsIndex, lhsRecord) in lhs.withIndex()) {
+            checkInterrupted()
             if (!lhsMatches.contains(lhsIndex)) {
                 yield(lhsRecord.concat(rhsPadded))
             }
@@ -107,6 +110,7 @@ internal class RelOpJoinOuterFull(
         lhs.close()
         rhs.open(env)
         for ((rhsIndex, rhsRecord) in rhs.withIndex()) {
+            checkInterrupted()
             if (!rhsMatches.contains(rhsIndex)) {
                 yield(lhsPadded.concat(rhsRecord))
             }

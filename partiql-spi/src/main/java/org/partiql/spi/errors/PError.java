@@ -229,6 +229,8 @@ public final class PError extends Enum {
                 return "SET_OP_SCHEMA_INCOMPATIBLE";
             case NOT_IMPLEMENTED:
                 return "NOT_IMPLEMENTED";
+            case INTERRUPTED:
+                return "INTERRUPTED";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -620,4 +622,12 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int NOT_IMPLEMENTED = 23;
+
+    /**
+     * <p>
+     * This is a runtime error indicating that the current thread was interrupted during query processing.
+     * This supports cooperative query cancellation via {@link Thread#interrupt()}.
+     * </p>
+     */
+    public static final int INTERRUPTED = 24;
 }

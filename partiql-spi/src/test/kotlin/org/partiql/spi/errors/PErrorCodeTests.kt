@@ -39,6 +39,7 @@ class PErrorCodeTests {
             "EXPERIMENTAL" to 21,
             "SET_OP_SCHEMA_INCOMPATIBLE" to 22,
             "NOT_IMPLEMENTED" to 23,
+            "INTERRUPTED" to 24,
         )
 
         // Preparation
