@@ -117,6 +117,30 @@ public abstract class PType extends org.partiql.spi.Enum {
     }
 
     /**
+     * The key type of the MAP type.
+     *
+     * @return key type of the MAP
+     * @throws UnsupportedOperationException if this is called on a type whose {@link PType#code()} is not:
+     * {@link PType#MAP}
+     */
+    @NotNull
+    public PType getKeyType() throws UnsupportedOperationException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * The value type of the MAP type.
+     *
+     * @return value type of the MAP
+     * @throws UnsupportedOperationException if this is called on a type whose {@link PType#code()} is not:
+     * {@link PType#MAP}
+     */
+    @NotNull
+    public PType getValueType() throws UnsupportedOperationException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * <p>
      * Gets the interval's code. Each code corresponds with the public static final integers within
      * {@link IntervalCode} (e.g. {@link IntervalCode#YEAR}).
@@ -196,7 +220,8 @@ public abstract class PType extends org.partiql.spi.Enum {
                 PType.UNKNOWN,
                 PType.VARIANT,
                 PType.INTERVAL_YM,
-                PType.INTERVAL_DT
+                PType.INTERVAL_DT,
+                PType.MAP
         };
     }
 
@@ -260,6 +285,8 @@ public abstract class PType extends org.partiql.spi.Enum {
                 return "INTERVAL_YM";
             case PType.INTERVAL_DT:
                 return "INTERVAL_DT";
+            case PType.MAP:
+                return "MAP";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -635,6 +662,17 @@ public abstract class PType extends org.partiql.spi.Enum {
      * </p>
      */
     public static final int INTERVAL_DT = 27;
+
+    /**
+     * MAP represents an unordered collection of key-value pairs where keys are unique.
+     * <br>
+     * <br>
+     * <b>Type Syntax</b>: <code>MAP&lt;K, V&gt;</code>
+     * <br>
+     * <b>Applicable methods</b>:
+     * {@link PType#getKeyType()}, {@link PType#getValueType()}
+     */
+    public static final int MAP = 28;
 
     private static final String UNSPECIFIED_LENGTH = "UNSPECIFIED_LENGTH";
     private static final String UNSPECIFIED_PRECISION = "UNSPECIFIED_PRECISION";
@@ -1140,6 +1178,22 @@ public abstract class PType extends org.partiql.spi.Enum {
     }
 
     /**
+     * @return a PartiQL map type with key type DYNAMIC and value type DYNAMIC
+     */
+    @NotNull
+    public static PType map() {
+        return new PTypeMap(PType.dynamic(), PType.dynamic());
+    }
+
+    /**
+     * @return a PartiQL map type with the specified key and value types
+     */
+    @NotNull
+    public static PType map(@NotNull PType keyType, @NotNull PType valueType) {
+        return new PTypeMap(keyType, valueType);
+    }
+
+    /**
      * @return a PartiQL unknown type
      */
     @NotNull
@@ -1219,6 +1273,8 @@ public abstract class PType extends org.partiql.spi.Enum {
                 return unknown();
             case VARIANT:
                 return variant("ion");
+            case MAP:
+                return map();
             default:
                 throw new IllegalArgumentException("Unknown type code: " + code);
         }

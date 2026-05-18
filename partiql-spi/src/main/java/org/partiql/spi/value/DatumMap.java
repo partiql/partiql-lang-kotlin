@@ -1,0 +1,71 @@
+package org.partiql.spi.value;
+
+import org.jetbrains.annotations.NotNull;
+import org.partiql.spi.types.PType;
+
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * This shall always be package-private (internal).
+ */
+class DatumMap implements Datum {
+
+    @NotNull
+    private final LinkedHashMap<DatumKey, Datum> _entries;
+
+    @NotNull
+    private final PType _type;
+
+    DatumMap(@NotNull PType type, @NotNull LinkedHashMap<DatumKey, Datum> entries) {
+        _type = type;
+        _entries = entries;
+    }
+
+    @NotNull
+    @Override
+    public PType getType() {
+        return _type;
+    }
+
+    @Override
+    public Datum get(@NotNull Datum key) {
+        DatumKey wrappedKey = new DatumKey(key);
+        Datum value = _entries.get(wrappedKey);
+        // null from HashMap means key not found; a NULL value would be stored as Datum.nullValue()
+        if (value == null) {
+            return Datum.missing();
+        }
+        return value;
+    }
+
+    @NotNull
+    @Override
+    public Iterator<Entry> getEntries() {
+        return _entries.entrySet().stream()
+                .map(e -> Entry.of(e.getKey().getDatum(), e.getValue()))
+                .iterator();
+    }
+
+    /**
+     * Returns the number of entries in this MAP.
+     */
+    public int size() {
+        return _entries.size();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("MAP {");
+        boolean first = true;
+        for (Map.Entry<DatumKey, Datum> entry : _entries.entrySet()) {
+            if (!first) sb.append(",");
+            sb.append(" ").append(entry.getKey().getDatum()).append(": ").append(entry.getValue());
+            first = false;
+        }
+        if (!_entries.isEmpty()) sb.append(" ");
+        sb.append("}");
+        return sb.toString();
+    }
+}

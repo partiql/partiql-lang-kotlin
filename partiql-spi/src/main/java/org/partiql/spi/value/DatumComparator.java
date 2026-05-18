@@ -254,6 +254,8 @@ abstract class DatumComparator implements Comparator<Datum> {
         precedence.put(STRUCT, 9);
         // Bag Type
         precedence.put(BAG, 10);
+        // Map Type
+        precedence.put(PType.MAP, 11);
         // OTHER
         precedence.put(DYNAMIC, 100);
         precedence.put(UNKNOWN, 100);
@@ -347,6 +349,10 @@ abstract class DatumComparator implements Comparator<Datum> {
                 case INTERVAL_YM:
                 case INTERVAL_DT:
                     fillIntervalComparator(row);
+                    break;
+                case PType.MAP:
+                    fillMapComparator(row);
+                    break;
                 default:
                     break;
             }
@@ -740,6 +746,41 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[STRUCT] = (self, struct, comp) -> compareUnordered(new DatumFieldIterable(self), new DatumFieldIterable(struct), new FieldComparator(comp));
         comps[PType.ROW] = (self, row, comp) -> compareOrdered(self.getFields(), row.getFields(), new FieldComparator(comp));
         return comps;
+    }
+
+    @SuppressWarnings({"UnusedReturnValue"})
+    private static DatumComparison[] fillMapComparator(DatumComparison[] comps) {
+        comps[PType.MAP] = (self, other, comp) -> compareUnordered(new DatumEntryIterable(self), new DatumEntryIterable(other), new MapEntryComparator(comp));
+        return comps;
+    }
+
+    private static class DatumEntryIterable implements Iterable<Entry> {
+        private final Datum datum;
+        DatumEntryIterable(Datum datum) {
+            this.datum = datum;
+        }
+        @NotNull
+        @Override
+        public Iterator<Entry> iterator() {
+            return datum.getEntries();
+        }
+    }
+
+    private static class MapEntryComparator implements Comparator<Entry> {
+        private final Comparator<Datum> comparator;
+
+        MapEntryComparator(Comparator<Datum> comparator) {
+            this.comparator = comparator;
+        }
+
+        @Override
+        public int compare(Entry o1, Entry o2) {
+            int cmpKey = comparator.compare(o1.getKey(), o2.getKey());
+            if (cmpKey != 0) {
+                return cmpKey;
+            }
+            return comparator.compare(o1.getValue(), o2.getValue());
+        }
     }
 
     private static class FieldComparator implements Comparator<Field> {
