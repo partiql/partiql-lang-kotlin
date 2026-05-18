@@ -462,7 +462,9 @@ public interface Datum extends Iterable<Datum> {
      * @throws InvalidOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     default Datum get(@NotNull Datum key) {
         throw new InvalidOperationException(getType(), "get");
     }
@@ -472,7 +474,9 @@ public interface Datum extends Iterable<Datum> {
      * @throws InvalidOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     @NotNull
     default Iterator<Entry> getEntries() {
         throw new InvalidOperationException(getType(), "getEntries");
@@ -908,7 +912,9 @@ public interface Datum extends Iterable<Datum> {
     /**
      * Creates an empty MAP with default type MAP&lt;DYNAMIC, DYNAMIC&gt;.
      * @return a value of type {@link PType#MAP}
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     @NotNull
     static Datum map() {
         return new DatumMap(PType.map(), new java.util.LinkedHashMap<>());
@@ -920,7 +926,9 @@ public interface Datum extends Iterable<Datum> {
      * @param type the MAP type (must have code MAP)
      * @param entries the key-value entries
      * @return a value of type {@link PType#MAP}
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     @NotNull
     static Datum map(@NotNull PType type, @NotNull Iterable<Entry> entries) {
         java.util.LinkedHashMap<DatumKey, Datum> map = new java.util.LinkedHashMap<>();

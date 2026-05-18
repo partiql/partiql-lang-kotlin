@@ -5,7 +5,9 @@ import org.partiql.spi.types.PType;
 
 /**
  * Represents an entry within a PartiQL {@link PType#MAP}.
+ * @deprecated This feature is experimental and is subject to change.
  */
+@Deprecated
 public interface Entry {
 
     /**

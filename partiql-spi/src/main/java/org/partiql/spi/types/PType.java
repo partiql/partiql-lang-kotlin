@@ -122,7 +122,9 @@ public abstract class PType extends org.partiql.spi.Enum {
      * @return key type of the MAP
      * @throws UnsupportedOperationException if this is called on a type whose {@link PType#code()} is not:
      * {@link PType#MAP}
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     @NotNull
     public PType getKeyType() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
@@ -134,7 +136,9 @@ public abstract class PType extends org.partiql.spi.Enum {
      * @return value type of the MAP
      * @throws UnsupportedOperationException if this is called on a type whose {@link PType#code()} is not:
      * {@link PType#MAP}
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     @NotNull
     public PType getValueType() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
@@ -671,7 +675,9 @@ public abstract class PType extends org.partiql.spi.Enum {
      * <br>
      * <b>Applicable methods</b>:
      * {@link PType#getKeyType()}, {@link PType#getValueType()}
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     public static final int MAP = 28;
 
     private static final String UNSPECIFIED_LENGTH = "UNSPECIFIED_LENGTH";
@@ -1179,7 +1185,9 @@ public abstract class PType extends org.partiql.spi.Enum {
 
     /**
      * @return a PartiQL map type with key type DYNAMIC and value type DYNAMIC
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     @NotNull
     public static PType map() {
         return new PTypeMap(PType.dynamic(), PType.dynamic());
@@ -1187,7 +1195,9 @@ public abstract class PType extends org.partiql.spi.Enum {
 
     /**
      * @return a PartiQL map type with the specified key and value types
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     @NotNull
     public static PType map(@NotNull PType keyType, @NotNull PType valueType) {
         return new PTypeMap(keyType, valueType);
