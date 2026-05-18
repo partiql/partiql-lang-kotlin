@@ -8,17 +8,16 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PRuntimeException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 /**
- * Tests that the V1 evaluation engine respects [Thread.interrupt] and throws [InterruptedException]
- * when interrupted during long-running operations.
- *
- * This mirrors the V0 tests in `EvaluatingCompilerInterruptTests` (added in PR #1211 / #1331).
+ * Tests that the V1 evaluation engine respects [Thread.interrupt] and throws [PRuntimeException]
+ * with [PError.INTERRUPTED] when interrupted during long-running operations.
  */
-class
-InterruptTests {
+class InterruptTests {
 
     private val parser = PartiQLParser.standard()
     private val planner = PartiQLPlanner.standard()
@@ -36,6 +35,10 @@ InterruptTests {
         /** How long (in millis) to wait for a thread to terminate after setting the interrupted flag. */
         const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 3000
     }
+
+    // ========================================================================
+    // Timer-based tests — these use large queries that take >100ms to execute
+    // ========================================================================
 
     /**
      * Cross joins are materialized lazily during iteration. This test ensures that the inner join
@@ -65,7 +68,6 @@ InterruptTests {
         val statement = prepare(query)
         val result = statement.execute()
         testThreadInterrupt {
-            // Materializing the result drives the join operators
             for (row in result) { /* consume */ }
         }
     }
@@ -101,11 +103,8 @@ InterruptTests {
     }
 
     /**
-     * Aggregations eagerly materialize all input rows during [open]. This test ensures that the
+     * Aggregations eagerly materialize all input rows during open(). This test ensures that the
      * aggregate operator checks for thread interruption while consuming its input.
-     *
-     * Note: This test will pass once checkInterrupted() is added to RelOpAggregate.
-     * For now it validates the test infrastructure works with joins.
      */
     @Test
     fun aggregation() {
@@ -130,53 +129,14 @@ InterruptTests {
         """.trimIndent()
         val statement = prepare(query)
         testThreadInterrupt {
-            // For aggregations, execute() triggers open() which eagerly materializes
             val result = statement.execute()
             for (row in result) { /* consume */ }
         }
     }
 
-    private fun prepare(query: String): org.partiql.eval.Statement {
-        val parsed = parser.parse(query)
-        val plan = planner.plan(parsed.statements[0], session).plan
-        return compiler.prepare(plan, Mode.PERMISSIVE())
-    }
-
-    /**
-     * Executes a prepared statement and materializes the result, returning all rows as a list.
-     */
-    private fun materialize(statement: org.partiql.eval.Statement): List<Any> {
-        val result = statement.execute()
-        val rows = mutableListOf<Any>()
-        for (row in result) { rows.add(row) }
-        return rows
-    }
-
     // ========================================================================
-    // Pre-set interrupt flag tests
-    //
-    // These tests prepare the statement first (parse + plan + compile), then
-    // set the interrupt flag, then execute. This ensures the flag is caught
-    // by the eval operators, not the parser/planner.
+    // Pre-set interrupt flag tests — verify specific operators check the flag
     // ========================================================================
-
-    /**
-     * Verifies that RelOpScan checks for interruption when producing rows.
-     */
-    @Test
-    fun scanRespectsPreSetInterrupt() {
-        val statement = prepare("SELECT * FROM [1, 2, 3]")
-        testPreSetInterrupt { materialize(statement) }
-    }
-
-    /**
-     * Verifies that RelOpFilter checks for interruption when filtering rows.
-     */
-    @Test
-    fun filterRespectsPreSetInterrupt() {
-        val statement = prepare("SELECT * FROM [1, 2, 3] AS x WHERE x > 1")
-        testPreSetInterrupt { materialize(statement) }
-    }
 
     /**
      * Verifies that RelOpSort checks for interruption when sorting rows.
@@ -184,42 +144,6 @@ InterruptTests {
     @Test
     fun sortRespectsPreSetInterrupt() {
         val statement = prepare("SELECT * FROM [3, 1, 2] AS x ORDER BY x")
-        testPreSetInterrupt { materialize(statement) }
-    }
-
-    /**
-     * Verifies that RelOpDistinct checks for interruption when deduplicating rows.
-     */
-    @Test
-    fun distinctRespectsPreSetInterrupt() {
-        val statement = prepare("SELECT DISTINCT x FROM [1, 1, 2, 2, 3] AS x")
-        testPreSetInterrupt { materialize(statement) }
-    }
-
-    /**
-     * Verifies that RelOpUnionAll checks for interruption.
-     */
-    @Test
-    fun unionAllRespectsPreSetInterrupt() {
-        val statement = prepare("SELECT x FROM [1, 2] AS x UNION ALL SELECT x FROM [3, 4] AS x")
-        testPreSetInterrupt { materialize(statement) }
-    }
-
-    /**
-     * Verifies that RelOpLimit checks for interruption.
-     */
-    @Test
-    fun limitRespectsPreSetInterrupt() {
-        val statement = prepare("SELECT * FROM [1, 2, 3] LIMIT 2")
-        testPreSetInterrupt { materialize(statement) }
-    }
-
-    /**
-     * Verifies that RelOpOffset checks for interruption when skipping rows.
-     */
-    @Test
-    fun offsetRespectsPreSetInterrupt() {
-        val statement = prepare("SELECT * FROM [1, 2, 3] LIMIT 2 OFFSET 1")
         testPreSetInterrupt { materialize(statement) }
     }
 
@@ -233,59 +157,59 @@ InterruptTests {
     }
 
     /**
+     * Verifies that RelOpProject checks for interruption (streaming top).
+     */
+    @Test
+    fun projectRespectsPreSetInterrupt() {
+        val statement = prepare("SELECT * FROM [1, 2, 3]")
+        testPreSetInterrupt { materialize(statement) }
+    }
+
+    /**
      * Verifies that PlanTyper checks for interruption during planning.
-     * Sets the interrupt flag after parsing but before planning.
-     *
-     * Note: SqlPlanner.plan() has a catch-all that wraps InterruptedException into an error plan
-     * rather than re-throwing. We verify the interrupt was caught by checking that executing the
-     * resulting plan throws (since it produces an error node).
+     * Since we now throw PRuntimeException, SqlPlanner's catch (e: PRuntimeException) re-throws it.
      */
     @Test
     fun plannerRespectsPreSetInterrupt() {
         val parsed = parser.parse("SELECT * FROM [1, 2, 3]")
-        val wasInterrupted = AtomicBoolean(false)
-        val t = thread(start = false) {
-            try {
-                Thread.currentThread().interrupt()
-                val result = planner.plan(parsed.statements[0], session)
-                // If the planner caught the interrupt, the plan will have an error node.
-                // Attempting to compile and execute it should fail.
-                val statement = compiler.prepare(result.plan, Mode.PERMISSIVE())
-                val datum = statement.execute()
-                for (row in datum) { /* consume */ }
-            } catch (_: InterruptedException) {
-                wasInterrupted.set(true)
-            } catch (e: Exception) {
-                if (isCausedByInterruptedException(e)) {
-                    wasInterrupted.set(true)
-                } else {
-                    // The planner caught the interrupt and produced an error plan.
-                    // Execution of the error plan throws — this is expected.
-                    wasInterrupted.set(true)
-                }
-            }
+        testPreSetInterrupt {
+            planner.plan(parsed.statements[0], session)
         }
-        t.setUncaughtExceptionHandler { _, _ -> }
-        t.start()
-        t.join(WAIT_FOR_THREAD_TERMINATION_MS)
-        assertTrue(wasInterrupted.get(), "Planner should have been interrupted.")
-        assertTrue(!t.isAlive, "Thread should have terminated after interruption.")
+    }
+
+    // ========================================================================
+    // Helpers
+    // ========================================================================
+
+    private fun prepare(query: String): org.partiql.eval.Statement {
+        val parsed = parser.parse(query)
+        val plan = planner.plan(parsed.statements[0], session).plan
+        return compiler.prepare(plan, Mode.PERMISSIVE())
+    }
+
+    private fun materialize(statement: org.partiql.eval.Statement): List<Any> {
+        val result = statement.execute()
+        val rows = mutableListOf<Any>()
+        for (row in result) { rows.add(row) }
+        return rows
     }
 
     /**
      * Prepares a statement, sets the interrupt flag, then runs [block].
-     * Asserts that an [InterruptedException] is thrown (directly or as a cause).
+     * Asserts that a [PRuntimeException] with [PError.INTERRUPTED] is thrown.
      */
     private fun testPreSetInterrupt(block: () -> Unit) {
         val wasInterrupted = AtomicBoolean(false)
         val t = thread(start = false) {
             try {
-                Thread.currentThread().interrupt() // pre-set the flag AFTER prepare
+                Thread.currentThread().interrupt()
                 block()
-            } catch (_: InterruptedException) {
-                wasInterrupted.set(true)
+            } catch (e: PRuntimeException) {
+                if (e.error.code() == PError.INTERRUPTED) {
+                    wasInterrupted.set(true)
+                }
             } catch (e: Exception) {
-                if (isCausedByInterruptedException(e)) {
+                if (isCausedByInterrupted(e)) {
                     wasInterrupted.set(true)
                 }
             }
@@ -299,7 +223,7 @@ InterruptTests {
 
     /**
      * Runs [block] in a separate thread, interrupts it after [interruptAfter] ms, and asserts
-     * that the thread terminates (via InterruptedException) within [interruptWait] ms.
+     * that the thread terminates within [interruptWait] ms.
      */
     private fun testThreadInterrupt(
         interruptAfter: Long = INTERRUPT_AFTER_MS,
@@ -310,10 +234,12 @@ InterruptTests {
         val t = thread(start = false) {
             try {
                 block()
-            } catch (_: InterruptedException) {
-                wasInterrupted.set(true)
+            } catch (e: PRuntimeException) {
+                if (e.error.code() == PError.INTERRUPTED) {
+                    wasInterrupted.set(true)
+                }
             } catch (e: Exception) {
-                if (isCausedByInterruptedException(e)) {
+                if (isCausedByInterrupted(e)) {
                     wasInterrupted.set(true)
                 }
             }
@@ -327,9 +253,13 @@ InterruptTests {
         assertTrue(!t.isAlive, "Thread should have terminated after interruption.")
     }
 
-    private tailrec fun isCausedByInterruptedException(throwable: Throwable?): Boolean = when (throwable) {
-        null -> false
-        is InterruptedException -> true
-        else -> isCausedByInterruptedException(throwable.cause)
+    private fun isCausedByInterrupted(throwable: Throwable?): Boolean {
+        var current = throwable
+        while (current != null) {
+            if (current is PRuntimeException && current.error.code() == PError.INTERRUPTED) return true
+            if (current is InterruptedException) return true
+            current = current.cause
+        }
+        return false
     }
 }

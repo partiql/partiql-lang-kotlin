@@ -59,7 +59,10 @@ import org.partiql.planner.internal.util.TypeUtils.exclude
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.errors.PRuntimeException
+import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 import org.partiql.spi.value.Datum
@@ -198,7 +201,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
     ) : PlanRewriter<Rel.Type?>() {
 
         override fun visitRel(node: Rel, ctx: Rel.Type?): Rel {
-            if (Thread.interrupted()) throw InterruptedException("thread interrupted during planning")
+            if (Thread.interrupted()) throw PRuntimeException(PError(PError.INTERRUPTED, Severity.ERROR(), PErrorKind.SEMANTIC(), null, emptyMap()))
             return visitRelOp(node.op, node.type) as Rel
         }
 
@@ -848,7 +851,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
     ) : PlanRewriter<CompilerType?>() {
 
         override fun visitRex(node: Rex, ctx: CompilerType?): Rex {
-            if (Thread.interrupted()) throw InterruptedException("thread interrupted during planning")
+            if (Thread.interrupted()) throw PRuntimeException(PError(PError.INTERRUPTED, Severity.ERROR(), PErrorKind.SEMANTIC(), null, emptyMap()))
             val rex = visitRexOp(node.op, node.type) as Rex
             return rex
         }

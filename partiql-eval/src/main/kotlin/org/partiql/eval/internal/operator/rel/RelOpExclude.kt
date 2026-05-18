@@ -3,7 +3,6 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
-import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.plan.Exclusion
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -28,7 +27,6 @@ internal class RelOpExclude(
     }
 
     override fun next(): Row {
-        checkInterrupted()
         val record = input.next()
         exclusions.forEach { exclusion ->
             // TODO memoize offsets and steps (i.e. don't call getVar(), getOffset(), and getItems() every time).

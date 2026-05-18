@@ -199,13 +199,13 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         // TODO REMOVE ME
         private fun compile(rel: Rel, ctx: Unit): ExprRelation {
-            checkInterrupted("thread interrupted during compilation")
+            checkInterrupted()
             return compileWithStrategies(rel) as ExprRelation
         }
 
         // TODO REMOVE ME
         private fun compile(rex: Rex, ctx: Unit): ExprValue {
-            checkInterrupted("thread interrupted during compilation")
+            checkInterrupted()
             return compileWithStrategies(rex) as ExprValue
         }
 
