@@ -458,6 +458,31 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * @return the value associated with the given key in a MAP, or MISSING if the key is not found.
+     * @throws InvalidOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
+     *                                       will throw this exception upon invocation.
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    default Datum get(@NotNull Datum key) {
+        throw new InvalidOperationException(getType(), "get");
+    }
+
+    /**
+     * @return an iterator over the entries of a MAP value.
+     * @throws InvalidOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
+     *                                       will throw this exception upon invocation.
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    default Iterator<Entry> getEntries() {
+        throw new InvalidOperationException(getType(), "getEntries");
+    }
+
+    /**
      * Pack a VARIANT into a byte array with the given charset.
      *
      * @param charset optional charset.
@@ -880,6 +905,37 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum struct(@NotNull Iterable<Field> values) {
         return new DatumStruct(values);
+    }
+
+    // MAP
+
+    /**
+     * Creates an empty MAP with default type MAP&lt;DYNAMIC, DYNAMIC&gt;.
+     * @return a value of type {@link PType#MAP}
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    static Datum map() {
+        return new DatumMap(PType.map(), new java.util.LinkedHashMap<>());
+    }
+
+    /**
+     * Creates a MAP with the given type and entries.
+     * Duplicate keys follow last-write-wins semantics.
+     * @param type the MAP type (must have code MAP)
+     * @param entries the key-value entries
+     * @return a value of type {@link PType#MAP}
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    static Datum map(@NotNull PType type, @NotNull Iterable<Entry> entries) {
+        java.util.LinkedHashMap<DatumKey, Datum> map = new java.util.LinkedHashMap<>();
+        for (Entry entry : entries) {
+            map.put(new DatumKey(entry.getKey()), entry.getValue());
+        }
+        return new DatumMap(type, map);
     }
 
     /**

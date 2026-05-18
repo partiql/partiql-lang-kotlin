@@ -494,6 +494,7 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static final field INTEGER I
 	public static final field INTERVAL_DT I
 	public static final field INTERVAL_YM I
+	public static final field MAP I
 	public static final field NUMERIC I
 	public static final field REAL I
 	public static final field ROW I
@@ -533,10 +534,12 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public fun getFields ()Ljava/util/Collection;
 	public fun getFractionalPrecision ()I
 	public fun getIntervalCode ()I
+	public fun getKeyType ()Lorg/partiql/spi/types/PType;
 	public fun getLength ()I
 	public fun getPrecision ()I
 	public fun getScale ()I
 	public fun getTypeParameter ()Lorg/partiql/spi/types/PType;
+	public fun getValueType ()Lorg/partiql/spi/types/PType;
 	public static fun integer ()Lorg/partiql/spi/types/PType;
 	public static fun intervalDay (I)Lorg/partiql/spi/types/PType;
 	public static fun intervalDayHour (I)Lorg/partiql/spi/types/PType;
@@ -551,6 +554,8 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static fun intervalSecond (II)Lorg/partiql/spi/types/PType;
 	public static fun intervalYear (I)Lorg/partiql/spi/types/PType;
 	public static fun intervalYearMonth (I)Lorg/partiql/spi/types/PType;
+	public static fun map ()Lorg/partiql/spi/types/PType;
+	public static fun map (Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
 	public fun name ()Ljava/lang/String;
 	public static fun numeric ()Lorg/partiql/spi/types/PType;
 	public static fun numeric (I)Lorg/partiql/spi/types/PType;
@@ -603,12 +608,14 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun decimal (Ljava/math/BigDecimal;II)Lorg/partiql/spi/value/Datum;
 	public static fun doublePrecision (D)Lorg/partiql/spi/value/Datum;
 	public fun get (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
+	public fun get (Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
 	public fun getBigDecimal ()Ljava/math/BigDecimal;
 	public fun getBoolean ()Z
 	public fun getByte ()B
 	public fun getBytes ()[B
 	public fun getDays ()I
 	public fun getDouble ()D
+	public fun getEntries ()Ljava/util/Iterator;
 	public fun getFields ()Ljava/util/Iterator;
 	public fun getFloat ()F
 	public fun getHours ()I
@@ -649,6 +656,8 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
 	public fun lower ()Lorg/partiql/spi/value/Datum;
+	public static fun map ()Lorg/partiql/spi/value/Datum;
+	public static fun map (Lorg/partiql/spi/types/PType;Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun missing ()Lorg/partiql/spi/value/Datum;
 	public static fun missing (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/value/Datum;
 	public static fun nullValue ()Lorg/partiql/spi/value/Datum;
@@ -697,6 +706,12 @@ public class org/partiql/spi/value/Encoding : org/partiql/spi/Enum {
 	public static final field ION I
 	public static fun ION ()Lorg/partiql/spi/value/Encoding;
 	public fun name ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/spi/value/Entry {
+	public abstract fun getKey ()Lorg/partiql/spi/value/Datum;
+	public abstract fun getValue ()Lorg/partiql/spi/value/Datum;
+	public static fun of (Lorg/partiql/spi/value/Datum;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Entry;
 }
 
 public abstract interface class org/partiql/spi/value/Field {

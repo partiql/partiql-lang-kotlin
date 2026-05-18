@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- **EXPERIMENTAL** Add interfaces to support `MAP` data type
 
 ### Changed
 
@@ -39,6 +40,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @xd1313113
 
 ## [1.3.13](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.13) - 2026-05-07
 
