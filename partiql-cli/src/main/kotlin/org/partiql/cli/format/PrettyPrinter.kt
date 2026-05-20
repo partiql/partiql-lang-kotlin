@@ -69,18 +69,13 @@ private fun splitClauses(sql: String): List<Pair<String, String>> {
         // DQL
         "SELECT ", "FROM ", "WHERE ", "GROUP BY ", "HAVING ",
         "ORDER BY ", "LIMIT ", "OFFSET ", "WINDOW ", "LET ", "EXCLUDE ",
-        // Set operations
+        // Set operations (OUTER variants first, then ALL before bare)
+        "OUTER UNION ALL ", "OUTER UNION ", "OUTER INTERSECT ALL ", "OUTER INTERSECT ",
+        "OUTER EXCEPT ALL ", "OUTER EXCEPT ",
         "UNION ALL ", "UNION ", "INTERSECT ALL ", "INTERSECT ", "EXCEPT ALL ", "EXCEPT ",
-        // Joins (indented)
+        // Joins (longer matches first)
         "INNER JOIN ", "LEFT OUTER JOIN ", "RIGHT OUTER JOIN ", "FULL OUTER JOIN ",
-        "LEFT JOIN ", "RIGHT JOIN ", "CROSS JOIN ", "FULL JOIN ",
-        // DML
-        "INSERT INTO ", "INSERT ", "UPDATE ", "DELETE FROM ", "DELETE ",
-        "SET ", "VALUES ", "RETURNING ",
-        // DDL
-        "CREATE TABLE ", "CREATE INDEX ", "CREATE ",
-        "DROP TABLE ", "DROP INDEX ", "DROP ",
-        "ALTER TABLE ", "ALTER ",
+        "LEFT CROSS JOIN ", "LEFT JOIN ", "RIGHT JOIN ", "CROSS JOIN ", "FULL JOIN ", "JOIN ",
         // WITH
         "WITH RECURSIVE ", "WITH ",
     )
