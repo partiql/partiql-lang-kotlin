@@ -51,6 +51,7 @@ import org.partiql.ast.expr.ExprPosition;
 import org.partiql.ast.expr.ExprQuerySet;
 import org.partiql.ast.expr.ExprRowValue;
 import org.partiql.ast.expr.ExprSessionAttribute;
+import org.partiql.ast.expr.ExprMap;
 import org.partiql.ast.expr.ExprStruct;
 import org.partiql.ast.expr.ExprSubstring;
 import org.partiql.ast.expr.ExprTrim;
@@ -471,6 +472,14 @@ public abstract class AstVisitor<R, C> {
     }
 
     public R visitExprStructField(ExprStruct.Field node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitExprMap(ExprMap node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitExprMapEntry(ExprMap.Entry node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

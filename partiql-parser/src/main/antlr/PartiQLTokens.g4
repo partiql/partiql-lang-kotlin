@@ -331,6 +331,7 @@ STRUCT: 'STRUCT';
 LIST: 'LIST';
 SEXP: 'SEXP';
 BAG: 'BAG';
+MAP: 'MAP';
 
 /**
  *

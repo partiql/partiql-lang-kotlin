@@ -184,6 +184,16 @@ rex::{
       ],
     },
 
+    map::{
+      entries: list::[entry],
+      _: [
+        entry::{
+          k: rex,
+          v: rex,
+        },
+      ],
+    },
+
     pivot::{
       key:    rex,
       value:  rex,

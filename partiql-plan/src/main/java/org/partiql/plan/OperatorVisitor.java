@@ -35,6 +35,7 @@ import org.partiql.plan.rex.RexPathSymbol;
 import org.partiql.plan.rex.RexPivot;
 import org.partiql.plan.rex.RexSelect;
 import org.partiql.plan.rex.RexSpread;
+import org.partiql.plan.rex.RexMap;
 import org.partiql.plan.rex.RexStruct;
 import org.partiql.plan.rex.RexSubquery;
 import org.partiql.plan.rex.RexSubqueryComp;
@@ -219,6 +220,10 @@ public interface OperatorVisitor<R, C> {
     }
 
     default R visitStruct(@NotNull RexStruct rex, C ctx) {
+        return defaultVisit(rex, ctx);
+    }
+
+    default R visitMap(@NotNull RexMap rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
 

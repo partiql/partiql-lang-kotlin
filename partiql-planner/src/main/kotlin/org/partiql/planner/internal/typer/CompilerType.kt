@@ -52,6 +52,14 @@ internal class CompilerType(
         }
     }
 
+    override fun getKeyType(): PType {
+        return _delegate.keyType
+    }
+
+    override fun getValueType(): PType {
+        return _delegate.valueType
+    }
+
     override fun equals(other: Any?): Boolean {
         return _delegate == other
     }

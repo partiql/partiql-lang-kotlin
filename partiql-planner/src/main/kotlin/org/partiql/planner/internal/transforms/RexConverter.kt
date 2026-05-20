@@ -41,6 +41,7 @@ import org.partiql.ast.expr.ExprInCollection
 import org.partiql.ast.expr.ExprIsType
 import org.partiql.ast.expr.ExprLike
 import org.partiql.ast.expr.ExprLit
+import org.partiql.ast.expr.ExprMap
 import org.partiql.ast.expr.ExprMissingPredicate
 import org.partiql.ast.expr.ExprNot
 import org.partiql.ast.expr.ExprNullIf
@@ -81,6 +82,8 @@ import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
+import org.partiql.planner.internal.ir.rexOpMap
+import org.partiql.planner.internal.ir.rexOpMapEntry
 import org.partiql.planner.internal.ir.rexOpNullif
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
@@ -790,6 +793,17 @@ internal object RexConverter {
                 rexOpStructField(k, v)
             }
             val op = rexOpStruct(fields)
+            return rex(type, op)
+        }
+
+        override fun visitExprMap(node: ExprMap, context: Env): Rex {
+            val type = CompilerType(PType.map())
+            val entries = node.entries.map {
+                val k = visitExprCoerce(it.key, context)
+                val v = visitExprCoerce(it.value, context)
+                rexOpMapEntry(k, v)
+            }
+            val op = rexOpMap(entries)
             return rex(type, op)
         }
 

@@ -225,6 +225,7 @@ internal data class Rex(
             is Coalesce -> visitor.visitRexOpCoalesce(this, ctx)
             is Collection -> visitor.visitRexOpCollection(this, ctx)
             is Struct -> visitor.visitRexOpStruct(this, ctx)
+            is `Map` -> visitor.visitRexOpMap(this, ctx)
             is Pivot -> visitor.visitRexOpPivot(this, ctx)
             is Subquery -> visitor.visitRexOpSubquery(this, ctx)
             is Select -> visitor.visitRexOpSelect(this, ctx)
@@ -636,6 +637,33 @@ internal data class Rex(
             internal companion object {
                 @JvmStatic
                 internal fun builder(): RexOpStructBuilder = RexOpStructBuilder()
+            }
+        }
+
+        internal data class `Map`(
+            @JvmField internal val entries: List<Entry>,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.addAll(entries)
+                kids.filterNotNull()
+            }
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpMap(this, ctx)
+
+            internal data class Entry(
+                @JvmField internal val k: Rex,
+                @JvmField internal val v: Rex,
+            ) : PlanNode() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(k)
+                    kids.add(v)
+                    kids.filterNotNull()
+                }
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpMapEntry(this, ctx)
             }
         }
 
