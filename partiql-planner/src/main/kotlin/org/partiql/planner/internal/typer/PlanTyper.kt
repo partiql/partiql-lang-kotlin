@@ -44,6 +44,8 @@ import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
+import org.partiql.planner.internal.ir.rexOpMap
+import org.partiql.planner.internal.ir.rexOpMapEntry
 import org.partiql.planner.internal.ir.rexOpNullif
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
@@ -891,15 +893,21 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             val root = visitRex(node.root, node.root.type)
             val key = visitRex(node.key, node.key.type)
 
+            // If the root is DYNAMIC, we can't know at compile time whether it's a MAP or ARRAY; defer to runtime.
+            if (root.type.code() == PType.DYNAMIC || root.type.code() == PType.VARIANT) {
+                return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Index(root, key))
+            }
+
+            // MAP index access — return the value type
+            if (root.type.code() == PType.MAP) {
+                val valueType = CompilerType(root.type.valueType)
+                return rex(valueType, rexOpPathIndex(root, key))
+            }
+
             // Check Key Type (INT or coercible to INT). TODO: Allow coercions to INT
             if (key.type.code() !in setOf(PType.TINYINT, PType.SMALLINT, PType.INTEGER, PType.BIGINT, PType.NUMERIC)) {
                 val problem = PErrors.pathIndexNeverSucceeds(null)
                 return errorRexAndReport(_listener, problem)
-            }
-
-            // Check if Root is DYNAMIC
-            if (root.type.code() == PType.DYNAMIC || root.type.code() == PType.VARIANT) {
-                return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Index(root, key))
             }
 
             // Check Root Type LIST
@@ -926,9 +934,15 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null))
             }
 
-            // Check if Root is DYNAMIC
+            // If the root is DYNAMIC, we can't know at compile time whether it's a MAP or STRUCT; defer to runtime.
             if (root.type.code() == PType.DYNAMIC || root.type.code() == PType.VARIANT) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Key(root, key))
+            }
+
+            // MAP key access — return the value type
+            if (root.type.code() == PType.MAP) {
+                val valueType = CompilerType(root.type.valueType)
+                return rex(valueType, rexOpPathKey(root, key))
             }
 
             // Check Root Type (STRUCT)
@@ -1270,6 +1284,17 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 false -> CompilerType(PType.struct())
             }
             return rex(type, rexOpStruct(fields))
+        }
+
+        override fun visitRexOpMap(node: Rex.Op.`Map`, ctx: CompilerType?): Rex {
+            _listener.report(PErrors.experimental("MAP Constructor"))
+            val entries = node.entries.map {
+                val k = visitRex(it.k, it.k.type)
+                val v = visitRex(it.v, it.v.type)
+                rexOpMapEntry(k, v)
+            }
+            val type = CompilerType(PType.map())
+            return rex(type, rexOpMap(entries))
         }
 
         override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: CompilerType?): Rex {

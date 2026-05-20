@@ -14,12 +14,17 @@ internal class ExprPathKey(
 ) : ExprValue {
 
     override fun eval(env: Environment): Datum {
-        val rootEvaluated = root.eval(env).checkStruct()
+        val rootEvaluated = root.eval(env)
         val keyEvaluated = key.eval(env).check(PType.string())
         if (rootEvaluated.isNull || keyEvaluated.isNull) {
             return Datum.nullValue()
         }
+        // MAP key access
+        if (rootEvaluated.type.code() == PType.MAP) {
+            return rootEvaluated.get(keyEvaluated)
+        }
+        val checkedRoot = rootEvaluated.checkStruct()
         val keyString = keyEvaluated.string
-        return rootEvaluated.get(keyString) ?: throw PErrors.pathKeyFailureException()
+        return checkedRoot.get(keyString) ?: throw PErrors.pathKeyFailureException()
     }
 }

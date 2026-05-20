@@ -527,6 +527,8 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitExprIsType (Lorg/partiql/ast/expr/ExprIsType;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLike (Lorg/partiql/ast/expr/ExprLike;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLit (Lorg/partiql/ast/expr/ExprLit;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMap (Lorg/partiql/ast/expr/ExprMap;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMapEntry (Lorg/partiql/ast/expr/ExprMap$Entry;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprMatch (Lorg/partiql/ast/expr/ExprMatch;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprMissingPredicate (Lorg/partiql/ast/expr/ExprMissingPredicate;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNot (Lorg/partiql/ast/expr/ExprNot;Ljava/lang/Object;)Ljava/lang/Object;
@@ -671,6 +673,7 @@ public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public static final field INTEGER8 I
 	public static final field INTERVAL I
 	public static final field LIST I
+	public static final field MAP I
 	public static final field NUMERIC I
 	public static final field REAL I
 	public static final field SEXP I
@@ -737,6 +740,8 @@ public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public static fun INTERVAL ()Lorg/partiql/ast/DataType;
 	public static fun INTERVAL (Lorg/partiql/ast/IntervalQualifier;)Lorg/partiql/ast/DataType;
 	public static fun LIST ()Lorg/partiql/ast/DataType;
+	public static fun MAP ()Lorg/partiql/ast/DataType;
+	public static fun MAP (Lorg/partiql/ast/DataType;Lorg/partiql/ast/DataType;)Lorg/partiql/ast/DataType;
 	public static fun NUMERIC ()Lorg/partiql/ast/DataType;
 	public static fun NUMERIC (I)Lorg/partiql/ast/DataType;
 	public static fun NUMERIC (II)Lorg/partiql/ast/DataType;
@@ -774,6 +779,7 @@ public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public fun getElementType ()Lorg/partiql/ast/DataType;
 	public fun getFields ()Ljava/util/List;
 	public fun getIntervalQualifier ()Lorg/partiql/ast/IntervalQualifier;
+	public fun getKeyType ()Lorg/partiql/ast/DataType;
 	public fun getLength ()Ljava/lang/Integer;
 	public fun getName ()Lorg/partiql/ast/Identifier;
 	public fun getPrecision ()Ljava/lang/Integer;
@@ -2609,6 +2615,41 @@ public final class org/partiql/ast/expr/ExprLit : org/partiql/ast/expr/Expr {
 	public fun getChildren ()Ljava/util/List;
 	public fun getLit ()Lorg/partiql/ast/Literal;
 	public fun hashCode ()I
+}
+
+public final class org/partiql/ast/expr/ExprMap : org/partiql/ast/expr/Expr {
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/expr/ExprMap$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getEntries ()Ljava/util/List;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/expr/ExprMap$Builder {
+	public fun build ()Lorg/partiql/ast/expr/ExprMap;
+	public fun entries (Ljava/util/List;)Lorg/partiql/ast/expr/ExprMap$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/ast/expr/ExprMap$Entry : org/partiql/ast/AstNode {
+	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/expr/ExprMap$Entry$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getKey ()Lorg/partiql/ast/expr/Expr;
+	public fun getValue ()Lorg/partiql/ast/expr/Expr;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/expr/ExprMap$Entry$Builder {
+	public fun build ()Lorg/partiql/ast/expr/ExprMap$Entry;
+	public fun key (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprMap$Entry$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprMap$Entry$Builder;
 }
 
 public final class org/partiql/ast/expr/ExprMatch : org/partiql/ast/expr/Expr {

@@ -45,6 +45,7 @@ import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprError
 import org.partiql.eval.internal.operator.rex.ExprLit
+import org.partiql.eval.internal.operator.rex.ExprMapConstruct
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
@@ -98,6 +99,7 @@ import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
+import org.partiql.plan.rex.RexMap
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -500,6 +502,15 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 Mode.STRICT -> ExprStructStrict(fields)
                 else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
+        }
+
+        override fun visitMap(rex: RexMap, ctx: Unit): ExprValue {
+            val entries = rex.getEntries().map {
+                val k = compile(it.key, ctx)
+                val v = compile(it.value, ctx).catch()
+                ExprStructField(k, v)
+            }
+            return ExprMapConstruct(entries)
         }
 
         override fun visitSubquery(rex: RexSubquery, ctx: Unit): ExprValue {

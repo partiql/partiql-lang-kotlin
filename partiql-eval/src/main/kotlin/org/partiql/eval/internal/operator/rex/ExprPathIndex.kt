@@ -14,6 +14,13 @@ internal class ExprPathIndex(
 
     override fun eval(env: Environment): Datum {
         val input = root.eval(env)
+
+        // MAP key lookup
+        if (input.type.code() == PType.MAP) {
+            val k = key.eval(env)
+            return input.get(k)
+        }
+
         val iterator = when (input.type.code()) {
             PType.BAG,
             PType.ARRAY -> input.iterator()

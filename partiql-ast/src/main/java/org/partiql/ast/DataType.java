@@ -157,6 +157,8 @@ public final class DataType extends AstEnum {
     // <datetime type> continue
     public static final int TIME_WITHOUT_TIME_ZONE = 46;
     public static final int TIMESTAMP_WITHOUT_TIME_ZONE = 47;
+    // <map type>
+    public static final int MAP = 48;
 
     public static DataType BOOL() {
         return new DataType(BOOL);
@@ -398,6 +400,14 @@ public final class DataType extends AstEnum {
         return new DataType(BAG);
     }
 
+    public static DataType MAP() {
+        return new DataType(MAP);
+    }
+
+    public static DataType MAP(DataType keyType, DataType valueType) {
+        return new DataType(MAP, keyType, valueType);
+    }
+
     public static DataType TIME() {
         return new DataType(TIME);
     }
@@ -487,6 +497,7 @@ public final class DataType extends AstEnum {
     private final Integer scale;
     private final Integer length;
     private final DataType elementType;
+    private final DataType keyType;
     private final List<StructField> fields;
     private final Identifier name;
     private final IntervalQualifier intervalQualifier;
@@ -498,6 +509,7 @@ public final class DataType extends AstEnum {
         this.scale = null;
         this.length = null;
         this.elementType = null;
+        this.keyType = null;
         this.fields = null;
         this.name = null;
         this.intervalQualifier = null;
@@ -537,9 +549,23 @@ public final class DataType extends AstEnum {
         this.scale = scale;
         this.length = length;
         this.elementType = elementType;
+        this.keyType = null;
         this.fields = fields;
         this.name = name;
         this.intervalQualifier = intervalQualifier;
+    }
+
+    // Private constructor for MAP type
+    private DataType(int code, DataType keyType, DataType valueType) {
+        this.code = code;
+        this.precision = null;
+        this.scale = null;
+        this.length = null;
+        this.keyType = keyType;
+        this.elementType = valueType;
+        this.fields = null;
+        this.name = null;
+        this.intervalQualifier = null;
     }
 
     // Private constructor for DataTypes with Integer parameters; set `name` to null
@@ -549,6 +575,7 @@ public final class DataType extends AstEnum {
         this.scale = scale;
         this.length = length;
         this.elementType = null;
+        this.keyType = null;
         this.fields = null;
         this.name = null;
         this.intervalQualifier = null;
@@ -561,6 +588,7 @@ public final class DataType extends AstEnum {
         this.scale = null;
         this.length = null;
         this.elementType = elementType;
+        this.keyType = null;
         this.fields = null;
         this.name = null;
         this.intervalQualifier = null;
@@ -572,6 +600,7 @@ public final class DataType extends AstEnum {
         this.scale = null;
         this.length = null;
         this.elementType = null;
+        this.keyType = null;
         this.fields = fields;
         this.name = null;
         this.intervalQualifier = null;
@@ -585,6 +614,7 @@ public final class DataType extends AstEnum {
         this.scale = null;
         this.length = null;
         this.elementType = null;
+        this.keyType = null;
         this.fields = null;
         this.intervalQualifier = null;
     }
@@ -644,6 +674,7 @@ public final class DataType extends AstEnum {
             case LIST: return "LIST";
             case ARRAY: return "ARRAY";
             case BAG: return "BAG";
+            case MAP: return "MAP";
             case SEXP: return "SEXP";
             case USER_DEFINED: return "USER_DEFINED";
             default: throw new IllegalStateException("Invalid DataType code: " + code);
@@ -699,7 +730,8 @@ public final class DataType extends AstEnum {
         ARRAY,
         BAG,
         SEXP,
-        USER_DEFINED
+        USER_DEFINED,
+        MAP
     };
 
     @NotNull
@@ -744,6 +776,7 @@ public final class DataType extends AstEnum {
             case "ARRAY": return ARRAY();
             case "SEXP": return SEXP();
             case "BAG": return BAG();
+            case "MAP": return MAP();
             case "TIME": return TIME();
             case "TIME_WITH_TIME_ZONE": return TIME_WITH_TIME_ZONE();
             case "TIMESTAMP": return TIMESTAMP();
@@ -791,9 +824,17 @@ public final class DataType extends AstEnum {
 
     /**
      * @return the element type of this data type. If there is no element type, null is returned.
+     * For MAP types, this returns the value type.
      */
     public DataType getElementType() {
         return elementType;
+    }
+
+    /**
+     * @return the key type of this MAP data type. If this is not a MAP or has no key type, null is returned.
+     */
+    public DataType getKeyType() {
+        return keyType;
     }
 
     /**
@@ -818,6 +859,9 @@ public final class DataType extends AstEnum {
         List<AstNode> kids = new ArrayList<>();
         if (name != null) {
             kids.add(name);
+        }
+        if (keyType != null) {
+            kids.add(keyType);
         }
         if (elementType != null) {
             kids.add(elementType);
