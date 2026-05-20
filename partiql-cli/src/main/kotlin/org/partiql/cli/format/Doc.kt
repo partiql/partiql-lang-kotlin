@@ -14,33 +14,24 @@
 
 package org.partiql.cli.format
 
-// TODO: Extend with PartiQL-specific nodes for full AST-to-Doc formatting (bags, arrays, CASE, paths).
-
 /**
  * Pretty-printing document algebra based on Wadler's "A Prettier Printer" (1997).
  *
  * Documents describe multiple possible layouts; the renderer picks the best fit
- * for a target line width. Example:
- *
- * ```
- * val doc = group(text("SELECT") cat nest(4, Line cat text("a, b, c")))
- * render(doc, width = 40)  // → "SELECT a, b, c"         (fits on one line)
- * render(doc, width = 10)  // → "SELECT\n    a, b, c"    (broken)
- * ```
+ * for a target line width.
  *
  * See: http://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf
  */
 internal sealed interface Doc {
     data object Nil : Doc
-    /** Literal text (never broken across lines). */
     data class Text(val s: String) : Doc
-    data class Keyword(val s: String) : Doc
     /** Newline when broken, space when flat. */
     data object Line : Doc
+    /** Newline when broken, empty string when flat. Used inside brackets. */
+    data object SoftBreak : Doc
     /** Always a newline (cannot be flattened). */
     data object HardLine : Doc
     data class Concat(val a: Doc, val b: Doc) : Doc
-    /** Indent [doc] by [n] spaces. */
     data class Nest(val n: Int, val doc: Doc) : Doc
     /** Flat layout if it fits, otherwise broken layout. */
     data class Union(val flat: Doc, val broken: Doc) : Doc
@@ -49,7 +40,6 @@ internal sealed interface Doc {
 // Constructors & Combinators
 
 internal fun text(s: String): Doc = if (s.isEmpty()) Doc.Nil else Doc.Text(s)
-internal fun keyword(s: String): Doc = Doc.Keyword(s)
 internal fun nest(n: Int, doc: Doc): Doc = Doc.Nest(n, doc)
 
 internal infix fun Doc.cat(other: Doc): Doc = when {
@@ -64,13 +54,26 @@ internal fun group(doc: Doc): Doc {
     return Doc.Union(f, doc)
 }
 
+/** Join a list of docs with a separator between each pair. */
+internal fun join(docs: List<Doc>, sep: Doc): Doc {
+    if (docs.isEmpty()) return Doc.Nil
+    return docs.reduce { acc, doc -> acc cat sep cat doc }
+}
+
+/** Join with comma + Line between items (break after comma). */
+internal fun commaJoin(docs: List<Doc>): Doc = join(docs, text(",") cat Doc.Line)
+
+/** Bracket: open + SoftBreak + nested content + SoftBreak + close. */
+internal fun bracket(open: String, doc: Doc, close: String, indent: Int = 4): Doc =
+    group(text(open) cat nest(indent, Doc.SoftBreak cat doc) cat Doc.SoftBreak cat text(close))
+
 /** Returns the single-line form, or null if the doc contains [Doc.HardLine]. */
 private fun flatten(doc: Doc): Doc? {
     return when (doc) {
         is Doc.Nil -> Doc.Nil
         is Doc.Text -> doc
-        is Doc.Keyword -> doc
         is Doc.Line -> Doc.Text(" ")
+        is Doc.SoftBreak -> Doc.Nil
         is Doc.HardLine -> null
         is Doc.Concat -> {
             val a = flatten(doc.a) ?: return null
@@ -104,8 +107,11 @@ private fun best(sb: StringBuilder, width: Int, col: Int, docs: List<Triple<Int,
         when (doc) {
             is Doc.Nil -> {}
             is Doc.Text -> { sb.append(doc.s); k += doc.s.length }
-            is Doc.Keyword -> { sb.append(doc.s); k += doc.s.length }
             is Doc.HardLine -> { sb.append('\n'); repeat(i) { sb.append(' ') }; k = i }
+            is Doc.SoftBreak -> when (mode) {
+                Mode.FLAT -> {} // empty string when flat
+                Mode.BREAK -> { sb.append('\n'); repeat(i) { sb.append(' ') }; k = i }
+            }
             is Doc.Line -> when (mode) {
                 Mode.FLAT -> { sb.append(' '); k += 1 }
                 Mode.BREAK -> { sb.append('\n'); repeat(i) { sb.append(' ') }; k = i }
@@ -137,7 +143,10 @@ private fun fits(remaining: Int, docs: List<Triple<Int, Mode, Doc>>): Boolean {
         when (doc) {
             is Doc.Nil -> {}
             is Doc.Text -> w -= doc.s.length
-            is Doc.Keyword -> w -= doc.s.length
+            is Doc.SoftBreak -> when (mode) {
+                Mode.FLAT -> {} // contributes 0 width
+                Mode.BREAK -> return true
+            }
             is Doc.Line -> when (mode) {
                 Mode.FLAT -> w -= 1
                 Mode.BREAK -> return true
