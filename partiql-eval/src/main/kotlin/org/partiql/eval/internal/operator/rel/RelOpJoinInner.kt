@@ -5,6 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
+import org.partiql.eval.internal.helpers.checkInterrupted
 
 /**
  * Inner Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true.
@@ -58,6 +59,7 @@ internal class RelOpJoinInner(
         for (lhsRecord in lhs) {
             rhs.open(env.push(lhsRecord))
             for (rhsRecord in rhs) {
+                checkInterrupted()
                 val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
                 if (result.isTrue()) {
