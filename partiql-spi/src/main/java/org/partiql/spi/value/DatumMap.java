@@ -40,6 +40,12 @@ class DatumMap implements Datum {
         return value;
     }
 
+    @Override
+    public boolean containsKey(@NotNull Datum key) {
+        DatumKey wrappedKey = new DatumKey(key);
+        return _entries.containsKey(wrappedKey);
+    }
+
     @NotNull
     @Override
     public Iterator<Entry> getEntries() {

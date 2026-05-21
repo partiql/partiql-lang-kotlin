@@ -470,6 +470,18 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * @return true if the MAP contains the given key, false otherwise.
+     * @throws InvalidOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
+     *                                       will throw this exception upon invocation.
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    default boolean containsKey(@NotNull Datum key) {
+        throw new InvalidOperationException(getType(), "containsKey");
+    }
+
+    /**
      * @return an iterator over the entries of a MAP value.
      * @throws InvalidOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
