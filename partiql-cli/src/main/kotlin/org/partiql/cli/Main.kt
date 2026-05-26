@@ -75,7 +75,8 @@ internal class Version : CommandLine.IVersionProvider {
         "@|bold,underline OPTIONS|@%n",
         "Execute `partiql` without a query or without -i to launch an interactive shell%n",
     ],
-    showDefaultValues = true
+    showDefaultValues = true,
+    subcommands = [FmtCommand::class]
 )
 internal class MainCommand : Runnable {
     // TODO: Need to add tests to CLI. All tests were removed in the same commit as this TODO. See Git blame.
