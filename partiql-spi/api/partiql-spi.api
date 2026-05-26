@@ -555,7 +555,6 @@ public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static fun intervalSecond (II)Lorg/partiql/spi/types/PType;
 	public static fun intervalYear (I)Lorg/partiql/spi/types/PType;
 	public static fun intervalYearMonth (I)Lorg/partiql/spi/types/PType;
-	public static fun map ()Lorg/partiql/spi/types/PType;
 	public static fun map (Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
 	public fun name ()Ljava/lang/String;
 	public static fun numeric ()Lorg/partiql/spi/types/PType;
@@ -658,7 +657,6 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
 	public fun lower ()Lorg/partiql/spi/value/Datum;
-	public static fun map ()Lorg/partiql/spi/value/Datum;
 	public static fun map (Lorg/partiql/spi/types/PType;Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun missing ()Lorg/partiql/spi/value/Datum;
 	public static fun missing (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/value/Datum;
