@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [Unreleased](https://TODO.com) - YYYY-MM-DD
+## [1.3.14](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.14) - 2026-05-26
 
 ### Added
 - Re-applied thread interruption support for the V1 evaluation engine, added `PError.INTERRUPTED` error code for identifying query cancellation via `Thread.interrupt()`
