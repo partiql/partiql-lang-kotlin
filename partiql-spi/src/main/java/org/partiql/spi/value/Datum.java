@@ -919,35 +919,25 @@ public interface Datum extends Iterable<Datum> {
         return new DatumStruct(values);
     }
 
-    // MAP
-
-    /**
-     * Creates an empty MAP with default type MAP&lt;DYNAMIC, DYNAMIC&gt;.
-     * @return a value of type {@link PType#MAP}
-     * @deprecated This feature is experimental and is subject to change.
-     */
-    @Deprecated
-    @NotNull
-    static Datum map() {
-        return new DatumMap(PType.map(), new java.util.LinkedHashMap<>());
-    }
-
     /**
      * Creates a MAP with the given type and entries.
      * Duplicate keys follow last-write-wins semantics.
-     * @param type the MAP type (must have code MAP)
+     * @param keyType the MAP type (must have code MAP)
      * @param entries the key-value entries
      * @return a value of type {@link PType#MAP}
      * @deprecated This feature is experimental and is subject to change.
      */
     @Deprecated
     @NotNull
-    static Datum map(@NotNull PType type, @NotNull Iterable<Entry> entries) {
+    static Datum map(@NotNull PType keyType, @NotNull Iterable<Entry> entries) {
+        if (keyType.code() == PType.DYNAMIC) {
+            throw new IllegalArgumentException("MAP key type must not be DYNAMIC");
+        }
         java.util.LinkedHashMap<DatumKey, Datum> map = new java.util.LinkedHashMap<>();
         for (Entry entry : entries) {
             map.put(new DatumKey(entry.getKey()), entry.getValue());
         }
-        return new DatumMap(type, map);
+        return new DatumMap(keyType, map);
     }
 
     /**

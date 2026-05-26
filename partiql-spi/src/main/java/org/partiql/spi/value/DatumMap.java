@@ -18,8 +18,8 @@ class DatumMap implements Datum {
     @NotNull
     private final PType _type;
 
-    DatumMap(@NotNull PType type, @NotNull LinkedHashMap<DatumKey, Datum> entries) {
-        _type = type;
+    DatumMap(@NotNull PType keyType, @NotNull LinkedHashMap<DatumKey, Datum> entries) {
+        _type = PType.map(keyType, PType.dynamic());
         _entries = entries;
     }
 

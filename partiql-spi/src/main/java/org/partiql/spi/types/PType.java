@@ -1184,16 +1184,6 @@ public abstract class PType extends org.partiql.spi.Enum {
     }
 
     /**
-     * @return a PartiQL map type with key type DYNAMIC and value type DYNAMIC
-     * @deprecated This feature is experimental and is subject to change.
-     */
-    @Deprecated
-    @NotNull
-    public static PType map() {
-        return new PTypeMap(PType.dynamic(), PType.dynamic());
-    }
-
-    /**
      * @return a PartiQL map type with the specified key and value types
      * @deprecated This feature is experimental and is subject to change.
      */
@@ -1283,8 +1273,6 @@ public abstract class PType extends org.partiql.spi.Enum {
                 return unknown();
             case VARIANT:
                 return variant("ion");
-            case MAP:
-                return map();
             default:
                 throw new IllegalArgumentException("Unknown type code: " + code);
         }

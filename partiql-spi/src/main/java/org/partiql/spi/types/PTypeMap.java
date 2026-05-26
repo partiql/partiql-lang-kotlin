@@ -18,6 +18,9 @@ class PTypeMap extends PType {
 
     PTypeMap(@NotNull PType keyType, @NotNull PType valueType) {
         super(MAP);
+        if (keyType.code() == PType.DYNAMIC) {
+            throw new IllegalArgumentException("MAP key type must not be DYNAMIC");
+        }
         _keyType = keyType;
         _valueType = valueType;
     }

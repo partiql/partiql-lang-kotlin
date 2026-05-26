@@ -30,6 +30,12 @@ class DatumKey {
 
     @Override
     public int hashCode() {
+        if (_datum.isNull()) {
+            throw new IllegalStateException("NULL is not allowed as a MAP key");
+        }
+        if (_datum.isMissing()) {
+            throw new IllegalStateException("MISSING is not allowed as a MAP key");
+        }
         int code = _datum.getType().code();
         switch (code) {
             // Numeric types — normalize to BigDecimal for cross-type equality
