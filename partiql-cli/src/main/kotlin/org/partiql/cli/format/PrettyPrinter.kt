@@ -387,7 +387,7 @@ private class DocVisitor : AstVisitor<Doc, Unit>() {
         }
         val terms = flattenOperator(node)
         val docs = terms.mapIndexed { idx, term ->
-            val operandDoc = visitOperand(term.operand, operatorPrecedence(node.symbol))
+            val operandDoc = visitOperand(term.operand, operatorPrecedence(node.symbol), isRight = idx > 0)
             if (idx == 0) operandDoc
             else text(" ${term.precedingOp} ") cat operandDoc
         }
@@ -397,11 +397,11 @@ private class DocVisitor : AstVisitor<Doc, Unit>() {
     private data class OpTerm(val operand: Expr, val precedingOp: String?)
 
     private fun flattenOperator(node: ExprOperator): List<OpTerm> {
-        val precedence = operatorPrecedence(node.symbol)
+        val symbol = node.symbol
         val result = mutableListOf<OpTerm>()
         fun collect(e: Expr, op: String?) {
-            if (e is ExprOperator && e.lhs != null && operatorPrecedence(e.symbol) == precedence) {
-                collect(e.lhs!!, null)
+            if (e is ExprOperator && e.lhs != null && e.symbol == symbol) {
+                collect(e.lhs!!, op)
                 collect(e.rhs, e.symbol)
             } else {
                 result.add(OpTerm(e, op))
@@ -412,11 +412,14 @@ private class DocVisitor : AstVisitor<Doc, Unit>() {
         return result
     }
 
-    private fun visitOperand(expr: Expr, parentPrecedence: Int): Doc {
+    private fun visitOperand(expr: Expr, parentPrecedence: Int, isRight: Boolean = false): Doc {
         return when {
             expr is ExprQuerySet -> bracket("(", visitExprQuerySet(expr, Unit), ")")
-            expr is ExprOperator && expr.lhs != null && operatorPrecedence(expr.symbol) < parentPrecedence ->
-                bracket("(", visit(expr, Unit), ")")
+            expr is ExprOperator && expr.lhs != null -> {
+                val childPrec = operatorPrecedence(expr.symbol)
+                val needsParens = if (isRight) childPrec <= parentPrecedence else childPrec < parentPrecedence
+                if (needsParens) bracket("(", visit(expr, Unit), ")") else visit(expr, Unit)
+            }
             else -> visit(expr, Unit)
         }
     }

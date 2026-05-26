@@ -15,7 +15,6 @@
 
 package org.partiql.cli
 
-import org.partiql.cli.format.pretty
 import org.partiql.cli.io.DatumCsvReader
 import org.partiql.cli.io.DatumIonReaderBuilder
 import org.partiql.cli.io.DatumParquetReader
@@ -25,7 +24,6 @@ import org.partiql.cli.io.LazyCatalog
 import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
-import org.partiql.parser.PartiQLParser
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -77,7 +75,8 @@ internal class Version : CommandLine.IVersionProvider {
         "@|bold,underline OPTIONS|@%n",
         "Execute `partiql` without a query or without -i to launch an interactive shell%n",
     ],
-    showDefaultValues = true
+    showDefaultValues = true,
+    subcommands = [FmtCommand::class]
 )
 internal class MainCommand : Runnable {
     // TODO: Need to add tests to CLI. All tests were removed in the same commit as this TODO. See Git blame.
@@ -97,12 +96,6 @@ internal class MainCommand : Runnable {
         description = ["File containing the global environment"],
     )
     var env: File? = null
-
-    @CommandLine.Option(
-        names = ["--fmt"],
-        description = ["Format (pretty-print) the input PartiQL statement and print to stdout."],
-    )
-    var fmt: Boolean = false
 
     @CommandLine.Option(
         names = ["--strict"],
@@ -207,8 +200,8 @@ internal class MainCommand : Runnable {
             System.err.println("========================================")
         }
         when (val statement = statement()) {
-            null -> if (fmt) fmt(System.`in`.bufferedReader().readText()) else shell()
-            else -> if (fmt) fmt(statement) else run(statement)
+            null -> shell()
+            else -> run(statement)
         }
     }
 
@@ -229,15 +222,6 @@ internal class MainCommand : Runnable {
     private fun shell() {
         val pipeline = pipeline()
         Shell(pipeline, session(), debug).start()
-    }
-
-    private fun fmt(statement: String) {
-        val parser = PartiQLParser.builder().build()
-        val result = parser.parse(statement)
-        val formatted = result.statements.joinToString(";\n\n") {
-            it.pretty(width = 80)
-        }
-        println(formatted)
     }
 
     private fun pipeline(): Pipeline {

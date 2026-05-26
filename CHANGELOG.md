@@ -26,7 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
-- Added `--fmt` flag to the CLI for pretty-printing PartiQL statements with width-aware formatting.
+- Added `fmt` subcommand to the CLI (`partiql fmt`) for pretty-printing PartiQL statements with width-aware formatting.
 
 ### Changed
 
