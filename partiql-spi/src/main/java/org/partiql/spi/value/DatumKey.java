@@ -72,17 +72,17 @@ class DatumKey {
             // Boolean
             case PType.BOOL:
                 return Boolean.hashCode(_datum.getBoolean());
-            // Date/time types
+            // Date/time types — normalize to offset types at UTC for cross-type equality
             case PType.DATE:
-                return _datum.getLocalDate().hashCode();
+                return _datum.getLocalDate().atTime(java.time.LocalTime.MIN).atOffset(java.time.ZoneOffset.UTC).hashCode();
             case PType.TIME:
-                return _datum.getLocalTime().hashCode();
+                return _datum.getLocalTime().atOffset(java.time.ZoneOffset.UTC).hashCode();
             case PType.TIMEZ:
-                return _datum.getOffsetTime().hashCode();
+                return _datum.getOffsetTime().withOffsetSameInstant(java.time.ZoneOffset.UTC).hashCode();
             case PType.TIMESTAMP:
-                return _datum.getLocalDateTime().hashCode();
+                return _datum.getLocalDateTime().atOffset(java.time.ZoneOffset.UTC).hashCode();
             case PType.TIMESTAMPZ:
-                return _datum.getOffsetDateTime().hashCode();
+                return _datum.getOffsetDateTime().withOffsetSameInstant(java.time.ZoneOffset.UTC).hashCode();
             // TODO: Support collection types (ARRAY, BAG, STRUCT, ROW, MAP) as MAP keys
             //  once well-defined equality semantics and hashing for these types are established.
             default:
