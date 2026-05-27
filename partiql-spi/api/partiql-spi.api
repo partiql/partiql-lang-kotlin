@@ -657,7 +657,7 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
 	public fun lower ()Lorg/partiql/spi/value/Datum;
-	public static fun map (Lorg/partiql/spi/types/PType;Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
+	public static fun map (Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun missing ()Lorg/partiql/spi/value/Datum;
 	public static fun missing (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/value/Datum;
 	public static fun nullValue ()Lorg/partiql/spi/value/Datum;

@@ -1273,6 +1273,9 @@ public abstract class PType extends org.partiql.spi.Enum {
                 return unknown();
             case VARIANT:
                 return variant("ion");
+            case MAP:
+                // TODO: Update this to unparameterized map() when MAP support DYNAMIC as default
+                return map(PType.string(), PType.dynamic());
             default:
                 throw new IllegalArgumentException("Unknown type code: " + code);
         }

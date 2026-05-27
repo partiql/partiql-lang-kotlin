@@ -18,9 +18,16 @@ class DatumMap implements Datum {
     @NotNull
     private final PType _type;
 
-    DatumMap(@NotNull PType keyType, @NotNull LinkedHashMap<DatumKey, Datum> entries) {
-        _type = PType.map(keyType, PType.dynamic());
-        _entries = entries;
+    DatumMap(@NotNull PType keyType, @NotNull PType valueType, @NotNull Iterable<Entry> entries) {
+        if (keyType.code() == PType.DYNAMIC) {
+            throw new IllegalArgumentException("MAP key type must not be DYNAMIC");
+        }
+
+        _type = PType.map(keyType, valueType);
+        _entries = new LinkedHashMap<>();
+        for (Entry entry : entries) {
+            _entries.put(new DatumKey(entry.getKey()), entry.getValue());
+        }
     }
 
     @NotNull

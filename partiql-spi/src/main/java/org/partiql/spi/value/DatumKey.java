@@ -50,10 +50,20 @@ class DatumKey {
             case PType.NUMERIC:
             case PType.DECIMAL:
                 return _datum.getBigDecimal().stripTrailingZeros().hashCode();
-            case PType.REAL:
-                return BigDecimal.valueOf(_datum.getFloat()).stripTrailingZeros().hashCode();
-            case PType.DOUBLE:
-                return BigDecimal.valueOf(_datum.getDouble()).stripTrailingZeros().hashCode();
+            case PType.REAL: {
+                float f = _datum.getFloat();
+                if (Float.isNaN(f) || Float.isInfinite(f)) {
+                    throw new IllegalArgumentException("NaN and Infinity are not allowed as MAP keys");
+                }
+                return BigDecimal.valueOf(f).stripTrailingZeros().hashCode();
+            }
+            case PType.DOUBLE: {
+                double d = _datum.getDouble();
+                if (Double.isNaN(d) || Double.isInfinite(d)) {
+                    throw new IllegalArgumentException("NaN and Infinity are not allowed as MAP keys");
+                }
+                return BigDecimal.valueOf(d).stripTrailingZeros().hashCode();
+            }
             // Text types
             case PType.STRING:
             case PType.CHAR:

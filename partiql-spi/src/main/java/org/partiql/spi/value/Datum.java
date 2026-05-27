@@ -458,7 +458,9 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return the value associated with the given key in a MAP, or MISSING if the key is not found.
+     * Returns the value associated with the given key in a MAP, or MISSING if the key is not found.
+     * @param key the key to look up
+     * @return the value associated with the key, or MISSING if not found
      * @throws InvalidOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
@@ -470,7 +472,9 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return true if the MAP contains the given key, false otherwise.
+     * Returns whether the MAP contains the given key.
+     * @param key the key to check
+     * @return true if the MAP contains the key, false otherwise
      * @throws InvalidOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
@@ -920,24 +924,19 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * Creates a MAP with the given type and entries.
+     * Creates a MAP with the given key type, value type, and entries.
      * Duplicate keys follow last-write-wins semantics.
-     * @param keyType the MAP type (must have code MAP)
+     * @param keyType the key type of the MAP (must not be DYNAMIC)
+     * @param valueType the value type of the MAP
      * @param entries the key-value entries
      * @return a value of type {@link PType#MAP}
+     * @throws IllegalArgumentException if keyType is DYNAMIC
      * @deprecated This feature is experimental and is subject to change.
      */
     @Deprecated
     @NotNull
-    static Datum map(@NotNull PType keyType, @NotNull Iterable<Entry> entries) {
-        if (keyType.code() == PType.DYNAMIC) {
-            throw new IllegalArgumentException("MAP key type must not be DYNAMIC");
-        }
-        java.util.LinkedHashMap<DatumKey, Datum> map = new java.util.LinkedHashMap<>();
-        for (Entry entry : entries) {
-            map.put(new DatumKey(entry.getKey()), entry.getValue());
-        }
-        return new DatumMap(keyType, map);
+    static Datum map(@NotNull PType keyType, @NotNull PType valueType, @NotNull Iterable<Entry> entries) {
+        return new DatumMap(keyType, valueType, entries);
     }
 
     /**
