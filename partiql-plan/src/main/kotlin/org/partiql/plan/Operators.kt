@@ -23,10 +23,12 @@ import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
+import org.partiql.plan.rex.RexCallRef
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexDispatch
+import org.partiql.plan.rex.RexDispatchRef
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexNullIf
@@ -42,6 +44,7 @@ import org.partiql.plan.rex.RexSubqueryComp
 import org.partiql.plan.rex.RexSubqueryIn
 import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
+import org.partiql.plan.rex.RexTableRef
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.function.Fn
@@ -459,4 +462,55 @@ public interface Operators {
      * @return
      */
     public fun variable(depth: Int, offset: Int, type: PType): RexVar = RexVar.create(depth, offset, type)
+
+    // --- REF OPERATORS (for thread-safe cacheable plans) ----------------------------------------------------------------
+
+    /**
+     * Create a [RexTableRef] instance for lazy table resolution.
+     *
+     * @param catalogId
+     * @param tableId
+     * @param schema
+     * @return
+     */
+    public fun tableRef(catalogId: Int, tableId: Int, schema: PType): RexTableRef =
+        RexTableRef.create(catalogId, tableId, schema)
+
+    /**
+     * Create a [RexCallRef] instance for lazy function resolution.
+     *
+     * @param catalogId
+     * @param fnId
+     * @param args
+     * @param returnType
+     * @return
+     */
+    public fun callRef(catalogId: Int, fnId: Int, args: List<Rex>, returnType: PType): RexCallRef =
+        RexCallRef.create(catalogId, fnId, args, returnType)
+
+    /**
+     * Create a [RexDispatchRef] instance for lazy dynamic dispatch resolution.
+     *
+     * @param name
+     * @param catalogId
+     * @param fnIds
+     * @param args
+     * @return
+     */
+    public fun dispatchRef(name: String, catalogId: Int, fnIds: List<Int>, args: List<Rex>): RexDispatchRef =
+        RexDispatchRef.create(name, catalogId, fnIds, args)
+
+    /**
+     * Create a [RelAggregate] with reference-based measures for lazy resolution.
+     *
+     * @param input
+     * @param measureRefs
+     * @param groups
+     * @return
+     */
+    public fun aggregateRef(
+        input: Rel,
+        measureRefs: List<RelAggregate.MeasureRef>,
+        groups: List<Rex>,
+    ): RelAggregate = RelAggregate.createRef(input, measureRefs, groups)
 }

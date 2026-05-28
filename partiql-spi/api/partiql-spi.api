@@ -107,6 +107,13 @@ public final class org/partiql/spi/catalog/Catalogs$DefaultImpls {
 	public static synthetic fun getCatalog$default (Lorg/partiql/spi/catalog/Catalogs;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/spi/catalog/Catalog;
 }
 
+public abstract interface class org/partiql/spi/catalog/ExecutionCatalog {
+	public abstract fun getAgg (I)Lorg/partiql/spi/function/Agg;
+	public abstract fun getFn (I)Lorg/partiql/spi/function/Fn;
+	public abstract fun getFnOverload (I)Lorg/partiql/spi/function/FnOverload;
+	public abstract fun getTable (I)Lorg/partiql/spi/catalog/Table;
+}
+
 public final class org/partiql/spi/catalog/Identifier : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
 	public static final field Companion Lorg/partiql/spi/catalog/Identifier$Companion;
 	public synthetic fun <init> ([Lorg/partiql/spi/catalog/Identifier$Simple;Lorg/partiql/spi/catalog/Identifier$Simple;Lkotlin/jvm/internal/DefaultConstructorMarker;)V

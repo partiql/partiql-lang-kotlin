@@ -41,6 +41,9 @@ import org.partiql.plan.rex.RexSubqueryComp;
 import org.partiql.plan.rex.RexSubqueryIn;
 import org.partiql.plan.rex.RexSubqueryTest;
 import org.partiql.plan.rex.RexTable;
+import org.partiql.plan.rex.RexTableRef;
+import org.partiql.plan.rex.RexCallRef;
+import org.partiql.plan.rex.RexDispatchRef;
 import org.partiql.plan.rex.RexVar;
 
 /**
@@ -243,6 +246,18 @@ public interface OperatorVisitor<R, C> {
     }
 
     default R visitTable(@NotNull RexTable rex, C ctx) {
+        return defaultVisit(rex, ctx);
+    }
+
+    default R visitTableRef(@NotNull RexTableRef rex, C ctx) {
+        return defaultVisit(rex, ctx);
+    }
+
+    default R visitCallRef(@NotNull RexCallRef rex, C ctx) {
+        return defaultVisit(rex, ctx);
+    }
+
+    default R visitDispatchRef(@NotNull RexDispatchRef rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
 

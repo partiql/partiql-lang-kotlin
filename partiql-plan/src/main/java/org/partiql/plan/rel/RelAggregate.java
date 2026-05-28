@@ -28,6 +28,18 @@ public abstract class RelAggregate extends RelBase {
     }
 
     /**
+     * Creates a new {@link RelAggregate} instance with reference-based measures for lazy resolution.
+     * @param input the input
+     * @param measureRefs the measure references
+     * @param groups the groups
+     * @return new {@link RelAggregate} instance
+     */
+    @NotNull
+    public static RelAggregate createRef(@NotNull Rel input, @NotNull List<MeasureRef> measureRefs, @NotNull List<Rex> groups) {
+        return new ImplRef(input, measureRefs, groups);
+    }
+
+    /**
      * Creates a new {@link Measure} instance.
      * @param agg the aggregation function
      * @param args the arguments
@@ -40,6 +52,19 @@ public abstract class RelAggregate extends RelBase {
     }
 
     /**
+     * Creates a new {@link MeasureRef} instance with integer references for lazy resolution.
+     * @param catalogId the catalog identifier assigned during planning
+     * @param aggId the aggregate identifier within the catalog
+     * @param args the arguments
+     * @param distinct the distinct flag
+     * @return new {@link MeasureRef} instance
+     */
+    @NotNull
+    public static MeasureRef measureRef(int catalogId, int aggId, @NotNull List<Rex> args, boolean distinct) {
+        return new MeasureRef(catalogId, aggId, args, distinct);
+    }
+
+    /**
      * Gets the input.
      * @return the input (operand 0)
      */
@@ -47,11 +72,20 @@ public abstract class RelAggregate extends RelBase {
     public abstract Rel getInput();
 
     /**
-     * Gets the measures.
+     * Gets the measures. Returns an empty list if this aggregate uses measure references instead.
      * @return the measures (arg)
      */
     @NotNull
     public abstract List<Measure> getMeasures();
+
+    /**
+     * Gets the measure references for lazy resolution. Returns an empty list if this aggregate uses embedded measures.
+     * @return the measure references
+     */
+    @NotNull
+    public List<MeasureRef> getMeasureRefs() {
+        return List.of();
+    }
 
     /**
      * Gets the groups.
@@ -125,6 +159,41 @@ public abstract class RelAggregate extends RelBase {
         }
     }
 
+    /**
+     * An aggregation function reference for lazy resolution at execution time.
+     */
+    public static class MeasureRef {
+
+        private final int catalogId;
+        private final int aggId;
+        private final List<Rex> args;
+        private final boolean distinct;
+
+        private MeasureRef(int catalogId, int aggId, List<Rex> args, boolean distinct) {
+            this.catalogId = catalogId;
+            this.aggId = aggId;
+            this.args = args;
+            this.distinct = distinct;
+        }
+
+        public int getCatalogId() {
+            return catalogId;
+        }
+
+        public int getAggId() {
+            return aggId;
+        }
+
+        @NotNull
+        public List<Rex> getArgs() {
+            return args;
+        }
+
+        public boolean isDistinct() {
+            return distinct;
+        }
+    }
+
     private static class Impl extends RelAggregate {
 
         private final Rel input;
@@ -168,6 +237,55 @@ public abstract class RelAggregate extends RelBase {
         @Override
         public RelAggregate copy(@NotNull Rel input, @NotNull List<Measure> measures, @NotNull List<Rex> groups) {
             return new Impl(input, measures, groups);
+        }
+    }
+
+    private static class ImplRef extends RelAggregate {
+
+        private final Rel input;
+        private final List<MeasureRef> measureRefs;
+        private final List<Rex> groups;
+
+        private ImplRef(Rel input, List<MeasureRef> measureRefs, List<Rex> groups) {
+            this.input = input;
+            this.measureRefs = measureRefs;
+            this.groups = groups;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public List<Measure> getMeasures() {
+            return List.of();
+        }
+
+        @NotNull
+        @Override
+        public List<MeasureRef> getMeasureRefs() {
+            return measureRefs;
+        }
+
+        @NotNull
+        @Override
+        public List<Rex> getGroups() {
+            return groups;
+        }
+
+        @NotNull
+        @Override
+        public RelAggregate copy(@NotNull Rel input) {
+            return new ImplRef(input, measureRefs, groups);
+        }
+
+        @NotNull
+        @Override
+        public RelAggregate copy(@NotNull Rel input, @NotNull List<Measure> measures, @NotNull List<Rex> groups) {
+            return new ImplRef(input, measureRefs, groups);
         }
     }
 }

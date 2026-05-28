@@ -259,11 +259,13 @@ public abstract interface class org/partiql/plan/OperatorVisitor {
 	public fun visitArray (Lorg/partiql/plan/rex/RexArray;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitBag (Lorg/partiql/plan/rex/RexBag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCall (Lorg/partiql/plan/rex/RexCall;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCallRef (Lorg/partiql/plan/rex/RexCallRef;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCase (Lorg/partiql/plan/rex/RexCase;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCast (Lorg/partiql/plan/rex/RexCast;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCoalesce (Lorg/partiql/plan/rex/RexCoalesce;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCorrelate (Lorg/partiql/plan/rel/RelCorrelate;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDispatch (Lorg/partiql/plan/rex/RexDispatch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDispatchRef (Lorg/partiql/plan/rex/RexDispatchRef;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDistinct (Lorg/partiql/plan/rel/RelDistinct;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitError (Lorg/partiql/plan/rex/RexError;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcept (Lorg/partiql/plan/rel/RelExcept;Ljava/lang/Object;)Ljava/lang/Object;
@@ -291,6 +293,7 @@ public abstract interface class org/partiql/plan/OperatorVisitor {
 	public fun visitSubqueryIn (Lorg/partiql/plan/rex/RexSubqueryIn;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSubqueryTest (Lorg/partiql/plan/rex/RexSubqueryTest;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTable (Lorg/partiql/plan/rex/RexTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableRef (Lorg/partiql/plan/rex/RexTableRef;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUnion (Lorg/partiql/plan/rel/RelUnion;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUnpivot (Lorg/partiql/plan/rel/RelUnpivot;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Ljava/lang/Object;
@@ -302,14 +305,17 @@ public abstract interface class org/partiql/plan/Operators {
 	public static final field Companion Lorg/partiql/plan/Operators$Companion;
 	public static final field STANDARD Lorg/partiql/plan/Operators;
 	public abstract fun aggregate (Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
+	public abstract fun aggregateRef (Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
 	public abstract fun array (Ljava/util/List;)Lorg/partiql/plan/rex/RexArray;
 	public abstract fun bag (Ljava/util/Collection;)Lorg/partiql/plan/rex/RexBag;
 	public abstract fun call (Lorg/partiql/spi/function/Fn;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
+	public abstract fun callRef (IILjava/util/List;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexCallRef;
 	public abstract fun caseWhen (Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
 	public abstract fun cast (Lorg/partiql/plan/rex/Rex;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexCast;
 	public abstract fun coalesce (Ljava/util/List;)Lorg/partiql/plan/rex/RexCoalesce;
 	public abstract fun correlate (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/JoinType;)Lorg/partiql/plan/rel/RelCorrelate;
 	public abstract fun dispatch (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatch;
+	public abstract fun dispatchRef (Ljava/lang/String;ILjava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatchRef;
 	public abstract fun distinct (Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rel/RelDistinct;
 	public abstract fun error (Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexError;
 	public abstract fun except (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelExcept;
@@ -337,6 +343,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun subqueryIn (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rex/RexSubqueryIn;
 	public abstract fun subqueryTest (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/RexSubqueryTest$Test;)Lorg/partiql/plan/rex/RexSubqueryTest;
 	public abstract fun table (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/rex/RexTable;
+	public abstract fun tableRef (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexTableRef;
 	public abstract fun union (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public abstract fun unpivot (Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public abstract fun variable (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
@@ -348,14 +355,17 @@ public final class org/partiql/plan/Operators$Companion {
 
 public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun aggregate (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
+	public static fun aggregateRef (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
 	public static fun array (Lorg/partiql/plan/Operators;Ljava/util/List;)Lorg/partiql/plan/rex/RexArray;
 	public static fun bag (Lorg/partiql/plan/Operators;Ljava/util/Collection;)Lorg/partiql/plan/rex/RexBag;
 	public static fun call (Lorg/partiql/plan/Operators;Lorg/partiql/spi/function/Fn;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
+	public static fun callRef (Lorg/partiql/plan/Operators;IILjava/util/List;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexCallRef;
 	public static fun caseWhen (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
 	public static fun cast (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexCast;
 	public static fun coalesce (Lorg/partiql/plan/Operators;Ljava/util/List;)Lorg/partiql/plan/rex/RexCoalesce;
 	public static fun correlate (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/JoinType;)Lorg/partiql/plan/rel/RelCorrelate;
 	public static fun dispatch (Lorg/partiql/plan/Operators;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatch;
+	public static fun dispatchRef (Lorg/partiql/plan/Operators;Ljava/lang/String;ILjava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatchRef;
 	public static fun distinct (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rel/RelDistinct;
 	public static fun error (Lorg/partiql/plan/Operators;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexError;
 	public static fun except (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelExcept;
@@ -383,6 +393,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun subqueryIn (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rex/RexSubqueryIn;
 	public static fun subqueryTest (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/RexSubqueryTest$Test;)Lorg/partiql/plan/rex/RexSubqueryTest;
 	public static fun table (Lorg/partiql/plan/Operators;Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/rex/RexTable;
+	public static fun tableRef (Lorg/partiql/plan/Operators;IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexTableRef;
 	public static fun union (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public static fun unpivot (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public static fun variable (Lorg/partiql/plan/Operators;IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
@@ -392,6 +403,35 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 public abstract interface class org/partiql/plan/Plan {
 	public abstract fun getAction ()Lorg/partiql/plan/Action;
 	public fun getVersion ()Lorg/partiql/plan/Version;
+}
+
+public abstract interface class org/partiql/plan/SymbolTable {
+	public abstract fun catalogCount ()I
+	public abstract fun getAggregations (I)Ljava/util/List;
+	public abstract fun getCatalogName (I)Ljava/lang/String;
+	public abstract fun getFunctions (I)Ljava/util/List;
+	public abstract fun getTables (I)Ljava/util/List;
+}
+
+public final class org/partiql/plan/SymbolTable$AggEntry {
+	public fun <init> (ILorg/partiql/spi/catalog/Name;Lorg/partiql/spi/function/RoutineSignature;)V
+	public fun getId ()I
+	public fun getName ()Lorg/partiql/spi/catalog/Name;
+	public fun getSignature ()Lorg/partiql/spi/function/RoutineSignature;
+}
+
+public final class org/partiql/plan/SymbolTable$FnEntry {
+	public fun <init> (ILorg/partiql/spi/catalog/Name;Lorg/partiql/spi/function/RoutineSignature;)V
+	public fun getId ()I
+	public fun getName ()Lorg/partiql/spi/catalog/Name;
+	public fun getSignature ()Lorg/partiql/spi/function/RoutineSignature;
+}
+
+public final class org/partiql/plan/SymbolTable$TableEntry {
+	public fun <init> (ILorg/partiql/spi/catalog/Name;Lorg/partiql/spi/types/PType;)V
+	public fun getId ()I
+	public fun getName ()Lorg/partiql/spi/catalog/Name;
+	public fun getSchema ()Lorg/partiql/spi/types/PType;
 }
 
 public class org/partiql/plan/Version : org/partiql/spi/Enum {
@@ -432,10 +472,13 @@ public abstract class org/partiql/plan/rel/RelAggregate : org/partiql/plan/rel/R
 	public abstract fun copy (Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rel/RelAggregate;
 	public abstract fun copy (Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
 	public static fun create (Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
+	public static fun createRef (Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate;
 	public abstract fun getGroups ()Ljava/util/List;
 	public abstract fun getInput ()Lorg/partiql/plan/rel/Rel;
+	public fun getMeasureRefs ()Ljava/util/List;
 	public abstract fun getMeasures ()Ljava/util/List;
 	public static fun measure (Lorg/partiql/spi/function/Agg;Ljava/util/List;Z)Lorg/partiql/plan/rel/RelAggregate$Measure;
+	public static fun measureRef (IILjava/util/List;Z)Lorg/partiql/plan/rel/RelAggregate$MeasureRef;
 	protected final fun operands ()Ljava/util/List;
 	protected final fun type ()Lorg/partiql/plan/rel/RelType;
 }
@@ -444,6 +487,13 @@ public class org/partiql/plan/rel/RelAggregate$Measure {
 	public fun copy (Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate$Measure;
 	public fun getAgg ()Lorg/partiql/spi/function/Agg;
 	public fun getArgs ()Ljava/util/List;
+	public fun isDistinct ()Z
+}
+
+public class org/partiql/plan/rel/RelAggregate$MeasureRef {
+	public fun getAggId ()I
+	public fun getArgs ()Ljava/util/List;
+	public fun getCatalogId ()I
 	public fun isDistinct ()Z
 }
 
@@ -717,6 +767,16 @@ public abstract class org/partiql/plan/rex/RexCall : org/partiql/plan/rex/RexBas
 	protected fun type ()Lorg/partiql/plan/rex/RexType;
 }
 
+public abstract class org/partiql/plan/rex/RexCallRef : org/partiql/plan/rex/RexBase {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun create (IILjava/util/List;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexCallRef;
+	public abstract fun getArgs ()Ljava/util/List;
+	public abstract fun getCatalogId ()I
+	public abstract fun getFnId ()I
+	protected fun operands ()Ljava/util/List;
+}
+
 public abstract class org/partiql/plan/rex/RexCase : org/partiql/plan/rex/RexBase {
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
@@ -759,6 +819,18 @@ public abstract class org/partiql/plan/rex/RexDispatch : org/partiql/plan/rex/Re
 	public static fun create (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatch;
 	public abstract fun getArgs ()Ljava/util/List;
 	public abstract fun getFunctions ()Ljava/util/List;
+	public abstract fun getName ()Ljava/lang/String;
+	protected final fun operands ()Ljava/util/List;
+	protected final fun type ()Lorg/partiql/plan/rex/RexType;
+}
+
+public abstract class org/partiql/plan/rex/RexDispatchRef : org/partiql/plan/rex/RexBase {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun create (Ljava/lang/String;ILjava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatchRef;
+	public abstract fun getArgs ()Ljava/util/List;
+	public abstract fun getCatalogId ()I
+	public abstract fun getFnIds ()Ljava/util/List;
 	public abstract fun getName ()Ljava/lang/String;
 	protected final fun operands ()Ljava/util/List;
 	protected final fun type ()Lorg/partiql/plan/rex/RexType;
@@ -950,6 +1022,15 @@ public abstract class org/partiql/plan/rex/RexTable : org/partiql/plan/rex/RexBa
 	public abstract fun getTable ()Lorg/partiql/spi/catalog/Table;
 	protected final fun operands ()Ljava/util/List;
 	protected final fun type ()Lorg/partiql/plan/rex/RexType;
+}
+
+public abstract class org/partiql/plan/rex/RexTableRef : org/partiql/plan/rex/RexBase {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun create (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexTableRef;
+	public abstract fun getCatalogId ()I
+	public abstract fun getTableId ()I
+	protected final fun operands ()Ljava/util/List;
 }
 
 public final class org/partiql/plan/rex/RexType {

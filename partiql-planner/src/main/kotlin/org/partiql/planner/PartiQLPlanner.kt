@@ -2,6 +2,7 @@ package org.partiql.planner
 
 import org.partiql.ast.Statement
 import org.partiql.plan.Plan
+import org.partiql.plan.SymbolTable
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
@@ -40,9 +41,11 @@ public interface PartiQLPlanner {
      * Planner result.
      *
      * @property plan
+     * @property symbols
      */
     public class Result(
         public val plan: Plan,
+        public val symbols: SymbolTable,
     )
 
     public companion object {

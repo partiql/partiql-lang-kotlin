@@ -6,6 +6,7 @@ import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operators
 import org.partiql.plan.Plan
+import org.partiql.plan.SymbolTable
 import org.partiql.plan.WindowFunctionNode
 import org.partiql.plan.WindowFunctionSignature
 import org.partiql.plan.WithListElement
@@ -21,6 +22,8 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
@@ -34,7 +37,9 @@ import org.partiql.planner.internal.ir.Statement as IStatement
  *
  * TODO types and schemas!
  */
-internal class PlanTransform(private val flags: Set<PlannerFlag>) {
+internal class PlanTransform(private val flags: Set<PlannerFlag>, private val useRefs: Boolean = false) {
+
+    data class TransformResult(val plan: Plan, val symbols: SymbolTable)
 
     /**
      * Transform the internal IR to the public plan interfaces.
@@ -43,19 +48,23 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
      * @param listener
      * @return
      */
-    fun transform(internal: IPlan, listener: PErrorListener): Plan {
+    fun transform(internal: IPlan, listener: PErrorListener): TransformResult {
         val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
         val query = (internal.statement as IStatement.Query)
-        val visitor = Visitor(listener, signal)
+        val symbolTableBuilder = SymbolTableBuilder()
+        val visitor = Visitor(listener, signal, symbolTableBuilder, useRefs)
         val root = visitor.visitRex(query.root, query.root.type)
         val action = Action.Query { root }
-        // TODO replace with standard implementations (or just remove plan transform altogether when possible).
-        return Plan { action }
+        val plan = Plan { action }
+        val symbols = symbolTableBuilder.build()
+        return TransformResult(plan, symbols)
     }
 
     private class Visitor(
         private val listener: PErrorListener,
         private val signal: Boolean,
+        private val symbols: SymbolTableBuilder,
+        private val useRefs: Boolean,
     ) : PlanBaseVisitor<Any?, PType>() {
 
         private val operators = Operators.STANDARD
@@ -162,14 +171,30 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
-            // TODO assert on function name in plan typer .. here is not the place.
             val args = node.args.map { visitRex(it, it.type) }
+            if (useRefs) {
+                val firstCandidate = node.candidates.first().fn
+                val catalogName = firstCandidate.catalog
+                val name = firstCandidate.name.getName()
+                val catalogId = symbols.getOrAddCatalog(catalogName)
+                val fnIds = node.candidates.map { candidate ->
+                    val ref = candidate.fn
+                    val overloadSig = ref.signature.signature
+                    val params = overloadSig.parameterTypes.mapIndexed { i, t -> Parameter("p$i", t) }
+                    val routineSig = RoutineSignature(overloadSig.name, params, PType.dynamic(), false, false)
+                    val (_, fnId) = symbols.getOrAddFn(ref.catalog, ref.name, routineSig)
+                    fnId
+                }
+                return operators.dispatchRef(name, catalogId, fnIds, args)
+            }
             val fns = node.candidates.map { it.fn.signature }
             val name = node.candidates.first().fn.name.getName()
             return operators.dispatch(name, fns, args)
         }
 
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
+            // Static calls embed the resolved Fn directly — Fn.invoke() is stateless and thread-safe.
+            // TODO: propagate catalog info through internal IR to enable full ref-based static calls.
             val fn = node.fn
             val args = node.args.map { visitRex(it, it.type) }
             return operators.call(fn, args)
@@ -208,7 +233,12 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpVarGlobal(node: IRex.Op.Var.Global, ctx: PType): Any {
-            return operators.table(node.ref.table)
+            val ref = node.ref
+            if (useRefs) {
+                val (catalogId, tableId) = symbols.getOrAddTable(ref.catalog, ref.name, ref.type)
+                return operators.tableRef(catalogId, tableId, ref.type)
+            }
+            return operators.table(ref.table)
         }
 
         override fun visitRexOpVarUnresolved(node: IRex.Op.Var.Unresolved, ctx: PType): Any {
@@ -240,9 +270,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         override fun visitRelOpAggregate(node: IRel.Op.Aggregate, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
-            val calls = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.Measure }
             val groups = node.groups.map { visitRex(it, it.type) }
-            return operators.aggregate(input, calls, groups)
+            if (useRefs) {
+                val measureRefs = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.MeasureRef }
+                return operators.aggregateRef(input, measureRefs, groups)
+            }
+            val measures = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.Measure }
+            return operators.aggregate(input, measures, groups)
         }
 
         override fun visitRelOpWindow(node: Rel.Op.Window, ctx: PType): org.partiql.plan.rel.RelWindow {
@@ -288,10 +322,14 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRelOpAggregateCallResolved(node: IRel.Op.Aggregate.Call.Resolved, ctx: PType): Any {
-            val agg = node.agg.signature
             val args = node.args.map { visitRex(it, it.type) }
             val isDistinct = node.setq == SetQuantifier.DISTINCT
-            return RelAggregate.measure(agg, args, isDistinct)
+            if (useRefs) {
+                val ref = node.agg
+                val (catalogId, aggId) = symbols.getOrAddAgg(ref.catalog, ref.name, ref.signature.signature)
+                return RelAggregate.measureRef(catalogId, aggId, args, isDistinct)
+            }
+            return RelAggregate.measure(node.agg.signature, args, isDistinct)
         }
 
         override fun visitRelOpJoin(node: IRel.Op.Join, ctx: PType): Any {
