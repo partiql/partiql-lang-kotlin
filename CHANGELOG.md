@@ -27,6 +27,7 @@ Thank you to all who have contributed!
 
 ### Added
 - Added `fmt` subcommand to the CLI (`partiql fmt`) for pretty-printing PartiQL statements with width-aware formatting.
+- **EXPERIMENTAL** Add interfaces to support `MAP` data type
 
 ### Changed
 
@@ -41,6 +42,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @XuechunHHH
+- @xd1313113
 
 ## [1.3.14](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.14) - 2026-05-26
 

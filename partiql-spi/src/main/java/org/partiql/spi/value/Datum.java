@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -458,6 +459,47 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * Returns the value associated with the given key in a MAP.
+     * @param key the key to look up
+     * @return an Optional containing the value if the key exists, or empty if not found
+     * @throws InvalidOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
+     *                                       will throw this exception upon invocation.
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    default Optional<Datum> get(@NotNull Datum key) {
+        throw new InvalidOperationException(getType(), "get");
+    }
+
+    /**
+     * Returns whether the MAP contains the given key.
+     * @param key the key to check
+     * @return true if the MAP contains the key, false otherwise
+     * @throws InvalidOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
+     *                                       will throw this exception upon invocation.
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    default boolean containsKey(@NotNull Datum key) {
+        throw new InvalidOperationException(getType(), "containsKey");
+    }
+
+    /**
+     * @return an iterator over the entries of a MAP value.
+     * @throws InvalidOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
+     *                                       will throw this exception upon invocation.
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    default Iterator<Entry> getEntries() {
+        throw new InvalidOperationException(getType(), "getEntries");
+    }
+
+    /**
      * Pack a VARIANT into a byte array with the given charset.
      *
      * @param charset optional charset.
@@ -880,6 +922,22 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum struct(@NotNull Iterable<Field> values) {
         return new DatumStruct(values);
+    }
+
+    /**
+     * Creates a MAP with the given key type, value type, and entries.
+     * Duplicate keys follow last-write-wins semantics.
+     * @param keyType the key type of the MAP (must not be DYNAMIC)
+     * @param valueType the value type of the MAP
+     * @param entries the key-value entries
+     * @return a value of type {@link PType#MAP}
+     * @throws IllegalArgumentException if keyType is DYNAMIC
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    static Datum map(@NotNull PType keyType, @NotNull PType valueType, @NotNull Iterable<Entry> entries) {
+        return new DatumMap(keyType, valueType, entries);
     }
 
     /**
