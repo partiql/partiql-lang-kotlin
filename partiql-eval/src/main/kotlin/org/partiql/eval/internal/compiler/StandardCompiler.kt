@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.compiler
 
 import org.partiql.eval.Environment
+import org.partiql.eval.ExecutionPlan
 import org.partiql.eval.Expr
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
@@ -128,6 +129,11 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
     private val strategies: List<Strategy> = strategies
 
     internal constructor() : this(emptyList())
+
+    override fun compile(plan: Plan): ExecutionPlan {
+        PlanValidator.validate(plan)
+        return ExecutionPlan(plan)
+    }
 
     override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {
         try {

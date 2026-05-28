@@ -2,7 +2,6 @@ package org.partiql.eval;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.eval.internal.vm.StandardVM;
-import org.partiql.plan.Plan;
 import org.partiql.spi.Context;
 import org.partiql.spi.catalog.ExecutionCatalog;
 import org.partiql.spi.errors.PRuntimeException;
@@ -29,7 +28,7 @@ public interface PartiQLVM {
      * @throws PRuntimeException if an error is encountered during execution
      */
     @NotNull
-    Datum execute(@NotNull Plan plan, @NotNull Mode mode, @NotNull ExecutionCatalog[] catalogs) throws PRuntimeException;
+    Datum execute(@NotNull ExecutionPlan plan, @NotNull Mode mode, @NotNull ExecutionCatalog[] catalogs) throws PRuntimeException;
 
     /**
      * Execute the plan against the given execution catalogs with a context.
@@ -42,7 +41,7 @@ public interface PartiQLVM {
      * @throws PRuntimeException if an error is encountered during execution
      */
     @NotNull
-    Datum execute(@NotNull Plan plan, @NotNull Mode mode, @NotNull ExecutionCatalog[] catalogs, @NotNull Context ctx) throws PRuntimeException;
+    Datum execute(@NotNull ExecutionPlan plan, @NotNull Mode mode, @NotNull ExecutionCatalog[] catalogs, @NotNull Context ctx) throws PRuntimeException;
 
     /**
      * Returns a standard PartiQLVM instance.

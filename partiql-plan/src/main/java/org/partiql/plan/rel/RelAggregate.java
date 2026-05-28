@@ -45,7 +45,9 @@ public abstract class RelAggregate extends RelBase {
      * @param args the arguments
      * @param distinct the distinct flag
      * @return new {@link Measure} instance
+     * @deprecated Use {@link #measureRef(int, int, List, boolean)} with {@code PartiQLPlanner.builder().useRefs()}.
      */
+    @Deprecated
     @NotNull
     public static Measure measure(@NotNull Agg agg, @NotNull List<Rex> args, boolean distinct) {
         return new Measure(agg, args, distinct);
@@ -126,7 +128,10 @@ public abstract class RelAggregate extends RelBase {
 
     /**
      * An aggregation function along with its arguments and any additional filters (e.g. DISTINCT).
+     *
+     * @deprecated Use {@link MeasureRef} with {@code PartiQLPlanner.builder().useRefs()} for thread-safe plans.
      */
+    @Deprecated
     public static class Measure {
 
         private final Agg agg;

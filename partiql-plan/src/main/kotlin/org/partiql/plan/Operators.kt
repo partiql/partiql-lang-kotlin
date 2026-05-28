@@ -278,6 +278,7 @@ public interface Operators {
      * @param args
      * @return
      */
+    @Deprecated("Use callRef() with PartiQLPlanner.builder().useRefs()")
     public fun call(function: Fn, args: List<Rex>): RexCall = RexCall.create(function, args)
 
     /**
@@ -316,6 +317,7 @@ public interface Operators {
      * @param args
      * @return
      */
+    @Deprecated("Use dispatchRef() with PartiQLPlanner.builder().useRefs()")
     public fun dispatch(name: String, functions: List<FnOverload>, args: List<Rex>): RexDispatch =
         RexDispatch.create(name, functions, args)
 
@@ -451,6 +453,7 @@ public interface Operators {
      * @param table
      * @return
      */
+    @Deprecated("Use tableRef() with PartiQLPlanner.builder().useRefs()")
     public fun table(table: Table): RexTable = RexTable.create(table)
 
     /**

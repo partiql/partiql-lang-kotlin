@@ -169,6 +169,10 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rex, ctx);
     }
 
+    /**
+     * @deprecated Use {@link #visitCallRef} with ref-based plans.
+     */
+    @Deprecated
     default R visitCall(@NotNull RexCall rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
@@ -185,6 +189,10 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rex, ctx);
     }
 
+    /**
+     * @deprecated Use {@link #visitDispatchRef} with ref-based plans.
+     */
+    @Deprecated
     default R visitDispatch(@NotNull RexDispatch rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
@@ -245,6 +253,10 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rex, ctx);
     }
 
+    /**
+     * @deprecated Use {@link #visitTableRef} with ref-based plans.
+     */
+    @Deprecated
     default R visitTable(@NotNull RexTable rex, C ctx) {
         return defaultVisit(rex, ctx);
     }

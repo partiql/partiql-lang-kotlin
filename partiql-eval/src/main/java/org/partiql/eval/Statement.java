@@ -6,7 +6,10 @@ import org.partiql.spi.value.Datum;
 
 /**
  * An executable statement.
+ *
+ * @deprecated Use {@link PartiQLVM#execute} with {@link ExecutionPlan} for thread-safe execution.
  */
+@Deprecated
 public interface Statement {
 
     /**

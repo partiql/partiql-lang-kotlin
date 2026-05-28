@@ -5,6 +5,11 @@ public class org/partiql/eval/Environment {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/partiql/eval/ExecutionPlan {
+	public fun <init> (Lorg/partiql/plan/Plan;)V
+	public fun getPlan ()Lorg/partiql/plan/Plan;
+}
+
 public abstract interface class org/partiql/eval/Expr {
 }
 
@@ -30,8 +35,8 @@ public class org/partiql/eval/Mode : org/partiql/spi/Enum {
 }
 
 public abstract interface class org/partiql/eval/PartiQLVM {
-	public abstract fun execute (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;[Lorg/partiql/spi/catalog/ExecutionCatalog;)Lorg/partiql/spi/value/Datum;
-	public abstract fun execute (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;[Lorg/partiql/spi/catalog/ExecutionCatalog;Lorg/partiql/spi/Context;)Lorg/partiql/spi/value/Datum;
+	public abstract fun execute (Lorg/partiql/eval/ExecutionPlan;Lorg/partiql/eval/Mode;[Lorg/partiql/spi/catalog/ExecutionCatalog;)Lorg/partiql/spi/value/Datum;
+	public abstract fun execute (Lorg/partiql/eval/ExecutionPlan;Lorg/partiql/eval/Mode;[Lorg/partiql/spi/catalog/ExecutionCatalog;Lorg/partiql/spi/Context;)Lorg/partiql/spi/value/Datum;
 	public static fun standard ()Lorg/partiql/eval/PartiQLVM;
 }
 
@@ -67,6 +72,7 @@ public class org/partiql/eval/compiler/Match {
 
 public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
 	public static fun builder ()Lorg/partiql/eval/compiler/PartiQLCompiler$Builder;
+	public abstract fun compile (Lorg/partiql/plan/Plan;)Lorg/partiql/eval/ExecutionPlan;
 	public fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/Statement;
 	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;Lorg/partiql/spi/Context;)Lorg/partiql/eval/Statement;
 	public static fun standard ()Lorg/partiql/eval/compiler/PartiQLCompiler;

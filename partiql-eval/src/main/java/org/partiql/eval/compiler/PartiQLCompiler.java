@@ -1,6 +1,7 @@
 package org.partiql.eval.compiler;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.eval.ExecutionPlan;
 import org.partiql.eval.Mode;
 import org.partiql.eval.Statement;
 import org.partiql.eval.internal.compiler.StandardCompiler;
@@ -23,7 +24,9 @@ public interface PartiQLCompiler {
      * @param mode The mode to use when compiling the plan.
      * @return The prepared statement.
      * @throws PRuntimeException If an error occurs during compilation.
+     * @deprecated Use {@link #compile(Plan)} with {@link org.partiql.eval.PartiQLVM} for thread-safe execution.
      */
+    @Deprecated
     @NotNull
     default Statement prepare(@NotNull Plan plan, @NotNull Mode mode) throws PRuntimeException {
         return prepare(plan, mode, Context.standard());
@@ -37,9 +40,24 @@ public interface PartiQLCompiler {
      * @param ctx The context to use when compiling the plan.
      * @throws PRuntimeException If an error occurs during compilation. The error might have been emitted by the {@code ctx}'s {@link Context#getErrorListener()}.
      * @return The prepared statement.
+     * @deprecated Use {@link #compile(Plan)} with {@link org.partiql.eval.PartiQLVM} for thread-safe execution.
      */
+    @Deprecated
     @NotNull
     public Statement prepare(@NotNull Plan plan, @NotNull Mode mode, @NotNull Context ctx) throws PRuntimeException;
+
+    /**
+     * Compiles a ref-based plan into a thread-safe, cacheable {@link ExecutionPlan}.
+     * <p>
+     * The plan must use reference nodes (produced by a planner with {@code useRefs()} enabled).
+     * Plans containing embedded objects (e.g., from the deprecated non-ref path) will be rejected.
+     *
+     * @param plan The ref-based plan to compile.
+     * @return An opaque, thread-safe execution plan.
+     * @throws PRuntimeException If the plan contains embedded objects (non-ref nodes).
+     */
+    @NotNull
+    ExecutionPlan compile(@NotNull Plan plan) throws PRuntimeException;
 
     /**
      * Returns a new {@link Builder}.

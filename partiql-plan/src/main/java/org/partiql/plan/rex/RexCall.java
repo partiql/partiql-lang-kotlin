@@ -9,7 +9,10 @@ import java.util.List;
 
 /**
  * Logical scalar function expression abstract base class.
+ *
+ * @deprecated Use {@link RexCallRef} with {@code PartiQLPlanner.builder().useRefs()} for thread-safe plans.
  */
+@Deprecated
 public abstract class RexCall extends RexBase {
 
     /**
