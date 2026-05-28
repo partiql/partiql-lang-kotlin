@@ -6,6 +6,7 @@ import org.partiql.spi.types.PType;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * This shall always be package-private (internal).
@@ -37,14 +38,14 @@ class DatumMap implements Datum {
     }
 
     @Override
-    public Datum get(@NotNull Datum key) {
+    public Optional<Datum> get(@NotNull Datum key) {
         DatumKey wrappedKey = new DatumKey(key);
         Datum value = _entries.get(wrappedKey);
         // null from HashMap means key not found; a NULL value would be stored as Datum.nullValue()
         if (value == null) {
-            return Datum.missing();
+            return Optional.empty();
         }
-        return value;
+        return Optional.of(value);
     }
 
     @Override

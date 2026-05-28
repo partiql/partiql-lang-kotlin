@@ -1186,6 +1186,7 @@ public abstract class PType extends org.partiql.spi.Enum {
     /**
      * @return a PartiQL map type with the specified key and value types
      * @deprecated This feature is experimental and is subject to change.
+     * @throws IllegalArgumentException if key type is Dynamic
      */
     @Deprecated
     @NotNull

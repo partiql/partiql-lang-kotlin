@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -458,16 +459,16 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * Returns the value associated with the given key in a MAP, or MISSING if the key is not found.
+     * Returns the value associated with the given key in a MAP.
      * @param key the key to look up
-     * @return the value associated with the key, or MISSING if not found
+     * @return an Optional containing the value if the key exists, or empty if not found
      * @throws InvalidOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @deprecated This feature is experimental and is subject to change.
      */
     @Deprecated
-    default Datum get(@NotNull Datum key) {
+    default Optional<Datum> get(@NotNull Datum key) {
         throw new InvalidOperationException(getType(), "get");
     }
 
