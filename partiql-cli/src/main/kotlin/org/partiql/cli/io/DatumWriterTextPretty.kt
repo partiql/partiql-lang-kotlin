@@ -82,6 +82,7 @@ class DatumWriterTextPretty(
             PType.ARRAY -> writeCollection(datum, format, "[", "]")
             PType.BAG -> writeCollection(datum, format, "<<", ">>")
             PType.ROW, PType.STRUCT -> writeStructure(datum, format)
+            PType.MAP -> writeMap(datum, format)
             PType.UNKNOWN -> error("The unknown type should not be encountered here.")
             PType.VARIANT -> format(format) { writeVariant(datum) }
             PType.INTERVAL_YM, PType.INTERVAL_DT -> format(format) { writeInterval(datum) }
@@ -203,6 +204,34 @@ class DatumWriterTextPretty(
                 this.out.print(": ")
                 val valueFormat = format?.nest(true)
                 write(field.value, valueFormat)
+                val separator = if (iterator.hasNext()) "," else ""
+                this.out.println(separator)
+            }
+        }
+        format(format) {
+            this.out.print("}")
+        }
+    }
+
+    private fun writeMap(datum: Datum, format: Format?) {
+        format(format) {
+            this.out.print("MAP {")
+        }
+        if (!datum.entries.hasNext()) {
+            this.out.print("}")
+            return
+        }
+        this.out.println()
+        val iterator = datum.entries
+        val fieldFormat = format?.nest(false)
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            format(fieldFormat) {
+                val keyFormat = format?.nest(true)
+                write(entry.key, keyFormat)
+                this.out.print(": ")
+                val valueFormat = format?.nest(true)
+                write(entry.value, valueFormat)
                 val separator = if (iterator.hasNext()) "," else ""
                 this.out.println(separator)
             }

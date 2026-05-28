@@ -29,6 +29,7 @@ import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
+import org.partiql.plan.rex.RexMap
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -395,6 +396,14 @@ public interface Operators {
      * @return
      */
     public fun struct(fields: List<RexStruct.Field>): RexStruct = RexStruct.create(fields)
+
+    /**
+     * Create a [RexMap] instance.
+     *
+     * @param fields map entries (key-value pairs)
+     * @return
+     */
+    public fun map(entries: List<RexMap.Entry>): RexMap = RexMap.create(entries)
 
     /**
      * Create a [RexSubquery] instance.

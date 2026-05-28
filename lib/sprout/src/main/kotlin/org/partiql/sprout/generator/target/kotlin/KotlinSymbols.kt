@@ -76,6 +76,21 @@ class KotlinSymbols private constructor(
          * Named constructor somewhat hints at the initial emptiness (when memoized) of the symbol table
          */
         fun init(universe: Universe, options: KotlinOptions): KotlinSymbols = KotlinSymbols(universe, options)
+
+        /**
+         * Kotlin stdlib type names that conflict when used as nested class names.
+         */
+        private val KOTLIN_CONFLICTING_NAMES = setOf(
+            "Map", "List", "Set", "Array", "String", "Int", "Long", "Double", "Float", "Boolean", "Byte", "Short", "Char",
+            "Any", "Nothing", "Unit", "Pair", "Triple", "Comparable", "Enum", "Number"
+        )
+
+        /**
+         * Escape a name with backticks if it conflicts with a Kotlin stdlib type.
+         */
+        fun escapeIfConflicting(name: String): String {
+            return if (name in KOTLIN_CONFLICTING_NAMES) "`$name`" else name
+        }
     }
 
     /**
@@ -83,7 +98,7 @@ class KotlinSymbols private constructor(
      */
     fun clazz(ref: TypeRef.Path) = ClassName(
         packageName = rootPackage,
-        simpleNames = ref.path.map { it.toPascalCase() }
+        simpleNames = ref.path.map { escapeIfConflicting(it.toPascalCase()) }
     )
 
     /**
