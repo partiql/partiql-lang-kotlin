@@ -308,6 +308,10 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitExprLike (Lorg/partiql/ast/expr/ExprLike;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprLit (Lorg/partiql/ast/expr/ExprLit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLit (Lorg/partiql/ast/expr/ExprLit;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprMap (Lorg/partiql/ast/expr/ExprMap;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMap (Lorg/partiql/ast/expr/ExprMap;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprMapEntry (Lorg/partiql/ast/expr/ExprMap$Entry;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMapEntry (Lorg/partiql/ast/expr/ExprMap$Entry;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprMatch (Lorg/partiql/ast/expr/ExprMatch;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprMatch (Lorg/partiql/ast/expr/ExprMatch;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprMissingPredicate (Lorg/partiql/ast/expr/ExprMissingPredicate;Ljava/lang/Object;)Ljava/lang/Object;
@@ -740,7 +744,6 @@ public final class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public static fun INTERVAL ()Lorg/partiql/ast/DataType;
 	public static fun INTERVAL (Lorg/partiql/ast/IntervalQualifier;)Lorg/partiql/ast/DataType;
 	public static fun LIST ()Lorg/partiql/ast/DataType;
-	public static fun MAP ()Lorg/partiql/ast/DataType;
 	public static fun MAP (Lorg/partiql/ast/DataType;Lorg/partiql/ast/DataType;)Lorg/partiql/ast/DataType;
 	public static fun NUMERIC ()Lorg/partiql/ast/DataType;
 	public static fun NUMERIC (I)Lorg/partiql/ast/DataType;
