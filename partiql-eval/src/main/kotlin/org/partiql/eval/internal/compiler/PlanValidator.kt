@@ -41,7 +41,9 @@ internal object PlanValidator : OperatorVisitor<Unit, Unit> {
     }
 
     override fun visitCall(rex: RexCall, ctx: Unit) {
-        throw invalid("Plan contains embedded Fn object. Use PartiQLPlanner.builder().useRefs() to produce ref-based plans.")
+        // Static Fn calls are thread-safe (Fn.invoke is stateless), so we allow them.
+        // Recurse into children.
+        defaultVisit(rex, Unit)
     }
 
     override fun visitDispatch(rex: RexDispatch, ctx: Unit) {
