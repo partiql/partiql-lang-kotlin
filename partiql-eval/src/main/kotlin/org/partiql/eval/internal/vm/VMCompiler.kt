@@ -29,6 +29,7 @@ import org.partiql.eval.internal.operator.rel.RelOpSort
 import org.partiql.eval.internal.operator.rel.RelOpUnionAll
 import org.partiql.eval.internal.operator.rel.RelOpUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelOpUnpivot
+import org.partiql.eval.internal.operator.rel.RelOpWindow
 import org.partiql.eval.internal.operator.rex.ExprArray
 import org.partiql.eval.internal.operator.rex.ExprBag
 import org.partiql.eval.internal.operator.rex.ExprCall
@@ -56,6 +57,7 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.eval.internal.window.WindowBuiltIns
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operator
@@ -76,6 +78,7 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnpivot
+import org.partiql.plan.rel.RelWindow
 import org.partiql.plan.rel.RelWith
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
@@ -418,6 +421,22 @@ internal class VMCompiler(
     override fun visitExclude(rel: RelExclude, ctx: Unit): ExprRelation {
         val input = compileRel(rel.input)
         return RelOpExclude(input, rel.exclusions)
+    }
+
+    @Suppress("DEPRECATION")
+    override fun visitWindow(rel: RelWindow, ctx: Unit): ExprRelation {
+        val input = compileRel(rel.input)
+        val functions = rel.windowFunctions.map {
+            val args = it.arguments.map { arg -> compile(arg).catch() }
+            WindowBuiltIns.get(it.signature, args)
+        }
+        val partitionBy = rel.partitions.map { compile(it) }
+        val sortBy = rel.collations.map { collation(it) }
+        val realSortBy = partitionBy.map {
+            org.partiql.eval.internal.operator.rel.Collation(it, false, false)
+        } + sortBy
+        val sorted = RelOpSort(input, realSortBy)
+        return RelOpWindow(sorted, functions, partitionBy, sortBy)
     }
 
     override fun visitWith(rel: RelWith, ctx: Unit): ExprRelation {

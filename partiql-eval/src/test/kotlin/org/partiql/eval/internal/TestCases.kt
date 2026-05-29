@@ -16,7 +16,18 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
+
+internal val vmSkipped = AtomicInteger(0)
+internal val vmPassed = AtomicInteger(0)
+
+private fun isKnownVMSkip(msg: String): Boolean {
+    return msg.contains("No VM compiler strategy") ||
+        msg.contains("not found in catalog") ||
+        msg.contains("Cannot convert Datum") ||
+        msg.contains("[VM PATH]")
+}
 
 /**
  * @property value is a serialized Ion value.
@@ -103,9 +114,13 @@ public class SuccessTestCase(
                     appendLine(comparisonString(expected, vmResult, refResult.plan))
                 }
             }
-        } catch (_: Exception) {
-            // VM path not yet fully supported for all queries — skip gracefully.
-            // As coverage improves, this catch can be narrowed.
+            vmPassed.incrementAndGet()
+        } catch (e: Throwable) {
+            vmSkipped.incrementAndGet()
+            val rootMsg = generateSequence(e) { it.cause }.mapNotNull { it.message }.joinToString(" -> ")
+            if (!isKnownVMSkip(rootMsg)) {
+                System.err.println("[VM SKIP] Unexpected: $input — $rootMsg")
+            }
         }
     }
 
