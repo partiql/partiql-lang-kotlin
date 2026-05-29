@@ -6,8 +6,8 @@ public class org/partiql/eval/Environment {
 }
 
 public final class org/partiql/eval/ExecutionPlan {
-	public fun <init> (Lorg/partiql/plan/Plan;)V
-	public fun getPlan ()Lorg/partiql/plan/Plan;
+	public fun <init> (Lorg/partiql/eval/internal/plan/ExecutionPlanImpl;)V
+	public fun getImpl ()Lorg/partiql/eval/internal/plan/ExecutionPlanImpl;
 }
 
 public abstract interface class org/partiql/eval/Expr {

@@ -131,8 +131,16 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
     internal constructor() : this(emptyList())
 
     override fun compile(plan: Plan): ExecutionPlan {
-        PlanValidator.validate(plan)
-        return ExecutionPlan(plan)
+        try {
+            val transform = PlanToExecTransform()
+            val impl = transform.transform(plan)
+            return ExecutionPlan(impl)
+        } catch (e: PRuntimeException) {
+            throw e
+        } catch (t: Throwable) {
+            val error = PError.INTERNAL_ERROR(PErrorKind.COMPILATION(), null, t)
+            throw PRuntimeException(error)
+        }
     }
 
     override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {

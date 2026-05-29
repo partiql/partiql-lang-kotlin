@@ -4,8 +4,8 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExecutionPlan
 import org.partiql.eval.Mode
 import org.partiql.eval.PartiQLVM
+import org.partiql.eval.internal.compiler.OperatorCompiler
 import org.partiql.eval.internal.helpers.PErrors
-import org.partiql.plan.Action
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.ExecutionCatalog
 import org.partiql.spi.errors.PRuntimeException
@@ -24,12 +24,9 @@ internal class StandardVM : PartiQLVM {
 
     override fun execute(plan: ExecutionPlan, mode: Mode, catalogs: Array<ExecutionCatalog>, ctx: Context): Datum {
         try {
-            val action = plan.getPlan().action
-            if (action !is Action.Query) {
-                throw IllegalArgumentException("Only query statements are supported")
-            }
-            val compiler = VMCompiler(catalogs, mode)
-            val root = compiler.compile(action.getRex())
+            val impl = plan.getImpl()
+            val compiler = OperatorCompiler(catalogs, mode)
+            val root = compiler.compile(impl)
             return root.eval(Environment())
         } catch (e: PRuntimeException) {
             throw e

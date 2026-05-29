@@ -1,5 +1,6 @@
 package org.partiql.eval;
 
+import org.partiql.eval.internal.plan.ExecutionPlanImpl;
 import org.partiql.plan.Plan;
 
 /**
@@ -25,21 +26,21 @@ import org.partiql.plan.Plan;
  */
 public final class ExecutionPlan {
 
-    private final Plan plan;
+    private final ExecutionPlanImpl impl;
 
     /**
      * Internal use only. Do not call directly.
-     * @param plan validated plan
+     * @param impl the internal execution plan
      */
-    public ExecutionPlan(Plan plan) {
-        this.plan = plan;
+    public ExecutionPlan(ExecutionPlanImpl impl) {
+        this.impl = impl;
     }
 
     /**
      * Internal use only. Do not call directly.
-     * @return the underlying plan
+     * @return the internal execution plan
      */
-    public Plan getPlan() {
-        return plan;
+    public ExecutionPlanImpl getImpl() {
+        return impl;
     }
 }
