@@ -3,6 +3,7 @@ package org.partiql.eval.internal.plan
 import org.partiql.plan.Exclusion
 import org.partiql.plan.WindowFunctionSignature
 import org.partiql.plan.rel.RelType
+import org.partiql.spi.function.Agg
 
 internal sealed class PRel {
     abstract val type: RelType?
@@ -26,7 +27,10 @@ internal sealed class PRel {
 }
 
 internal data class PCollation(val expr: PExpr, val desc: Boolean, val nullsLast: Boolean)
-internal data class PMeasure(val catalogId: Int, val aggId: Int, val args: List<PExpr>, val distinct: Boolean)
+internal sealed class PMeasure {
+    data class Ref(val catalogId: Int, val aggId: Int, val args: List<PExpr>, val distinct: Boolean) : PMeasure()
+    data class Static(val agg: Agg, val args: List<PExpr>, val distinct: Boolean) : PMeasure()
+}
 internal data class PWindowFn(val signature: WindowFunctionSignature, val args: List<PExpr>)
 
 internal enum class PJoinType { INNER, LEFT, RIGHT, FULL }

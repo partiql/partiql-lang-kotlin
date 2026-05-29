@@ -132,6 +132,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
     override fun compile(plan: Plan): ExecutionPlan {
         try {
+            PlanValidator.validate(plan)
             val transform = PlanToExecTransform()
             val impl = transform.transform(plan)
             return ExecutionPlan(impl)
@@ -144,6 +145,35 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
     }
 
     override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {
+        if (strategies.isNotEmpty()) {
+            return prepareWithStrategies(plan, mode, ctx)
+        }
+        try {
+            val transform = PlanToExecTransform()
+            val impl = transform.transform(plan)
+            val compiler = OperatorCompiler(emptyArray(), mode)
+            val root = compiler.compile(impl)
+            return object : Statement {
+                override fun execute(): Datum {
+                    return try {
+                        root.eval(Environment())
+                    } catch (e: PRuntimeException) {
+                        throw e
+                    } catch (t: Throwable) {
+                        throw PErrors.internalErrorException(t)
+                    }
+                }
+            }
+        } catch (e: PRuntimeException) {
+            throw e
+        } catch (t: Throwable) {
+            val error = PError.INTERNAL_ERROR(PErrorKind.COMPILATION(), null, t)
+            ctx.errorListener.report(error)
+            return Statement { Datum.missing() }
+        }
+    }
+
+    private fun prepareWithStrategies(plan: Plan, mode: Mode, ctx: Context): Statement {
         try {
             val visitor = Visitor(mode)
             val operation = plan.action

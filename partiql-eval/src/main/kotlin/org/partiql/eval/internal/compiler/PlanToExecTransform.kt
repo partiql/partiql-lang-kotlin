@@ -85,11 +85,11 @@ internal class PlanToExecTransform : OperatorVisitor<Any, Unit> {
     // --- Rex ---
 
     override fun visitTableRef(rex: RexTableRef, ctx: Unit): Any =
-        PExpr.Table(rex.catalogId, rex.tableId)
+        PExpr.TableRef(rex.catalogId, rex.tableId)
 
     @Suppress("DEPRECATION")
     override fun visitTable(rex: RexTable, ctx: Unit): Any {
-        error("Plan contains embedded Table object. Use PartiQLPlanner.builder().useRefs().")
+        return PExpr.StaticTable(rex.getTable())
     }
 
     override fun visitCallRef(rex: RexCallRef, ctx: Unit): Any =
@@ -107,7 +107,7 @@ internal class PlanToExecTransform : OperatorVisitor<Any, Unit> {
 
     @Suppress("DEPRECATION")
     override fun visitDispatch(rex: RexDispatch, ctx: Unit): Any {
-        error("Plan contains embedded FnOverload objects. Use PartiQLPlanner.builder().useRefs().")
+        return PExpr.StaticDynamicCall(rex.name, rex.functions, rex.args.map { visitRex(it) })
     }
 
     override fun visitLit(rex: RexLit, ctx: Unit): Any = PExpr.Lit(rex.datum)
@@ -201,12 +201,19 @@ internal class PlanToExecTransform : OperatorVisitor<Any, Unit> {
     override fun visitOffset(rel: RelOffset, ctx: Unit): Any =
         PRel.Offset(visitRel(rel.input), visitRex(rel.offset), rel.type)
 
+    @Suppress("DEPRECATION")
     override fun visitAggregate(rel: RelAggregate, ctx: Unit): Any {
         val input = visitRel(rel.input)
         val groups = rel.groups.map { visitRex(it) }
         val measureRefs = rel.measureRefs
-        val measures = measureRefs.map { ref ->
-            PMeasure(ref.catalogId, ref.aggId, ref.args.map { visitRex(it) }, ref.isDistinct)
+        val measures: List<PMeasure> = if (measureRefs.isNotEmpty()) {
+            measureRefs.map { ref ->
+                PMeasure.Ref(ref.catalogId, ref.aggId, ref.args.map { visitRex(it) }, ref.isDistinct)
+            }
+        } else {
+            rel.measures.map { m ->
+                PMeasure.Static(m.agg, m.args.map { visitRex(it) }, m.isDistinct)
+            }
         }
         return PRel.Aggregate(input, measures, groups, rel.type)
     }

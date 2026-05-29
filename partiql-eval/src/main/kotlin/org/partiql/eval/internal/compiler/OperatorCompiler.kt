@@ -61,6 +61,7 @@ import org.partiql.eval.internal.plan.ExecutionPlanImpl
 import org.partiql.eval.internal.plan.PCollation
 import org.partiql.eval.internal.plan.PExpr
 import org.partiql.eval.internal.plan.PJoinType
+import org.partiql.eval.internal.plan.PMeasure
 import org.partiql.eval.internal.plan.PRel
 import org.partiql.eval.internal.window.WindowBuiltIns
 import org.partiql.spi.catalog.ExecutionCatalog
@@ -76,14 +77,16 @@ internal class OperatorCompiler(
 ) {
     private val MODE = mode.code()
 
-    fun compile(plan: ExecutionPlanImpl): ExprValue = compile(plan.root)
+    fun compile(plan: ExecutionPlanImpl): ExprValue = compile(plan.root).catch()
+
+    fun compileUnwrapped(plan: ExecutionPlanImpl): ExprValue = compile(plan.root)
 
     fun compile(expr: PExpr): ExprValue {
         checkInterrupted()
         return when (expr) {
             is PExpr.Lit -> ExprLit(expr.value)
             is PExpr.Var -> ExprVar(expr.depth, expr.offset)
-            is PExpr.Table -> {
+            is PExpr.TableRef -> {
                 val table = catalogs[expr.catalogId].getTable(expr.tableId)
                 ExprTable(table)
             }
@@ -153,6 +156,12 @@ internal class OperatorCompiler(
                 Mode.STRICT -> ExprError()
                 else -> error("Unsupported mode: $MODE")
             }
+            is PExpr.StaticTable -> ExprTable(expr.table)
+            is PExpr.StaticDynamicCall -> {
+                val candidates = kotlin.Array(expr.overloads.size) { expr.overloads[it] }
+                val args = expr.args.map { compile(it).catch() }.toTypedArray()
+                ExprCallDynamic(expr.name, candidates, args)
+            }
         }
     }
 
@@ -206,9 +215,17 @@ internal class OperatorCompiler(
                 val input = compileRel(rel.input)
                 val groups = rel.groups.map { compile(it).catch() }
                 val aggs = rel.measures.map { measure ->
-                    val agg = catalogs[measure.catalogId].getAgg(measure.aggId)
-                    val args = measure.args.map { compile(it).catch() }
-                    Aggregate(agg, args, measure.distinct)
+                    when (measure) {
+                        is PMeasure.Ref -> {
+                            val agg = catalogs[measure.catalogId].getAgg(measure.aggId)
+                            val args = measure.args.map { compile(it).catch() }
+                            Aggregate(agg, args, measure.distinct)
+                        }
+                        is PMeasure.Static -> {
+                            val args = measure.args.map { compile(it).catch() }
+                            Aggregate(measure.agg, args, measure.distinct)
+                        }
+                    }
                 }
                 RelOpAggregate(input, aggs, groups)
             }
