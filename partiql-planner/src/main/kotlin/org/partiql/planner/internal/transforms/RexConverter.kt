@@ -797,12 +797,12 @@ internal object RexConverter {
         }
 
         override fun visitExprMap(node: ExprMap, context: Env): Rex {
-            val type = CompilerType(PType.map())
             val entries = node.entries.map {
                 val k = visitExprCoerce(it.key, context)
                 val v = visitExprCoerce(it.value, context)
                 rexOpMapEntry(k, v)
             }
+            val type = CompilerType(PType.dynamic())
             val op = rexOpMap(entries)
             return rex(type, op)
         }

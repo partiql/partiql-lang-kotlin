@@ -14,26 +14,27 @@ internal class ExprPathIndex(
 
     override fun eval(env: Environment): Datum {
         val input = root.eval(env)
-
-        // MAP key lookup
-        if (input.type.code() == PType.MAP) {
-            val k = key.eval(env)
-            return input.get(k)
+        val k = key.eval(env)
+        return when (input.type.code()) {
+            PType.MAP -> evalMap(input, k)
+            else -> evalCollection(input, k)
         }
+    }
 
+    private fun evalMap(input: Datum, k: Datum): Datum {
+        if (k.isNull || k.isMissing) {
+            throw PErrors.pathIndexFailureException()
+        }
+        return input.get(k).orElseThrow { PErrors.pathIndexFailureException() }
+    }
+
+    private fun evalCollection(input: Datum, k: Datum): Datum {
         val iterator = when (input.type.code()) {
             PType.BAG,
             PType.ARRAY -> input.iterator()
             else -> throw PErrors.pathIndexFailureException()
         }
-
-        // Calculate index
-        // TODO: The PLANNER should be in charge of adding a necessary coercion for the index. AKA, getInt32Coerced()
-        //  should never need to be called.
-        val k = key.eval(env)
         val index = k.getInt32Coerced()
-
-        // Get element
         var i = 0
         while (iterator.hasNext()) {
             val v = iterator.next()

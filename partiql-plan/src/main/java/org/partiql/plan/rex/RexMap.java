@@ -16,12 +16,14 @@ public abstract class RexMap extends RexBase {
 
     /**
      * Creates a new map expression.
+     * @param keyType the key type
+     * @param valueType the value type
      * @param entries list of map entries (key-value pairs)
      * @return new RexMap instance
      */
     @NotNull
-    public static RexMap create(@NotNull List<Entry> entries) {
-        return new Impl(entries);
+    public static RexMap create(@NotNull PType keyType, @NotNull PType valueType, @NotNull List<Entry> entries) {
+        return new Impl(keyType, valueType, entries);
     }
 
     /**
@@ -36,6 +38,20 @@ public abstract class RexMap extends RexBase {
     }
 
     /**
+     * Gets the key type.
+     * @return the key type
+     */
+    @NotNull
+    public abstract PType getKeyType();
+
+    /**
+     * Gets the value type.
+     * @return the value type
+     */
+    @NotNull
+    public abstract PType getValueType();
+
+    /**
      * Gets the map entries.
      * @return list of map entries (NOT operands)
      */
@@ -45,7 +61,7 @@ public abstract class RexMap extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return RexType.of(PType.map());
+        return RexType.of(PType.map(getKeyType(), getValueType()));
     }
 
     @NotNull
@@ -84,10 +100,30 @@ public abstract class RexMap extends RexBase {
     private static class Impl extends RexMap {
 
         @NotNull
+        private final PType keyType;
+
+        @NotNull
+        private final PType valueType;
+
+        @NotNull
         private final List<Entry> entries;
 
-        private Impl(@NotNull List<Entry> entries) {
+        private Impl(@NotNull PType keyType, @NotNull PType valueType, @NotNull List<Entry> entries) {
+            this.keyType = keyType;
+            this.valueType = valueType;
             this.entries = entries;
+        }
+
+        @Override
+        @NotNull
+        public PType getKeyType() {
+            return keyType;
+        }
+
+        @Override
+        @NotNull
+        public PType getValueType() {
+            return valueType;
         }
 
         @Override

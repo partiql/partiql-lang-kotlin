@@ -2306,6 +2306,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitMapConstructor(ctx: GeneratedParser.MapConstructorContext) = translate(ctx) {
+            listener.report(PErrors.experimental("MAP type", ctx))
             val fields = ctx.mapEntry().map {
                 val k = visitExpr(it.key)
                 val v = visitExpr(it.value)
@@ -2367,7 +2368,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.ARRAY -> DataType.ARRAY()
                 GeneratedParser.STRUCT -> DataType.STRUCT()
                 GeneratedParser.TUPLE -> DataType.TUPLE()
-                GeneratedParser.MAP -> DataType.MAP()
+                GeneratedParser.MAP -> throw error(ctx, "MAP type requires key and value type parameters, e.g. MAP<STRING, INT>")
                 else -> throw error(ctx, "Unknown atomic type.") // TODO other types included in parser
             }
         }

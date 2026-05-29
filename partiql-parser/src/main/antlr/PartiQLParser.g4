@@ -1264,7 +1264,7 @@ type
         | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER
         | STRING | SYMBOL | DATE | ANY
       )                                                                                                                # TypeAtomic
-    | datatype=( STRUCT | TUPLE | LIST | ARRAY | SEXP | BAG | MAP )                                                     # TypeComplexAtomic
+    | datatype=( STRUCT | TUPLE | LIST | ARRAY | SEXP | BAG )                                                     # TypeComplexAtomic
     | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
     | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR|CLOB|BLOB) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar

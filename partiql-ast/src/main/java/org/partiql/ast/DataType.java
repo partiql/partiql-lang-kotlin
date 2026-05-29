@@ -157,7 +157,7 @@ public final class DataType extends AstEnum {
     // <datetime type> continue
     public static final int TIME_WITHOUT_TIME_ZONE = 46;
     public static final int TIMESTAMP_WITHOUT_TIME_ZONE = 47;
-    // <map type>
+    // <map type> — use {@link #getKeyType()} and {@link #getValueType()} for parameters
     public static final int MAP = 48;
 
     public static DataType BOOL() {
@@ -400,11 +400,8 @@ public final class DataType extends AstEnum {
         return new DataType(BAG);
     }
 
-    public static DataType MAP() {
-        return new DataType(MAP);
-    }
-
     public static DataType MAP(DataType keyType, DataType valueType) {
+        // keyType do not allow Any/Dynamic
         return new DataType(MAP, keyType, valueType);
     }
 
@@ -776,7 +773,6 @@ public final class DataType extends AstEnum {
             case "ARRAY": return ARRAY();
             case "SEXP": return SEXP();
             case "BAG": return BAG();
-            case "MAP": return MAP();
             case "TIME": return TIME();
             case "TIME_WITH_TIME_ZONE": return TIME_WITH_TIME_ZONE();
             case "TIMESTAMP": return TIMESTAMP();

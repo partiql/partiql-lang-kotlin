@@ -517,7 +517,9 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 val v = compile(it.value, ctx).catch()
                 ExprStructField(k, v)
             }
-            return ExprMapConstruct(entries)
+            val keyType = rex.keyType.takeIf { it.code() != PType.DYNAMIC }
+            val valueType = rex.valueType.takeIf { it.code() != PType.DYNAMIC }
+            return ExprMapConstruct(keyType, valueType, entries)
         }
 
         override fun visitSubquery(rex: RexSubquery, ctx: Unit): ExprValue {

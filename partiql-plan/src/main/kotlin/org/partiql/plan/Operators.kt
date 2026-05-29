@@ -403,7 +403,7 @@ public interface Operators {
      * @param fields map entries (key-value pairs)
      * @return
      */
-    public fun map(entries: List<RexMap.Entry>): RexMap = RexMap.create(entries)
+    public fun map(keyType: PType, valueType: PType, entries: List<RexMap.Entry>): RexMap = RexMap.create(keyType, valueType, entries)
 
     /**
      * Create a [RexSubquery] instance.

@@ -1293,14 +1293,37 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             return rex(type, rexOpStruct(fields))
         }
 
-        override fun visitRexOpMap(node: Rex.Op.`Map`, ctx: CompilerType?): Rex {
-            _listener.report(PErrors.experimental("MAP Constructor"))
-            val entries = node.entries.map {
+        override fun visitRexOpMap(node: Rex.Op.Map, ctx: CompilerType?): Rex {
+            _listener.report(PErrors.experimental("MAP type"))
+            val typedEntries = node.entries.map {
                 val k = visitRex(it.k, it.k.type)
                 val v = visitRex(it.v, it.v.type)
                 rexOpMapEntry(k, v)
             }
-            val type = CompilerType(PType.map())
+            val keyType = if (typedEntries.isNotEmpty()) {
+                typedEntries.map { it.k.type }.reduce { acc, t ->
+                    (getCommonSuperType(acc, t) ?: acc).toCType()
+                }.toCType()
+            } else {
+                CompilerType(PType.string())
+            }
+            val valueType = if (typedEntries.isNotEmpty()) {
+                typedEntries.map { it.v.type }.reduce { acc, t ->
+                    (getCommonSuperType(acc, t) ?: acc).toCType()
+                }
+            } else {
+                PType.dynamic()
+            }
+            val entries = typedEntries.map { entry ->
+                val k = if (entry.k.type != keyType) {
+                    val cast = env.resolveCast(entry.k, keyType)
+                    if (cast != null) rex(keyType, cast) else entry.k
+                } else {
+                    entry.k
+                }
+                rexOpMapEntry(k, entry.v)
+            }
+            val type = CompilerType(PType.map(keyType, valueType))
             return rex(type, rexOpMap(entries))
         }
 
