@@ -5,7 +5,10 @@ import org.partiql.plan.Operand;
 
 /**
  * Match represents a subtree match to be sent to the {@link Strategy}.
+ *
+ * @deprecated See {@link Strategy} deprecation notice.
  */
+@Deprecated
 public class Match {
 
     private final Operand[] operands;

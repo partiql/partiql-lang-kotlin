@@ -219,7 +219,8 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
     }
 
     /**
-     * Transforms plan relation operators into the internal physical operators.
+     * LEGACY: Only used when deprecated strategies are configured.
+     * The standard path uses PlanToExecTransform + OperatorCompiler instead.
      */
     private inner class Visitor(mode: Mode) : OperatorVisitor<Expr, Unit> {
 

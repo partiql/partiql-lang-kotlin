@@ -8,7 +8,10 @@ import java.util.function.Predicate;
 
 /**
  * Pattern defines a tree pattern.
+ *
+ * @deprecated See {@link Strategy} deprecation notice.
  */
+@Deprecated
 public class Pattern {
 
     @NotNull

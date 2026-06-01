@@ -8,7 +8,12 @@ import org.partiql.plan.Operator;
 /**
  * Strategy converts a logical operator into a physical operator. The compiler uses the list of operands
  * to determine a subtree match, then invokes `apply` to produce an {@link Expr}.
+ *
+ * @deprecated Strategies will be replaced by a thread-safe operator factory API.
+ *             The current strategy API produces operators directly, which are not thread-safe for reuse.
+ *             A future API will provide ExprRelation/ExprValue factories instead.
  */
+@Deprecated
 public abstract class Strategy {
 
     @NotNull
