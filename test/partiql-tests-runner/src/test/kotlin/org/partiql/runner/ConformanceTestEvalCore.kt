@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.eval.Statement
-import org.partiql.runner.executor.EvalExecutor
+import org.partiql.runner.executor.VMEvalExecutor
+import org.partiql.runner.executor.VMPreparedPlan
 import org.partiql.runner.report.ReportGenerator
 import org.partiql.runner.schema.TestCase
 import org.partiql.runner.test.TestProvider
@@ -19,14 +19,14 @@ import org.partiql.spi.value.Datum
  * to ensure compliance with the PartiQL specification. It includes both evaluation tests
  * and equivalence tests with configurable skip lists for known issues.
  */
-class ConformanceTestEvalCore : ConformanceTestBase<Statement, Datum>() {
+class ConformanceTestEvalCore : ConformanceTestBase<VMPreparedPlan, Datum>() {
     companion object {
         @JvmStatic
         @RegisterExtension
         val reporter = ReportGenerator(DataSet.PartiQLCore)
     }
 
-    private val factory = EvalExecutor.Factory
+    private val factory = VMEvalExecutor.Factory
     override val runner = TestRunner(factory)
 
     private val skipListForEvaluation: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval-core.txt")

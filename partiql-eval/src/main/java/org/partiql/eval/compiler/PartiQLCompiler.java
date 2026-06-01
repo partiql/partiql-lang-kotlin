@@ -25,7 +25,7 @@ public interface PartiQLCompiler {
      * @param mode The mode to use when compiling the plan.
      * @return The prepared statement.
      * @throws PRuntimeException If an error occurs during compilation.
-     * @deprecated Use {@link #compile(Plan)} with {@link org.partiql.eval.PartiQLVM} for thread-safe execution.
+     * @deprecated Use {@link #compile(Plan, Mode)} with {@link org.partiql.eval.PartiQLVM} for thread-safe execution.
      */
     @Deprecated
     @NotNull
@@ -41,7 +41,7 @@ public interface PartiQLCompiler {
      * @param ctx The context to use when compiling the plan.
      * @throws PRuntimeException If an error occurs during compilation. The error might have been emitted by the {@code ctx}'s {@link Context#getErrorListener()}.
      * @return The prepared statement.
-     * @deprecated Use {@link #compile(Plan)} with {@link org.partiql.eval.PartiQLVM} for thread-safe execution.
+     * @deprecated Use {@link #compile(Plan, Mode)} with {@link org.partiql.eval.PartiQLVM} for thread-safe execution.
      */
     @Deprecated
     @NotNull

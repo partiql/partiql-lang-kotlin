@@ -6,8 +6,8 @@ import org.partiql.plan.Plan;
 /**
  * An opaque, immutable, thread-safe execution plan.
  * <p>
- * Produced by {@link org.partiql.eval.compiler.PartiQLCompiler#compile(Plan)}.
- * Executed by {@link PartiQLVM#execute(ExecutionPlan, Mode, org.partiql.spi.catalog.ExecutionCatalog[])}.
+ * Produced by {@link org.partiql.eval.compiler.PartiQLCompiler#compile(Plan, Mode)}.
+ * Executed by {@link PartiQLVM#execute(ExecutionPlan, org.partiql.spi.catalog.ExecutionCatalog[])}.
  * <p>
  * This class has no public methods — internal structure may change without notice.
  *
