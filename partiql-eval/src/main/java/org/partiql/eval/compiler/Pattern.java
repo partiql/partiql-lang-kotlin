@@ -7,11 +7,8 @@ import org.partiql.plan.Operator;
 import java.util.function.Predicate;
 
 /**
- * Pattern defines a tree pattern.
- *
- * @deprecated See {@link Strategy} deprecation notice.
+ * Pattern defines a tree pattern for matching logical plan operators.
  */
-@Deprecated
 public class Pattern {
 
     @NotNull

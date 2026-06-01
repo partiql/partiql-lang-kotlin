@@ -125,9 +125,7 @@ public interface PartiQLCompiler {
          *
          * @param strategy The strategy to add.
          * @return this.
-         * @deprecated See {@link Strategy} deprecation notice.
          */
-        @Deprecated
         public Builder addStrategy(Strategy strategy) {
             strategies.add(strategy);
             return this;

@@ -10,12 +10,13 @@ import java.util.function.Supplier;
 /**
  * Strategy converts a logical operator into a physical operator factory.
  * <p>
- * The compiler uses the pattern to determine a subtree match, then invokes {@link #applyFactory}
+ * The compiler uses the {@link Pattern} to determine a subtree match, then invokes {@link #applyFactory}
  * to produce a supplier of {@link Expr}. The supplier is called on each execution to produce
  * fresh operator instances — safe for concurrent use.
  * <p>
  * For backward compatibility, implementations may override the deprecated {@link #apply} method.
- * New implementations should override {@link #applyFactory} directly.
+ * New implementations should override {@link #applyFactory} directly and ensure the returned
+ * supplier produces independent instances on each call.
  */
 public abstract class Strategy {
 
