@@ -1269,6 +1269,12 @@ internal object RexConverter {
                         it.setUnspecifiedPrecisionMeta()
                     }
                 }
+                // <map type>
+                DataType.MAP -> {
+                    val keyType = visitType(type.keyType)
+                    val valueType = visitType(type.elementType)
+                    PType.map(keyType, valueType)
+                }
                 // <container type>
                 DataType.STRUCT -> PType.struct()
                 DataType.TUPLE -> PType.struct()

@@ -946,15 +946,15 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Key(root, key))
             }
 
+            // Check Root Type (STRUCT)
+            if (root.type.code() != PType.STRUCT && root.type.code() != PType.ROW && root.type.code() != PType.MAP) {
+                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null), PType.unknown())
+            }
+
             // MAP key access — return the value type
             if (root.type.code() == PType.MAP) {
                 val valueType = CompilerType(root.type.valueType)
                 return rex(valueType, rexOpPathKey(root, key))
-            }
-
-            // Check Root Type (STRUCT)
-            if (root.type.code() != PType.STRUCT && root.type.code() != PType.ROW) {
-                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null), PType.unknown())
             }
 
             // Get Literal Key
@@ -1302,7 +1302,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             }
             val keyType = if (typedEntries.isNotEmpty()) {
                 typedEntries.map { it.k.type }.reduce { acc, t ->
-                    (getCommonSuperType(acc, t) ?: acc).toCType()
+                    (getCommonSuperType(acc, t) ?: error("Incompatible MAP key types: $acc and $t")).toCType()
                 }.toCType()
             } else {
                 CompilerType(PType.string())
