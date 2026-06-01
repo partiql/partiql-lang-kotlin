@@ -7,6 +7,7 @@ import org.partiql.eval.Statement;
 import org.partiql.eval.internal.compiler.StandardCompiler;
 import org.partiql.plan.Plan;
 import org.partiql.spi.Context;
+import org.partiql.spi.catalog.ExecutionCatalog;
 import org.partiql.spi.errors.PRuntimeException;
 
 import java.util.ArrayList;
@@ -58,6 +59,38 @@ public interface PartiQLCompiler {
      */
     @NotNull
     ExecutionPlan compile(@NotNull Plan plan) throws PRuntimeException;
+
+    /**
+     * Prepares a ref-based plan into a thread-safe {@link Statement} that resolves references
+     * from the provided {@link ExecutionCatalog} array on each {@link Statement#execute()} call.
+     * <p>
+     * Each call to {@link Statement#execute()} builds a fresh operator tree — safe for concurrent use.
+     * Use this when you want the convenience of {@link Statement} with thread-safe ref-based plans.
+     *
+     * @param plan     The ref-based plan (produced by a planner with {@code useRefs()} enabled).
+     * @param mode     The execution mode (permissive or strict).
+     * @param catalogs The execution catalogs indexed by catalog ID from the plan's symbol table.
+     * @return A thread-safe statement.
+     * @throws PRuntimeException If the plan contains embedded objects or compilation fails.
+     */
+    @NotNull
+    default Statement prepare(@NotNull Plan plan, @NotNull Mode mode, @NotNull ExecutionCatalog[] catalogs) throws PRuntimeException {
+        return prepare(plan, mode, catalogs, Context.standard());
+    }
+
+    /**
+     * Prepares a ref-based plan into a thread-safe {@link Statement} that resolves references
+     * from the provided {@link ExecutionCatalog} array on each {@link Statement#execute()} call.
+     *
+     * @param plan     The ref-based plan (produced by a planner with {@code useRefs()} enabled).
+     * @param mode     The execution mode (permissive or strict).
+     * @param catalogs The execution catalogs indexed by catalog ID from the plan's symbol table.
+     * @param ctx      The context.
+     * @return A thread-safe statement.
+     * @throws PRuntimeException If the plan contains embedded objects or compilation fails.
+     */
+    @NotNull
+    Statement prepare(@NotNull Plan plan, @NotNull Mode mode, @NotNull ExecutionCatalog[] catalogs, @NotNull Context ctx) throws PRuntimeException;
 
     /**
      * Returns a new {@link Builder}.

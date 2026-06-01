@@ -75,6 +75,8 @@ public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
 	public abstract fun compile (Lorg/partiql/plan/Plan;)Lorg/partiql/eval/ExecutionPlan;
 	public fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/Statement;
 	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;Lorg/partiql/spi/Context;)Lorg/partiql/eval/Statement;
+	public fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;[Lorg/partiql/spi/catalog/ExecutionCatalog;)Lorg/partiql/eval/Statement;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;[Lorg/partiql/spi/catalog/ExecutionCatalog;Lorg/partiql/spi/Context;)Lorg/partiql/eval/Statement;
 	public static fun standard ()Lorg/partiql/eval/compiler/PartiQLCompiler;
 }
 

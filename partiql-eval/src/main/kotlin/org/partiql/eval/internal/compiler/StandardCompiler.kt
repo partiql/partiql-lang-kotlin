@@ -115,6 +115,7 @@ import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.Context
+import org.partiql.spi.catalog.ExecutionCatalog
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PRuntimeException
@@ -157,6 +158,32 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 override fun execute(): Datum {
                     return try {
                         root.eval(Environment())
+                    } catch (e: PRuntimeException) {
+                        throw e
+                    } catch (t: Throwable) {
+                        throw PErrors.internalErrorException(t)
+                    }
+                }
+            }
+        } catch (e: PRuntimeException) {
+            throw e
+        } catch (t: Throwable) {
+            val error = PError.INTERNAL_ERROR(PErrorKind.COMPILATION(), null, t)
+            ctx.errorListener.report(error)
+            return Statement { Datum.missing() }
+        }
+    }
+
+    override fun prepare(plan: Plan, mode: Mode, catalogs: Array<ExecutionCatalog>, ctx: Context): Statement {
+        try {
+            PlanValidator.validate(plan)
+            val transform = PlanToExecTransform()
+            val impl = transform.transform(plan)
+            return object : Statement {
+                override fun execute(): Datum {
+                    return try {
+                        val compiler = OperatorCompiler(catalogs, mode)
+                        compiler.compile(impl).eval(Environment())
                     } catch (e: PRuntimeException) {
                         throw e
                     } catch (t: Throwable) {
