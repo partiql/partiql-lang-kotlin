@@ -1,5 +1,11 @@
 package org.partiql.eval.internal.compiler
 
+import org.partiql.eval.Expr
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
+import org.partiql.eval.Mode
+import org.partiql.eval.compiler.Match
+import org.partiql.eval.compiler.Strategy
 import org.partiql.eval.internal.plan.ExecutionPlanImpl
 import org.partiql.eval.internal.plan.PCollation
 import org.partiql.eval.internal.plan.PExpr
@@ -10,6 +16,7 @@ import org.partiql.eval.internal.plan.PWindowFn
 import org.partiql.plan.Action
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
+import org.partiql.plan.Operand
 import org.partiql.plan.Operator
 import org.partiql.plan.OperatorVisitor
 import org.partiql.plan.Plan
@@ -57,7 +64,10 @@ import org.partiql.plan.rex.RexVar
 /**
  * Transforms a public [Plan] into an internal [ExecutionPlanImpl].
  */
-internal class PlanToExecTransform : OperatorVisitor<Any, Unit> {
+internal class PlanToExecTransform(
+    private val strategies: List<Strategy> = emptyList(),
+    private val mode: Mode = Mode.PERMISSIVE(),
+) : OperatorVisitor<Any, Unit> {
 
     fun transform(plan: Plan): ExecutionPlanImpl {
         val action = plan.action
@@ -68,9 +78,39 @@ internal class PlanToExecTransform : OperatorVisitor<Any, Unit> {
         return ExecutionPlanImpl(root)
     }
 
-    private fun visitRex(rex: Rex): PExpr = rex.accept(this, Unit) as PExpr
+    private fun visitRex(rex: Rex): PExpr {
+        if (strategies.isNotEmpty()) {
+            val custom = tryStrategies(rex)
+            if (custom != null) return custom as PExpr
+        }
+        return rex.accept(this, Unit) as PExpr
+    }
 
-    private fun visitRel(rel: Rel): PRel = rel.accept(this, Unit) as PRel
+    private fun visitRel(rel: Rel): PRel {
+        if (strategies.isNotEmpty()) {
+            val custom = tryStrategies(rel)
+            if (custom != null) return custom as PRel
+        }
+        return rel.accept(this, Unit) as PRel
+    }
+
+    @Suppress("DEPRECATION")
+    private fun tryStrategies(operator: Operator): Any? {
+        for (strategy in strategies) {
+            if (strategy.pattern.matches(operator)) {
+                val operand = Operand.single(operator)
+                val match = Match(operand)
+                val callback = Strategy.Callback { op -> op.accept(this, Unit) as Expr }
+                val supplier = strategy.applyFactory(match, mode, callback)
+                return if (operator is Rel) {
+                    PRel.Custom(factory = { supplier.get() as ExprRelation })
+                } else {
+                    PExpr.Custom(factory = { supplier.get() as ExprValue })
+                }
+            }
+        }
+        return null
+    }
 
     override fun defaultReturn(operator: Operator, ctx: Unit): Any {
         error("Unsupported plan operator: ${operator::class.java.simpleName}")

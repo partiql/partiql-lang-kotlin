@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.plan
 
+import org.partiql.eval.ExprValue
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnOverload
@@ -30,4 +31,5 @@ internal sealed class PExpr {
     data class PathIndex(val root: PExpr, val index: PExpr) : PExpr()
     data class PathSymbol(val root: PExpr, val symbol: String) : PExpr()
     data class Error(val type: PType) : PExpr()
+    class Custom(val factory: () -> ExprValue) : PExpr()
 }

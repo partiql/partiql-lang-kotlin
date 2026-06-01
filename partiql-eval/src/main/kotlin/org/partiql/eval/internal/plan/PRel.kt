@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.plan
 
+import org.partiql.eval.ExprRelation
 import org.partiql.plan.Exclusion
 import org.partiql.plan.WindowFunctionSignature
 import org.partiql.plan.rel.RelType
@@ -24,6 +25,7 @@ internal sealed class PRel {
     data class Except(val lhs: PRel, val rhs: PRel, val all: Boolean, override val type: RelType? = null) : PRel()
     data class Exclude(val input: PRel, val exclusions: List<Exclusion>, override val type: RelType? = null) : PRel()
     data class Window(val input: PRel, val functions: List<PWindowFn>, val partitions: List<PExpr>, val sorts: List<PCollation>, override val type: RelType? = null) : PRel()
+    class Custom(val factory: () -> ExprRelation, override val type: RelType? = null) : PRel()
 }
 
 internal data class PCollation(val expr: PExpr, val desc: Boolean, val nullsLast: Boolean)

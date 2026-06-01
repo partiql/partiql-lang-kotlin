@@ -149,6 +149,7 @@ internal class OperatorCompiler(
                 Mode.STRICT -> ExprError()
                 else -> error("Unsupported mode: $MODE")
             }
+            is PExpr.Custom -> expr.factory()
         }
     }
 
@@ -223,6 +224,7 @@ internal class OperatorCompiler(
                 if (rel.all) RelOpExceptAll(lhs, rhs) else RelOpExceptDistinct(lhs, rhs)
             }
             is PRel.Exclude -> RelOpExclude(compileRel(rel.input), rel.exclusions)
+            is PRel.Custom -> rel.factory()
             is PRel.Window -> {
                 val input = compileRel(rel.input)
                 val functions = rel.functions.map { wf ->
