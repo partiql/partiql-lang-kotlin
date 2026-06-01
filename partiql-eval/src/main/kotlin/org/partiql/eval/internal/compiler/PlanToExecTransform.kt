@@ -35,12 +35,10 @@ import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexCallRef
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexDispatch
-import org.partiql.plan.rex.RexDispatchRef
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexNullIf
@@ -89,25 +87,17 @@ internal class PlanToExecTransform : OperatorVisitor<Any, Unit> {
 
     @Suppress("DEPRECATION")
     override fun visitTable(rex: RexTable, ctx: Unit): Any {
-        return PExpr.StaticTable(rex.getTable())
+        return PExpr.TableDirect(rex.getTable())
     }
 
-    override fun visitCallRef(rex: RexCallRef, ctx: Unit): Any =
-        PExpr.Call(rex.catalogId, rex.fnId, rex.args.map { visitRex(it) }, rex.type.pType)
-
-    @Suppress("DEPRECATION")
     override fun visitCall(rex: RexCall, ctx: Unit): Any {
         val fn = rex.function
         val args = rex.args.map { visitRex(it) }
-        return PExpr.StaticCall(fn, args)
+        return PExpr.Call(fn, args)
     }
 
-    override fun visitDispatchRef(rex: RexDispatchRef, ctx: Unit): Any =
-        PExpr.DynamicCall(rex.catalogId, rex.fnIds, rex.name, rex.args.map { visitRex(it) })
-
-    @Suppress("DEPRECATION")
     override fun visitDispatch(rex: RexDispatch, ctx: Unit): Any {
-        return PExpr.StaticDynamicCall(rex.name, rex.functions, rex.args.map { visitRex(it) })
+        return PExpr.DynamicCall(rex.name, rex.functions, rex.args.map { visitRex(it) })
     }
 
     override fun visitLit(rex: RexLit, ctx: Unit): Any = PExpr.Lit(rex.datum)
@@ -201,19 +191,11 @@ internal class PlanToExecTransform : OperatorVisitor<Any, Unit> {
     override fun visitOffset(rel: RelOffset, ctx: Unit): Any =
         PRel.Offset(visitRel(rel.input), visitRex(rel.offset), rel.type)
 
-    @Suppress("DEPRECATION")
     override fun visitAggregate(rel: RelAggregate, ctx: Unit): Any {
         val input = visitRel(rel.input)
         val groups = rel.groups.map { visitRex(it) }
-        val measureRefs = rel.measureRefs
-        val measures: List<PMeasure> = if (measureRefs.isNotEmpty()) {
-            measureRefs.map { ref ->
-                PMeasure.Ref(ref.catalogId, ref.aggId, ref.args.map { visitRex(it) }, ref.isDistinct)
-            }
-        } else {
-            rel.measures.map { m ->
-                PMeasure.Static(m.agg, m.args.map { visitRex(it) }, m.isDistinct)
-            }
+        val measures = rel.measures.map { m ->
+            PMeasure(m.agg, m.args.map { visitRex(it) }, m.isDistinct)
         }
         return PRel.Aggregate(input, measures, groups, rel.type)
     }

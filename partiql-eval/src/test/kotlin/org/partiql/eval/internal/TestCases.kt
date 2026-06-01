@@ -16,18 +16,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
-
-internal val vmSkipped = AtomicInteger(0)
-internal val vmPassed = AtomicInteger(0)
-
-private fun isKnownVMSkip(msg: String): Boolean {
-    return msg.contains("No VM compiler strategy") ||
-        msg.contains("not found in catalog") ||
-        msg.contains("Cannot convert Datum") ||
-        msg.contains("[VM PATH]")
-}
 
 /**
  * @property value is a serialized Ion value.
@@ -98,28 +87,19 @@ public class SuccessTestCase(
         assert(comparison) {
             comparisonString(expected, result, plan)
         }
-        // New VM path
-        try {
-            val refResult = refPlanner.plan(statement, session)
-            val execPlan = compiler.compile(refResult.plan)
-            val catalogs = buildExecutionCatalogs(refResult.symbols, session)
-            val vmResult = DatumMaterialize.materialize(vm.execute(execPlan, mode, catalogs))
-            val vmComparison = when (jvmEquality) {
-                true -> expected == vmResult
-                false -> Datum.comparator(true, true).compare(expected, vmResult) == 0
-            }
-            assert(vmComparison) {
-                buildString {
-                    appendLine("[VM PATH]")
-                    appendLine(comparisonString(expected, vmResult, refResult.plan))
-                }
-            }
-            vmPassed.incrementAndGet()
-        } catch (e: Throwable) {
-            vmSkipped.incrementAndGet()
-            val rootMsg = generateSequence(e) { it.cause }.mapNotNull { it.message }.joinToString(" -> ")
-            if (!isKnownVMSkip(rootMsg)) {
-                System.err.println("[VM SKIP] Unexpected: $input — $rootMsg")
+        // New VM path — execute through the thread-safe path and assert same result
+        val refResult = refPlanner.plan(statement, session)
+        val execPlan = compiler.compile(refResult.plan)
+        val catalogs = buildExecutionCatalogs(refResult.symbols, session)
+        val vmResult = DatumMaterialize.materialize(vm.execute(execPlan, mode, catalogs))
+        val vmComparison = when (jvmEquality) {
+            true -> expected == vmResult
+            false -> Datum.comparator(true, true).compare(expected, vmResult) == 0
+        }
+        assert(vmComparison) {
+            buildString {
+                appendLine("[VM PATH]")
+                appendLine(comparisonString(expected, vmResult, refResult.plan))
             }
         }
     }

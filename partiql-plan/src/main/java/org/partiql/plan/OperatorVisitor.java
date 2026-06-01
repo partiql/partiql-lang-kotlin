@@ -42,8 +42,6 @@ import org.partiql.plan.rex.RexSubqueryIn;
 import org.partiql.plan.rex.RexSubqueryTest;
 import org.partiql.plan.rex.RexTable;
 import org.partiql.plan.rex.RexTableRef;
-import org.partiql.plan.rex.RexCallRef;
-import org.partiql.plan.rex.RexDispatchRef;
 import org.partiql.plan.rex.RexVar;
 
 /**
@@ -169,10 +167,6 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rex, ctx);
     }
 
-    /**
-     * @deprecated Use {@link #visitCallRef} with ref-based plans.
-     */
-    @Deprecated
     default R visitCall(@NotNull RexCall rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
@@ -189,10 +183,6 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rex, ctx);
     }
 
-    /**
-     * @deprecated Use {@link #visitDispatchRef} with ref-based plans.
-     */
-    @Deprecated
     default R visitDispatch(@NotNull RexDispatch rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
@@ -261,15 +251,8 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rex, ctx);
     }
 
+
     default R visitTableRef(@NotNull RexTableRef rex, C ctx) {
-        return defaultVisit(rex, ctx);
-    }
-
-    default R visitCallRef(@NotNull RexCallRef rex, C ctx) {
-        return defaultVisit(rex, ctx);
-    }
-
-    default R visitDispatchRef(@NotNull RexDispatchRef rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
 

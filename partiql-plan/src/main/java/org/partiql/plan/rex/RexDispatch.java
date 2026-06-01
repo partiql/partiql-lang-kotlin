@@ -10,10 +10,10 @@ import java.util.List;
 
 /**
  * Logical operator for a dynamic dispatch.
- *
- * @deprecated Use {@link RexDispatchRef} with {@code PartiQLPlanner.builder().useRefs()} for thread-safe plans.
+ * <p>
+ * Function overloads ({@link org.partiql.spi.function.FnOverload}) are assumed thread-safe
+ * and are embedded directly in the plan.
  */
-@Deprecated
 public abstract class RexDispatch extends RexBase {
 
     /**

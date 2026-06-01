@@ -23,12 +23,10 @@ import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexCallRef
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexDispatch
-import org.partiql.plan.rex.RexDispatchRef
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexNullIf
@@ -278,7 +276,6 @@ public interface Operators {
      * @param args
      * @return
      */
-    @Deprecated("Use callRef() with PartiQLPlanner.builder().useRefs()")
     public fun call(function: Fn, args: List<Rex>): RexCall = RexCall.create(function, args)
 
     /**
@@ -317,7 +314,6 @@ public interface Operators {
      * @param args
      * @return
      */
-    @Deprecated("Use dispatchRef() with PartiQLPlanner.builder().useRefs()")
     public fun dispatch(name: String, functions: List<FnOverload>, args: List<Rex>): RexDispatch =
         RexDispatch.create(name, functions, args)
 
@@ -453,7 +449,7 @@ public interface Operators {
      * @param table
      * @return
      */
-    @Deprecated("Use tableRef() with PartiQLPlanner.builder().useRefs()")
+    @Deprecated("Use tableRef() with PartiQLPlanner.builder().useRefs() for thread-safe plans")
     public fun table(table: Table): RexTable = RexTable.create(table)
 
     /**
@@ -478,42 +474,4 @@ public interface Operators {
      */
     public fun tableRef(catalogId: Int, tableId: Int, schema: PType): RexTableRef =
         RexTableRef.create(catalogId, tableId, schema)
-
-    /**
-     * Create a [RexCallRef] instance for lazy function resolution.
-     *
-     * @param catalogId
-     * @param fnId
-     * @param args
-     * @param returnType
-     * @return
-     */
-    public fun callRef(catalogId: Int, fnId: Int, args: List<Rex>, returnType: PType): RexCallRef =
-        RexCallRef.create(catalogId, fnId, args, returnType)
-
-    /**
-     * Create a [RexDispatchRef] instance for lazy dynamic dispatch resolution.
-     *
-     * @param name
-     * @param catalogId
-     * @param fnIds
-     * @param args
-     * @return
-     */
-    public fun dispatchRef(name: String, catalogId: Int, fnIds: List<Int>, args: List<Rex>): RexDispatchRef =
-        RexDispatchRef.create(name, catalogId, fnIds, args)
-
-    /**
-     * Create a [RelAggregate] with reference-based measures for lazy resolution.
-     *
-     * @param input
-     * @param measureRefs
-     * @param groups
-     * @return
-     */
-    public fun aggregateRef(
-        input: Rel,
-        measureRefs: List<RelAggregate.MeasureRef>,
-        groups: List<Rex>,
-    ): RelAggregate = RelAggregate.createRef(input, measureRefs, groups)
 }

@@ -27,10 +27,7 @@ internal sealed class PRel {
 }
 
 internal data class PCollation(val expr: PExpr, val desc: Boolean, val nullsLast: Boolean)
-internal sealed class PMeasure {
-    data class Ref(val catalogId: Int, val aggId: Int, val args: List<PExpr>, val distinct: Boolean) : PMeasure()
-    data class Static(val agg: Agg, val args: List<PExpr>, val distinct: Boolean) : PMeasure()
-}
+internal data class PMeasure(val agg: Agg, val args: List<PExpr>, val distinct: Boolean)
 internal data class PWindowFn(val signature: WindowFunctionSignature, val args: List<PExpr>)
 
 internal enum class PJoinType { INNER, LEFT, RIGHT, FULL }

@@ -2,16 +2,18 @@ package org.partiql.plan;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.catalog.Name;
-import org.partiql.spi.function.RoutineSignature;
 import org.partiql.spi.types.PType;
 
 import java.util.List;
 
 /**
- * A symbol table mapping plan-assigned integer IDs to catalog names, table names, and function signatures.
+ * A symbol table mapping plan-assigned integer IDs to catalog and table names.
  * <p>
  * Returned alongside the {@link Plan} from the planner. Database owners use this to understand what each
  * integer ID in the plan represents and to build their {@link org.partiql.spi.catalog.ExecutionCatalog} accordingly.
+ * <p>
+ * Only tables are tracked here — functions and aggregates are embedded directly in the plan
+ * since they are assumed to be thread-safe (stateless invoke, fresh accumulators).
  */
 public interface SymbolTable {
 
@@ -36,22 +38,6 @@ public interface SymbolTable {
      */
     @NotNull
     List<TableEntry> getTables(int catalogId);
-
-    /**
-     * Returns the function entries for a given catalog.
-     * @param catalogId the catalog identifier
-     * @return list of function entries
-     */
-    @NotNull
-    List<FnEntry> getFunctions(int catalogId);
-
-    /**
-     * Returns the aggregate entries for a given catalog.
-     * @param catalogId the catalog identifier
-     * @return list of aggregate entries
-     */
-    @NotNull
-    List<AggEntry> getAggregations(int catalogId);
 
     /**
      * A table entry in the symbol table.
@@ -80,66 +66,6 @@ public interface SymbolTable {
         @NotNull
         public PType getSchema() {
             return schema;
-        }
-    }
-
-    /**
-     * A scalar function entry in the symbol table.
-     */
-    final class FnEntry {
-
-        private final int id;
-        private final Name name;
-        private final RoutineSignature signature;
-
-        public FnEntry(int id, @NotNull Name name, @NotNull RoutineSignature signature) {
-            this.id = id;
-            this.name = name;
-            this.signature = signature;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        @NotNull
-        public Name getName() {
-            return name;
-        }
-
-        @NotNull
-        public RoutineSignature getSignature() {
-            return signature;
-        }
-    }
-
-    /**
-     * An aggregate function entry in the symbol table.
-     */
-    final class AggEntry {
-
-        private final int id;
-        private final Name name;
-        private final RoutineSignature signature;
-
-        public AggEntry(int id, @NotNull Name name, @NotNull RoutineSignature signature) {
-            this.id = id;
-            this.name = name;
-            this.signature = signature;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        @NotNull
-        public Name getName() {
-            return name;
-        }
-
-        @NotNull
-        public RoutineSignature getSignature() {
-            return signature;
         }
     }
 }

@@ -12,9 +12,6 @@ import org.partiql.spi.catalog.ExecutionCatalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.function.Agg
-import org.partiql.spi.function.Fn
-import org.partiql.spi.function.FnOverload
 import org.partiql.spi.value.Datum
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -59,13 +56,8 @@ class ThreadSafetyTest {
                 CompletableFuture.supplyAsync({
                     // Override only the "test" catalog (index 0) with per-thread data
                     val threadCatalogs = baseCatalogs.copyOf()
-                    threadCatalogs[0] = object : ExecutionCatalog {
-                        override fun getTable(id: Int): Table {
-                            return Table.standard(Name.of("t"), Datum.bagVararg(Datum.integer(threadData)))
-                        }
-                        override fun getFn(id: Int): Fn = baseCatalogs[0].getFn(id)
-                        override fun getFnOverload(id: Int): FnOverload = baseCatalogs[0].getFnOverload(id)
-                        override fun getAgg(id: Int): Agg = baseCatalogs[0].getAgg(id)
+                    threadCatalogs[0] = ExecutionCatalog { id ->
+                        Table.standard(Name.of("t"), Datum.bagVararg(Datum.integer(threadData)))
                     }
                     val datum = vm.execute(execPlan, Mode.PERMISSIVE(), threadCatalogs)
                     DatumMaterialize.materialize(datum)

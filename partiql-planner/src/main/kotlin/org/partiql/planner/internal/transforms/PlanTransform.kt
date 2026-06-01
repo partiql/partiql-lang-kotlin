@@ -22,8 +22,6 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.spi.function.Parameter
-import org.partiql.spi.function.RoutineSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
@@ -172,35 +170,14 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
             val args = node.args.map { visitRex(it, it.type) }
-            if (useRefs) {
-                val firstCandidate = node.candidates.first().fn
-                val catalogName = firstCandidate.catalog
-                val name = firstCandidate.name.getName()
-                val catalogId = symbols.getOrAddCatalog(catalogName)
-                val fnIds = node.candidates.map { candidate ->
-                    val ref = candidate.fn
-                    val overloadSig = ref.signature.signature
-                    val params = overloadSig.parameterTypes.mapIndexed { i, t -> Parameter("p$i", t) }
-                    val routineSig = RoutineSignature(overloadSig.name, params, PType.dynamic(), false, false)
-                    val (_, fnId) = symbols.getOrAddFn(ref.catalog, ref.name, routineSig)
-                    fnId
-                }
-                return operators.dispatchRef(name, catalogId, fnIds, args)
-            }
             val fns = node.candidates.map { it.fn.signature }
             val name = node.candidates.first().fn.name.getName()
             return operators.dispatch(name, fns, args)
         }
 
-        @Suppress("DEPRECATION")
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
             val fn = node.fn
             val args = node.args.map { visitRex(it, it.type) }
-            if (useRefs && node.catalog.isNotEmpty()) {
-                val sig = fn.signature
-                val (catalogId, fnId) = symbols.getOrAddFn(node.catalog, node.fnName, sig)
-                return operators.callRef(catalogId, fnId, args, sig.returns)
-            }
             return operators.call(fn, args)
         }
 
@@ -274,12 +251,8 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
 
         override fun visitRelOpAggregate(node: IRel.Op.Aggregate, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
-            val groups = node.groups.map { visitRex(it, it.type) }
-            if (useRefs) {
-                val measureRefs = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.MeasureRef }
-                return operators.aggregateRef(input, measureRefs, groups)
-            }
             val measures = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.Measure }
+            val groups = node.groups.map { visitRex(it, it.type) }
             return operators.aggregate(input, measures, groups)
         }
 
@@ -326,14 +299,10 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
         }
 
         override fun visitRelOpAggregateCallResolved(node: IRel.Op.Aggregate.Call.Resolved, ctx: PType): Any {
+            val agg = node.agg.signature
             val args = node.args.map { visitRex(it, it.type) }
             val isDistinct = node.setq == SetQuantifier.DISTINCT
-            if (useRefs) {
-                val ref = node.agg
-                val (catalogId, aggId) = symbols.getOrAddAgg(ref.catalog, ref.name, ref.signature.signature)
-                return RelAggregate.measureRef(catalogId, aggId, args, isDistinct)
-            }
-            return RelAggregate.measure(node.agg.signature, args, isDistinct)
+            return RelAggregate.measure(agg, args, isDistinct)
         }
 
         override fun visitRelOpJoin(node: IRel.Op.Join, ctx: PType): Any {

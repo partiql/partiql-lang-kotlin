@@ -108,9 +108,6 @@ public final class org/partiql/spi/catalog/Catalogs$DefaultImpls {
 }
 
 public abstract interface class org/partiql/spi/catalog/ExecutionCatalog {
-	public abstract fun getAgg (I)Lorg/partiql/spi/function/Agg;
-	public abstract fun getFn (I)Lorg/partiql/spi/function/Fn;
-	public abstract fun getFnOverload (I)Lorg/partiql/spi/function/FnOverload;
 	public abstract fun getTable (I)Lorg/partiql/spi/catalog/Table;
 }
 

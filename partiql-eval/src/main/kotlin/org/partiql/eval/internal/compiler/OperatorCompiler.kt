@@ -61,7 +61,6 @@ import org.partiql.eval.internal.plan.ExecutionPlanImpl
 import org.partiql.eval.internal.plan.PCollation
 import org.partiql.eval.internal.plan.PExpr
 import org.partiql.eval.internal.plan.PJoinType
-import org.partiql.eval.internal.plan.PMeasure
 import org.partiql.eval.internal.plan.PRel
 import org.partiql.eval.internal.window.WindowBuiltIns
 import org.partiql.spi.catalog.ExecutionCatalog
@@ -90,19 +89,13 @@ internal class OperatorCompiler(
                 val table = catalogs[expr.catalogId].getTable(expr.tableId)
                 ExprTable(table)
             }
+            is PExpr.TableDirect -> ExprTable(expr.table)
             is PExpr.Call -> {
-                val fn = catalogs[expr.catalogId].getFn(expr.fnId)
                 val args = kotlin.Array(expr.args.size) { i -> compile(expr.args[i]).catch() }
-                ExprCall(fn, args)
-            }
-            is PExpr.StaticCall -> {
-                val fn = expr.fn
-                val args = kotlin.Array(expr.args.size) { i -> compile(expr.args[i]).catch() }
-                ExprCall(fn, args)
+                ExprCall(expr.fn, args)
             }
             is PExpr.DynamicCall -> {
-                val catalog = catalogs[expr.catalogId]
-                val candidates = kotlin.Array(expr.fnIds.size) { i -> catalog.getFnOverload(expr.fnIds[i]) }
+                val candidates = kotlin.Array(expr.overloads.size) { expr.overloads[it] }
                 val args = expr.args.map { compile(it).catch() }.toTypedArray()
                 ExprCallDynamic(expr.name, candidates, args)
             }
@@ -155,12 +148,6 @@ internal class OperatorCompiler(
                 Mode.PERMISSIVE -> ExprMissing(PType.unknown())
                 Mode.STRICT -> ExprError()
                 else -> error("Unsupported mode: $MODE")
-            }
-            is PExpr.StaticTable -> ExprTable(expr.table)
-            is PExpr.StaticDynamicCall -> {
-                val candidates = kotlin.Array(expr.overloads.size) { expr.overloads[it] }
-                val args = expr.args.map { compile(it).catch() }.toTypedArray()
-                ExprCallDynamic(expr.name, candidates, args)
             }
         }
     }
@@ -215,17 +202,8 @@ internal class OperatorCompiler(
                 val input = compileRel(rel.input)
                 val groups = rel.groups.map { compile(it).catch() }
                 val aggs = rel.measures.map { measure ->
-                    when (measure) {
-                        is PMeasure.Ref -> {
-                            val agg = catalogs[measure.catalogId].getAgg(measure.aggId)
-                            val args = measure.args.map { compile(it).catch() }
-                            Aggregate(agg, args, measure.distinct)
-                        }
-                        is PMeasure.Static -> {
-                            val args = measure.args.map { compile(it).catch() }
-                            Aggregate(measure.agg, args, measure.distinct)
-                        }
-                    }
+                    val args = measure.args.map { compile(it).catch() }
+                    Aggregate(measure.agg, args, measure.distinct)
                 }
                 RelOpAggregate(input, aggs, groups)
             }
