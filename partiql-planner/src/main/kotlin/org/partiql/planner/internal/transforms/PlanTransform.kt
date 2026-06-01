@@ -192,11 +192,15 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
             return operators.dispatch(name, fns, args)
         }
 
+        @Suppress("DEPRECATION")
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
-            // Static calls embed the resolved Fn directly — Fn.invoke() is stateless and thread-safe.
-            // TODO: propagate catalog info through internal IR to enable full ref-based static calls.
             val fn = node.fn
             val args = node.args.map { visitRex(it, it.type) }
+            if (useRefs && node.catalog.isNotEmpty()) {
+                val sig = fn.signature
+                val (catalogId, fnId) = symbols.getOrAddFn(node.catalog, node.fnName, sig)
+                return operators.callRef(catalogId, fnId, args, sig.returns)
+            }
             return operators.call(fn, args)
         }
 
