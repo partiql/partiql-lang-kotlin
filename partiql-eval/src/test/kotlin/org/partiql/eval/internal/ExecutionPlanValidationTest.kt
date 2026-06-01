@@ -41,7 +41,7 @@ class ExecutionPlanValidationTest {
         val ast = parser.parse("SELECT * FROM t").statements[0]
         val plan = planner.plan(ast, buildSession()).plan
         assertThrows<PRuntimeException> {
-            compiler.compile(plan)
+            compiler.compile(plan, Mode.PERMISSIVE())
         }
     }
 
@@ -51,7 +51,7 @@ class ExecutionPlanValidationTest {
         val ast = parser.parse("SELECT * FROM t").statements[0]
         val plan = planner.plan(ast, buildSession()).plan
         assertDoesNotThrow {
-            compiler.compile(plan)
+            compiler.compile(plan, Mode.PERMISSIVE())
         }
     }
 
@@ -61,7 +61,7 @@ class ExecutionPlanValidationTest {
         val ast = parser.parse("1 + 2").statements[0]
         val plan = planner.plan(ast, buildSession()).plan
         assertDoesNotThrow {
-            compiler.compile(plan)
+            compiler.compile(plan, Mode.PERMISSIVE())
         }
     }
 
@@ -74,7 +74,7 @@ class ExecutionPlanValidationTest {
         val plan = planner.plan(ast, buildSession()).plan
         // compile() should reject this
         assertThrows<PRuntimeException> {
-            compiler.compile(plan)
+            compiler.compile(plan, Mode.PERMISSIVE())
         }
     }
 
@@ -84,10 +84,10 @@ class ExecutionPlanValidationTest {
         val planner = PartiQLPlanner.builder().useRefs().build()
         val ast = parser.parse("SELECT * FROM t").statements[0]
         val result = planner.plan(ast, session)
-        val execPlan = compiler.compile(result.plan)
+        val execPlan = compiler.compile(result.plan, Mode.PERMISSIVE())
         val catalogs = buildExecutionCatalogs(result.symbols, session)
         assertDoesNotThrow {
-            vm.execute(execPlan, Mode.PERMISSIVE(), catalogs)
+            vm.execute(execPlan, catalogs)
         }
     }
 

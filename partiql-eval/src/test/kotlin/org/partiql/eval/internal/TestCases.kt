@@ -89,9 +89,9 @@ public class SuccessTestCase(
         }
         // New VM path — execute through the thread-safe path and assert same result
         val refResult = refPlanner.plan(statement, session)
-        val execPlan = compiler.compile(refResult.plan)
+        val execPlan = compiler.compile(refResult.plan, mode)
         val catalogs = buildExecutionCatalogs(refResult.symbols, session)
-        val vmResult = DatumMaterialize.materialize(vm.execute(execPlan, mode, catalogs))
+        val vmResult = DatumMaterialize.materialize(vm.execute(execPlan, catalogs))
         val vmComparison = when (jvmEquality) {
             true -> expected == vmResult
             false -> Datum.comparator(true, true).compare(expected, vmResult) == 0
@@ -178,9 +178,9 @@ public class FailureTestCase(
         // New VM path — also expect failure
         try {
             val refResult = refPlanner.plan(statement, session)
-            val execPlan = compiler.compile(refResult.plan)
+            val execPlan = compiler.compile(refResult.plan, mode)
             val catalogs = buildExecutionCatalogs(refResult.symbols, session)
-            DatumMaterialize.materialize(vm.execute(execPlan, mode, catalogs))
+            DatumMaterialize.materialize(vm.execute(execPlan, catalogs))
             // If we get here without error, that's also acceptable — the VM path may handle errors differently
         } catch (_: Throwable) {
             // Expected — VM path also threw

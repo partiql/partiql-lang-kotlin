@@ -18,13 +18,18 @@ import org.partiql.spi.value.Datum
  */
 internal class StandardVM : PartiQLVM {
 
-    override fun execute(plan: ExecutionPlan, mode: Mode, catalogs: Array<ExecutionCatalog>): Datum {
-        return execute(plan, mode, catalogs, Context.standard())
+    override fun execute(plan: ExecutionPlan, catalogs: Array<ExecutionCatalog>): Datum {
+        return execute(plan, catalogs, Context.standard())
     }
 
-    override fun execute(plan: ExecutionPlan, mode: Mode, catalogs: Array<ExecutionCatalog>, ctx: Context): Datum {
+    override fun execute(plan: ExecutionPlan, catalogs: Array<ExecutionCatalog>, ctx: Context): Datum {
         try {
             val impl = plan.getImpl()
+            val mode = when (impl.mode) {
+                Mode.STRICT -> Mode.STRICT()
+                Mode.PERMISSIVE -> Mode.PERMISSIVE()
+                else -> error("Unknown mode: ${impl.mode}")
+            }
             val compiler = OperatorCompiler(catalogs, mode)
             val root = compiler.compile(impl)
             return root.eval(Environment())

@@ -48,13 +48,13 @@ class VMEvalExecutor(
         assertEquals(1, parseResult.statements.size)
         val ast = parseResult.statements[0]
         val result = planner.plan(ast, session)
-        val execPlan = compiler.compile(result.plan)
+        val execPlan = compiler.compile(result.plan, mode)
         return VMPreparedPlan(execPlan, result.symbols)
     }
 
     override fun execute(input: VMPreparedPlan): Datum {
         val catalogs = buildCatalogs(input.symbols, session)
-        return vm.execute(input.execPlan, mode, catalogs)
+        return vm.execute(input.execPlan, catalogs)
     }
 
     override fun fromIon(value: IonValue): Datum {

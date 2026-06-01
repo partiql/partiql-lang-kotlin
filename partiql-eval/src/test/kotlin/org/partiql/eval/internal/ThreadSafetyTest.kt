@@ -27,7 +27,7 @@ class ThreadSafetyTest {
     private fun compileQuery(query: String, session: Session): Pair<ExecutionPlan, Session> {
         val ast = parser.parse(query).statements[0]
         val result = planner.plan(ast, session)
-        val execPlan = compiler.compile(result.plan)
+        val execPlan = compiler.compile(result.plan, Mode.PERMISSIVE())
         return execPlan to session
     }
 
@@ -44,7 +44,7 @@ class ThreadSafetyTest {
 
         val ast = parser.parse("SELECT VALUE x + 1 FROM t AS x").statements[0]
         val result = planner.plan(ast, session)
-        val execPlan = compiler.compile(result.plan)
+        val execPlan = compiler.compile(result.plan, Mode.PERMISSIVE())
         val symbols = result.symbols
 
         // Build base catalogs from session (includes $system for functions)
@@ -59,7 +59,7 @@ class ThreadSafetyTest {
                     threadCatalogs[0] = ExecutionCatalog { id ->
                         Table.standard(Name.of("t"), Datum.bagVararg(Datum.integer(threadData)))
                     }
-                    val datum = vm.execute(execPlan, Mode.PERMISSIVE(), threadCatalogs)
+                    val datum = vm.execute(execPlan, threadCatalogs)
                     DatumMaterialize.materialize(datum)
                 }, executor)
             }
@@ -87,14 +87,14 @@ class ThreadSafetyTest {
 
         val ast = parser.parse("1 + 2").statements[0]
         val result = planner.plan(ast, session)
-        val execPlan = compiler.compile(result.plan)
+        val execPlan = compiler.compile(result.plan, Mode.PERMISSIVE())
 
         val executor = Executors.newFixedThreadPool(8)
         try {
             val futures = (1..8).map {
                 CompletableFuture.supplyAsync({
                     val catalogs = buildExecutionCatalogs(result.symbols, session)
-                    vm.execute(execPlan, Mode.PERMISSIVE(), catalogs)
+                    vm.execute(execPlan, catalogs)
                 }, executor)
             }
 

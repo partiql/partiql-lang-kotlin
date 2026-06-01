@@ -75,7 +75,7 @@ internal class PlanToExecTransform(
             error("Only query statements are supported")
         }
         val root = visitRex(action.rex)
-        return ExecutionPlanImpl(root)
+        return ExecutionPlanImpl(root, mode.code())
     }
 
     private fun visitRex(rex: Rex): PExpr {

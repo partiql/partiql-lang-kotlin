@@ -52,13 +52,16 @@ public interface PartiQLCompiler {
      * <p>
      * The plan must use reference nodes (produced by a planner with {@code useRefs()} enabled).
      * Plans containing embedded objects (e.g., from the deprecated non-ref path) will be rejected.
+     * <p>
+     * Mode is baked into the compiled plan. Use separate compilations for different modes.
      *
      * @param plan The ref-based plan to compile.
+     * @param mode The execution mode (permissive or strict).
      * @return An opaque, thread-safe execution plan.
      * @throws PRuntimeException If the plan contains embedded objects (non-ref nodes).
      */
     @NotNull
-    ExecutionPlan compile(@NotNull Plan plan) throws PRuntimeException;
+    ExecutionPlan compile(@NotNull Plan plan, @NotNull Mode mode) throws PRuntimeException;
 
     /**
      * Prepares a ref-based plan into a thread-safe {@link Statement} that resolves references

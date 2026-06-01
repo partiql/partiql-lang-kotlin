@@ -108,9 +108,9 @@ public class TypingTestCase(
             .catalogs(catalog)
             .build()
         val refResult = refPlanner.plan(statement, session)
-        val execPlan = compiler.compile(refResult.plan)
+        val execPlan = compiler.compile(refResult.plan, mode)
         val catalogs = buildExecutionCatalogs(refResult.symbols, session)
-        val result = vm.execute(execPlan, mode, catalogs)
+        val result = vm.execute(execPlan, catalogs)
         return result to refResult.plan
     }
 

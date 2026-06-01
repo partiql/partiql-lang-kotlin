@@ -24,10 +24,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
     internal constructor() : this(emptyList())
 
-    override fun compile(plan: Plan): ExecutionPlan {
+    override fun compile(plan: Plan, mode: Mode): ExecutionPlan {
         try {
             PlanValidator.validate(plan)
-            val transform = PlanToExecTransform()
+            val transform = PlanToExecTransform(strategies, mode)
             val impl = transform.transform(plan)
             return ExecutionPlan(impl)
         } catch (e: PRuntimeException) {
