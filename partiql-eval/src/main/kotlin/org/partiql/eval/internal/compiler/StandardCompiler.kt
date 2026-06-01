@@ -50,7 +50,11 @@ import org.partiql.eval.internal.operator.rex.ExprMapConstruct
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
+import org.partiql.eval.internal.operator.rex.ExprPathIndexCollection
+import org.partiql.eval.internal.operator.rex.ExprPathIndexMap
 import org.partiql.eval.internal.operator.rex.ExprPathKey
+import org.partiql.eval.internal.operator.rex.ExprPathKeyMap
+import org.partiql.eval.internal.operator.rex.ExprPathKeyStruct
 import org.partiql.eval.internal.operator.rex.ExprPathSymbol
 import org.partiql.eval.internal.operator.rex.ExprPermissive
 import org.partiql.eval.internal.operator.rex.ExprPivot
@@ -465,13 +469,21 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitPathIndex(rex: RexPathIndex, ctx: Unit): ExprValue {
             val operand = compile(rex.getOperand(), ctx)
             val index = compile(rex.getIndex(), ctx)
-            return ExprPathIndex(operand, index)
+            return when (rex.getOperand().type.pType.code()) {
+                PType.MAP -> ExprPathIndexMap(operand, index).catch()
+                PType.DYNAMIC -> ExprPathIndex(operand, index)
+                else -> ExprPathIndexCollection(operand, index)
+            }
         }
 
         override fun visitPathKey(rex: RexPathKey, ctx: Unit): ExprValue {
             val operand = compile(rex.getOperand(), ctx)
             val key = compile(rex.getKey(), ctx)
-            return ExprPathKey(operand, key).catch()
+            return when (rex.getOperand().type.pType.code()) {
+                PType.MAP -> ExprPathKeyMap(operand, key).catch()
+                PType.DYNAMIC -> ExprPathKey(operand, key).catch()
+                else -> ExprPathKeyStruct(operand, key).catch()
+            }
         }
 
         override fun visitPathSymbol(rex: RexPathSymbol, ctx: Unit): ExprValue {

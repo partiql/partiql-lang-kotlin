@@ -1,0 +1,37 @@
+package org.partiql.eval.internal.operator.rex
+
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
+import org.partiql.eval.internal.helpers.PErrors
+import org.partiql.eval.internal.helpers.ValueUtility.getInt32Coerced
+import org.partiql.spi.types.PType
+import org.partiql.spi.value.Datum
+
+internal class ExprPathIndexCollection(
+    @JvmField val root: ExprValue,
+    @JvmField val key: ExprValue,
+) : ExprValue {
+
+    override fun eval(env: Environment): Datum {
+        return evalWithInput(root.eval(env), env)
+    }
+
+    fun evalWithInput(input: Datum, env: Environment): Datum {
+        val iterator = when (input.type.code()) {
+            PType.BAG,
+            PType.ARRAY -> input.iterator()
+            else -> throw PErrors.pathIndexFailureException()
+        }
+        val k = key.eval(env)
+        val index = k.getInt32Coerced()
+        var i = 0
+        while (iterator.hasNext()) {
+            val v = iterator.next()
+            if (i == index) {
+                return v
+            }
+            i++
+        }
+        throw PErrors.pathIndexFailureException()
+    }
+}
