@@ -4,11 +4,12 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 
 /**
+ * This is a lightweight copy of partiql-planner/src/main/kotlin/org/partiql/planner/internal/typer/DynamicTyper.kt
+ * TODO: Unify the DynamicTyper across planner and eval
  * Runtime type resolver implementing SQL-99 Section 9.3 type coercion rules.
  * Used to determine the common supertype of a collection of runtime values.
  */
 internal object DynamicTyper {
-
     /**
      * Returns the common super type of [lType] and [rType], or null if incompatible.
      */
