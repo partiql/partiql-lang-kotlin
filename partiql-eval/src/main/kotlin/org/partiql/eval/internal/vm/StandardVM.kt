@@ -24,7 +24,7 @@ internal class StandardVM : PartiQLVM {
 
     override fun execute(plan: ExecutionPlan, catalogs: Array<ExecutionCatalog>, ctx: Context): Datum {
         try {
-            val impl = plan.getImpl()
+            val impl = plan.impl
             val mode = when (impl.mode) {
                 Mode.STRICT -> Mode.STRICT()
                 Mode.PERMISSIVE -> Mode.PERMISSIVE()
