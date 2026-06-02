@@ -1,7 +1,6 @@
 package org.partiql.eval.internal
 
 import org.junit.jupiter.api.RepeatedTest
-import org.partiql.eval.ExecutionPlan
 import org.partiql.eval.Mode
 import org.partiql.eval.PartiQLVM
 import org.partiql.eval.compiler.PartiQLCompiler
@@ -24,40 +23,63 @@ class ThreadSafetyTest {
     private val compiler = PartiQLCompiler.standard()
     private val vm = PartiQLVM.standard()
 
-    private fun compileQuery(query: String, session: Session): Pair<ExecutionPlan, Session> {
-        val ast = parser.parse(query).statements[0]
-        val result = planner.plan(ast, session)
-        val execPlan = compiler.compile(result.plan, Mode.PERMISSIVE())
-        return execPlan to session
-    }
-
     @RepeatedTest(5)
-    fun concurrentExecutionWithDifferentData() {
+    fun concurrentComplexQuery() {
+        // Query with JOIN, aggregation, and function calls
+        val query = """
+            SELECT
+                o.product_id,
+                SUM(o.quantity * o.price) AS total_revenue,
+                COUNT(o.quantity) AS order_count,
+                UPPER(p.name) AS product_name
+            FROM orders AS o
+            JOIN products AS p ON o.product_id = p.id
+            WHERE o.quantity > 0
+            GROUP BY o.product_id, p.name
+        """.trimIndent()
+
+        // Shared schema for planning — actual data varies per thread
+        val orders = Datum.bagVararg(
+            struct("product_id" to Datum.integer(1), "quantity" to Datum.integer(1), "price" to Datum.decimal(java.math.BigDecimal.TEN)),
+        )
+        val products = Datum.bagVararg(
+            struct("id" to Datum.integer(1), "name" to Datum.string("widget")),
+        )
         val catalog = Catalog.builder()
-            .name("test")
-            .define(Table.standard(Name.of("t"), Datum.bagVararg(Datum.integer(0))))
+            .name("store")
+            .define(Table.standard(Name.of("orders"), orders))
+            .define(Table.standard(Name.of("products"), products))
             .build()
         val session = Session.builder()
-            .catalog("test")
+            .catalog("store")
             .catalogs(catalog)
             .build()
 
-        val ast = parser.parse("SELECT VALUE x + 1 FROM t AS x").statements[0]
+        val ast = parser.parse(query).statements[0]
         val result = planner.plan(ast, session)
         val execPlan = compiler.compile(result.plan, Mode.PERMISSIVE())
         val symbols = result.symbols
-
-        // Build base catalogs from session (includes $system for functions)
         val baseCatalogs = buildExecutionCatalogs(symbols, session)
 
         val executor = Executors.newFixedThreadPool(8)
         try {
-            val futures = (1..8).map { threadData ->
+            val futures = (1..8).map { threadId ->
                 CompletableFuture.supplyAsync({
-                    // Override only the "test" catalog (index 0) with per-thread data
+                    // Each thread has different order quantities
+                    val threadOrders = Datum.bagVararg(
+                        struct("product_id" to Datum.integer(1), "quantity" to Datum.integer(threadId), "price" to Datum.decimal(java.math.BigDecimal.TEN)),
+                        struct("product_id" to Datum.integer(1), "quantity" to Datum.integer(threadId * 2), "price" to Datum.decimal(java.math.BigDecimal.TEN)),
+                    )
+                    val threadProducts = Datum.bagVararg(
+                        struct("id" to Datum.integer(1), "name" to Datum.string("widget")),
+                    )
                     val threadCatalogs = baseCatalogs.copyOf()
-                    threadCatalogs[0] = ExecutionCatalog { id ->
-                        Table.standard(Name.of("t"), Datum.bagVararg(Datum.integer(threadData)))
+                    threadCatalogs[0] = ExecutionCatalog { tableId ->
+                        when (val name = symbols.getTables(0)[tableId].name.getName()) {
+                            "orders" -> Table.standard(Name.of("orders"), threadOrders)
+                            "products" -> Table.standard(Name.of("products"), threadProducts)
+                            else -> error("Unknown table: $name")
+                        }
                     }
                     val datum = vm.execute(execPlan, threadCatalogs)
                     DatumMaterialize.materialize(datum)
@@ -66,12 +88,20 @@ class ThreadSafetyTest {
 
             val results = futures.map { it.get() }
             results.forEachIndexed { i, datum ->
-                val expected = Datum.bagVararg(Datum.integer(i + 1 + 1))
+                val threadId = i + 1
+                // total_revenue = (threadId * 10) + (threadId * 2 * 10) = threadId * 30
+                val expectedRevenue = java.math.BigDecimal.valueOf((threadId * 30).toLong())
+                val row = datum.iterator().next()
+                val actualRevenue = row.get("total_revenue")
                 assertEquals(
                     0,
-                    Datum.comparator(true, true).compare(expected, datum),
-                    "Thread ${i + 1} expected $expected but got $datum"
+                    actualRevenue.bigDecimal.compareTo(expectedRevenue),
+                    "Thread $threadId: expected revenue $expectedRevenue but got ${actualRevenue.bigDecimal}"
                 )
+                val actualName = row.get("product_name")
+                assertEquals("WIDGET", actualName.string, "Thread $threadId: UPPER should produce WIDGET")
+                val actualCount = row.get("order_count")
+                assertEquals(2L, actualCount.long, "Thread $threadId: should have 2 orders")
             }
         } finally {
             executor.shutdown()
@@ -105,5 +135,10 @@ class ThreadSafetyTest {
         } finally {
             executor.shutdown()
         }
+    }
+
+    private fun struct(vararg fields: Pair<String, Datum>): Datum {
+        val f = fields.map { (k, v) -> org.partiql.spi.value.Field.of(k, v) }
+        return Datum.struct(f)
     }
 }

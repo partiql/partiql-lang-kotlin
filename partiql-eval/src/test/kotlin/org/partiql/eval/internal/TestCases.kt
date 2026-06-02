@@ -176,14 +176,17 @@ public class FailureTestCase(
             error(message)
         }
         // New VM path — also expect failure
+        var vmThrown: Throwable? = null
         try {
             val refResult = refPlanner.plan(statement, session)
             val execPlan = compiler.compile(refResult.plan, mode)
             val catalogs = buildExecutionCatalogs(refResult.symbols, session)
             DatumMaterialize.materialize(vm.execute(execPlan, catalogs))
-            // If we get here without error, that's also acceptable — the VM path may handle errors differently
-        } catch (_: Throwable) {
-            // Expected — VM path also threw
+        } catch (t: Throwable) {
+            vmThrown = t
+        }
+        if (vmThrown == null) {
+            error("[VM PATH] Expected error to be thrown but none was thrown for: $input")
         }
     }
 
