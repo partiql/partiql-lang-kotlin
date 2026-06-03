@@ -1329,7 +1329,13 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 } else {
                     entry.k
                 }
-                rexOpMapEntry(k, entry.v)
+                val v = if (entry.v.type != valueType) {
+                    val cast = env.resolveCast(entry.v, valueType.toCType())
+                    if (cast != null) rex(valueType.toCType(), cast) else entry.v
+                } else {
+                    entry.v
+                }
+                rexOpMapEntry(k, v)
             }
             val type = CompilerType(PType.map(keyType, valueType))
             return rex(type, rexOpMap(entries))
