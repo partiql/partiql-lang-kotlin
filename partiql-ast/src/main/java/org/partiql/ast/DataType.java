@@ -159,7 +159,7 @@ public final class DataType extends AstEnum {
     public static final int TIMESTAMP_WITHOUT_TIME_ZONE = 47;
 
     /**
-     *  <map type> — use {@link #getKeyType()} and {@link #getElementType()} for parameters
+     * MAP type — use {@link #getKeyType()} and {@link #getElementType()} for parameters
      */
     public static final int MAP = 48;
 

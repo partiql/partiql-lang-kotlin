@@ -1305,7 +1305,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                     (getCommonSuperType(acc, t) ?: error("Incompatible MAP key types: $acc and $t")).toCType()
                 }.toCType()
             } else {
-                CompilerType(PType.dynamic())
+                CompilerType(PType.string())
             }
             val valueType = if (typedEntries.isNotEmpty()) {
                 typedEntries.map { it.v.type }.reduce { acc, t ->
