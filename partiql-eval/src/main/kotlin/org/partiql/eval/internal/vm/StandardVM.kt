@@ -2,7 +2,6 @@ package org.partiql.eval.internal.vm
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExecutionPlan
-import org.partiql.eval.Mode
 import org.partiql.eval.PartiQLVM
 import org.partiql.eval.internal.compiler.OperatorCompiler
 import org.partiql.eval.internal.helpers.PErrors
@@ -25,12 +24,7 @@ internal class StandardVM : PartiQLVM {
     override fun execute(plan: ExecutionPlan, catalogs: Array<ExecutionCatalog>, ctx: Context): Datum {
         try {
             val impl = plan.impl
-            val mode = when (impl.mode) {
-                Mode.STRICT -> Mode.STRICT()
-                Mode.PERMISSIVE -> Mode.PERMISSIVE()
-                else -> error("Unknown mode: ${impl.mode}")
-            }
-            val compiler = OperatorCompiler(catalogs, mode)
+            val compiler = OperatorCompiler(catalogs, impl.mode)
             val root = compiler.compile(impl)
             return root.eval(Environment())
         } catch (e: PRuntimeException) {

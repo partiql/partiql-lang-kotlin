@@ -1,6 +1,5 @@
 package org.partiql.eval.internal.compiler
 
-import org.partiql.eval.Expr
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Mode
@@ -75,7 +74,7 @@ internal class PlanToExecTransform(
             error("Only query statements are supported")
         }
         val root = visitRex(action.rex)
-        return ExecutionPlanImpl(root, mode.code())
+        return ExecutionPlanImpl(root, mode)
     }
 
     private fun visitRex(rex: Rex): PExpr {
@@ -94,13 +93,22 @@ internal class PlanToExecTransform(
         return rel.accept(this, Unit) as PRel
     }
 
-    @Suppress("DEPRECATION")
     private fun tryStrategies(operator: Operator): Any? {
         for (strategy in strategies) {
             if (strategy.pattern.matches(operator)) {
                 val operand = Operand.single(operator)
                 val match = Match(operand)
-                val callback = Strategy.Callback { op -> op.accept(this, Unit) as Expr }
+                // The callback compiles a child operator to a physical Expr.
+                // It transforms to internal IR then compiles with an OperatorCompiler.
+                val callback = Strategy.Callback { op ->
+                    val node = op.accept(this, Unit)
+                    val compiler = OperatorCompiler(emptyArray(), mode)
+                    when (node) {
+                        is PExpr -> compiler.compile(node)
+                        is PRel -> compiler.compileRel(node)
+                        else -> error("Unexpected node type from strategy callback")
+                    }
+                }
                 val supplier = strategy.applyFactory(match, mode, callback)
                 return if (operator is Rel) {
                     PRel.Custom(factory = { supplier.get() as ExprRelation })

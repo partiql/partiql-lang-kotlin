@@ -20,10 +20,14 @@ public interface PartiQLCompiler {
 
     /**
      * Prepares the given plan into an executable PartiQL statement.
+     * <p>
+     * <b>Warning:</b> The returned {@link Statement} is NOT thread-safe. The operator tree is built once
+     * at prepare time and reused on each {@link Statement#execute()} call. Do not call execute() concurrently.
+     * For thread-safe execution, use {@link #compile(Plan, Mode)} with {@link org.partiql.eval.PartiQLVM}.
      *
      * @param plan The plan to compile.
      * @param mode The mode to use when compiling the plan.
-     * @return The prepared statement.
+     * @return The prepared statement (not thread-safe).
      * @throws PRuntimeException If an error occurs during compilation.
      * @deprecated Use {@link #compile(Plan, Mode)} with {@link org.partiql.eval.PartiQLVM} for thread-safe execution.
      */
@@ -35,12 +39,16 @@ public interface PartiQLCompiler {
 
     /**
      * Prepares the given plan into an executable PartiQL statement.
+     * <p>
+     * <b>Warning:</b> The returned {@link Statement} is NOT thread-safe. The operator tree is built once
+     * at prepare time and reused on each {@link Statement#execute()} call. Do not call execute() concurrently.
+     * For thread-safe execution, use {@link #compile(Plan, Mode)} with {@link org.partiql.eval.PartiQLVM}.
      *
      * @param plan The plan to compile.
      * @param mode The mode to use when compiling the plan.
      * @param ctx The context to use when compiling the plan.
-     * @throws PRuntimeException If an error occurs during compilation. The error might have been emitted by the {@code ctx}'s {@link Context#getErrorListener()}.
-     * @return The prepared statement.
+     * @return The prepared statement (not thread-safe).
+     * @throws PRuntimeException If an error occurs during compilation.
      * @deprecated Use {@link #compile(Plan, Mode)} with {@link org.partiql.eval.PartiQLVM} for thread-safe execution.
      */
     @Deprecated

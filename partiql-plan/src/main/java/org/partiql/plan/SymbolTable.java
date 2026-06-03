@@ -33,8 +33,11 @@ public interface SymbolTable {
 
     /**
      * Returns the table entries for a given catalog.
+     * Table identifiers start at 0 and increment by one for each distinct table referenced in the plan.
+     * The returned list is indexed by table ID (i.e., {@code getTables(catalogId).get(tableId)}).
+     *
      * @param catalogId the catalog identifier
-     * @return list of table entries
+     * @return list of table entries, indexed by table ID
      */
     @NotNull
     List<TableEntry> getTables(int catalogId);

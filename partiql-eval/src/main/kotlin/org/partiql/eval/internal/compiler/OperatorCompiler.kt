@@ -78,8 +78,6 @@ internal class OperatorCompiler(
 
     fun compile(plan: ExecutionPlanImpl): ExprValue = compile(plan.root).catch()
 
-    fun compileUnwrapped(plan: ExecutionPlanImpl): ExprValue = compile(plan.root)
-
     fun compile(expr: PExpr): ExprValue {
         checkInterrupted()
         return when (expr) {
