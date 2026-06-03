@@ -138,7 +138,9 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         override fun visitRexOpMap(node: IRex.Op.Map, ctx: PType): Any {
             val entries = node.entries.map { mapEntry(it) }
-            return operators.map(ctx.keyType, ctx.valueType, entries)
+            val keyType = if (ctx.code() == PType.MAP) ctx.keyType else PType.dynamic()
+            val valueType = if (ctx.code() == PType.MAP) ctx.valueType else PType.dynamic()
+            return operators.map(keyType, valueType, entries)
         }
 
         override fun visitRexOpCollection(node: IRex.Op.Collection, ctx: PType): Any {

@@ -157,7 +157,10 @@ public final class DataType extends AstEnum {
     // <datetime type> continue
     public static final int TIME_WITHOUT_TIME_ZONE = 46;
     public static final int TIMESTAMP_WITHOUT_TIME_ZONE = 47;
-    // <map type> — use {@link #getKeyType()} and {@link #getValueType()} for parameters
+
+    /**
+     *  <map type> — use {@link #getKeyType()} and {@link #getElementType()} for parameters
+     */
     public static final int MAP = 48;
 
     public static DataType BOOL() {

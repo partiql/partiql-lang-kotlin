@@ -18,11 +18,13 @@ internal class ExprPathKeyStruct(
     }
 
     fun evalWithInput(input: Datum, env: Environment): Datum {
+        val checkedRoot = input.checkStruct()
         val k = key.eval(env).check(PType.string())
-        if (input.isNull || k.isNull || k.isMissing) {
+        if (checkedRoot.isNull || k.isNull) {
             return Datum.nullValue()
         }
-        val checkedRoot = input.checkStruct()
-        return checkedRoot.get(k.string) ?: throw PErrors.pathKeyFailureException()
+
+        val keyString = k.string
+        return checkedRoot.get(keyString) ?: throw PErrors.pathKeyFailureException()
     }
 }

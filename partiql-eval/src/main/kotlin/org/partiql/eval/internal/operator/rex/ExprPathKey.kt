@@ -15,9 +15,6 @@ internal class ExprPathKey(
 
     override fun eval(env: Environment): Datum {
         val input = root.eval(env)
-        if (input.isNull || input.isMissing) {
-            return Datum.nullValue()
-        }
         return when (input.type.code()) {
             PType.MAP -> mapOp.evalWithInput(input, env)
             else -> structOp.evalWithInput(input, env)

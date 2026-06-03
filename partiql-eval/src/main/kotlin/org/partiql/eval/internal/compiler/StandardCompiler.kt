@@ -47,6 +47,7 @@ import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprError
 import org.partiql.eval.internal.operator.rex.ExprLit
 import org.partiql.eval.internal.operator.rex.ExprMapConstruct
+import org.partiql.eval.internal.operator.rex.ExprMapConstructDynamic
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
@@ -529,9 +530,13 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 val v = compile(it.value, ctx).catch()
                 ExprStructField(k, v)
             }
-            val keyType = rex.keyType.takeIf { it.code() != PType.DYNAMIC }
-            val valueType = rex.valueType.takeIf { it.code() != PType.DYNAMIC }
-            return ExprMapConstruct(keyType, valueType, entries)
+            val keyType = rex.keyType
+            val valueType = rex.valueType
+            return if (keyType.code() == PType.DYNAMIC || valueType.code() == PType.DYNAMIC) {
+                ExprMapConstructDynamic(entries)
+            } else {
+                ExprMapConstruct(keyType, valueType, entries)
+            }
         }
 
         override fun visitSubquery(rex: RexSubquery, ctx: Unit): ExprValue {

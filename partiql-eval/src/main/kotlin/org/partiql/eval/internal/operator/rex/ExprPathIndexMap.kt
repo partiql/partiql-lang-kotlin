@@ -15,12 +15,9 @@ internal class ExprPathIndexMap(
     }
 
     fun evalWithInput(input: Datum, env: Environment): Datum {
-        if (input.isNull || input.isMissing) {
-            return Datum.nullValue()
-        }
         val k = key.eval(env)
-        if (k.isNull || k.isMissing) {
-            throw PErrors.pathIndexFailureException()
+        if (input.isNull || k.isNull) {
+            return Datum.nullValue()
         }
         return input.get(k).orElseThrow { PErrors.pathIndexFailureException() }
     }
