@@ -1065,11 +1065,11 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
 
             if (argIsAlwaysMissing && instance.signature.isMissingCall) {
                 _listener.report(PErrors.alwaysMissing(null))
-                return rex(CompilerType(returnType), Rex.Op.Call.Static(node.fn, args, node.catalog, node.fnName))
+                return rex(CompilerType(returnType), Rex.Op.Call.Static(node.fn, args))
             }
 
             // Infer fn return type
-            return rex(CompilerType(returnType), Rex.Op.Call.Static(node.fn, args, node.catalog, node.fnName))
+            return rex(CompilerType(returnType), Rex.Op.Call.Static(node.fn, args))
         }
 
         /**

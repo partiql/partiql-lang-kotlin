@@ -250,7 +250,7 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
                     }
                 }
                 // Rewrite as a static call to be typed by PlanTyper
-                Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Static(match.function, coercions, catalog.getName(), Name.of(name)))
+                Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Static(match.function, coercions))
             }
         }
     }

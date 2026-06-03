@@ -453,8 +453,6 @@ internal data class Rex(
             internal data class Static(
                 @JvmField internal val fn: Fn,
                 @JvmField internal val args: List<Rex>,
-                @JvmField internal val catalog: String = "",
-                @JvmField internal val fnName: Name = Name.of("unknown"),
             ) : Call() {
                 public override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
