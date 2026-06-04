@@ -36,6 +36,7 @@ import org.partiql.plan.rex.RexPivot;
 import org.partiql.plan.rex.RexSelect;
 import org.partiql.plan.rex.RexSpread;
 import org.partiql.plan.rex.RexMap;
+import org.partiql.plan.rex.RexMapDynamic;
 import org.partiql.plan.rex.RexStruct;
 import org.partiql.plan.rex.RexSubquery;
 import org.partiql.plan.rex.RexSubqueryComp;
@@ -224,6 +225,14 @@ public interface OperatorVisitor<R, C> {
     }
 
     default R visitMap(@NotNull RexMap rex, C ctx) {
+        return defaultVisit(rex, ctx);
+    }
+
+    /**
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    default R visitMapDynamic(@NotNull RexMapDynamic rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
 

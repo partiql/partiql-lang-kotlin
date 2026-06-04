@@ -3,7 +3,6 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.DynamicTyper
-import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
@@ -21,7 +20,7 @@ internal class ExprMapConstructDynamic(
             }
 
             if (key.isMissing) {
-                throw PErrors.pathKeyFailureException()
+                return Datum.missing()
             }
             keys.add(key)
             values.add(field.value.eval(env))

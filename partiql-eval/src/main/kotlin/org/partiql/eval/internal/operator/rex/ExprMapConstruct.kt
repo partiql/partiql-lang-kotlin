@@ -2,7 +2,6 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
-import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
@@ -17,11 +16,10 @@ internal class ExprMapConstruct(
         for (field in fields) {
             val key = field.key.eval(env)
             if (key.isNull) {
-                return Datum.nullValue()
+                return Datum.nullValue(PType.map(keyType, valueType))
             }
-
             if (key.isMissing) {
-                throw PErrors.pathKeyFailureException()
+                return Datum.missing(PType.map(keyType, valueType))
             }
             val value = field.value.eval(env)
             entries.add(Entry.of(key, value))

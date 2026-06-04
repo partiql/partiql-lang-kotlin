@@ -30,6 +30,7 @@ import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexMap
+import org.partiql.plan.rex.RexMapDynamic
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -404,6 +405,8 @@ public interface Operators {
      * @return
      */
     public fun map(keyType: PType, valueType: PType, entries: List<RexMap.Entry>): RexMap = RexMap.create(keyType, valueType, entries)
+
+    public fun mapDynamic(entries: List<RexMap.Entry>): RexMapDynamic = RexMapDynamic.create(entries)
 
     /**
      * Create a [RexSubquery] instance.

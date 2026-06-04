@@ -3906,6 +3906,18 @@ internal class PlanTyperTestsPorted {
             ),
         )
 
+        @JvmStatic
+        fun mapCases() = listOf(
+            ErrorTestCase(
+                name = "MAP with heterogeneous incompatible key types",
+                query = "MAP { 'a': 1, 2: 'b' }",
+                problemHandler = ProblemHandler { problems, _ ->
+                    val hasInternalError = problems.problems.any { it.code() == PError.INTERNAL_ERROR }
+                    assert(hasInternalError) { "Expected INTERNAL_ERROR for incompatible MAP key types" }
+                }
+            ),
+        )
+
         // --------- Parameterized Test Source Finished ------------
     }
 
@@ -4184,6 +4196,11 @@ internal class PlanTyperTestsPorted {
     @MethodSource("castCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testCasts(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("mapCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testMap(tc: TestCase) = runTest(tc)
 
     /**
      * While all existing CTE tests exist in the evaluator, this one exists in the planner, since it causes a compilation

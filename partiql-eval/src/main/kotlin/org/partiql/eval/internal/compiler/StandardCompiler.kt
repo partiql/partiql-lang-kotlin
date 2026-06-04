@@ -106,6 +106,7 @@ import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexMap
+import org.partiql.plan.rex.RexMapDynamic
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -530,13 +531,16 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 val v = compile(it.value, ctx).catch()
                 ExprStructField(k, v)
             }
-            val keyType = rex.keyType
-            val valueType = rex.valueType
-            return if (keyType.code() == PType.DYNAMIC || valueType.code() == PType.DYNAMIC) {
-                ExprMapConstructDynamic(entries)
-            } else {
-                ExprMapConstruct(keyType, valueType, entries)
+            return ExprMapConstruct(rex.keyType, rex.valueType, entries)
+        }
+
+        override fun visitMapDynamic(rex: RexMapDynamic, ctx: Unit): ExprValue {
+            val entries = rex.getEntries().map {
+                val k = compile(it.key, ctx)
+                val v = compile(it.value, ctx).catch()
+                ExprStructField(k, v)
             }
+            return ExprMapConstructDynamic(entries)
         }
 
         override fun visitSubquery(rex: RexSubquery, ctx: Unit): ExprValue {
