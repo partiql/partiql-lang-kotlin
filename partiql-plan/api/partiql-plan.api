@@ -275,6 +275,7 @@ public abstract interface class org/partiql/plan/OperatorVisitor {
 	public fun visitLimit (Lorg/partiql/plan/rel/RelLimit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLit (Lorg/partiql/plan/rex/RexLit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitMap (Lorg/partiql/plan/rex/RexMap;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitMapDynamic (Lorg/partiql/plan/rex/RexMapDynamic;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitNullIf (Lorg/partiql/plan/rex/RexNullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOffset (Lorg/partiql/plan/rel/RelOffset;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathIndex (Lorg/partiql/plan/rex/RexPathIndex;Ljava/lang/Object;)Ljava/lang/Object;
@@ -322,6 +323,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun limit (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelLimit;
 	public abstract fun lit (Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/rex/RexLit;
 	public abstract fun map (Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;Ljava/util/List;)Lorg/partiql/plan/rex/RexMap;
+	public abstract fun mapDynamic (Ljava/util/List;)Lorg/partiql/plan/rex/RexMapDynamic;
 	public abstract fun nullIf (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexNullIf;
 	public abstract fun offset (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelOffset;
 	public abstract fun pathIndex (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPathIndex;
@@ -369,6 +371,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun limit (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelLimit;
 	public static fun lit (Lorg/partiql/plan/Operators;Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/rex/RexLit;
 	public static fun map (Lorg/partiql/plan/Operators;Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;Ljava/util/List;)Lorg/partiql/plan/rex/RexMap;
+	public static fun mapDynamic (Lorg/partiql/plan/Operators;Ljava/util/List;)Lorg/partiql/plan/rex/RexMapDynamic;
 	public static fun nullIf (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexNullIf;
 	public static fun offset (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelOffset;
 	public static fun pathIndex (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPathIndex;
@@ -799,6 +802,15 @@ public abstract class org/partiql/plan/rex/RexMap : org/partiql/plan/rex/RexBase
 public class org/partiql/plan/rex/RexMap$Entry {
 	public fun getKey ()Lorg/partiql/plan/rex/Rex;
 	public fun getValue ()Lorg/partiql/plan/rex/Rex;
+}
+
+public abstract class org/partiql/plan/rex/RexMapDynamic : org/partiql/plan/rex/RexBase {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun create (Ljava/util/List;)Lorg/partiql/plan/rex/RexMapDynamic;
+	public abstract fun getEntries ()Ljava/util/List;
+	protected fun operands ()Ljava/util/List;
+	protected final fun type ()Lorg/partiql/plan/rex/RexType;
 }
 
 public abstract class org/partiql/plan/rex/RexNullIf : org/partiql/plan/rex/RexBase {
