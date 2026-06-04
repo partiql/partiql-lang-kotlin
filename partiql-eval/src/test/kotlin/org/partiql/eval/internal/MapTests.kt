@@ -219,12 +219,16 @@ class MapTests {
                 name = "String key MAP: basic access",
                 globals = catalogGlobals,
                 input = "SELECT u.name, u.settings['theme'] AS theme FROM users AS u WHERE u.name = 'Alice';",
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
-                        org.partiql.spi.value.Field.of("theme", Datum.string("dark")),
-                    ))
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
+                                org.partiql.spi.value.Field.of("theme", Datum.string("dark")),
+                            )
+                        ),
+                    )
+                ),
             ),
             SuccessTestCase(
                 name = "String key MAP: access on null map returns NULL",
@@ -232,12 +236,16 @@ class MapTests {
                 globals = catalogGlobals,
                 input = "SELECT u.name, u.settings['theme'] AS theme FROM users AS u WHERE u.name = 'Charlie';",
                 // Charlie has null settings — null propagation returns NULL for theme
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
-                        org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
-                    ))
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
+                                org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
+                            )
+                        ),
+                    )
+                ),
             ),
             SuccessTestCase(
                 name = "String key MAP: access on missing map field excluded from struct",
@@ -245,23 +253,31 @@ class MapTests {
                 globals = catalogGlobals,
                 input = "SELECT u.name, u.settings['theme'] AS theme FROM users AS u WHERE u.name = 'Dana';",
                 // Dana has no settings field — MISSING propagates, theme excluded from struct
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Dana")),
-                    ))
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Dana")),
+                            )
+                        ),
+                    )
+                ),
             ),
             // --- Integer key MAP access ---
             SuccessTestCase(
                 name = "Integer key MAP: basic access",
                 globals = catalogGlobals,
                 input = "SELECT u.name, u.scores[100] AS score FROM users AS u WHERE u.name = 'Alice';",
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
-                        org.partiql.spi.value.Field.of("score", Datum.integer(5)),
-                    ))
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
+                                org.partiql.spi.value.Field.of("score", Datum.integer(5)),
+                            )
+                        ),
+                    )
+                ),
             ),
             SuccessTestCase(
                 name = "Integer key MAP: nonexistent key returns empty struct",
@@ -269,11 +285,15 @@ class MapTests {
                 globals = catalogGlobals,
                 input = "SELECT u.name, u.scores[999] AS score FROM users AS u WHERE u.name = 'Alice';",
                 // key 999 doesn't exist — MISSING propagates, score excluded
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
-                    ))
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
+                            )
+                        ),
+                    )
+                ),
             ),
             SuccessTestCase(
                 name = "Integer key MAP: access on missing datum excluded from struct",
@@ -281,22 +301,30 @@ class MapTests {
                 globals = catalogGlobals,
                 input = "SELECT u.name, u.scores[100] AS score FROM users AS u WHERE u.name = 'Charlie';",
                 // Charlie has scores field present but value is MISSING — score excluded
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
-                    ))
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
+                            )
+                        ),
+                    )
+                ),
             ),
             // --- WHERE filter using MAP values ---
             SuccessTestCase(
                 name = "WHERE filter on string key map value",
                 globals = catalogGlobals,
                 input = "SELECT u.name FROM users AS u WHERE u.settings['lang'] = 'fr';",
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Bob")),
-                    ))
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Bob")),
+                            )
+                        ),
+                    )
+                ),
             ),
             // --- All rows with mixed null/missing ---
             SuccessTestCase(
@@ -304,25 +332,35 @@ class MapTests {
                 mode = Mode.PERMISSIVE(),
                 globals = catalogGlobals,
                 input = "SELECT u.name, u.settings['theme'] AS theme FROM users AS u;",
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
-                        org.partiql.spi.value.Field.of("theme", Datum.string("dark")),
-                    )),
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Bob")),
-                        org.partiql.spi.value.Field.of("theme", Datum.string("light")),
-                    )),
-                    // null map → NULL value included
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
-                        org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
-                    )),
-                    // missing field → excluded from struct
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("name", Datum.string("Dana")),
-                    )),
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
+                                org.partiql.spi.value.Field.of("theme", Datum.string("dark")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Bob")),
+                                org.partiql.spi.value.Field.of("theme", Datum.string("light")),
+                            )
+                        ),
+                        // null map → NULL value included
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
+                                org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
+                            )
+                        ),
+                        // missing field → excluded from struct
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("name", Datum.string("Dana")),
+                            )
+                        ),
+                    )
+                ),
             ),
             // --- Null map vs missing datum on same row (Charlie) ---
             SuccessTestCase(
@@ -332,11 +370,15 @@ class MapTests {
                 input = "SELECT u.settings['theme'] AS theme, u.scores[100] AS score FROM users AS u WHERE u.name = 'Charlie';",
                 // settings is null MAP → theme = NULL (null propagation, included)
                 // scores is MISSING datum → score excluded from struct
-                expected = Datum.bag(listOf(
-                    Datum.struct(listOf(
-                        org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
-                    ))
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
+                            )
+                        ),
+                    )
+                ),
             ),
             // --- Access on completely nonexistent field ---
             SuccessTestCase(
@@ -344,12 +386,14 @@ class MapTests {
                 mode = Mode.PERMISSIVE(),
                 globals = catalogGlobals,
                 input = "SELECT u.nonexistent[100] AS v FROM users AS u;",
-                expected = Datum.bag(listOf(
-                    Datum.struct(emptyList()),
-                    Datum.struct(emptyList()),
-                    Datum.struct(emptyList()),
-                    Datum.struct(emptyList()),
-                )),
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(emptyList()),
+                        Datum.struct(emptyList()),
+                        Datum.struct(emptyList()),
+                        Datum.struct(emptyList()),
+                    )
+                ),
             ),
         )
     }
