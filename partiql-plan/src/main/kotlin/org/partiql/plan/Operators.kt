@@ -42,6 +42,7 @@ import org.partiql.plan.rex.RexSubqueryComp
 import org.partiql.plan.rex.RexSubqueryIn
 import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
+import org.partiql.plan.rex.RexTableRef
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.function.Fn
@@ -448,6 +449,7 @@ public interface Operators {
      * @param table
      * @return
      */
+    @Deprecated("Use tableRef() with PartiQLPlanner.builder().useRefs() for thread-safe plans")
     public fun table(table: Table): RexTable = RexTable.create(table)
 
     /**
@@ -459,4 +461,17 @@ public interface Operators {
      * @return
      */
     public fun variable(depth: Int, offset: Int, type: PType): RexVar = RexVar.create(depth, offset, type)
+
+    // --- REF OPERATORS (for thread-safe cacheable plans) ----------------------------------------------------------------
+
+    /**
+     * Create a [RexTableRef] instance for lazy table resolution.
+     *
+     * @param catalogId
+     * @param tableId
+     * @param schema
+     * @return
+     */
+    public fun tableRef(catalogId: Int, tableId: Int, schema: PType): RexTableRef =
+        RexTableRef.create(catalogId, tableId, schema)
 }

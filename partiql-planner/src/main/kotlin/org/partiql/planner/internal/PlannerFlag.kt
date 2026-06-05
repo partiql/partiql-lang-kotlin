@@ -22,5 +22,14 @@ internal enum class PlannerFlag {
      * Experimental flag to enable planner to replace references to WITH variables with their definitions.
      * By default, this flag is included in the default planner phase.
      */
-    FORCE_INLINE_WITH_CLAUSE
+    FORCE_INLINE_WITH_CLAUSE,
+
+    /**
+     * When set, the planner emits integer-referenced table nodes (RexTableRef) instead of embedding
+     * live Table objects (RexTable). These plans are thread-safe, cacheable, and executable via PartiQLVM.
+     *
+     * Functions and aggregates are always embedded directly (they are stateless/thread-safe).
+     * Only tables need ref-based resolution since their data may change between executions.
+     */
+    USE_REFS
 }

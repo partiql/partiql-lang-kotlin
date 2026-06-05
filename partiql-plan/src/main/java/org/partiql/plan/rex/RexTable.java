@@ -9,7 +9,10 @@ import java.util.List;
 
 /**
  * Global variable references e.g. tables and views.
+ *
+ * @deprecated Use {@link RexTableRef} with {@code PartiQLPlanner.builder().useRefs()} for thread-safe plans.
  */
+@Deprecated
 public abstract class RexTable extends RexBase {
 
     /**

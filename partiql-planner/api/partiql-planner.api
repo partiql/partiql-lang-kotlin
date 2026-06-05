@@ -16,8 +16,9 @@ public final class org/partiql/planner/PartiQLPlanner$DefaultImpls {
 }
 
 public final class org/partiql/planner/PartiQLPlanner$Result {
-	public fun <init> (Lorg/partiql/plan/Plan;)V
+	public fun <init> (Lorg/partiql/plan/Plan;Lorg/partiql/plan/SymbolTable;)V
 	public final fun getPlan ()Lorg/partiql/plan/Plan;
+	public final fun getSymbols ()Lorg/partiql/plan/SymbolTable;
 }
 
 public abstract interface class org/partiql/planner/PartiQLPlannerPass {
@@ -33,5 +34,7 @@ public final class org/partiql/planner/builder/PartiQLPlannerBuilder {
 	public static synthetic fun forceInlineWithClause$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 	public final fun signal (Z)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 	public static synthetic fun signal$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public final fun useRefs (Z)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public static synthetic fun useRefs$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 }
 
