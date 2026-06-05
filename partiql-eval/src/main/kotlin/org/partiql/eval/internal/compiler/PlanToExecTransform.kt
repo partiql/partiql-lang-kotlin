@@ -47,6 +47,8 @@ import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
+import org.partiql.plan.rex.RexMap
+import org.partiql.plan.rex.RexMapDynamic
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -192,6 +194,12 @@ internal class PlanToExecTransform(
 
     override fun visitStruct(rex: RexStruct, ctx: Unit): Any =
         PExpr.Struct(rex.fields.map { PExpr.Field(visitRex(it.key), visitRex(it.value)) })
+
+    override fun visitMap(rex: RexMap, ctx: Unit): Any =
+        PExpr.Map(rex.keyType, rex.valueType, rex.entries.map { PExpr.Field(visitRex(it.key), visitRex(it.value)) })
+
+    override fun visitMapDynamic(rex: RexMapDynamic, ctx: Unit): Any =
+        PExpr.MapDynamic(rex.entries.map { PExpr.Field(visitRex(it.key), visitRex(it.value)) })
 
     override fun visitSubquery(rex: RexSubquery, ctx: Unit): Any =
         PExpr.Subquery(visitRel(rex.input), visitRex(rex.constructor), rex.isScalar)

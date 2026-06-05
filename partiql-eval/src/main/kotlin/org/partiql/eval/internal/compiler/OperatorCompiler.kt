@@ -40,6 +40,8 @@ import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprError
 import org.partiql.eval.internal.operator.rex.ExprLit
+import org.partiql.eval.internal.operator.rex.ExprMapConstruct
+import org.partiql.eval.internal.operator.rex.ExprMapConstructDynamic
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
@@ -114,6 +116,14 @@ internal class OperatorCompiler(
                     Mode.STRICT -> ExprStructStrict(fields)
                     else -> error("Unsupported mode: $MODE")
                 }
+            }
+            is PExpr.Map -> {
+                val entries = expr.entries.map { ExprStructField(compile(it.key), compile(it.value).catch()) }
+                ExprMapConstruct(expr.keyType, expr.valueType, entries)
+            }
+            is PExpr.MapDynamic -> {
+                val entries = expr.entries.map { ExprStructField(compile(it.key), compile(it.value).catch()) }
+                ExprMapConstructDynamic(entries)
             }
             is PExpr.Spread -> ExprSpread(expr.args.map { compile(it) }.toTypedArray())
             is PExpr.Select -> {
