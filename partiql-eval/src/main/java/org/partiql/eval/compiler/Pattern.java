@@ -7,7 +7,7 @@ import org.partiql.plan.Operator;
 import java.util.function.Predicate;
 
 /**
- * Pattern defines a tree pattern.
+ * Pattern defines a tree pattern for matching logical plan operators.
  */
 public class Pattern {
 

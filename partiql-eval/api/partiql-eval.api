@@ -5,6 +5,9 @@ public class org/partiql/eval/Environment {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/partiql/eval/ExecutionPlan {
+}
+
 public abstract interface class org/partiql/eval/Expr {
 }
 
@@ -27,6 +30,12 @@ public class org/partiql/eval/Mode : org/partiql/spi/Enum {
 	public static fun PERMISSIVE ()Lorg/partiql/eval/Mode;
 	public static fun STRICT ()Lorg/partiql/eval/Mode;
 	public fun name ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/eval/PartiQLVM {
+	public abstract fun execute (Lorg/partiql/eval/ExecutionPlan;[Lorg/partiql/spi/catalog/ExecutionCatalog;)Lorg/partiql/spi/value/Datum;
+	public abstract fun execute (Lorg/partiql/eval/ExecutionPlan;[Lorg/partiql/spi/catalog/ExecutionCatalog;Lorg/partiql/spi/Context;)Lorg/partiql/spi/value/Datum;
+	public static fun standard ()Lorg/partiql/eval/PartiQLVM;
 }
 
 public class org/partiql/eval/Row {
@@ -61,8 +70,11 @@ public class org/partiql/eval/compiler/Match {
 
 public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
 	public static fun builder ()Lorg/partiql/eval/compiler/PartiQLCompiler$Builder;
+	public abstract fun compile (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/ExecutionPlan;
 	public fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/Statement;
 	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;Lorg/partiql/spi/Context;)Lorg/partiql/eval/Statement;
+	public fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;[Lorg/partiql/spi/catalog/ExecutionCatalog;)Lorg/partiql/eval/Statement;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;[Lorg/partiql/spi/catalog/ExecutionCatalog;Lorg/partiql/spi/Context;)Lorg/partiql/eval/Statement;
 	public static fun standard ()Lorg/partiql/eval/compiler/PartiQLCompiler;
 }
 
@@ -79,7 +91,8 @@ public class org/partiql/eval/compiler/Pattern {
 
 public abstract class org/partiql/eval/compiler/Strategy {
 	public fun <init> (Lorg/partiql/eval/compiler/Pattern;)V
-	public abstract fun apply (Lorg/partiql/eval/compiler/Match;Lorg/partiql/eval/Mode;Lorg/partiql/eval/compiler/Strategy$Callback;)Lorg/partiql/eval/Expr;
+	public fun apply (Lorg/partiql/eval/compiler/Match;Lorg/partiql/eval/Mode;Lorg/partiql/eval/compiler/Strategy$Callback;)Lorg/partiql/eval/Expr;
+	public fun applyFactory (Lorg/partiql/eval/compiler/Match;Lorg/partiql/eval/Mode;Lorg/partiql/eval/compiler/Strategy$Callback;)Ljava/util/function/Supplier;
 	public fun getPattern ()Lorg/partiql/eval/compiler/Pattern;
 }
 

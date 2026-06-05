@@ -12,6 +12,7 @@ import org.partiql.planner.internal.transforms.NormalizeFromSource
 import org.partiql.planner.internal.transforms.NormalizeGroupBy
 import org.partiql.planner.internal.transforms.OrderByAliasSupport
 import org.partiql.planner.internal.transforms.PlanTransform
+import org.partiql.planner.internal.transforms.SymbolTableBuilder
 import org.partiql.planner.internal.typer.PlanTyper
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
@@ -49,13 +50,15 @@ internal class SqlPlanner(
             val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
 
             // 4. Assert plan has been resolved — translating to public API
-            var plan = PlanTransform(flags).transform(internal, ctx.errorListener)
+            val useRefs = flags.contains(PlannerFlag.USE_REFS)
+            val transformResult = PlanTransform(flags, useRefs).transform(internal, ctx.errorListener)
+            var plan = transformResult.plan
 
             // 5. Apply all passes
             for (pass in passes) {
                 plan = pass.apply(plan, ctx)
             }
-            return Result(plan)
+            return Result(plan, transformResult.symbols)
         } catch (e: PRuntimeException) {
             throw e
         } catch (t: Throwable) {
@@ -86,6 +89,7 @@ internal class SqlPlanner(
         ctx.errorListener.report(error)
         val query = Action.Query { Operators.STANDARD.error(PType.dynamic()) }
         val plan = Plan { query }
-        return Result(plan)
+        val symbols = SymbolTableBuilder().build()
+        return Result(plan, symbols)
     }
 }

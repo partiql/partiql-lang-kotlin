@@ -10,6 +10,9 @@ import java.util.List;
 
 /**
  * Logical operator for a dynamic dispatch.
+ * <p>
+ * Function overloads ({@link org.partiql.spi.function.FnOverload}) are assumed thread-safe
+ * and are embedded directly in the plan.
  */
 public abstract class RexDispatch extends RexBase {
 

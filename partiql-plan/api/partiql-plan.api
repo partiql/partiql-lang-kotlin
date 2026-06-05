@@ -293,6 +293,7 @@ public abstract interface class org/partiql/plan/OperatorVisitor {
 	public fun visitSubqueryIn (Lorg/partiql/plan/rex/RexSubqueryIn;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSubqueryTest (Lorg/partiql/plan/rex/RexSubqueryTest;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTable (Lorg/partiql/plan/rex/RexTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableRef (Lorg/partiql/plan/rex/RexTableRef;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUnion (Lorg/partiql/plan/rel/RelUnion;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUnpivot (Lorg/partiql/plan/rel/RelUnpivot;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Ljava/lang/Object;
@@ -341,6 +342,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun subqueryIn (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rex/RexSubqueryIn;
 	public abstract fun subqueryTest (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/RexSubqueryTest$Test;)Lorg/partiql/plan/rex/RexSubqueryTest;
 	public abstract fun table (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/rex/RexTable;
+	public abstract fun tableRef (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexTableRef;
 	public abstract fun union (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public abstract fun unpivot (Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public abstract fun variable (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
@@ -389,6 +391,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun subqueryIn (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rex/RexSubqueryIn;
 	public static fun subqueryTest (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/RexSubqueryTest$Test;)Lorg/partiql/plan/rex/RexSubqueryTest;
 	public static fun table (Lorg/partiql/plan/Operators;Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/rex/RexTable;
+	public static fun tableRef (Lorg/partiql/plan/Operators;IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexTableRef;
 	public static fun union (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public static fun unpivot (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public static fun variable (Lorg/partiql/plan/Operators;IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
@@ -398,6 +401,19 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 public abstract interface class org/partiql/plan/Plan {
 	public abstract fun getAction ()Lorg/partiql/plan/Action;
 	public fun getVersion ()Lorg/partiql/plan/Version;
+}
+
+public abstract interface class org/partiql/plan/SymbolTable {
+	public abstract fun catalogCount ()I
+	public abstract fun getCatalogName (I)Ljava/lang/String;
+	public abstract fun getTables (I)Ljava/util/List;
+}
+
+public final class org/partiql/plan/SymbolTable$TableEntry {
+	public fun <init> (ILorg/partiql/spi/catalog/Name;Lorg/partiql/spi/types/PType;)V
+	public fun getId ()I
+	public fun getName ()Lorg/partiql/spi/catalog/Name;
+	public fun getSchema ()Lorg/partiql/spi/types/PType;
 }
 
 public class org/partiql/plan/Version : org/partiql/spi/Enum {
@@ -982,6 +998,15 @@ public abstract class org/partiql/plan/rex/RexTable : org/partiql/plan/rex/RexBa
 	public abstract fun getTable ()Lorg/partiql/spi/catalog/Table;
 	protected final fun operands ()Ljava/util/List;
 	protected final fun type ()Lorg/partiql/plan/rex/RexType;
+}
+
+public abstract class org/partiql/plan/rex/RexTableRef : org/partiql/plan/rex/RexBase {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun create (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexTableRef;
+	public abstract fun getCatalogId ()I
+	public abstract fun getTableId ()I
+	protected final fun operands ()Ljava/util/List;
 }
 
 public final class org/partiql/plan/rex/RexType {

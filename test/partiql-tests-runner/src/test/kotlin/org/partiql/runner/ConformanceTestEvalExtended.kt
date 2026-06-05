@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.eval.Statement
-import org.partiql.runner.executor.EvalExecutor
+import org.partiql.runner.executor.VMEvalExecutor
+import org.partiql.runner.executor.VMPreparedPlan
 import org.partiql.runner.report.ReportGenerator
 import org.partiql.runner.schema.TestCase
 import org.partiql.runner.test.TestProvider
@@ -19,14 +19,14 @@ import org.partiql.spi.value.Datum
  * The extended dataset includes additional test cases beyond the PartiQL specification.
  *
  */
-class ConformanceTestEvalExtended : ConformanceTestBase<Statement, Datum>() {
+class ConformanceTestEvalExtended : ConformanceTestBase<VMPreparedPlan, Datum>() {
     companion object {
         @JvmStatic
         @RegisterExtension
         val reporter = ReportGenerator(DataSet.PartiQLExtended)
     }
 
-    private val factory = EvalExecutor.Factory
+    private val factory = VMEvalExecutor.Factory
     override val runner = TestRunner(factory)
 
     private val skipListForEvaluationExtended: Set<Pair<String, CompileType>> = getSkipList("/config/eval/skip-eval-extended.txt")

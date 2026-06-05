@@ -92,6 +92,9 @@ public abstract class RelAggregate extends RelBase {
 
     /**
      * An aggregation function along with its arguments and any additional filters (e.g. DISTINCT).
+     * <p>
+     * Aggregates ({@link Agg}) are assumed thread-safe (each call to {@code getAccumulator()} creates fresh state)
+     * and are embedded directly in the plan.
      */
     public static class Measure {
 
@@ -161,9 +164,6 @@ public abstract class RelAggregate extends RelBase {
             return new Impl(input, measures, groups);
         }
 
-        /**
-         * @return copy with new input and args (non-final).
-         */
         @NotNull
         @Override
         public RelAggregate copy(@NotNull Rel input, @NotNull List<Measure> measures, @NotNull List<Rex> groups) {

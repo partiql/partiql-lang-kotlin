@@ -6,6 +6,7 @@ import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operators
 import org.partiql.plan.Plan
+import org.partiql.plan.SymbolTable
 import org.partiql.plan.WindowFunctionNode
 import org.partiql.plan.WindowFunctionSignature
 import org.partiql.plan.WithListElement
@@ -35,7 +36,9 @@ import org.partiql.planner.internal.ir.Statement as IStatement
  *
  * TODO types and schemas!
  */
-internal class PlanTransform(private val flags: Set<PlannerFlag>) {
+internal class PlanTransform(private val flags: Set<PlannerFlag>, private val useRefs: Boolean = false) {
+
+    data class TransformResult(val plan: Plan, val symbols: SymbolTable)
 
     /**
      * Transform the internal IR to the public plan interfaces.
@@ -44,19 +47,23 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
      * @param listener
      * @return
      */
-    fun transform(internal: IPlan, listener: PErrorListener): Plan {
+    fun transform(internal: IPlan, listener: PErrorListener): TransformResult {
         val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
         val query = (internal.statement as IStatement.Query)
-        val visitor = Visitor(listener, signal)
+        val symbolTableBuilder = SymbolTableBuilder()
+        val visitor = Visitor(listener, signal, symbolTableBuilder, useRefs)
         val root = visitor.visitRex(query.root, query.root.type)
         val action = Action.Query { root }
-        // TODO replace with standard implementations (or just remove plan transform altogether when possible).
-        return Plan { action }
+        val plan = Plan { action }
+        val symbols = symbolTableBuilder.build()
+        return TransformResult(plan, symbols)
     }
 
     private class Visitor(
         private val listener: PErrorListener,
         private val signal: Boolean,
+        private val symbols: SymbolTableBuilder,
+        private val useRefs: Boolean,
     ) : PlanBaseVisitor<Any?, PType>() {
 
         private val operators = Operators.STANDARD
@@ -172,7 +179,6 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
-            // TODO assert on function name in plan typer .. here is not the place.
             val args = node.args.map { visitRex(it, it.type) }
             val fns = node.candidates.map { it.fn.signature }
             val name = node.candidates.first().fn.name.getName()
@@ -218,7 +224,12 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpVarGlobal(node: IRex.Op.Var.Global, ctx: PType): Any {
-            return operators.table(node.ref.table)
+            val ref = node.ref
+            if (useRefs) {
+                val (catalogId, tableId) = symbols.getOrAddTable(ref.catalog, ref.name, ref.type)
+                return operators.tableRef(catalogId, tableId, ref.type)
+            }
+            return operators.table(ref.table)
         }
 
         override fun visitRexOpVarUnresolved(node: IRex.Op.Var.Unresolved, ctx: PType): Any {
@@ -250,9 +261,9 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         override fun visitRelOpAggregate(node: IRel.Op.Aggregate, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
-            val calls = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.Measure }
+            val measures = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.Measure }
             val groups = node.groups.map { visitRex(it, it.type) }
-            return operators.aggregate(input, calls, groups)
+            return operators.aggregate(input, measures, groups)
         }
 
         override fun visitRelOpWindow(node: Rel.Op.Window, ctx: PType): org.partiql.plan.rel.RelWindow {

@@ -80,4 +80,19 @@ public class PartiQLPlannerBuilder {
         }
         return this
     }
+
+    /**
+     * Enable integer-referenced plan nodes for thread-safe, cacheable plans.
+     *
+     * When enabled, the planner emits reference-based nodes (RexTableRef, RexCallRef, RexDispatchRef)
+     * instead of embedding live objects. These plans are executable via [org.partiql.eval.PartiQLVM].
+     */
+    public fun useRefs(enable: Boolean = true): PartiQLPlannerBuilder {
+        if (enable) {
+            flags.add(PlannerFlag.USE_REFS)
+        } else {
+            flags.remove(PlannerFlag.USE_REFS)
+        }
+        return this
+    }
 }
