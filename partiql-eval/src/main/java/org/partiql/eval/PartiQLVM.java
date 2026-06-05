@@ -8,15 +8,15 @@ import org.partiql.spi.errors.PRuntimeException;
 import org.partiql.spi.value.Datum;
 
 /**
- * Executes a cached, thread-safe plan with execution catalogs.
+ * Executes a compiled {@link ExecutionPlan} with execution catalogs.
  * <p>
  * The plan holds integer references (catalog ID, table ID) instead of live objects.
  * At execution time, the VM resolves references lazily through the provided {@link ExecutionCatalog} array.
  * <p>
- * Thread-safe: multiple threads can call {@code execute()} concurrently with the same plan and different catalogs.
- * Each invocation builds a fresh operator tree with no shared mutable state.
- * <p>
  * Mode (PERMISSIVE/STRICT) is baked into the {@link ExecutionPlan} at compile time.
+ * <p>
+ * <b>Note:</b> The {@code PartiQLVM} instance itself is not currently thread-safe. Create one instance per thread,
+ * or use a single instance with external synchronization. This restriction may be lifted in a future release.
  */
 public interface PartiQLVM {
 

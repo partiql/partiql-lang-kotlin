@@ -28,10 +28,20 @@ Thank you to all who have contributed!
 ### Added
 - Added `fmt` subcommand to the CLI (`partiql fmt`) for pretty-printing PartiQL statements with width-aware formatting.
 - **EXPERIMENTAL** Add interfaces to support `MAP` data type
+- Added thread-safe, cacheable execution plans via `PartiQLVM` and `ExecutionPlan`. Plans compiled with `PartiQLCompiler.compile(plan, mode)` use integer-referenced table nodes (`RexTableRef`) resolved lazily through user-provided `ExecutionCatalog` instances. Each `PartiQLVM.execute()` call builds a fresh operator tree with no shared mutable state.
+- Added `ExecutionCatalog` interface (single method: `getTable(int id)`) for providing table data at execution time.
+- Added `SymbolTable` to planner results, mapping plan-assigned integer IDs to catalog/table names.
+- Added `PartiQLPlanner.builder().useRefs()` to opt into ref-based table nodes for thread-safe plans.
+- Added `Strategy.applyFactory()` for thread-safe custom operator strategies that return `Supplier<Expr>`.
 
 ### Changed
+- `StandardCompiler` now uses a unified internal compilation path (`PlanToExecTransform` + `OperatorCompiler`) for all plans.
 
 ### Deprecated
+- `Statement` — use `PartiQLVM.execute()` with `ExecutionPlan` for thread-safe execution.
+- `PartiQLCompiler.prepare(plan, mode)` — use `compile(plan, mode)` + `PartiQLVM` instead.
+- `RexTable` — use `RexTableRef` with `useRefs()` for thread-safe plans.
+- `Strategy.apply()` — override `applyFactory()` for thread-safe strategies.
 
 ### Fixed
 
