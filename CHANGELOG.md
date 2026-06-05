@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.4.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.4.0) - 2026-06-05
+
+### Added
 - Added `fmt` subcommand to the CLI (`partiql fmt`) for pretty-printing PartiQL statements with width-aware formatting.
 - **EXPERIMENTAL** Add interfaces to support `MAP` data type
 - Added thread-safe, cacheable execution plans via `PartiQLVM` and `ExecutionPlan`. Plans compiled with `PartiQLCompiler.compile(plan, mode)` use integer-referenced table nodes (`RexTableRef`) resolved lazily through user-provided `ExecutionCatalog` instances. Each `PartiQLVM.execute()` call builds a fresh operator tree with no shared mutable state.
@@ -1621,7 +1638,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.4.0...HEAD
 [1.0.0-rc.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-rc.2...v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-perf.1...v1.0.0-rc.1
