@@ -18,19 +18,20 @@ internal class ExprMapConstructDynamic(
             if (key.isNull) {
                 return Datum.nullValue()
             }
-
             if (key.isMissing) {
                 return Datum.missing()
             }
+            val value = field.value.eval(env)
+            if (value.isMissing) continue
             keys.add(key)
-            values.add(field.value.eval(env))
+            values.add(value)
         }
         val keyType = if (keys.isEmpty()) PType.string() else DynamicTyper.commonSuperType(keys.map { it.type })
         if (keyType.code() == PType.DYNAMIC) {
             error("MAP key type must not be DYNAMIC")
         }
         val valueType = DynamicTyper.commonSuperType(values.map { it.type })
-        val entries = keys.zip(values).map { (k, v) ->
+        val entries = keys.zip(values).mapNotNull { (k, v) ->
             val castedKey = if (k.type.code() != keyType.code()) {
                 CastTable.cast(k, keyType)
             } else {
@@ -41,6 +42,7 @@ internal class ExprMapConstructDynamic(
             } else {
                 v
             }
+            if (castedValue.isMissing) return@mapNotNull null
             Entry.of(castedKey, castedValue)
         }
         return Datum.map(keyType, valueType, entries)

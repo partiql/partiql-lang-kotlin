@@ -12,8 +12,7 @@ internal class ExprMapConstruct(
     private val fields: List<ExprStructField>,
 ) : ExprValue {
     override fun eval(env: Environment): Datum {
-        val entries = mutableListOf<Entry>()
-        for (field in fields) {
+        val entries = fields.mapNotNull { field ->
             val key = field.key.eval(env)
             if (key.isNull) {
                 return Datum.nullValue(PType.map(keyType, valueType))
@@ -22,7 +21,10 @@ internal class ExprMapConstruct(
                 return Datum.missing(PType.map(keyType, valueType))
             }
             val value = field.value.eval(env)
-            entries.add(Entry.of(key, value))
+            when (value.isMissing) {
+                true -> null
+                false -> Entry.of(key, value)
+            }
         }
         return Datum.map(keyType, valueType, entries)
     }

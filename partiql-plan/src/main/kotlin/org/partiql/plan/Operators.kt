@@ -402,11 +402,19 @@ public interface Operators {
     /**
      * Create a [RexMap] instance.
      *
+     * @deprecated This feature is experimental and is subject to change.
      * @param fields map entries (key-value pairs)
      * @return
      */
     public fun map(keyType: PType, valueType: PType, entries: List<RexMap.Entry>): RexMap = RexMap.create(keyType, valueType, entries)
 
+    /**
+     * Create a [RexMapDynamic] instance whose key and value types are deferred to evaluation.
+     *
+     * @deprecated This feature is experimental and is subject to change.
+     * @param entries map entries (key-value pairs)
+     * @return
+     */
     public fun mapDynamic(entries: List<RexMap.Entry>): RexMapDynamic = RexMapDynamic.create(entries)
 
     /**

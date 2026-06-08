@@ -225,6 +225,9 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rex, ctx);
     }
 
+    /**
+     * @deprecated This feature is experimental and is subject to change.
+     */
     default R visitMap(@NotNull RexMap rex, C ctx) {
         return defaultVisit(rex, ctx);
     }

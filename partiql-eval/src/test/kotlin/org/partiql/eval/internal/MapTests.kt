@@ -92,6 +92,27 @@ class MapTests {
                     )
                 ),
             ),
+            SuccessTestCase(
+                name = "MAP constructor strips MISSING values",
+                input = "MAP { 'a': 1, 'b': MISSING, 'c': 3 };",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.integer(),
+                    listOf(
+                        Entry.of(Datum.string("a"), Datum.integer(1)),
+                        Entry.of(Datum.string("c"), Datum.integer(3)),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "MAP constructor with all MISSING values produces empty map",
+                input = "MAP { 'a': MISSING, 'b': MISSING };",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.dynamic(),
+                    emptyList()
+                ),
+            ),
         )
 
         @JvmStatic
