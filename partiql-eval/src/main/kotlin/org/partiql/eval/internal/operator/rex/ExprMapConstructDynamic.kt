@@ -15,6 +15,8 @@ internal class ExprMapConstructDynamic(
         val values = mutableListOf<Datum>()
         for (field in fields) {
             val key = field.key.eval(env)
+
+            // TODO: The return should contain type information.
             if (key.isNull) {
                 return Datum.nullValue()
             }
