@@ -6,6 +6,7 @@ import com.amazon.ion.Span
 import com.amazon.ion.SpanProvider
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.Encoding
@@ -114,6 +115,7 @@ internal class IonDatumReader internal constructor(
         "blob" -> ::blob0
         "array" -> ::array
         "bag" -> ::bag
+        "map" -> ::map
         "struct" -> ::struct
         "ion" -> ::ion
         else -> throw IonDatumException("cannot read type $symbol without arguments", null, span())
@@ -336,6 +338,18 @@ internal class IonDatumReader internal constructor(
         }
         reader.stepOut()
         return Datum.struct(fields)
+    }
+
+    private fun map(): Datum {
+        reader.stepIn()
+        val entries = mutableListOf<org.partiql.spi.value.Entry>()
+        while (reader.next() != null) {
+            val key = Datum.string(reader.fieldName)
+            val value = read()
+            entries.add(org.partiql.spi.value.Entry.of(key, value))
+        }
+        reader.stepOut()
+        return Datum.map(PType.string(), PType.dynamic(), entries)
     }
 
     private fun ion(): Datum {

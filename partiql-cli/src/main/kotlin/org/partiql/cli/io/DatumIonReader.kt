@@ -41,6 +41,7 @@ class DatumIonReader(
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
+        MAP_ANNOTATION("\$map"),
         DATE_ANNOTATION("\$date"),
         TIME_ANNOTATION("\$time"),
         TIMESTAMP_ANNOTATION("\$timestamp"),
@@ -179,6 +180,7 @@ class DatumIonReader(
             null -> return
             PARTIQL_ANNOTATION.MISSING_ANNOTATION -> assert(type == IonType.NULL)
             PARTIQL_ANNOTATION.BAG_ANNOTATION -> assert(type == IonType.LIST)
+            PARTIQL_ANNOTATION.MAP_ANNOTATION -> assert(type == IonType.STRUCT)
             PARTIQL_ANNOTATION.DATE_ANNOTATION -> assert(type == IonType.STRUCT)
             PARTIQL_ANNOTATION.TIME_ANNOTATION -> assert(type == IonType.STRUCT)
             PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> assert(type == IonType.STRUCT)
@@ -201,6 +203,7 @@ class DatumIonReader(
             return when (lastAnnotation) {
                 PARTIQL_ANNOTATION.MISSING_ANNOTATION -> Datum.missing()
                 PARTIQL_ANNOTATION.BAG_ANNOTATION -> Datum.nullValue(PType.bag())
+                PARTIQL_ANNOTATION.MAP_ANNOTATION -> Datum.nullValue(PType.map(PType.string(), PType.dynamic()))
                 PARTIQL_ANNOTATION.DATE_ANNOTATION -> Datum.nullValue(PType.date())
                 PARTIQL_ANNOTATION.TIME_ANNOTATION -> Datum.nullValue(PType.time(6))
                 PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> Datum.nullValue(PType.timestamp(6))
@@ -377,6 +380,17 @@ class DatumIonReader(
                             INTERVAL_MAX_PRECISION,
                             INTERVAL_MAX_FRACTIONAL_PRECISION,
                         )
+                    }
+                    PARTIQL_ANNOTATION.MAP_ANNOTATION -> {
+                        reader.stepIn()
+                        val entries = mutableListOf<org.partiql.spi.value.Entry>()
+                        reader.loadEachValue {
+                            val key = Datum.string(reader.fieldName)
+                            val value = fromIon(reader)
+                            entries.add(org.partiql.spi.value.Entry.of(key, value))
+                        }
+                        reader.stepOut()
+                        Datum.map(PType.string(), PType.dynamic(), entries)
                     }
                     null -> fromIonGeneric(reader)
                     else -> error("Unsupported annotation.")
