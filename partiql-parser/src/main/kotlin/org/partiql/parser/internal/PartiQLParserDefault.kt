@@ -193,6 +193,7 @@ import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag
 import org.partiql.ast.expr.ExprLit
+import org.partiql.ast.expr.ExprMap
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprRowValue
@@ -2304,6 +2305,16 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprStruct(fields)
         }
 
+        override fun visitMapConstructor(ctx: GeneratedParser.MapConstructorContext) = translate(ctx) {
+            listener.report(PErrors.experimental("MAP type", ctx))
+            val fields = ctx.mapEntry().map {
+                val k = visitExpr(it.key)
+                val v = visitExpr(it.value)
+                ExprMap.Entry(k, v)
+            }
+            ExprMap(fields)
+        }
+
         /**
          *
          * TYPES
@@ -2357,6 +2368,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.ARRAY -> DataType.ARRAY()
                 GeneratedParser.STRUCT -> DataType.STRUCT()
                 GeneratedParser.TUPLE -> DataType.TUPLE()
+                GeneratedParser.MAP -> throw error(ctx, "MAP type requires key and value type parameters, e.g. MAP<STRING, INT>")
                 else -> throw error(ctx, "Unknown atomic type.") // TODO other types included in parser
             }
         }
@@ -2476,6 +2488,14 @@ internal class PartiQLParserDefault : PartiQLParser {
             val type = visitAs<DataType>(ctx.type())
                 .also { isValidTypeDeclarationOrThrow(it, ctx.type()) }
             DataType.ARRAY(type)
+        }
+
+        override fun visitTypeMap(ctx: GeneratedParser.TypeMapContext): DataType = translate(ctx) {
+            val keyType = visitAs<DataType>(ctx.key)
+                .also { isValidTypeDeclarationOrThrow(it, ctx.key) }
+            val valueType = visitAs<DataType>(ctx.value)
+                .also { isValidTypeDeclarationOrThrow(it, ctx.value) }
+            DataType.MAP(keyType, valueType)
         }
 
         // TODO: Grammar rule support for Array and List

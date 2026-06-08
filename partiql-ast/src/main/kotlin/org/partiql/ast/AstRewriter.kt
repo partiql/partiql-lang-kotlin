@@ -34,6 +34,7 @@ import org.partiql.ast.expr.ExprInCollection
 import org.partiql.ast.expr.ExprIsType
 import org.partiql.ast.expr.ExprLike
 import org.partiql.ast.expr.ExprLit
+import org.partiql.ast.expr.ExprMap
 import org.partiql.ast.expr.ExprMatch
 import org.partiql.ast.expr.ExprMissingPredicate
 import org.partiql.ast.expr.ExprNot
@@ -261,6 +262,25 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val pattern = visitGraphMatch(node.pattern, ctx) as GraphMatch
         return if (expr !== node.expr || pattern !== node.pattern) {
             ExprMatch(expr, pattern)
+        } else {
+            node
+        }
+    }
+
+    override fun visitExprMap(node: ExprMap, ctx: C): AstNode {
+        val entries = _visitList(node.entries, ctx, ::visitExprMapEntry)
+        return if (entries !== node.entries) {
+            ExprMap(entries)
+        } else {
+            node
+        }
+    }
+
+    override fun visitExprMapEntry(node: ExprMap.Entry, ctx: C): AstNode {
+        val key = visitExpr(node.key, ctx) as Expr
+        val value = visitExpr(node.value, ctx) as Expr
+        return if (key !== node.key || value !== node.value) {
+            ExprMap.Entry(key, value)
         } else {
             node
         }

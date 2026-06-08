@@ -949,6 +949,7 @@ exprTerm
     | literal                        # ExprTermBase
     | collection                     # ExprTermBase
     | tuple                          # ExprTermBase
+    | mapConstructor                 # ExprTermBase
     ;
 
 caseExpr
@@ -1219,6 +1220,12 @@ tuple
 pair
     : lhs=expr COLON rhs=expr;
 
+mapConstructor
+    : MAP BRACE_LEFT ( mapEntry ( COMMA mapEntry )* )? BRACE_RIGHT;
+
+mapEntry
+    : key=expr COLON value=expr;
+
 literal
     : NULL                                                                                # LiteralNull
     | MISSING                                                                             # LiteralMissing
@@ -1265,6 +1272,7 @@ type
     | datatype=(TIME|TIMESTAMP) ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE | WITHOUT TIME ZONE)?                # TypeTimeZone
     | datatype=(STRUCT|TUPLE) (ANGLE_LEFT structField ( COMMA structField )* ANGLE_RIGHT)                              # TypeStruct
     | datatype=(LIST|ARRAY) ANGLE_LEFT type ANGLE_RIGHT                                                                # TypeList
+    | MAP ANGLE_LEFT key=type COMMA value=type ANGLE_RIGHT                                                             # TypeMap
     | symbolPrimitive                                                                                                  # TypeCustom
     | intervalType                                                                                                     # TypeInterval
     ;

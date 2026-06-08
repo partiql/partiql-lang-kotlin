@@ -30,6 +30,8 @@ internal sealed class PExpr {
     data class PathKey(val root: PExpr, val key: PExpr) : PExpr()
     data class PathIndex(val root: PExpr, val index: PExpr) : PExpr()
     data class PathSymbol(val root: PExpr, val symbol: String) : PExpr()
+    data class Map(val keyType: PType, val valueType: PType, val entries: List<Field>) : PExpr()
+    data class MapDynamic(val entries: List<Field>) : PExpr()
     data class Error(val type: PType) : PExpr()
     class Custom(val factory: () -> ExprValue) : PExpr()
 }

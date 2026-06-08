@@ -14,6 +14,7 @@ import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelType
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexCase
+import org.partiql.plan.rex.RexMap
 import org.partiql.plan.rex.RexStruct
 import org.partiql.plan.rex.RexType
 import org.partiql.plan.rex.RexVar
@@ -140,6 +141,15 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
         override fun visitRexOpStruct(node: IRex.Op.Struct, ctx: PType): Any {
             val fields = node.fields.map { field(it) }
             return operators.struct(fields)
+        }
+
+        override fun visitRexOpMap(node: IRex.Op.Map, ctx: PType): Any {
+            val entries = node.entries.map { mapEntry(it) }
+            return if (ctx.code() == PType.MAP) {
+                operators.map(ctx.keyType, ctx.valueType, entries)
+            } else {
+                operators.mapDynamic(entries)
+            }
         }
 
         override fun visitRexOpCollection(node: IRex.Op.Collection, ctx: PType): Any {
@@ -437,6 +447,12 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
             val key = visitRex(field.k, field.k.type)
             val value = visitRex(field.v, field.v.type)
             return RexStruct.field(key, value)
+        }
+
+        private fun mapEntry(entry: IRex.Op.`Map`.Entry): RexMap.Entry {
+            val key = visitRex(entry.k, entry.k.type)
+            val value = visitRex(entry.v, entry.v.type)
+            return RexMap.entry(key, value)
         }
 
         private fun branch(branch: IRex.Op.Case.Branch): RexCase.Branch {

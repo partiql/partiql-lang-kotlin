@@ -29,6 +29,8 @@ import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
+import org.partiql.plan.rex.RexMap
+import org.partiql.plan.rex.RexMapDynamic
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -396,6 +398,24 @@ public interface Operators {
      * @return
      */
     public fun struct(fields: List<RexStruct.Field>): RexStruct = RexStruct.create(fields)
+
+    /**
+     * Create a [RexMap] instance.
+     *
+     * @deprecated This feature is experimental and is subject to change.
+     * @param fields map entries (key-value pairs)
+     * @return
+     */
+    public fun map(keyType: PType, valueType: PType, entries: List<RexMap.Entry>): RexMap = RexMap.create(keyType, valueType, entries)
+
+    /**
+     * Create a [RexMapDynamic] instance whose key and value types are deferred to evaluation.
+     *
+     * @deprecated This feature is experimental and is subject to change.
+     * @param entries map entries (key-value pairs)
+     * @return
+     */
+    public fun mapDynamic(entries: List<RexMap.Entry>): RexMapDynamic = RexMapDynamic.create(entries)
 
     /**
      * Create a [RexSubquery] instance.
