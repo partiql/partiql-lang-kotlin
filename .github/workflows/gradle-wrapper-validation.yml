@@ -1,5 +1,9 @@
 name: "Validate Gradle Wrapper"
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main     # Triggers only when code is merged into main
+  pull_request:  # Triggers for any PR creation or update
 
 permissions:
   contents: read
