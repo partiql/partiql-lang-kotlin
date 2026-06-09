@@ -6,7 +6,6 @@ import com.amazon.ion.Span
 import com.amazon.ion.SpanProvider
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
-import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.Encoding
@@ -51,11 +50,10 @@ internal class IonDatumReader internal constructor(
         return try {
             reader.next() ?: return null
             val anno = reader.typeAnnotations
-            when {
-                anno.isEmpty() -> read()
-                anno.size == 3 && anno[0] == "map" -> map(anno[1], anno[2])
-                anno.size == 1 -> method(anno[0]).invoke()
-                else -> throw IonDatumException("expected 0 or 1 annotations (or map::k::v), got ${anno.toList()}", null, span())
+            when (anno.size) {
+                0 -> read()
+                1 -> method(anno[0]).invoke()
+                else -> throw IonDatumException("expected 0 or 1 annotations", null, span())
             }
         } catch (ex: IonException) {
             throw IonDatumException("data exception", ex, span())
@@ -116,7 +114,6 @@ internal class IonDatumReader internal constructor(
         "blob" -> ::blob0
         "array" -> ::array
         "bag" -> ::bag
-        "map" -> ::map
         "struct" -> ::struct
         "ion" -> ::ion
         else -> throw IonDatumException("cannot read type $symbol without arguments", null, span())
@@ -339,47 +336,6 @@ internal class IonDatumReader internal constructor(
         }
         reader.stepOut()
         return Datum.struct(fields)
-    }
-
-    private fun map(): Datum = map("string", "dynamic")
-
-    private fun map(keyTypeName: String, valueTypeName: String): Datum {
-        val keyType = pTypeFromName(keyTypeName)
-        val valueType = pTypeFromName(valueTypeName)
-        reader.stepIn()
-        val entries = mutableListOf<org.partiql.spi.value.Entry>()
-        while (reader.next() != null) {
-            // Each element is a list [key, value]
-            reader.stepIn()
-            reader.next()
-            val key = read()
-            reader.next()
-            val value = read()
-            reader.stepOut()
-            entries.add(org.partiql.spi.value.Entry.of(key, value))
-        }
-        reader.stepOut()
-        return Datum.map(keyType, valueType, entries)
-    }
-
-    private fun pTypeFromName(name: String): PType = when (name.lowercase()) {
-        "dynamic" -> PType.dynamic()
-        "bool" -> PType.bool()
-        "tinyint" -> PType.tinyint()
-        "smallint" -> PType.smallint()
-        "integer", "int" -> PType.integer()
-        "bigint" -> PType.bigint()
-        "numeric" -> PType.numeric()
-        "decimal" -> PType.decimal()
-        "real" -> PType.real()
-        "double" -> PType.doublePrecision()
-        "string" -> PType.string()
-        "char" -> PType.character(255)
-        "varchar" -> PType.varchar(255)
-        "date" -> PType.date()
-        "time" -> PType.time(6)
-        "timestamp" -> PType.timestamp(6)
-        else -> throw IonDatumException("unsupported PType name: $name", null, span())
     }
 
     private fun ion(): Datum {
