@@ -37,8 +37,8 @@ internal object Builtins {
         FnBitwiseAnd,
         Fn_CARDINALITY__BAG__INT32,
         Fn_CARDINALITY__LIST__INT32,
-
         Fn_CARDINALITY__STRUCT__INT32,
+        Fn_CARDINALITY__MAP__INT32,
         Fn_CHAR_LENGTH__STRING__INT,
         Fn_CHAR_LENGTH__CLOB__INT,
 
@@ -161,6 +161,7 @@ internal object Builtins {
         Fn_IS_INT8__ANY__BOOL,
         Fn_IS_INTERVAL__ANY__BOOL,
         Fn_IS_LIST__ANY__BOOL,
+        Fn_IS_MAP__ANY__BOOL,
         Fn_IS_MISSING__ANY__BOOL,
         Fn_IS_NULL__ANY__BOOL,
 
@@ -237,12 +238,18 @@ internal object Builtins {
         //
         Fn_EXISTS__BAG__BOOL,
         Fn_EXISTS__LIST__BOOL,
-
         Fn_EXISTS__STRUCT__BOOL,
+        Fn_EXISTS__MAP__BOOL,
         Fn_SIZE__BAG__INT32,
         Fn_SIZE__LIST__INT32,
+        Fn_SIZE__STRUCT__INT32,
+        Fn_SIZE__MAP__INT32,
 
-        Fn_SIZE__STRUCT__INT32
+        Fn_MAP_KEYS__MAP__BAG,
+        Fn_MAP_VALUES__MAP__BAG,
+        Fn_MAP_ENTRIES__MAP__ARRAY,
+        Fn_CONTAINS_KEY__MAP_ANY__BOOL,
+        Fn_MAP_GET__MAP_ANY__ANY
     ).groupBy { it.signature.name }
 
     @JvmStatic

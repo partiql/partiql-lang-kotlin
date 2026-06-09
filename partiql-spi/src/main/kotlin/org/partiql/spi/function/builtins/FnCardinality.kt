@@ -49,3 +49,22 @@ internal val Fn_CARDINALITY__STRUCT__INT32 = Function.overload(
     }
     Datum.integer(count)
 }
+
+internal val Fn_CARDINALITY__MAP__INT32 = Function.overload(
+
+    name = "cardinality",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("container", PType.dynamic()),
+    ),
+
+) { args ->
+    val container = args[0]
+    var count = 0
+    val iter = container.entries
+    while (iter.hasNext()) {
+        iter.next()
+        count++
+    }
+    Datum.integer(count)
+}
