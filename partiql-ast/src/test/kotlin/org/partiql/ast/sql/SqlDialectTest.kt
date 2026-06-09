@@ -329,6 +329,7 @@ class SqlDialectTest {
             expect("SEXP", DataType.SEXP()),
             expect("BAG", DataType.BAG()),
             expect("MAP<VARCHAR, INT>", DataType.MAP(DataType.VARCHAR(), DataType.INT())),
+            expect("MAP<VARCHAR, MAP<DECIMAL, BOOL>>", DataType.MAP(DataType.VARCHAR(), DataType.MAP(DataType.DECIMAL(), DataType.BOOL()))),
             // Other (??)
             expect("INT4", DataType.INT4()),
             expect("INT8", DataType.INT8()),
