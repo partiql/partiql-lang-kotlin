@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added SqlDialect support for MAP expression and type serialization
 
 ### Changed
 
