@@ -26,6 +26,8 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added `MAP` type parsing in IonDatumReader and DatumIonReader
+
 
 ### Changed
 
