@@ -180,7 +180,7 @@ class DatumIonReader(
             null -> return
             PARTIQL_ANNOTATION.MISSING_ANNOTATION -> assert(type == IonType.NULL)
             PARTIQL_ANNOTATION.BAG_ANNOTATION -> assert(type == IonType.LIST)
-            PARTIQL_ANNOTATION.MAP_ANNOTATION -> assert(type == IonType.STRUCT)
+            PARTIQL_ANNOTATION.MAP_ANNOTATION -> assert(type == IonType.LIST)
             PARTIQL_ANNOTATION.DATE_ANNOTATION -> assert(type == IonType.STRUCT)
             PARTIQL_ANNOTATION.TIME_ANNOTATION -> assert(type == IonType.STRUCT)
             PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> assert(type == IonType.STRUCT)
@@ -203,7 +203,10 @@ class DatumIonReader(
             return when (lastAnnotation) {
                 PARTIQL_ANNOTATION.MISSING_ANNOTATION -> Datum.missing()
                 PARTIQL_ANNOTATION.BAG_ANNOTATION -> Datum.nullValue(PType.bag())
-                PARTIQL_ANNOTATION.MAP_ANNOTATION -> Datum.nullValue(PType.map(PType.string(), PType.dynamic()))
+                PARTIQL_ANNOTATION.MAP_ANNOTATION -> {
+                    val (keyType, valueType) = getMapTypes(annotations)
+                    Datum.nullValue(PType.map(keyType, valueType))
+                }
                 PARTIQL_ANNOTATION.DATE_ANNOTATION -> Datum.nullValue(PType.date())
                 PARTIQL_ANNOTATION.TIME_ANNOTATION -> Datum.nullValue(PType.time(6))
                 PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> Datum.nullValue(PType.timestamp(6))
@@ -236,6 +239,22 @@ class DatumIonReader(
                     }
                     reader.stepOut()
                     Datum.bag(elements)
+                } else if (lastAnnotation == PARTIQL_ANNOTATION.MAP_ANNOTATION) {
+                    val (keyType, valueType) = getMapTypes(annotations)
+                    reader.stepIn()
+                    val entries = mutableListOf<org.partiql.spi.value.Entry>()
+                    reader.loadEachValue {
+                        // Each element is a list [key, value]
+                        reader.stepIn()
+                        reader.next()
+                        val key = fromIon(reader)
+                        reader.next()
+                        val value = fromIon(reader)
+                        reader.stepOut()
+                        entries.add(org.partiql.spi.value.Entry.of(key, value))
+                    }
+                    reader.stepOut()
+                    Datum.map(keyType, valueType, entries)
                 } else {
                     reader.stepIn()
                     val elements = mutableListOf<Datum>().also { elements ->
@@ -381,17 +400,6 @@ class DatumIonReader(
                             INTERVAL_MAX_FRACTIONAL_PRECISION,
                         )
                     }
-                    PARTIQL_ANNOTATION.MAP_ANNOTATION -> {
-                        reader.stepIn()
-                        val entries = mutableListOf<org.partiql.spi.value.Entry>()
-                        reader.loadEachValue {
-                            val key = Datum.string(reader.fieldName)
-                            val value = fromIon(reader)
-                            entries.add(org.partiql.spi.value.Entry.of(key, value))
-                        }
-                        reader.stepOut()
-                        Datum.map(PType.string(), PType.dynamic(), entries)
-                    }
                     null -> fromIonGeneric(reader)
                     else -> error("Unsupported annotation.")
                 }
@@ -409,9 +417,46 @@ class DatumIonReader(
     }
 
     private fun getPartiQLReservedAnnotation(partiqlAnnotation: List<String>) =
-        partiqlAnnotation.lastOrNull()?.let { lastAnnotation ->
-            PARTIQL_ANNOTATION.values().find { it.annotation == lastAnnotation }
+        partiqlAnnotation.firstOrNull()?.let { firstAnnotation ->
+            PARTIQL_ANNOTATION.values().find { it.annotation == firstAnnotation }
         }
+
+    /**
+     * Converts a PType name string (e.g., "string", "integer", "decimal") to a PType.
+     */
+    private fun pTypeFromName(name: String): PType = when (name.lowercase()) {
+        "dynamic" -> PType.dynamic()
+        "bool" -> PType.bool()
+        "tinyint" -> PType.tinyint()
+        "smallint" -> PType.smallint()
+        "integer", "int" -> PType.integer()
+        "bigint" -> PType.bigint()
+        "numeric" -> PType.numeric()
+        "decimal" -> PType.decimal()
+        "real" -> PType.real()
+        "double" -> PType.doublePrecision()
+        "string" -> PType.string()
+        "char" -> PType.character(255)
+        "varchar" -> PType.varchar(255)
+        "date" -> PType.date()
+        "time" -> PType.time(6)
+        "timestamp" -> PType.timestamp(6)
+        else -> error("unsupported PType name: $name")
+    }
+
+    /**
+     * Extracts key and value PTypes from map annotations.
+     * Format: $map::keytype::valuetype::[...]
+     * TODO: support $map::[...] without type annotations when dynamic keys are allowed
+     */
+    private fun getMapTypes(annotations: List<String>): Pair<PType, PType> {
+        if (annotations.size >= 3 && annotations[0] == "\$map") {
+            val keyType = pTypeFromName(annotations[1])
+            val valueType = pTypeFromName(annotations[2])
+            return keyType to valueType
+        }
+        error("MAP annotation requires key and value types: \$map::keytype::valuetype::[...]. Got annotations: $annotations")
+    }
 
     private fun getRequiredFieldName(reader: IonReader, expectedField: String): Datum {
         if (reader.next() == null) {
