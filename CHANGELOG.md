@@ -26,8 +26,8 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
-- Added `MAP` type parsing in IonDatumReader and DatumIonReader
-
+- Added SqlDialect support for MAP expression and type serialization
+- Added `MAP` type parsing in DatumIonReader for CLI and Conformanace tests
 
 ### Changed
 
