@@ -6,6 +6,7 @@ import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
+import org.partiql.spi.value.Datum
 
 internal object PErrors {
 
@@ -39,6 +40,21 @@ internal object PErrors {
     fun pathKeyFailureException(): PRuntimeException {
         val pError = pathKeyFailure()
         return PRuntimeException(pError)
+    }
+
+    fun mapKeyNotFoundException(key: Datum, mapType: PType): PRuntimeException {
+        return PRuntimeException(
+            PError(
+                PError.MAP_KEY_NOT_FOUND,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                mapOf(
+                    "KEY" to key,
+                    "MAP_TYPE" to mapType
+                )
+            )
+        )
     }
 
     /**

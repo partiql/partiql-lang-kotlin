@@ -2,6 +2,7 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
 
 internal val Fn_MAP_GET__MAP_ANY__ANY = Function.overload(
@@ -16,5 +17,5 @@ internal val Fn_MAP_GET__MAP_ANY__ANY = Function.overload(
 ) { args ->
     val map = args[0]
     val key = args[1]
-    map.get(key).orElse(null)
+    map.get(key).orElseThrow { PErrors.mapKeyNotFoundException(key, map.type) }
 }

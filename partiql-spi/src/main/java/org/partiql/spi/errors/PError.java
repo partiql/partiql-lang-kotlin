@@ -630,4 +630,18 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int INTERRUPTED = 24;
+
+    /**
+     * <p>
+     * Represents an error when a key is not found in a MAP.
+     * </p>
+     * <p>
+     * Properties:
+     * <ul>
+     *     <li>KEY: The key that was not found.</li>
+     *     <li>MAP_TYPE: The type of the map.</li>
+     * </ul>
+     * </p>
+     */
+    public static final int MAP_KEY_NOT_FOUND = 25;
 }
