@@ -6,7 +6,7 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 
-internal val Fn_MAP_ENTRIES__MAP__ARRAY = Function.overload(
+internal val Fn_MAP_ENTRIES__MAP__BAG = Function.overload(
 
     name = "map_entries",
     returns = PType.array(),
@@ -26,5 +26,5 @@ internal val Fn_MAP_ENTRIES__MAP__ARRAY = Function.overload(
         )
         rows.add(row)
     }
-    Datum.array(rows)
+    Datum.bag(rows)
 }

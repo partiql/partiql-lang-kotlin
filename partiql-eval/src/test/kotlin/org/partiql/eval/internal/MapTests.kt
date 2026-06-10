@@ -57,6 +57,21 @@ class MapTests {
     fun mapValuesTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
+    @MethodSource("mapEntriesTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun mapEntriesTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("cardinalityTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun cardinalityTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("isMapTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun isMapTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
     @MethodSource("catalogTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun catalogTests(tc: SuccessTestCase) = tc.run()
@@ -295,6 +310,68 @@ class MapTests {
                 name = "map_values on empty map returns empty bag",
                 input = "map_values(MAP { });",
                 expected = Datum.bag(emptyList()),
+            ),
+        )
+
+        @JvmStatic
+        fun mapEntriesTestCases() = listOf(
+            SuccessTestCase(
+                name = "map_entries returns bag of key-value structs",
+                input = "map_entries(MAP { 'a': 1, 'b': 2 });",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("key", Datum.string("a")),
+                                org.partiql.spi.value.Field.of("value", Datum.integer(1)),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("key", Datum.string("b")),
+                                org.partiql.spi.value.Field.of("value", Datum.integer(2)),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "map_entries on empty map returns empty bag",
+                input = "map_entries(MAP { });",
+                expected = Datum.bag(emptyList()),
+            ),
+        )
+
+        @JvmStatic
+        fun cardinalityTestCases() = listOf(
+            SuccessTestCase(
+                name = "cardinality of map with entries",
+                input = "cardinality(MAP { 'a': 1, 'b': 2, 'c': 3 });",
+                expected = Datum.integer(3),
+            ),
+            SuccessTestCase(
+                name = "cardinality of empty map",
+                input = "cardinality(MAP { });",
+                expected = Datum.integer(0),
+            ),
+        )
+
+        @JvmStatic
+        fun isMapTestCases() = listOf(
+            SuccessTestCase(
+                name = "is_map returns true for a map",
+                input = "MAP { 'a': 1 } IS MAP<STRING, INTEGER>;",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "is_map returns false for a struct",
+                input = "{'a': 1} IS MAP<STRING, INTEGER>;",
+                expected = Datum.bool(false),
+            ),
+            SuccessTestCase(
+                name = "is_map returns false for an integer",
+                input = "42 IS MAP<STRING, INTEGER>;",
+                expected = Datum.bool(false),
             ),
         )
 
