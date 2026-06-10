@@ -11,7 +11,7 @@ internal val Fn_MAP_ENTRIES__MAP__BAG = Function.overload(
     name = "map_entries",
     returns = PType.array(),
     parameters = arrayOf(
-        Parameter("map", PType.dynamic()),
+        Parameter("map", PType.map(PType.string(), PType.dynamic())),
     ),
 
 ) { args ->

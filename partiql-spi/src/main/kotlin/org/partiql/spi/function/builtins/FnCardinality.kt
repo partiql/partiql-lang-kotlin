@@ -55,7 +55,7 @@ internal val Fn_CARDINALITY__MAP__INT32 = Function.overload(
     name = "cardinality",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("container", PType.dynamic()),
+        Parameter("container", PType.map(PType.string(), PType.dynamic())),
     ),
 
 ) { args ->

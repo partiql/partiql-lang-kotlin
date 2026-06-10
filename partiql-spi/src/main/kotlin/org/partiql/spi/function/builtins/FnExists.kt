@@ -56,7 +56,7 @@ internal val Fn_EXISTS__MAP__BOOL = Function.overload(
     name = "exists",
     returns = PType.bool(),
     parameters = arrayOf(
-        Parameter("container", PType.dynamic()),
+        Parameter("container", PType.map(PType.string(), PType.dynamic())),
     ),
 
 ) { args ->

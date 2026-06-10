@@ -8,6 +8,7 @@ import org.partiql.eval.Mode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
+import java.math.BigDecimal
 
 class MapTests {
 
@@ -156,6 +157,30 @@ class MapTests {
                     PType.string(),
                     PType.dynamic(),
                     emptyList()
+                ),
+            ),
+            SuccessTestCase(
+                name = "MAP constructor with compatible heterogeneous values coerces to common type",
+                input = "MAP { 'a': 1, 'b': 2.0 };",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.decimal(38, 19),
+                    listOf(
+                        Entry.of(Datum.string("a"), Datum.decimal(BigDecimal.ONE, 38, 19)),
+                        Entry.of(Datum.string("b"), Datum.decimal(BigDecimal("2.0"), 38, 19)),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "MAP constructor with compatible heterogeneous keys coerces to common type",
+                input = "MAP { 2: 'two', 1.0: 'yes' };",
+                expected = Datum.map(
+                    PType.decimal(38, 19),
+                    PType.string(),
+                    listOf(
+                        Entry.of(Datum.decimal(BigDecimal(2), 38, 19), Datum.string("two")),
+                        Entry.of(Datum.decimal(BigDecimal("1.0"), 38, 19), Datum.string("yes")),
+                    )
                 ),
             ),
         )

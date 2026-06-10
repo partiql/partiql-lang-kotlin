@@ -3916,6 +3916,14 @@ internal class PlanTyperTestsPorted {
                     assert(hasInternalError) { "Expected INTERNAL_ERROR for incompatible MAP key types" }
                 }
             ),
+            ErrorTestCase(
+                name = "MAP with heterogeneous incompatible value types",
+                query = "MAP { 'a': 1, 'b': 'hello', 'c': true }",
+                problemHandler = ProblemHandler { problems, _ ->
+                    val hasInternalError = problems.problems.any { it.code() == PError.INTERNAL_ERROR }
+                    assert(hasInternalError) { "Expected INTERNAL_ERROR for incompatible MAP value types" }
+                }
+            ),
         )
 
         // --------- Parameterized Test Source Finished ------------

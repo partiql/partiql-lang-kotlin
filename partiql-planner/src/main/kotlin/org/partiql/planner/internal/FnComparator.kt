@@ -68,6 +68,7 @@ internal object FnComparator : Comparator<FnOverload> {
         PType.BAG,
         PType.ROW,
         PType.STRUCT,
+        PType.MAP,
         PType.DYNAMIC,
     ).mapIndexed { precedence, type -> type to precedence }.toMap()
 }

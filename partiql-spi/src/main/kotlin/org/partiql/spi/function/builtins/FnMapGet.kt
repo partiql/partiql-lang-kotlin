@@ -10,7 +10,7 @@ internal val Fn_MAP_GET__MAP_ANY__ANY = Function.overload(
     name = "map_get",
     returns = PType.dynamic(),
     parameters = arrayOf(
-        Parameter("map", PType.dynamic()),
+        Parameter("map", PType.map(PType.string(), PType.dynamic())),
         Parameter("key", PType.dynamic()),
     ),
 

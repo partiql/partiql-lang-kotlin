@@ -10,7 +10,7 @@ internal val Fn_CONTAINS_KEY__MAP_ANY__BOOL = Function.overload(
     name = "contains_key",
     returns = PType.bool(),
     parameters = arrayOf(
-        Parameter("map", PType.dynamic()),
+        Parameter("map", PType.map(PType.string(), PType.dynamic())),
         Parameter("key", PType.dynamic()),
     ),
 

@@ -10,7 +10,7 @@ internal val Fn_MAP_KEYS__MAP__BAG = Function.overload(
     name = "map_keys",
     returns = PType.bag(),
     parameters = arrayOf(
-        Parameter("map", PType.dynamic()),
+        Parameter("map", PType.map(PType.string(), PType.dynamic())),
     ),
 
 ) { args ->

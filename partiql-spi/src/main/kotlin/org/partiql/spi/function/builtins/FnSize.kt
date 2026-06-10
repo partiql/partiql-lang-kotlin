@@ -55,7 +55,7 @@ internal val Fn_SIZE__MAP__INT32 = Function.overload(
     name = "size",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("container", PType.dynamic()),
+        Parameter("container", PType.map(PType.string(), PType.dynamic())),
     ),
 
 ) { args ->

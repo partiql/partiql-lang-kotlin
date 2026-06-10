@@ -1309,7 +1309,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             }
             val valueType = if (typedEntries.isNotEmpty()) {
                 typedEntries.map { it.v.type }.reduce { acc, t ->
-                    (getCommonSuperType(acc, t) ?: acc).toCType()
+                    (getCommonSuperType(acc, t) ?: error("Incompatible MAP value types: $acc and $t")).toCType()
                 }
             } else {
                 PType.dynamic()
@@ -1317,7 +1317,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
 
             // Dynamic Key type is not allowed. However during plan typing phase,
             // Key may be resolved as DYNAMIC for certain expr, defer to eval to error
-            if (keyType.code() == PType.DYNAMIC || valueType.code() == PType.DYNAMIC) {
+            if (keyType.code() == PType.DYNAMIC) {
                 val type = CompilerType(PType.dynamic())
                 return rex(type, rexOpMap(typedEntries))
             }
