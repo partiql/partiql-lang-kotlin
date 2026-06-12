@@ -76,6 +76,7 @@ import org.partiql.ast.expr.ExprInCollection
 import org.partiql.ast.expr.ExprIsType
 import org.partiql.ast.expr.ExprLike
 import org.partiql.ast.expr.ExprLit
+import org.partiql.ast.expr.ExprMap
 import org.partiql.ast.expr.ExprMissingPredicate
 import org.partiql.ast.expr.ExprNot
 import org.partiql.ast.expr.ExprNullIf
@@ -339,6 +340,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             DataType.INTERVAL -> visit(node.intervalQualifier, tail concat "INTERVAL ")
             // <container type>
             DataType.STRUCT, DataType.TUPLE -> tail concat node.name()
+            DataType.MAP -> {
+                var t = tail concat "MAP<"
+                t = visitDataType(node.keyType, t)
+                t = t concat ", "
+                t = visitDataType(node.elementType, t)
+                t = t concat ">"
+                t
+            }
             // <collection type>
             DataType.LIST, DataType.BAG, DataType.SEXP -> tail concat node.name()
             // <user defined type>
@@ -535,6 +544,19 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprStructField(node: ExprStruct.Field, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.name, t)
+        t = t concat ": "
+        t = visitExprWrapped(node.value, t)
+        return t
+    }
+
+    @Suppress("DEPRECATION")
+    override fun visitExprMap(node: ExprMap, tail: SqlBlock): SqlBlock =
+        tail concat list("MAP {", "}") { node.entries }
+
+    @Suppress("DEPRECATION")
+    override fun visitExprMapEntry(node: ExprMap.Entry, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.key, t)
         t = t concat ": "
         t = visitExprWrapped(node.value, t)
         return t
