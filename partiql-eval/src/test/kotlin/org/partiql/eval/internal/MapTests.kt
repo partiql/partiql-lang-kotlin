@@ -160,6 +160,18 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
+                name = "MAP constructor with compatible heterogeneous keys coerces to common type",
+                input = "MAP { 2: 'two', 1.0: 'yes' };",
+                expected = Datum.map(
+                    PType.decimal(38, 19),
+                    PType.string(),
+                    listOf(
+                        Entry.of(Datum.decimal(BigDecimal(2), 38, 19), Datum.string("two")),
+                        Entry.of(Datum.decimal(BigDecimal("1.0"), 38, 19), Datum.string("yes")),
+                    )
+                ),
+            ),
+            SuccessTestCase(
                 name = "MAP constructor with compatible heterogeneous values coerces to common type",
                 input = "MAP { 'a': 1, 'b': 2.0 };",
                 expected = Datum.map(
@@ -172,14 +184,14 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
-                name = "MAP constructor with compatible heterogeneous keys coerces to common type",
-                input = "MAP { 2: 'two', 1.0: 'yes' };",
+                name = "MAP constructor with incompatible heterogeneous values coerces to common type resolve to dynamic value type",
+                input = "MAP { 'a': 1, 'b': 'c' };",
                 expected = Datum.map(
-                    PType.decimal(38, 19),
                     PType.string(),
+                    PType.dynamic(),
                     listOf(
-                        Entry.of(Datum.decimal(BigDecimal(2), 38, 19), Datum.string("two")),
-                        Entry.of(Datum.decimal(BigDecimal("1.0"), 38, 19), Datum.string("yes")),
+                        Entry.of(Datum.string("a"), Datum.integer(1)),
+                        Entry.of(Datum.string("b"), Datum.string("c")),
                     )
                 ),
             ),
@@ -347,14 +359,14 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("key", Datum.string("a")),
-                                org.partiql.spi.value.Field.of("value", Datum.integer(1)),
+                                org.partiql.spi.value.Field.of("k", Datum.string("a")),
+                                org.partiql.spi.value.Field.of("v", Datum.integer(1)),
                             )
                         ),
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("key", Datum.string("b")),
-                                org.partiql.spi.value.Field.of("value", Datum.integer(2)),
+                                org.partiql.spi.value.Field.of("k", Datum.string("b")),
+                                org.partiql.spi.value.Field.of("v", Datum.integer(2)),
                             )
                         ),
                     )

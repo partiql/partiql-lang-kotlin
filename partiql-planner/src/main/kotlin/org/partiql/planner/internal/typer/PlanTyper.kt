@@ -1309,7 +1309,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             }
             val valueType = if (typedEntries.isNotEmpty()) {
                 typedEntries.map { it.v.type }.reduce { acc, t ->
-                    (getCommonSuperType(acc, t) ?: error("Incompatible MAP value types: $acc and $t")).toCType()
+                    (getCommonSuperType(acc, t) ?: PType.dynamic()).toCType()
                 }
             } else {
                 PType.dynamic()
