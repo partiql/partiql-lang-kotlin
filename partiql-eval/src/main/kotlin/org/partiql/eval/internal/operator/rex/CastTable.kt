@@ -24,6 +24,7 @@ import org.partiql.spi.types.PType.REAL
 import org.partiql.spi.types.PType.ROW
 import org.partiql.spi.types.PType.SMALLINT
 import org.partiql.spi.types.PType.STRING
+import org.partiql.spi.types.PType.MAP
 import org.partiql.spi.types.PType.STRUCT
 import org.partiql.spi.types.PType.TIME
 import org.partiql.spi.types.PType.TIMESTAMP
@@ -33,6 +34,7 @@ import org.partiql.spi.types.PType.TINYINT
 import org.partiql.spi.types.PType.VARCHAR
 import org.partiql.spi.types.PType.VARIANT
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Entry
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -105,6 +107,7 @@ internal object CastTable {
         registerDoublePrecision()
         registerStruct()
         registerRow()
+        registerMap()
         registerString()
         registerBag()
         registerList()
@@ -429,6 +432,50 @@ internal object CastTable {
     private fun registerRow() {
         register(ROW, STRUCT) { x, _ -> Datum.struct(x.fields.asSequence().asIterable()) }
         register(ROW, ROW) { x, _ -> x }
+    }
+
+    /**
+     * CAST(<struct> AS MAP) and CAST(<map> AS MAP)
+     *
+     * For STRUCT → MAP: struct field names become string keys. Duplicate keys use last-write-wins.
+     * Values are cast to the target map's value type via DynamicTyper coercion.
+     *
+     * For MAP → MAP: re-keys and re-values to the target parameterized types.
+     */
+    private fun registerMap() {
+        register(STRUCT, MAP) { x, t ->
+            val targetKeyType = t.keyType
+            val targetValueType = t.valueType
+            val entries = mutableListOf<Entry>()
+            for (field in x.fields) {
+                val key = cast(Datum.string(field.name), targetKeyType)
+                val value = cast(field.value, targetValueType)
+                entries.add(Entry.of(key, value))
+            }
+            Datum.map(targetKeyType, targetValueType, entries)
+        }
+        register(ROW, MAP) { x, t ->
+            val targetKeyType = t.keyType
+            val targetValueType = t.valueType
+            val entries = mutableListOf<Entry>()
+            for (field in x.fields) {
+                val key = cast(Datum.string(field.name), targetKeyType)
+                val value = cast(field.value, targetValueType)
+                entries.add(Entry.of(key, value))
+            }
+            Datum.map(targetKeyType, targetValueType, entries)
+        }
+        register(MAP, MAP) { x, t ->
+            val targetKeyType = t.keyType
+            val targetValueType = t.valueType
+            val entries = mutableListOf<Entry>()
+            for (entry in x.entries) {
+                val key = cast(entry.key, targetKeyType)
+                val value = cast(entry.value, targetValueType)
+                entries.add(Entry.of(key, value))
+            }
+            Datum.map(targetKeyType, targetValueType, entries)
+        }
     }
 
     /**
