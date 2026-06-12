@@ -72,6 +72,21 @@ internal object PErrors {
         )
     }
 
+    fun mapKeyNotFoundException(key: Any, mapType: PType): PRuntimeException {
+        return PRuntimeException(
+            PError(
+                PError.MAP_KEY_NOT_FOUND,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                mapOf(
+                    "KEY" to key,
+                    "MAP_TYPE" to mapType
+                )
+            )
+        )
+    }
+
     private fun unexpectedType(actual: PType, expected: List<PType>): PError {
         return PError(
             PError.TYPE_UNEXPECTED,

@@ -83,6 +83,7 @@ internal object FunctionUtils {
     val OP_IS_BAG: String = hide("is_bag")
     val OP_IS_SEXP: String = hide("is_sexp")
     val OP_IS_STRUCT: String = hide("is_struct")
+    val OP_IS_MAP: String = hide("is_map")
     val OP_IS_CUSTOM: String = hide("is_custom")
 
     /**

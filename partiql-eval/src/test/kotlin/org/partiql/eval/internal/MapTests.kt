@@ -8,6 +8,7 @@ import org.partiql.eval.Mode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
+import java.math.BigDecimal
 
 class MapTests {
 
@@ -25,6 +26,51 @@ class MapTests {
     @MethodSource("accessFailureTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun accessFailureTests(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("sizeTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun sizeTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("existsTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun existsTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("containsKeyTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun containsKeyTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("mapGetTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun mapGetTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("mapKeysTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun mapKeysTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("mapValuesTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun mapValuesTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("mapEntriesTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun mapEntriesTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("cardinalityTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun cardinalityTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("isMapTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun isMapTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("catalogTestCases")
@@ -113,6 +159,42 @@ class MapTests {
                     emptyList()
                 ),
             ),
+            SuccessTestCase(
+                name = "MAP constructor with compatible heterogeneous keys coerces to common type",
+                input = "MAP { 2: 'two', 1.0: 'yes' };",
+                expected = Datum.map(
+                    PType.decimal(38, 19),
+                    PType.string(),
+                    listOf(
+                        Entry.of(Datum.decimal(BigDecimal(2), 38, 19), Datum.string("two")),
+                        Entry.of(Datum.decimal(BigDecimal("1.0"), 38, 19), Datum.string("yes")),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "MAP constructor with compatible heterogeneous values coerces to common type",
+                input = "MAP { 'a': 1, 'b': 2.0 };",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.decimal(38, 19),
+                    listOf(
+                        Entry.of(Datum.string("a"), Datum.decimal(BigDecimal.ONE, 38, 19)),
+                        Entry.of(Datum.string("b"), Datum.decimal(BigDecimal("2.0"), 38, 19)),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "MAP constructor with incompatible heterogeneous values coerces to common type resolve to dynamic value type",
+                input = "MAP { 'a': 1, 'b': 'c' };",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.dynamic(),
+                    listOf(
+                        Entry.of(Datum.string("a"), Datum.integer(1)),
+                        Entry.of(Datum.string("b"), Datum.string("c")),
+                    )
+                ),
+            ),
         )
 
         @JvmStatic
@@ -148,6 +230,185 @@ class MapTests {
                 name = "MAP nonexistent key fails (strict)",
                 mode = Mode.STRICT(),
                 input = "MAP { 'a': 1 }['z'];",
+            ),
+        )
+
+        @JvmStatic
+        fun sizeTestCases() = listOf(
+            SuccessTestCase(
+                name = "size of map with entries",
+                input = "size(MAP { 'a': 1, 'b': 2, 'c': 3 });",
+                expected = Datum.integer(3),
+            ),
+            SuccessTestCase(
+                name = "size of empty map",
+                input = "size(MAP { });",
+                expected = Datum.integer(0),
+            ),
+        )
+
+        @JvmStatic
+        fun existsTestCases() = listOf(
+            SuccessTestCase(
+                name = "exists on non-empty map returns true",
+                input = "exists(MAP { 'a': 1 });",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "exists on empty map returns false",
+                input = "exists(MAP { });",
+                expected = Datum.bool(false),
+            ),
+        )
+
+        @JvmStatic
+        fun containsKeyTestCases() = listOf(
+            SuccessTestCase(
+                name = "contains_key returns true when key exists",
+                input = "contains_key(MAP { 'a': 1, 'b': 2 }, 'a');",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "contains_key returns false when key absent",
+                input = "contains_key(MAP { 'a': 1, 'b': 2 }, 'z');",
+                expected = Datum.bool(false),
+            ),
+            SuccessTestCase(
+                name = "contains_key with integer key",
+                input = "contains_key(MAP { 1: 'one', 2: 'two' }, 1);",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "contains_key with null key returns null",
+                input = "contains_key(MAP { 'a': 1 }, NULL);",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "contains_key with missing key returns missing",
+                mode = Mode.PERMISSIVE(),
+                input = "contains_key(MAP { 'a': 1 }, MISSING);",
+                expected = Datum.missing(),
+            ),
+        )
+
+        @JvmStatic
+        fun mapGetTestCases() = listOf(
+            SuccessTestCase(
+                name = "map_get returns value for existing key",
+                input = "map_get(MAP { 'a': 1, 'b': 2 }, 'b');",
+                expected = Datum.integer(2),
+            ),
+            SuccessTestCase(
+                name = "map_get with integer key",
+                input = "map_get(MAP { 10: 'ten', 20: 'twenty' }, 10);",
+                expected = Datum.string("ten"),
+            ),
+            SuccessTestCase(
+                name = "map_get with null key returns null",
+                input = "map_get(MAP { 'a': 1 }, NULL);",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "map_get with nonexistent key returns missing",
+                mode = Mode.PERMISSIVE(),
+                input = "map_get(MAP { 'a': 1, 'b': 2 }, 'z');",
+                expected = Datum.missing(),
+            ),
+            SuccessTestCase(
+                name = "map_get with missing key returns missing",
+                mode = Mode.PERMISSIVE(),
+                input = "map_get(MAP { 'a': 1 }, MISSING);",
+                expected = Datum.missing(),
+            ),
+        )
+
+        @JvmStatic
+        fun mapKeysTestCases() = listOf(
+            SuccessTestCase(
+                name = "map_keys returns bag of all keys",
+                input = "map_keys(MAP { 'x': 1, 'y': 2 });",
+                expected = Datum.bag(listOf(Datum.string("x"), Datum.string("y"))),
+            ),
+            SuccessTestCase(
+                name = "map_keys on empty map returns empty bag",
+                input = "map_keys(MAP { });",
+                expected = Datum.bag(emptyList()),
+            ),
+        )
+
+        @JvmStatic
+        fun mapValuesTestCases() = listOf(
+            SuccessTestCase(
+                name = "map_values returns bag of all values",
+                input = "map_values(MAP { 'x': 1, 'y': 2 });",
+                expected = Datum.bag(listOf(Datum.integer(1), Datum.integer(2))),
+            ),
+            SuccessTestCase(
+                name = "map_values on empty map returns empty bag",
+                input = "map_values(MAP { });",
+                expected = Datum.bag(emptyList()),
+            ),
+        )
+
+        @JvmStatic
+        fun mapEntriesTestCases() = listOf(
+            SuccessTestCase(
+                name = "map_entries returns bag of key-value structs",
+                input = "map_entries(MAP { 'a': 1, 'b': 2 });",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("k", Datum.string("a")),
+                                org.partiql.spi.value.Field.of("v", Datum.integer(1)),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("k", Datum.string("b")),
+                                org.partiql.spi.value.Field.of("v", Datum.integer(2)),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "map_entries on empty map returns empty bag",
+                input = "map_entries(MAP { });",
+                expected = Datum.bag(emptyList()),
+            ),
+        )
+
+        @JvmStatic
+        fun cardinalityTestCases() = listOf(
+            SuccessTestCase(
+                name = "cardinality of map with entries",
+                input = "cardinality(MAP { 'a': 1, 'b': 2, 'c': 3 });",
+                expected = Datum.integer(3),
+            ),
+            SuccessTestCase(
+                name = "cardinality of empty map",
+                input = "cardinality(MAP { });",
+                expected = Datum.integer(0),
+            ),
+        )
+
+        @JvmStatic
+        fun isMapTestCases() = listOf(
+            SuccessTestCase(
+                name = "is_map returns true for a map",
+                input = "MAP { 'a': 1 } IS MAP<STRING, INTEGER>;",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "is_map returns false for a struct",
+                input = "{'a': 1} IS MAP<STRING, INTEGER>;",
+                expected = Datum.bool(false),
+            ),
+            SuccessTestCase(
+                name = "is_map returns false for an integer",
+                input = "42 IS MAP<STRING, INTEGER>;",
+                expected = Datum.bool(false),
             ),
         )
 

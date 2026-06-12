@@ -22,6 +22,6 @@ internal class ExprPathKeyMap(
         if (input.isMissing || k.isMissing) {
             return Datum.missing(input.type.valueType)
         }
-        return input.get(k).orElseThrow { PErrors.pathKeyFailureException() }
+        return input.get(k).orElseThrow { PErrors.mapKeyNotFoundException(k, input.type) }
     }
 }
