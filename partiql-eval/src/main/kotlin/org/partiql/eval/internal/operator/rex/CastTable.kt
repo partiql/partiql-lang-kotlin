@@ -19,12 +19,12 @@ import org.partiql.spi.types.PType.DYNAMIC
 import org.partiql.spi.types.PType.INTEGER
 import org.partiql.spi.types.PType.INTERVAL_DT
 import org.partiql.spi.types.PType.INTERVAL_YM
+import org.partiql.spi.types.PType.MAP
 import org.partiql.spi.types.PType.NUMERIC
 import org.partiql.spi.types.PType.REAL
 import org.partiql.spi.types.PType.ROW
 import org.partiql.spi.types.PType.SMALLINT
 import org.partiql.spi.types.PType.STRING
-import org.partiql.spi.types.PType.MAP
 import org.partiql.spi.types.PType.STRUCT
 import org.partiql.spi.types.PType.TIME
 import org.partiql.spi.types.PType.TIMESTAMP

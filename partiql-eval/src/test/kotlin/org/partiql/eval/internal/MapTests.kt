@@ -762,7 +762,8 @@ class MapTests {
                                 Field.of("id", Datum.integer(1)),
                                 Field.of(
                                     "addr",
-                                    Datum.map(PType.string(),
+                                    Datum.map(
+                                        PType.string(),
                                         PType.integer(),
                                         listOf(Entry.of(Datum.string("zip"), Datum.string("10001")))
                                     )
@@ -782,7 +783,8 @@ class MapTests {
                                 Field.of("id", Datum.integer(1)),
                                 Field.of(
                                     "addr",
-                                    Datum.map(PType.string(),
+                                    Datum.map(
+                                        PType.string(),
                                         PType.integer(),
                                         listOf<Entry>()
                                     )
