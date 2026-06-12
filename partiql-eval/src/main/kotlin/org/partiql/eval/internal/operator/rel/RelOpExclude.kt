@@ -6,6 +6,7 @@ import org.partiql.eval.Row
 import org.partiql.plan.Exclusion
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Entry
 import org.partiql.spi.value.Field
 
 /**
@@ -80,7 +81,36 @@ internal class RelOpExclude(
     private fun Datum.exclude(exclusions: List<Exclusion.Item>): Datum = when (this.type.code()) {
         PType.ROW, PType.STRUCT -> this.structExclude(exclusions)
         PType.BAG, PType.ARRAY -> this.collExclude(exclusions)
+        PType.MAP -> this.mapExclude(exclusions)
         else -> this
+    }
+
+    private fun Datum.mapExclude(exclusions: List<Exclusion.Item>): Datum {
+        val keysToExclude = mutableSetOf<String>()
+        for (e in exclusions) {
+            if (!e.hasItems()) {
+                when (e) {
+                    is Exclusion.StructKey -> keysToExclude.add(e.getKey())
+                    is Exclusion.StructSymbol -> keysToExclude.add(e.getSymbol().lowercase())
+                    else -> {}
+                }
+            }
+        }
+        val entries = mutableListOf<Entry>()
+        val iter = this.entries
+        while (iter.hasNext()) {
+            val entry = iter.next()
+            val keyStr = if (entry.key.type.code() in setOf(PType.STRING, PType.CHAR, PType.VARCHAR)) {
+                entry.key.string
+            } else {
+                null
+            }
+            if (keyStr != null && (keysToExclude.contains(keyStr) || keysToExclude.contains(keyStr.lowercase()))) {
+                continue
+            }
+            entries.add(entry)
+        }
+        return Datum.map(this.type.keyType, this.type.valueType, entries)
     }
 
     private fun Datum.structExclude(exclusions: List<Exclusion.Item>): Datum {

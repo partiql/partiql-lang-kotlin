@@ -35,6 +35,8 @@ import org.partiql.ast.Ast.exprInCollection
 import org.partiql.ast.Ast.exprIsType
 import org.partiql.ast.Ast.exprLike
 import org.partiql.ast.Ast.exprLit
+import org.partiql.ast.Ast.exprMap
+import org.partiql.ast.Ast.exprMapEntry
 import org.partiql.ast.Ast.exprMissingPredicate
 import org.partiql.ast.Ast.exprNot
 import org.partiql.ast.Ast.exprNullIf
@@ -186,6 +188,11 @@ class SqlDialectTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun testExprStruct(case: Case) = case.assert()
 
+    @ParameterizedTest(name = "expr.map #{index}")
+    @MethodSource("exprMapCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testExprMap(case: Case) = case.assert()
+
     @ParameterizedTest(name = "special form #{index}")
     @MethodSource("exprSpecialFormCases")
     @Execution(ExecutionMode.CONCURRENT)
@@ -305,8 +312,13 @@ class SqlDialectTest {
             expect("TIME (1)", DataType.TIME(1)),
             expect("TIME WITH TIME ZONE", DataType.TIME_WITH_TIME_ZONE()),
             expect("TIME (1) WITH TIME ZONE", DataType.TIME_WITH_TIME_ZONE(1)),
-            // TODO TIMESTAMP
-            // TODO INTERVAL
+            expect("TIMESTAMP (3)", DataType.TIMESTAMP(3)),
+            expect("TIMESTAMP WITH TIME ZONE", DataType.TIMESTAMP_WITH_TIME_ZONE()),
+            expect("TIMESTAMP (6) WITH TIME ZONE", DataType.TIMESTAMP_WITH_TIME_ZONE(6)),
+            expect("INTERVAL YEAR", DataType.INTERVAL(IntervalQualifier.Single(DatetimeField.YEAR(), null, null))),
+            expect("INTERVAL DAY (3)", DataType.INTERVAL(IntervalQualifier.Single(DatetimeField.DAY(), 3, null))),
+            expect("INTERVAL DAY TO SECOND", DataType.INTERVAL(IntervalQualifier.Range(DatetimeField.DAY(), null, DatetimeField.SECOND(), null))),
+            expect("INTERVAL DAY (2) TO SECOND (6)", DataType.INTERVAL(IntervalQualifier.Range(DatetimeField.DAY(), 2, DatetimeField.SECOND(), 6))),
             // TODO other types in `DataType`
             // PartiQL
             expect("STRING", DataType.STRING()),
@@ -316,6 +328,8 @@ class SqlDialectTest {
             expect("LIST", DataType.LIST()),
             expect("SEXP", DataType.SEXP()),
             expect("BAG", DataType.BAG()),
+            expect("MAP<VARCHAR, INT>", DataType.MAP(DataType.VARCHAR(), DataType.INT())),
+            expect("MAP<VARCHAR, MAP<DECIMAL, BOOL>>", DataType.MAP(DataType.VARCHAR(), DataType.MAP(DataType.DECIMAL(), DataType.BOOL()))),
             // Other (??)
             expect("INT4", DataType.INT4()),
             expect("INT8", DataType.INT8()),
@@ -940,6 +954,56 @@ class SqlDialectTest {
                         exprStructField(
                             name = v("b"),
                             value = exprLit(bool(false))
+                        )
+                    )
+                )
+            ),
+        )
+
+        @Suppress("DEPRECATION")
+        @JvmStatic
+        fun exprMapCases() = listOf(
+            expect(
+                "MAP {}",
+                exprMap(emptyList())
+            ),
+            expect(
+                "MAP {'a': 1}",
+                exprMap(
+                    listOf(
+                        exprMapEntry(
+                            exprLit(string("a")),
+                            exprLit(intNum(1))
+                        )
+                    )
+                )
+            ),
+            expect(
+                "MAP {'a': 1, 'b': 2, 'c': 3}",
+                exprMap(
+                    listOf(
+                        exprMapEntry(
+                            exprLit(string("a")),
+                            exprLit(intNum(1))
+                        ),
+                        exprMapEntry(
+                            exprLit(string("b")),
+                            exprLit(intNum(2))
+                        ),
+                        exprMapEntry(
+                            exprLit(string("c")),
+                            exprLit(intNum(3))
+                        )
+                    )
+                )
+            ),
+            expect(
+                "MAP {x: y}",
+                exprMap(
+                    listOf(
+                        exprMapEntry(
+                            v("x"),
+                            v("y")
                         )
                     )
                 )

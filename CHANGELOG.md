@@ -26,6 +26,8 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added SqlDialect support for MAP expression and type serialization
+- Added MAP type operation/function support, CAST, UNPIVOT, and EXCLUDE
 
 ### Changed
 

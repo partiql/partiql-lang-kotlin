@@ -10,6 +10,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.Iterator;
+import java.util.Optional;
 
 /**
  * This shall always be package-private (internal).
@@ -210,6 +211,31 @@ class DatumNull implements Datum {
         } else {
             throw new InvalidOperationException(getType(), "getOffsetDateTime");
         }
+    }
+
+    @NotNull
+    @Override
+    public Iterator<Entry> getEntries() {
+        if (_type.code() == PType.MAP) {
+            throw new NullPointerException();
+        }
+        throw new InvalidOperationException(getType(), "getEntries");
+    }
+
+    @Override
+    public Optional<Datum> get(@NotNull Datum key) {
+        if (_type.code() == PType.MAP) {
+            throw new NullPointerException();
+        }
+        throw new InvalidOperationException(getType(), "get");
+    }
+
+    @Override
+    public boolean containsKey(@NotNull Datum key) {
+        if (_type.code() == PType.MAP) {
+            throw new NullPointerException();
+        }
+        throw new InvalidOperationException(getType(), "containsKey");
     }
 
     @Override

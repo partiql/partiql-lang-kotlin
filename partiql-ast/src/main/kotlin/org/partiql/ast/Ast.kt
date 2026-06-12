@@ -36,6 +36,7 @@ import org.partiql.ast.expr.ExprInCollection
 import org.partiql.ast.expr.ExprIsType
 import org.partiql.ast.expr.ExprLike
 import org.partiql.ast.expr.ExprLit
+import org.partiql.ast.expr.ExprMap
 import org.partiql.ast.expr.ExprMatch
 import org.partiql.ast.expr.ExprMissingPredicate
 import org.partiql.ast.expr.ExprNot
@@ -255,6 +256,18 @@ public object Ast {
     @JvmStatic
     public fun exprStructField(name: Expr, value: Expr): ExprStruct.Field {
         return ExprStruct.Field(name, value)
+    }
+
+    @Deprecated("This feature is experimental and is subject to change.")
+    @JvmStatic
+    public fun exprMap(entries: List<ExprMap.Entry>): ExprMap {
+        return ExprMap(entries)
+    }
+
+    @Deprecated("This feature is experimental and is subject to change.")
+    @JvmStatic
+    public fun exprMapEntry(key: Expr, value: Expr): ExprMap.Entry {
+        return ExprMap.Entry(key, value)
     }
 
     @JvmStatic
