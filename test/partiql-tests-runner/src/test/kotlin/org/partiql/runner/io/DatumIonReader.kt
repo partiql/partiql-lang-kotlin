@@ -7,6 +7,7 @@ import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.IonElement
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Entry
 import org.partiql.spi.value.Field
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -182,11 +183,11 @@ class DatumIonReader(
     // I made the deliberate decision to list out all branches so we don't accidentally forget one in the future...
     private fun fromIonForPartiQL(reader: IonReader): Datum {
         val annotations = reader.typeAnnotations.toList()
-        val lastAnnotation = getPartiQLReservedAnnotation(annotations)
+        val partiQLAnnotation = getPartiQLReservedAnnotation(annotations)
         val type = reader.type!!
         checkAnnotations(type, annotations)
         if (type == IonType.NULL) {
-            return when (lastAnnotation) {
+            return when (partiQLAnnotation) {
                 PARTIQL_ANNOTATION.MISSING_ANNOTATION -> Datum.missing()
                 PARTIQL_ANNOTATION.BAG_ANNOTATION -> Datum.nullValue(PType.bag())
                 PARTIQL_ANNOTATION.MAP_ANNOTATION -> {
@@ -216,7 +217,7 @@ class DatumIonReader(
             IonType.CLOB,
             IonType.BLOB -> fromIonGeneric(reader)
             IonType.LIST -> {
-                if (lastAnnotation == PARTIQL_ANNOTATION.BAG_ANNOTATION) {
+                if (partiQLAnnotation == PARTIQL_ANNOTATION.BAG_ANNOTATION) {
                     reader.stepIn()
                     val elements = mutableListOf<Datum>().also { elements ->
                         reader.loadEachValue {
@@ -225,10 +226,10 @@ class DatumIonReader(
                     }
                     reader.stepOut()
                     Datum.bag(elements)
-                } else if (lastAnnotation == PARTIQL_ANNOTATION.MAP_ANNOTATION) {
+                } else if (partiQLAnnotation == PARTIQL_ANNOTATION.MAP_ANNOTATION) {
                     val (keyType, valueType) = getMapTypes(annotations)
                     reader.stepIn()
-                    val entries = mutableListOf<org.partiql.spi.value.Entry>()
+                    val entries = mutableListOf<Entry>()
                     reader.loadEachValue {
                         // Each element is a list [key, value]
                         reader.stepIn()
@@ -240,7 +241,7 @@ class DatumIonReader(
                         if (pair.size != 2) {
                             throw IllegalArgumentException("MAP entry must have exactly 2 elements [key, value], but found ${pair.size}")
                         }
-                        entries.add(org.partiql.spi.value.Entry.of(pair[0], pair[1]))
+                        entries.add(Entry.of(pair[0], pair[1]))
                     }
                     reader.stepOut()
                     Datum.map(keyType, valueType, entries)
@@ -268,7 +269,7 @@ class DatumIonReader(
             }
 
             IonType.STRUCT -> {
-                when (lastAnnotation) {
+                when (partiQLAnnotation) {
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> {
                         reader.stepIn()
                         val year = getRequiredFieldName(reader, "year")

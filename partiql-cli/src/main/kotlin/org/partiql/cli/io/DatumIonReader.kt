@@ -197,11 +197,11 @@ class DatumIonReader(
     // I made the deliberate decision to list out all branches so we don't accidentally forget one in the future...
     private fun fromIonForPartiQL(reader: IonReader): Datum {
         val annotations = reader.typeAnnotations.toList()
-        val lastAnnotation = getPartiQLReservedAnnotation(annotations)
+        val partiQLAnnotation = getPartiQLReservedAnnotation(annotations)
         val type = reader.type!!
         checkAnnotations(type, annotations)
         if (type == IonType.NULL) {
-            return when (lastAnnotation) {
+            return when (partiQLAnnotation) {
                 PARTIQL_ANNOTATION.MISSING_ANNOTATION -> Datum.missing()
                 PARTIQL_ANNOTATION.BAG_ANNOTATION -> Datum.nullValue(PType.bag())
                 PARTIQL_ANNOTATION.MAP_ANNOTATION -> {
@@ -231,7 +231,7 @@ class DatumIonReader(
             IonType.CLOB,
             IonType.BLOB -> fromIonGeneric(reader)
             IonType.LIST -> {
-                if (lastAnnotation == PARTIQL_ANNOTATION.BAG_ANNOTATION) {
+                if (partiQLAnnotation == PARTIQL_ANNOTATION.BAG_ANNOTATION) {
                     reader.stepIn()
                     val elements = mutableListOf<Datum>().also { elements ->
                         reader.loadEachValue {
@@ -240,10 +240,10 @@ class DatumIonReader(
                     }
                     reader.stepOut()
                     Datum.bag(elements)
-                } else if (lastAnnotation == PARTIQL_ANNOTATION.MAP_ANNOTATION) {
+                } else if (partiQLAnnotation == PARTIQL_ANNOTATION.MAP_ANNOTATION) {
                     val (keyType, valueType) = getMapTypes(annotations)
                     reader.stepIn()
-                    val entries = mutableListOf<org.partiql.spi.value.Entry>()
+                    val entries = mutableListOf<Entry>()
                     reader.loadEachValue {
                         // Each element is a list [key, value]
                         reader.stepIn()
@@ -283,7 +283,7 @@ class DatumIonReader(
             }
 
             IonType.STRUCT -> {
-                when (lastAnnotation) {
+                when (partiQLAnnotation) {
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> {
                         reader.stepIn()
                         val year = getRequiredFieldName(reader, "year")
