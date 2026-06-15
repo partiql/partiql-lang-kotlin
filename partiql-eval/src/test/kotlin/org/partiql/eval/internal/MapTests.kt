@@ -8,10 +8,7 @@ import org.partiql.eval.Mode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
-<<<<<<< HEAD
 import org.partiql.spi.value.Field
-=======
->>>>>>> origin/main
 import java.math.BigDecimal
 
 class MapTests {
@@ -77,19 +74,6 @@ class MapTests {
     fun isMapTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
-<<<<<<< HEAD
-    @MethodSource("unpivotTestCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun unpivotTests(tc: SuccessTestCase) = tc.run()
-
-    @ParameterizedTest
-    @MethodSource("excludeTestCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun excludeTests(tc: SuccessTestCase) = tc.run()
-
-    @ParameterizedTest
-=======
->>>>>>> origin/main
     @MethodSource("catalogTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun catalogTests(tc: SuccessTestCase) = tc.run()
@@ -98,6 +82,16 @@ class MapTests {
     @MethodSource("castTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun castTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("unpivotTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun unpivotTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("excludeTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun excludeTests(tc: SuccessTestCase) = tc.run()
 
     companion object {
 
@@ -182,8 +176,6 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
-<<<<<<< HEAD
-=======
                 name = "MAP constructor with compatible heterogeneous keys coerces to common type",
                 input = "MAP { 2: 'two', 1.0: 'yes' };",
                 expected = Datum.map(
@@ -196,7 +188,6 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
->>>>>>> origin/main
                 name = "MAP constructor with compatible heterogeneous values coerces to common type",
                 input = "MAP { 'a': 1, 'b': 2.0 };",
                 expected = Datum.map(
@@ -209,7 +200,6 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
-<<<<<<< HEAD
                 name = "MAP constructor with compatible heterogeneous keys coerces to common type",
                 input = "MAP { 2: 'two', 1.0: 'yes' };",
                 expected = Datum.map(
@@ -218,7 +208,6 @@ class MapTests {
                     listOf(
                         Entry.of(Datum.decimal(BigDecimal(2), 38, 19), Datum.string("two")),
                         Entry.of(Datum.decimal(BigDecimal("1.0"), 38, 19), Datum.string("yes")),
-=======
                 name = "MAP constructor with incompatible heterogeneous values are resolved to dynamic value type",
                 input = "MAP { 'a': 1, 'b': 'c' };",
                 expected = Datum.map(
@@ -227,7 +216,6 @@ class MapTests {
                     listOf(
                         Entry.of(Datum.string("a"), Datum.integer(1)),
                         Entry.of(Datum.string("b"), Datum.string("c")),
->>>>>>> origin/main
                     )
                 ),
             ),
