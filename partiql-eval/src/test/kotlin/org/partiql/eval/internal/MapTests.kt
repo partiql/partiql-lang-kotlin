@@ -577,6 +577,19 @@ class MapTests {
                         ),
                         Datum.struct(
                             listOf(
+                                Field.of("name", Datum.string("Peter")),
+                                Field.of(
+                                    "settings",
+                                    Datum.nullValue()
+                                ),
+                                Field.of(
+                                    "scores",
+                                    Datum.missing()
+                                ),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
                                 Field.of("name", Datum.string("Dana")),
                             )
                         ),
@@ -719,10 +732,17 @@ class MapTests {
                                 Field.of("theme", Datum.string("light")),
                             )
                         ),
-                        // null map → NULL value included
+                        // typed null map → NULL value with map's value type
                         Datum.struct(
                             listOf(
                                 Field.of("name", Datum.string("Charlie")),
+                                Field.of("theme", Datum.nullValue(PType.string())),
+                            )
+                        ),
+                        // untyped null → NULL value (UNKNOWN type)
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Peter")),
                                 Field.of("theme", Datum.nullValue()),
                             )
                         ),
@@ -765,6 +785,7 @@ class MapTests {
                         Datum.struct(emptyList()),
                         Datum.struct(emptyList()),
                         Datum.struct(emptyList()),
+                        Datum.struct(emptyList()),
                     )
                 ),
             ),
@@ -797,9 +818,9 @@ class MapTests {
                 input = "SELECT k, v FROM UNPIVOT MAP { } AS v AT k;",
                 expected = Datum.bag(emptyList()),
             ),
-
+            /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
-                name = "UNPIVOT map column with correlated join",
+                name = "UNPIVOT map column with correlated join with all rows",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM users AS u, UNPIVOT u.settings AS v AT k WHERE u.name = 'Alice';",
                 expected = Datum.bag(
@@ -820,6 +841,68 @@ class MapTests {
                         ),
                     )
                 ),
+            ),*/
+            SuccessTestCase(
+                name = "UNPIVOT map column with correlated join for `Alice`(Full data)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Alice') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("setting_name", Datum.string("theme")),
+                                Field.of("setting_value", Datum.string("dark")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("setting_name", Datum.string("lang")),
+                                Field.of("setting_value", Datum.string("en")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
+            SuccessTestCase(
+                name = "UNPIVOT map column for Charlie (typed null settings)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Charlie') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Peter")),
+                                Field.of("setting_name", Datum.string("_1")),
+                                Field.of("setting_value", Datum.nullValue()),
+                            )
+                        ),
+                    )
+                ),
+            ),*/
+            SuccessTestCase(
+                name = "UNPIVOT map column for Peter (untyped null settings)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Peter') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Peter")),
+                                Field.of("setting_name", Datum.string("_1")),
+                                Field.of("setting_value", Datum.nullValue()),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "UNPIVOT map column for Dana (missing settings field)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Dana') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(emptyList()),
             ),
         )
 

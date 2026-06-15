@@ -78,7 +78,7 @@ internal sealed class RelOpUnpivot : ExprRelation {
 
         override fun input(): Datum {
             val v = expr.eval(env.push(Row())).lowerSafe()
-            if (v.isMissing || v.isNull) {
+            if (v.isMissing) {
                 return Datum.struct(emptyList())
             }
             return when (v.type.code()) {
