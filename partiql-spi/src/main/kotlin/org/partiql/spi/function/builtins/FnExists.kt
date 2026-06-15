@@ -50,3 +50,17 @@ internal val Fn_EXISTS__STRUCT__BOOL = Function.overload(
     val exists = container.fields.iterator().hasNext()
     Datum.bool(exists)
 }
+
+internal val Fn_EXISTS__MAP__BOOL = Function.overload(
+
+    name = "exists",
+    returns = PType.bool(),
+    parameters = arrayOf(
+        Parameter("container", PType.map(PType.string(), PType.dynamic())),
+    ),
+
+) { args ->
+    val container = args[0]
+    val exists = container.entries.hasNext()
+    Datum.bool(exists)
+}

@@ -8,6 +8,7 @@ import org.partiql.spi.UnsupportedCodeException;
 import org.partiql.spi.catalog.Identifier;
 import org.partiql.spi.function.FnOverload;
 import org.partiql.spi.types.PType;
+import org.partiql.spi.value.Datum;
 
 import java.util.HashMap;
 import java.util.List;
@@ -630,4 +631,21 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int INTERRUPTED = 24;
+
+    /**
+     * <p>
+     * This is a runtime error indicating that a key lookup on a MAP value failed because the key does not exist.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>KEY</b> ({@link Datum}): The key that was not found.</li>
+     * <li><b>MAP_TYPE</b> ({@link PType}): The type of the map.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>Key not found in MAP.</code>
+     * </p>
+     */
+    public static final int MAP_KEY_NOT_FOUND = 25;
 }

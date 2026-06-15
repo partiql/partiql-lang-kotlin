@@ -3915,7 +3915,7 @@ internal class PlanTyperTestsPorted {
                     val hasInternalError = problems.problems.any { it.code() == PError.INTERNAL_ERROR }
                     assert(hasInternalError) { "Expected INTERNAL_ERROR for incompatible MAP key types" }
                 }
-            ),
+            )
         )
 
         // --------- Parameterized Test Source Finished ------------
