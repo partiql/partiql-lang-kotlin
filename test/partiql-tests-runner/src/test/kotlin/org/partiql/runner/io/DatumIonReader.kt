@@ -232,12 +232,15 @@ class DatumIonReader(
                     reader.loadEachValue {
                         // Each element is a list [key, value]
                         reader.stepIn()
-                        reader.next()
-                        val key = fromIon(reader)
-                        reader.next()
-                        val value = fromIon(reader)
+                        val pair = mutableListOf<Datum>()
+                        while (reader.next() != null) {
+                            pair.add(fromIon(reader))
+                        }
                         reader.stepOut()
-                        entries.add(org.partiql.spi.value.Entry.of(key, value))
+                        if (pair.size != 2) {
+                            throw IllegalArgumentException("MAP entry must have exactly 2 elements [key, value], but found ${pair.size}")
+                        }
+                        entries.add(org.partiql.spi.value.Entry.of(pair[0], pair[1]))
                     }
                     reader.stepOut()
                     Datum.map(keyType, valueType, entries)
@@ -403,8 +406,8 @@ class DatumIonReader(
     }
 
     private fun getPartiQLReservedAnnotation(partiqlAnnotation: List<String>) =
-        partiqlAnnotation.firstOrNull()?.let { firstAnnotation ->
-            PARTIQL_ANNOTATION.values().find { it.annotation == firstAnnotation }
+        partiqlAnnotation.firstNotNullOfOrNull { annotation ->
+            PARTIQL_ANNOTATION.values().find { it.annotation == annotation }
         }
 
     /**

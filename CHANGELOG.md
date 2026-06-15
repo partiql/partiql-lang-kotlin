@@ -27,7 +27,7 @@ Thank you to all who have contributed!
 
 ### Added
 - Added SqlDialect support for MAP expression and type serialization
-- Added `MAP` type parsing in DatumIonReader for CLI and Conformanace tests
+- Added `MAP` type parsing in DatumIonReader for CLI and Conformance tests
 
 ### Changed
 
