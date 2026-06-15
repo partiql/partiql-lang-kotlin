@@ -21,8 +21,8 @@ internal val Fn_MAP_ENTRIES__MAP__BAG = Function.overload(
     while (iter.hasNext()) {
         val entry = iter.next()
         val row = Datum.struct(
-            Field.of("key", entry.key),
-            Field.of("value", entry.value)
+            Field.of("k", entry.key),
+            Field.of("v", entry.value)
         )
         rows.add(row)
     }
