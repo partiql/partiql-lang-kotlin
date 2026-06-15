@@ -184,7 +184,7 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
-                name = "MAP constructor with incompatible heterogeneous values coerces to common type resolve to dynamic value type",
+                name = "MAP constructor with incompatible heterogeneous values are resolved to dynamic value type",
                 input = "MAP { 'a': 1, 'b': 'c' };",
                 expected = Datum.map(
                     PType.string(),
@@ -222,6 +222,11 @@ class MapTests {
                 input = "MAP { 'a': 1 }[MISSING];",
                 expected = Datum.missing(),
             ),
+            SuccessTestCase(
+                name = "MAP integer key access with bracket notation",
+                input = "MAP { 1: 'one', 2: 'two' }[1];",
+                expected = Datum.string("one"),
+            ),
         )
 
         @JvmStatic
@@ -230,6 +235,11 @@ class MapTests {
                 name = "MAP nonexistent key fails (strict)",
                 mode = Mode.STRICT(),
                 input = "MAP { 'a': 1 }['z'];",
+            ),
+            FailureTestCase(
+                name = "MAP nonexistent integer key fails (strict)",
+                mode = Mode.STRICT(),
+                input = "MAP { 1: 'one', 2: 'two' }[99];",
             ),
         )
 
@@ -245,6 +255,11 @@ class MapTests {
                 input = "size(MAP { });",
                 expected = Datum.integer(0),
             ),
+            SuccessTestCase(
+                name = "size of map with integer keys",
+                input = "size(MAP { 1: 'a', 2: 'b' });",
+                expected = Datum.integer(2),
+            ),
         )
 
         @JvmStatic
@@ -258,6 +273,11 @@ class MapTests {
                 name = "exists on empty map returns false",
                 input = "exists(MAP { });",
                 expected = Datum.bool(false),
+            ),
+            SuccessTestCase(
+                name = "exists on non-empty map with integer keys returns true",
+                input = "exists(MAP { 1: 'a', 2: 'b' });",
+                expected = Datum.bool(true),
             ),
         )
 
@@ -334,6 +354,11 @@ class MapTests {
                 input = "map_keys(MAP { });",
                 expected = Datum.bag(emptyList()),
             ),
+            SuccessTestCase(
+                name = "map_keys with integer keys",
+                input = "map_keys(MAP { 1: 'a', 2: 'b' });",
+                expected = Datum.bag(listOf(Datum.integer(1), Datum.integer(2))),
+            ),
         )
 
         @JvmStatic
@@ -347,6 +372,11 @@ class MapTests {
                 name = "map_values on empty map returns empty bag",
                 input = "map_values(MAP { });",
                 expected = Datum.bag(emptyList()),
+            ),
+            SuccessTestCase(
+                name = "map_values with integer keys",
+                input = "map_values(MAP { 1: 'a', 2: 'b' });",
+                expected = Datum.bag(listOf(Datum.string("a"), Datum.string("b"))),
             ),
         )
 
@@ -377,6 +407,26 @@ class MapTests {
                 input = "map_entries(MAP { });",
                 expected = Datum.bag(emptyList()),
             ),
+            SuccessTestCase(
+                name = "map_entries with integer keys",
+                input = "map_entries(MAP { 1: 'a', 2: 'b' });",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("k", Datum.integer(1)),
+                                org.partiql.spi.value.Field.of("v", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                org.partiql.spi.value.Field.of("k", Datum.integer(2)),
+                                org.partiql.spi.value.Field.of("v", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
         )
 
         @JvmStatic
@@ -390,6 +440,11 @@ class MapTests {
                 name = "cardinality of empty map",
                 input = "cardinality(MAP { });",
                 expected = Datum.integer(0),
+            ),
+            SuccessTestCase(
+                name = "cardinality of map with integer keys",
+                input = "cardinality(MAP { 1: 'a', 2: 'b', 3: 'c' });",
+                expected = Datum.integer(3),
             ),
         )
 
@@ -408,6 +463,26 @@ class MapTests {
             SuccessTestCase(
                 name = "is_map returns false for an integer",
                 input = "42 IS MAP<STRING, INTEGER>;",
+                expected = Datum.bool(false),
+            ),
+            SuccessTestCase(
+                name = "is_map returns true for map with integer keys",
+                input = "MAP { 1: 'one', 2: 'two' } IS MAP<INTEGER, STRING>;",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "is_map returns false for mismatched value type (DOUBLE PRECISION)",
+                input = "MAP { 'a': 1 } IS MAP<STRING, DOUBLE PRECISION>;",
+                expected = Datum.bool(false),
+            ),
+            SuccessTestCase(
+                name = "is_map returns false for mismatched value type (BIGINT)",
+                input = "MAP { 'a': 1 } IS MAP<STRING, BIGINT>;",
+                expected = Datum.bool(false),
+            ),
+            SuccessTestCase(
+                name = "is_map returns false for mismatched key type (INT)",
+                input = "MAP { 'a': 1 } IS MAP<INT, STRING>;",
                 expected = Datum.bool(false),
             ),
         )
