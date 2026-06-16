@@ -813,6 +813,46 @@ class MapTests {
                 input = "SELECT k, v FROM UNPIVOT MAP { } AS v AT k;",
                 expected = Datum.bag(emptyList()),
             ),
+            SuccessTestCase(
+                name = "UNPIVOT map with integer keys",
+                input = "SELECT k, v FROM UNPIVOT MAP { 1: 'one', 2: 'two' } AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.integer(1)),
+                                Field.of("v", Datum.string("one")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.integer(2)),
+                                Field.of("v", Datum.string("two")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "UNPIVOT map with decimal keys",
+                input = "SELECT k, v FROM UNPIVOT MAP { 1.0: 'a', 2.5: 'b' } AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.decimal(BigDecimal("1.0"), 38, 19)),
+                                Field.of("v", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.decimal(BigDecimal("2.5"), 38, 19)),
+                                Field.of("v", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
             /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
                 name = "UNPIVOT map column with correlated join with all rows",
