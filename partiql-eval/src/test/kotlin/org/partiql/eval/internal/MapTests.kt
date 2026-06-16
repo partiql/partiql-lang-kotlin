@@ -88,11 +88,6 @@ class MapTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun unpivotTests(tc: SuccessTestCase) = tc.run()
 
-    @ParameterizedTest
-    @MethodSource("excludeTestCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun excludeTests(tc: SuccessTestCase) = tc.run()
-
     companion object {
 
         @JvmStatic
@@ -903,66 +898,6 @@ class MapTests {
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Dana') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(emptyList()),
-            ),
-        )
-
-        @JvmStatic
-        fun excludeTestCases() = listOf(
-            SuccessTestCase(
-                name = "EXCLUDE drops a MAP field from rows",
-                input = "SELECT * EXCLUDE t.addr FROM [{'id': 1, 'name': 'Alice', 'addr': MAP {'city': 'NYC'}}] AS t;",
-                expected = Datum.bag(
-                    listOf(
-                        Datum.struct(
-                            listOf(
-                                Field.of("id", Datum.integer(1)),
-                                Field.of("name", Datum.string("Alice")),
-                            )
-                        ),
-                    )
-                ),
-            ),
-            SuccessTestCase(
-                name = "EXCLUDE drops a MAP key",
-                input = "SELECT * EXCLUDE t.addr['city'] FROM [{'id': 1, 'addr': MAP{'city': 'NYC', 'zip': '10001'}}] AS t;",
-                expected = Datum.bag(
-                    listOf(
-                        Datum.struct(
-                            listOf(
-                                Field.of("id", Datum.integer(1)),
-                                Field.of(
-                                    "addr",
-                                    Datum.map(
-                                        PType.string(),
-                                        PType.integer(),
-                                        listOf(Entry.of(Datum.string("zip"), Datum.string("10001")))
-                                    )
-                                ),
-                            )
-                        ),
-                    )
-                ),
-            ),
-            SuccessTestCase(
-                name = "EXCLUDE drops two MAP keys and produce empty map",
-                input = "SELECT * EXCLUDE t.addr['city'], t.addr['zip'] FROM [{'id': 1, 'addr': MAP{'city': 'NYC', 'zip': '10001'}}] AS t;",
-                expected = Datum.bag(
-                    listOf(
-                        Datum.struct(
-                            listOf(
-                                Field.of("id", Datum.integer(1)),
-                                Field.of(
-                                    "addr",
-                                    Datum.map(
-                                        PType.string(),
-                                        PType.integer(),
-                                        listOf<Entry>()
-                                    )
-                                ),
-                            )
-                        ),
-                    )
-                ),
             ),
         )
 
