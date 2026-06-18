@@ -45,7 +45,7 @@ internal sealed class RelOpUnpivot : ExprRelation {
     override fun hasNext(): Boolean = _row != null
 
     override fun next(): Row {
-        val row = _row!!
+        val row =  _row ?: throw NoSuchElementException()
         _row = _next()
         return row
     }

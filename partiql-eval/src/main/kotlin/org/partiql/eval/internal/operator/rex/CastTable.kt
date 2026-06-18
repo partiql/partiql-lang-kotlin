@@ -437,15 +437,18 @@ internal object CastTable {
     /**
      * CAST(<struct> AS MAP) and CAST(<map> AS MAP)
      *
-     * For STRUCT → MAP: struct field names become string keys. Duplicate keys use last-write-wins.
-     * Values are cast to the target map's value type via DynamicTyper coercion.
+     * For STRUCT/ROW → MAP: struct field names become string keys. Target key type must be a text type.
+     * Duplicate keys use last-write-wins. Values are cast to the target map's value type.
      *
      * For MAP → MAP: re-keys and re-values to the target parameterized types.
      */
     private fun registerMap() {
-        register(STRUCT, MAP) { x, t ->
+        val structToMap: Cast = { x, t ->
             val targetKeyType = t.keyType
             val targetValueType = t.valueType
+            if (targetKeyType.code() !in TEXT_TYPES) {
+                throw PErrors.castUndefinedException(x.type, t)
+            }
             val entries = mutableListOf<Entry>()
             for (field in x.fields) {
                 val key = cast(Datum.string(field.name), targetKeyType)
@@ -454,17 +457,8 @@ internal object CastTable {
             }
             Datum.map(targetKeyType, targetValueType, entries)
         }
-        register(ROW, MAP) { x, t ->
-            val targetKeyType = t.keyType
-            val targetValueType = t.valueType
-            val entries = mutableListOf<Entry>()
-            for (field in x.fields) {
-                val key = cast(Datum.string(field.name), targetKeyType)
-                val value = cast(field.value, targetValueType)
-                entries.add(Entry.of(key, value))
-            }
-            Datum.map(targetKeyType, targetValueType, entries)
-        }
+        register(STRUCT, MAP, structToMap)
+        register(ROW, MAP, structToMap)
         register(MAP, MAP) { x, t ->
             val targetKeyType = t.keyType
             val targetValueType = t.valueType
@@ -562,6 +556,8 @@ internal object CastTable {
         }
         register(VARIANT, VARIANT) { x, _ -> x }
     }
+
+    private val TEXT_TYPES = setOf(STRING, CHAR, VARCHAR, CLOB)
 
     private fun register(source: Int, target: Int, cast: (Datum, PType) -> Datum) {
         _table[source][target] = cast
