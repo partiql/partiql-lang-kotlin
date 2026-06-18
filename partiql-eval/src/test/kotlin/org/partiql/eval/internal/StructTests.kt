@@ -76,7 +76,7 @@ class StructTests {
         fun unpivotTestCases() = listOf(
             /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
-                name = "UNPIVOT struct column with correlated join",
+                name = "UNPIVOT struct column with WHERE filter (iterates all rows including null)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM users AS u, UNPIVOT u.settings AS v AT k WHERE u.name = 'Alice';",
                 expected = Datum.bag(
@@ -99,7 +99,7 @@ class StructTests {
                 ),
             ),*/
             SuccessTestCase(
-                name = "UNPIVOT struct column with correlated join for `Alice`(Full data)",
+                name = "UNPIVOT struct column pre-filtered to Alice (returns key-value pairs)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Alice') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(
@@ -123,7 +123,7 @@ class StructTests {
             ),
             /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
-                name = "UNPIVOT struct column for Charlie (typed null settings)",
+                name = "UNPIVOT struct column pre-filtered to Charlie (typed null wraps as _1)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Charlie') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(
@@ -140,7 +140,7 @@ class StructTests {
             ),
             */
             SuccessTestCase(
-                name = "UNPIVOT struct column for Peter (untyped null settings)",
+                name = "UNPIVOT struct column pre-filtered to Peter (untyped null wraps as _1)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Peter') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(
@@ -156,7 +156,7 @@ class StructTests {
                 ),
             ),
             SuccessTestCase(
-                name = "UNPIVOT struct column for Dana (missing settings field)",
+                name = "UNPIVOT struct column pre-filtered to Dana (missing field returns empty)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Dana') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(emptyList()),

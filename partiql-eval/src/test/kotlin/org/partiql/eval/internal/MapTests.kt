@@ -789,7 +789,7 @@ class MapTests {
         @JvmStatic
         fun unpivotTestCases() = listOf(
             SuccessTestCase(
-                name = "UNPIVOT map produces key-value rows",
+                name = "UNPIVOT literal map with string keys",
                 input = "SELECT k, v FROM UNPIVOT MAP { 'a': 1, 'b': 2 } AS v AT k;",
                 expected = Datum.bag(
                     listOf(
@@ -809,12 +809,12 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
-                name = "UNPIVOT empty map produces empty bag",
+                name = "UNPIVOT empty literal map",
                 input = "SELECT k, v FROM UNPIVOT MAP { } AS v AT k;",
                 expected = Datum.bag(emptyList()),
             ),
             SuccessTestCase(
-                name = "UNPIVOT map with integer keys",
+                name = "UNPIVOT literal map with integer keys",
                 input = "SELECT k, v FROM UNPIVOT MAP { 1: 'one', 2: 'two' } AS v AT k;",
                 expected = Datum.bag(
                     listOf(
@@ -834,7 +834,7 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
-                name = "UNPIVOT map with decimal keys",
+                name = "UNPIVOT literal map with decimal keys",
                 input = "SELECT k, v FROM UNPIVOT MAP { 1.0: 'a', 2.5: 'b' } AS v AT k;",
                 expected = Datum.bag(
                     listOf(
@@ -855,7 +855,7 @@ class MapTests {
             ),
             /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
-                name = "UNPIVOT map column with correlated join with all rows",
+                name = "UNPIVOT map column with WHERE filter (iterates all rows including null)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM users AS u, UNPIVOT u.settings AS v AT k WHERE u.name = 'Alice';",
                 expected = Datum.bag(
@@ -878,7 +878,7 @@ class MapTests {
                 ),
             ),*/
             SuccessTestCase(
-                name = "UNPIVOT map column with correlated join for `Alice`(Full data)",
+                name = "UNPIVOT map column pre-filtered to Alice (returns key-value pairs)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Alice') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(
@@ -902,7 +902,7 @@ class MapTests {
             ),
             /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
-                name = "UNPIVOT map column for Charlie (typed null settings)",
+                name = "UNPIVOT map column pre-filtered to Charlie (typed null wraps as _1)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Charlie') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(
@@ -918,7 +918,7 @@ class MapTests {
                 ),
             ),*/
             SuccessTestCase(
-                name = "UNPIVOT map column for Peter (untyped null settings)",
+                name = "UNPIVOT map column pre-filtered to Peter (untyped null wraps as _1)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Peter') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(
@@ -934,7 +934,7 @@ class MapTests {
                 ),
             ),
             SuccessTestCase(
-                name = "UNPIVOT map column for Dana (missing settings field)",
+                name = "UNPIVOT map column pre-filtered to Dana (missing field returns empty)",
                 globals = catalogGlobals,
                 input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Dana') AS u, UNPIVOT u.settings AS v AT k;",
                 expected = Datum.bag(emptyList()),
