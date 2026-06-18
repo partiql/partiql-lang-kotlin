@@ -261,6 +261,28 @@ class MapTests {
                 input = "MAP { 1.0: 'one', 2.0: 'two' }[1];",
                 expected = Datum.string("one"),
             ),
+            // Static cast: heterogeneous keys coerced to DECIMAL at plan time, lookup with INTEGER
+            SuccessTestCase(
+                name = "MAP with heterogeneous keys accessed with integer (plan-time coercion to DECIMAL)",
+                input = "MAP { 2: 'two', 1.0: 'yes' }[2];",
+                expected = Datum.string("two"),
+            ),
+            SuccessTestCase(
+                name = "MAP with heterogeneous keys accessed with decimal (plan-time coercion to DECIMAL)",
+                input = "MAP { 2: 'two', 1.0: 'yes' }[1.0];",
+                expected = Datum.string("yes"),
+            ),
+            // Dynamic type: MAP type resolved at runtime via CASE expression
+            SuccessTestCase(
+                name = "Dynamic MAP from CASE accessed with integer key (runtime cast)",
+                input = "(CASE WHEN 1=1 THEN MAP { 1: 'one', 2: 'two' } ELSE MAP { 3: 'three' } END)[1];",
+                expected = Datum.string("one"),
+            ),
+            SuccessTestCase(
+                name = "Dynamic MAP from CASE accessed with decimal key (runtime cast)",
+                input = "(CASE WHEN 1=1 THEN MAP { 1: 'one', 2: 'two' } ELSE MAP { 3: 'three' } END)[1.0];",
+                expected = Datum.string("one"),
+            ),
         )
 
         @JvmStatic
