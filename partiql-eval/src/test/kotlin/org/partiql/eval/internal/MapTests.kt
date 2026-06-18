@@ -84,6 +84,11 @@ class MapTests {
     fun castTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
+    @MethodSource("castFailureTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun castFailureTests(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
     @MethodSource("unpivotTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun unpivotTests(tc: SuccessTestCase) = tc.run()
@@ -998,6 +1003,19 @@ class MapTests {
                         Entry.of(Datum.string("y"), Datum.bigint(20)),
                     )
                 ),
+            ),
+            SuccessTestCase(
+                name = "CAST struct to MAP with non-string key type fails (permissive), return missing",
+                input = "CAST({'a': 1, 'b': 2} AS MAP<INTEGER, INTEGER>);",
+                expected = Datum.missing()
+            ),
+        )
+
+        @JvmStatic
+        fun castFailureTestCases() = listOf(
+            FailureTestCase(
+                name = "CAST struct to MAP with non-string key type fails (strict)",
+                input = "CAST({'a': 1, 'b': 2} AS MAP<INTEGER, INTEGER>);",
             ),
         )
     }
