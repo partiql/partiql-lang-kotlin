@@ -19,6 +19,7 @@ import org.partiql.spi.types.PType.DYNAMIC
 import org.partiql.spi.types.PType.INTEGER
 import org.partiql.spi.types.PType.INTERVAL_DT
 import org.partiql.spi.types.PType.INTERVAL_YM
+import org.partiql.spi.types.PType.MAP
 import org.partiql.spi.types.PType.NUMERIC
 import org.partiql.spi.types.PType.REAL
 import org.partiql.spi.types.PType.ROW
@@ -33,6 +34,7 @@ import org.partiql.spi.types.PType.TINYINT
 import org.partiql.spi.types.PType.VARCHAR
 import org.partiql.spi.types.PType.VARIANT
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Entry
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -105,6 +107,7 @@ internal object CastTable {
         registerDoublePrecision()
         registerStruct()
         registerRow()
+        registerMap()
         registerString()
         registerBag()
         registerList()
@@ -432,6 +435,44 @@ internal object CastTable {
     }
 
     /**
+     * CAST(<struct> AS MAP) and CAST(<map> AS MAP)
+     *
+     * For STRUCT/ROW → MAP: struct field names become string keys. Target key type must be a text type.
+     * Duplicate keys use last-write-wins. Values are cast to the target map's value type.
+     *
+     * For MAP → MAP: re-keys and re-values to the target parameterized types.
+     */
+    private fun registerMap() {
+        val structToMap: Cast = { x, t ->
+            val targetKeyType = t.keyType
+            val targetValueType = t.valueType
+            if (targetKeyType.code() !in TEXT_TYPES) {
+                throw PErrors.castUndefinedException(x.type, t)
+            }
+            val entries = mutableListOf<Entry>()
+            for (field in x.fields) {
+                val key = cast(Datum.string(field.name), targetKeyType)
+                val value = cast(field.value, targetValueType)
+                entries.add(Entry.of(key, value))
+            }
+            Datum.map(targetKeyType, targetValueType, entries)
+        }
+        register(STRUCT, MAP, structToMap)
+        register(ROW, MAP, structToMap)
+        register(MAP, MAP) { x, t ->
+            val targetKeyType = t.keyType
+            val targetValueType = t.valueType
+            val entries = mutableListOf<Entry>()
+            for (entry in x.entries) {
+                val key = cast(entry.key, targetKeyType)
+                val value = cast(entry.value, targetValueType)
+                entries.add(Entry.of(key, value))
+            }
+            Datum.map(targetKeyType, targetValueType, entries)
+        }
+    }
+
+    /**
      * CAST(<string> AS <target>)
      */
     private fun registerString() {
@@ -515,6 +556,8 @@ internal object CastTable {
         }
         register(VARIANT, VARIANT) { x, _ -> x }
     }
+
+    private val TEXT_TYPES = setOf(STRING, CHAR, VARCHAR, CLOB)
 
     private fun register(source: Int, target: Int, cast: (Datum, PType) -> Datum) {
         _table[source][target] = cast
