@@ -905,10 +905,17 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Index(root, key))
             }
 
-            // MAP index access — return the value type
+            // MAP index access — return the value type, cast key to map's key type if needed
             if (root.type.code() == PType.MAP) {
+                val mapKeyType = CompilerType(root.type.keyType)
                 val valueType = CompilerType(root.type.valueType)
-                return rex(valueType, rexOpPathIndex(root, key))
+                val castKey = if (key.type != mapKeyType) {
+                    val cast = env.resolveCast(key, mapKeyType)
+                    if (cast != null) rex(mapKeyType, cast) else key
+                } else {
+                    key
+                }
+                return rex(valueType, rexOpPathIndex(root, castKey))
             }
 
             // Check Key Type (INT or coercible to INT). TODO: Allow coercions to INT
@@ -936,25 +943,32 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             val root = visitRex(node.root, node.root.type)
             val key = visitRex(node.key, node.key.type)
 
-            // Check Key Type (STRING). TODO: Allow coercions to STRING
-            if (key.type.code() != PType.STRING) {
-                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null))
-            }
-
             // If the root is DYNAMIC, we can't know at compile time whether it's a MAP or STRUCT; defer to runtime.
             if (root.type.code() == PType.DYNAMIC || root.type.code() == PType.VARIANT) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Key(root, key))
             }
 
-            // Check Root Type (STRUCT)
-            if (root.type.code() != PType.STRUCT && root.type.code() != PType.ROW && root.type.code() != PType.MAP) {
-                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null), PType.unknown())
+            // MAP key access — return the value type, cast key to map's key type if needed
+            if (root.type.code() == PType.MAP) {
+                val mapKeyType = CompilerType(root.type.keyType)
+                val valueType = CompilerType(root.type.valueType)
+                val castKey = if (key.type != mapKeyType) {
+                    val cast = env.resolveCast(key, mapKeyType)
+                    if (cast != null) rex(mapKeyType, cast) else key
+                } else {
+                    key
+                }
+                return rex(valueType, rexOpPathKey(root, castKey))
             }
 
-            // MAP key access — return the value type
-            if (root.type.code() == PType.MAP) {
-                val valueType = CompilerType(root.type.valueType)
-                return rex(valueType, rexOpPathKey(root, key))
+            // Check Key Type (STRING). TODO: Allow coercions to STRING
+            if (key.type.code() != PType.STRING) {
+                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null))
+            }
+
+            // Check Root Type (STRUCT)
+            if (root.type.code() != PType.STRUCT && root.type.code() != PType.ROW) {
+                return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null), PType.unknown())
             }
 
             // Get Literal Key

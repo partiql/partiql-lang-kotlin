@@ -10,6 +10,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
 import org.partiql.spi.value.Field
 import java.math.BigDecimal
+import java.time.LocalDate
 
 class MapTests {
 
@@ -211,6 +212,18 @@ class MapTests {
                     )
                 ),
             ),
+            SuccessTestCase(
+                name = "MAP with DATE keys",
+                input = "MAP { DATE '2024-01-15': 'holiday', DATE '2024-07-04': 'independence' };",
+                expected = Datum.map(
+                    PType.date(),
+                    PType.string(),
+                    listOf(
+                        Entry.of(Datum.date(LocalDate.of(2024, 1, 15)), Datum.string("holiday")),
+                        Entry.of(Datum.date(LocalDate.of(2024, 7, 4)), Datum.string("independence")),
+                    )
+                ),
+            ),
         )
 
         @JvmStatic
@@ -241,6 +254,49 @@ class MapTests {
             SuccessTestCase(
                 name = "MAP integer key access with bracket notation",
                 input = "MAP { 1: 'one', 2: 'two' }[1];",
+                expected = Datum.string("one"),
+            ),
+            SuccessTestCase(
+                name = "MAP DATE key access with bracket notation",
+                input = "MAP { DATE '2024-01-15': 'holiday', DATE '2024-07-04': 'independence' }[DATE '2024-07-04'];",
+                expected = Datum.string("independence"),
+            ),
+            // Key cast tests: lookup key type differs from MAP key type, implicit cast applied
+            SuccessTestCase(
+                name = "MAP integer key accessed with decimal (implicit cast to INTEGER)",
+                input = "MAP { 1: 'one', 2: 'two' }[1.0];",
+                expected = Datum.string("one"),
+            ),
+            SuccessTestCase(
+                name = "MAP integer key accessed with bigint (implicit cast to INTEGER)",
+                input = "MAP { 1: 'one', 2: 'two' }[CAST(2 AS BIGINT)];",
+                expected = Datum.string("two"),
+            ),
+            SuccessTestCase(
+                name = "MAP decimal key accessed with integer (implicit cast to DECIMAL)",
+                input = "MAP { 1.0: 'one', 2.0: 'two' }[1];",
+                expected = Datum.string("one"),
+            ),
+            // Static cast: heterogeneous keys coerced to DECIMAL at plan time, lookup with INTEGER
+            SuccessTestCase(
+                name = "MAP with heterogeneous keys accessed with integer (plan-time coercion to DECIMAL)",
+                input = "MAP { 2: 'two', 1.0: 'yes' }[2];",
+                expected = Datum.string("two"),
+            ),
+            SuccessTestCase(
+                name = "MAP with heterogeneous keys accessed with decimal (plan-time coercion to DECIMAL)",
+                input = "MAP { 2: 'two', 1.0: 'yes' }[1.0];",
+                expected = Datum.string("yes"),
+            ),
+            // Dynamic type: MAP type resolved at runtime via CASE expression
+            SuccessTestCase(
+                name = "Dynamic MAP from CASE accessed with integer key (runtime cast)",
+                input = "(CASE WHEN 1=1 THEN MAP { 1: 'one', 2: 'two' } ELSE MAP { 3: 'three' } END)[1];",
+                expected = Datum.string("one"),
+            ),
+            SuccessTestCase(
+                name = "Dynamic MAP from CASE accessed with decimal key (runtime cast)",
+                input = "(CASE WHEN 1=1 THEN MAP { 1: 'one', 2: 'two' } ELSE MAP { 3: 'three' } END)[1.0];",
                 expected = Datum.string("one"),
             ),
         )
