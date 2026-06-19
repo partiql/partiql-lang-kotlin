@@ -301,7 +301,7 @@ class MapTests {
             ),
             SuccessTestCase(
                 name = "MAP access with explicit cast to different precision",
-                input = "MAP { 2: 'two', 1.0: 'yes' }[CAST(1.0 AS DECIMAL(2,1))];",
+                input = "MAP { 2: 'two', 1.0: 'yes' }[CAST(1.0 AS DECIMAL(10,1))];",
                 expected = Datum.string("yes"),
             ),
         )
@@ -398,7 +398,7 @@ class MapTests {
             ),
             SuccessTestCase(
                 name = "contains_key with explicit cast to different precision",
-                input = "contains_key(MAP { 1.0: 'a', 2.0: 'b' }, CAST(1.0 AS DECIMAL(2,1)));",
+                input = "contains_key(MAP { 1.0: 'a', 2.0: 'b' }, CAST(1.0 AS DECIMAL(10,1)));",
                 expected = Datum.bool(true),
             ),
         )
@@ -444,7 +444,7 @@ class MapTests {
             ),
             SuccessTestCase(
                 name = "map_get with explicit cast to different precision",
-                input = "map_get(MAP { 1.0: 'one', 2.0: 'two' }, CAST(1.0 AS DECIMAL(2,1)));",
+                input = "map_get(MAP { 1.0: 'one', 2.0: 'two' }, CAST(1.0 AS DECIMAL(10,1)));",
                 expected = Datum.string("one"),
             ),
         )
