@@ -299,6 +299,11 @@ class MapTests {
                 input = "(CASE WHEN 1=1 THEN MAP { 1: 'one', 2: 'two' } ELSE MAP { 3: 'three' } END)[1.0];",
                 expected = Datum.string("one"),
             ),
+            SuccessTestCase(
+                name = "MAP access with explicit cast to different precision",
+                input = "MAP { 2: 'two', 1.0: 'yes' }[CAST(1.0 AS DECIMAL(2,1))];",
+                expected = Datum.string("yes"),
+            ),
         )
 
         @JvmStatic
@@ -381,6 +386,21 @@ class MapTests {
                 input = "contains_key(MAP { 'a': 1 }, MISSING);",
                 expected = Datum.missing(),
             ),
+            SuccessTestCase(
+                name = "contains_key with decimal key matches same precision",
+                input = "contains_key(MAP { 1.0: 'a', 2.0: 'b' }, 1.0);",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "contains_key with integer key matches decimal map key (cross-type cast)",
+                input = "contains_key(MAP { 1.0: 'a', 2.0: 'b' }, 1);",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "contains_key with explicit cast to different precision",
+                input = "contains_key(MAP { 1.0: 'a', 2.0: 'b' }, CAST(1.0 AS DECIMAL(2,1)));",
+                expected = Datum.bool(true),
+            ),
         )
 
         @JvmStatic
@@ -411,6 +431,21 @@ class MapTests {
                 mode = Mode.PERMISSIVE(),
                 input = "map_get(MAP { 'a': 1 }, MISSING);",
                 expected = Datum.missing(),
+            ),
+            SuccessTestCase(
+                name = "map_get with decimal key matches same precision",
+                input = "map_get(MAP { 1.0: 'one', 2.0: 'two' }, 1.0);",
+                expected = Datum.string("one"),
+            ),
+            SuccessTestCase(
+                name = "map_get with integer key matches decimal map key (cross-type cast)",
+                input = "map_get(MAP { 1.0: 'one', 2.0: 'two' }, 1);",
+                expected = Datum.string("one"),
+            ),
+            SuccessTestCase(
+                name = "map_get with explicit cast to different precision",
+                input = "map_get(MAP { 1.0: 'one', 2.0: 'two' }, CAST(1.0 AS DECIMAL(2,1)));",
+                expected = Datum.string("one"),
             ),
         )
 
