@@ -7,7 +7,6 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
-import org.partiql.spi.value.Datum
 
 internal val Fn_MAP_GET__MAP_ANY__ANY: FnOverload = object : FnOverload() {
 
