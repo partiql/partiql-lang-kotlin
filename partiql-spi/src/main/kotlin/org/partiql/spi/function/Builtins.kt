@@ -248,8 +248,8 @@ internal object Builtins {
         Fn_MAP_KEYS__MAP__BAG,
         Fn_MAP_VALUES__MAP__BAG,
         Fn_MAP_ENTRIES__MAP__BAG,
-        Fn_CONTAINS_KEY__MAP_ANY__BOOL,
-        Fn_MAP_GET__MAP_ANY__ANY
+        FnMapContainsKey,
+        FnMapGet
     ).groupBy { it.signature.name }
 
     @JvmStatic

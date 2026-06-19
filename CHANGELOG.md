@@ -27,8 +27,8 @@ Thank you to all who have contributed!
 
 ### Added
 - Added SqlDialect support for MAP expression and type serialization
-- Added MAP functions: contains_key, map_get, map_keys, map_values, map_entries, size, exists, cardinality and `IS MAP<K, V>
-- Added implicit cast when `MAP` lookup key type does not match `MAP` key type.
+- Added MAP functions: map_contains_key, map_get, map_keys, map_values, map_entries, size, exists, cardinality and `IS MAP<K, V>
+- Added implicit cast for `MAP` lookup key type if needed for bracket notation, map_contains_key function and map_get function.
 - Added MAP type operation support: CAST and UNPIVOT
 
 ### Changed
