@@ -8,6 +8,7 @@ import org.partiql.eval.Mode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
+import org.partiql.spi.value.Field
 import java.math.BigDecimal
 
 class MapTests {
@@ -76,6 +77,21 @@ class MapTests {
     @MethodSource("catalogTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun catalogTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("castTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun castTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("castFailureTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun castFailureTests(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("unpivotTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun unpivotTests(tc: SuccessTestCase) = tc.run()
 
     companion object {
 
@@ -494,8 +510,8 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
-                                org.partiql.spi.value.Field.of(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of(
                                     "settings",
                                     Datum.map(
                                         PType.string(),
@@ -506,7 +522,7 @@ class MapTests {
                                         )
                                     )
                                 ),
-                                org.partiql.spi.value.Field.of(
+                                Field.of(
                                     "scores",
                                     Datum.map(
                                         PType.integer(),
@@ -521,8 +537,8 @@ class MapTests {
                         ),
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Bob")),
-                                org.partiql.spi.value.Field.of(
+                                Field.of("name", Datum.string("Bob")),
+                                Field.of(
                                     "settings",
                                     Datum.map(
                                         PType.string(),
@@ -533,7 +549,7 @@ class MapTests {
                                         )
                                     )
                                 ),
-                                org.partiql.spi.value.Field.of(
+                                Field.of(
                                     "scores",
                                     Datum.map(
                                         PType.integer(),
@@ -548,12 +564,12 @@ class MapTests {
                         ),
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
-                                org.partiql.spi.value.Field.of(
+                                Field.of("name", Datum.string("Charlie")),
+                                Field.of(
                                     "settings",
                                     Datum.nullValue(PType.map(PType.string(), PType.string()))
                                 ),
-                                org.partiql.spi.value.Field.of(
+                                Field.of(
                                     "scores",
                                     Datum.missing()
                                 ),
@@ -561,7 +577,20 @@ class MapTests {
                         ),
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Dana")),
+                                Field.of("name", Datum.string("Peter")),
+                                Field.of(
+                                    "settings",
+                                    Datum.nullValue()
+                                ),
+                                Field.of(
+                                    "scores",
+                                    Datum.missing()
+                                ),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Dana")),
                             )
                         ),
                     )
@@ -580,8 +609,8 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
-                                org.partiql.spi.value.Field.of("theme", Datum.string("dark")),
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("theme", Datum.string("dark")),
                             )
                         ),
                     )
@@ -597,8 +626,8 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
-                                org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
+                                Field.of("name", Datum.string("Charlie")),
+                                Field.of("theme", Datum.nullValue()),
                             )
                         ),
                     )
@@ -614,7 +643,7 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Dana")),
+                                Field.of("name", Datum.string("Dana")),
                             )
                         ),
                     )
@@ -629,8 +658,8 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
-                                org.partiql.spi.value.Field.of("score", Datum.integer(5)),
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("score", Datum.integer(5)),
                             )
                         ),
                     )
@@ -646,7 +675,7 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
+                                Field.of("name", Datum.string("Alice")),
                             )
                         ),
                     )
@@ -662,7 +691,7 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
+                                Field.of("name", Datum.string("Charlie")),
                             )
                         ),
                     )
@@ -677,7 +706,7 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Bob")),
+                                Field.of("name", Datum.string("Bob")),
                             )
                         ),
                     )
@@ -693,27 +722,34 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Alice")),
-                                org.partiql.spi.value.Field.of("theme", Datum.string("dark")),
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("theme", Datum.string("dark")),
                             )
                         ),
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Bob")),
-                                org.partiql.spi.value.Field.of("theme", Datum.string("light")),
+                                Field.of("name", Datum.string("Bob")),
+                                Field.of("theme", Datum.string("light")),
                             )
                         ),
-                        // null map → NULL value included
+                        // typed null map → NULL value with map's value type
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Charlie")),
-                                org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
+                                Field.of("name", Datum.string("Charlie")),
+                                Field.of("theme", Datum.nullValue(PType.string())),
+                            )
+                        ),
+                        // untyped null → NULL value (UNKNOWN type)
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Peter")),
+                                Field.of("theme", Datum.nullValue()),
                             )
                         ),
                         // missing field → excluded from struct
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("name", Datum.string("Dana")),
+                                Field.of("name", Datum.string("Dana")),
                             )
                         ),
                     )
@@ -731,7 +767,7 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                org.partiql.spi.value.Field.of("theme", Datum.nullValue()),
+                                Field.of("theme", Datum.nullValue()),
                             )
                         ),
                     )
@@ -749,8 +785,237 @@ class MapTests {
                         Datum.struct(emptyList()),
                         Datum.struct(emptyList()),
                         Datum.struct(emptyList()),
+                        Datum.struct(emptyList()),
                     )
                 ),
+            ),
+        )
+
+        @JvmStatic
+        fun unpivotTestCases() = listOf(
+            SuccessTestCase(
+                name = "UNPIVOT literal map with string keys",
+                input = "SELECT k, v FROM UNPIVOT MAP { 'a': 1, 'b': 2 } AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.string("a")),
+                                Field.of("v", Datum.integer(1)),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.string("b")),
+                                Field.of("v", Datum.integer(2)),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "UNPIVOT empty literal map",
+                input = "SELECT k, v FROM UNPIVOT MAP { } AS v AT k;",
+                expected = Datum.bag(emptyList()),
+            ),
+            SuccessTestCase(
+                name = "UNPIVOT literal map with integer keys",
+                input = "SELECT k, v FROM UNPIVOT MAP { 1: 'one', 2: 'two' } AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.integer(1)),
+                                Field.of("v", Datum.string("one")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.integer(2)),
+                                Field.of("v", Datum.string("two")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "UNPIVOT literal map with decimal keys",
+                input = "SELECT k, v FROM UNPIVOT MAP { 1.0: 'a', 2.5: 'b' } AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.decimal(BigDecimal("1.0"), 38, 19)),
+                                Field.of("v", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("k", Datum.decimal(BigDecimal("2.5"), 38, 19)),
+                                Field.of("v", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
+            SuccessTestCase(
+                name = "UNPIVOT map column with WHERE filter (iterates all rows including null)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM users AS u, UNPIVOT u.settings AS v AT k WHERE u.name = 'Alice';",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("setting_name", Datum.string("theme")),
+                                Field.of("setting_value", Datum.string("dark")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("setting_name", Datum.string("lang")),
+                                Field.of("setting_value", Datum.string("en")),
+                            )
+                        ),
+                    )
+                ),
+            ),*/
+            SuccessTestCase(
+                name = "UNPIVOT map column pre-filtered to Alice (returns key-value pairs)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Alice') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("setting_name", Datum.string("theme")),
+                                Field.of("setting_value", Datum.string("dark")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of("setting_name", Datum.string("lang")),
+                                Field.of("setting_value", Datum.string("en")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
+            SuccessTestCase(
+                name = "UNPIVOT map column pre-filtered to Charlie (typed null wraps as _1)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Charlie') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Peter")),
+                                Field.of("setting_name", Datum.string("_1")),
+                                Field.of("setting_value", Datum.nullValue()),
+                            )
+                        ),
+                    )
+                ),
+            ),*/
+            SuccessTestCase(
+                name = "UNPIVOT map column pre-filtered to Peter (untyped null wraps as _1)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Peter') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Peter")),
+                                Field.of("setting_name", Datum.string("_1")),
+                                Field.of("setting_value", Datum.nullValue()),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "UNPIVOT map column pre-filtered to Dana (missing field returns empty)",
+                globals = catalogGlobals,
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Dana') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(emptyList()),
+            ),
+        )
+
+        @JvmStatic
+        fun castTestCases() = listOf(
+            SuccessTestCase(
+                name = "CAST struct to MAP<STRING, INTEGER>",
+                input = "CAST({'a': 1, 'b': 2} AS MAP<STRING, INTEGER>);",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.integer(),
+                    listOf(
+                        Entry.of(Datum.string("a"), Datum.integer(1)),
+                        Entry.of(Datum.string("b"), Datum.integer(2)),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "CAST empty struct to MAP",
+                input = "CAST({} AS MAP<STRING, INTEGER>);",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.integer(),
+                    emptyList()
+                ),
+            ),
+            SuccessTestCase(
+                name = "CAST struct with duplicate keys to MAP (last-write-wins)",
+                input = "CAST({'a': 1, 'a': 2} AS MAP<STRING, INTEGER>);",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.integer(),
+                    listOf(
+                        Entry.of(Datum.string("a"), Datum.integer(2)),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "CAST MAP<INTEGER, STRING> to MAP<STRING, STRING>",
+                input = "CAST(MAP {1: 'one', 2: 'two'} AS MAP<STRING, STRING>);",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.string(),
+                    listOf(
+                        Entry.of(Datum.string("1"), Datum.string("one")),
+                        Entry.of(Datum.string("2"), Datum.string("two")),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "CAST MAP<STRING, INTEGER> to MAP<STRING, BIGINT>",
+                input = "CAST(MAP {'x': 10, 'y': 20} AS MAP<STRING, BIGINT>);",
+                expected = Datum.map(
+                    PType.string(),
+                    PType.bigint(),
+                    listOf(
+                        Entry.of(Datum.string("x"), Datum.bigint(10)),
+                        Entry.of(Datum.string("y"), Datum.bigint(20)),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "CAST struct to MAP with non-string key type fails (permissive), return missing",
+                input = "CAST({'a': 1, 'b': 2} AS MAP<INTEGER, INTEGER>);",
+                expected = Datum.missing()
+            ),
+        )
+
+        @JvmStatic
+        fun castFailureTestCases() = listOf(
+            FailureTestCase(
+                name = "CAST struct to MAP with non-string key type fails (strict)",
+                input = "CAST({'a': 1, 'b': 2} AS MAP<INTEGER, INTEGER>);",
             ),
         )
     }
