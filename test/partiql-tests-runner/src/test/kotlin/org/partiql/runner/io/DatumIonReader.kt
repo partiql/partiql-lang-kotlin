@@ -406,10 +406,16 @@ class DatumIonReader(
         }
     }
 
-    private fun getPartiQLReservedAnnotation(partiqlAnnotation: List<String>) =
-        partiqlAnnotation.firstNotNullOfOrNull { annotation ->
-            PARTIQL_ANNOTATION.values().find { it.annotation == annotation }
+    private fun getPartiQLReservedAnnotation(partiqlAnnotation: List<String>): PARTIQL_ANNOTATION? {
+        // $map::keytype::valuetype — $map is 3rd from last when annotations.size >= 3
+        if (partiqlAnnotation.size >= 3 && partiqlAnnotation[partiqlAnnotation.size - 3] == PARTIQL_ANNOTATION.MAP_ANNOTATION.annotation) {
+            return PARTIQL_ANNOTATION.MAP_ANNOTATION
         }
+        // For all other PartiQL annotations, the last annotation is the PartiQL one
+        return partiqlAnnotation.lastOrNull()?.let { lastAnnotation ->
+            PARTIQL_ANNOTATION.values().find { it.annotation == lastAnnotation }
+        }
+    }
 
     /**
      * Converts a PType name string (e.g., "string", "integer", "decimal") to a PType.
@@ -436,13 +442,14 @@ class DatumIonReader(
 
     /**
      * Extracts key and value PTypes from map annotations.
-     * Format: $map::keytype::valuetype::[...]
+     * The last 3 annotations are: $map::keytype::valuetype
+     * e.g., user_ann::$map::string::integer::[...]
      * TODO: support $map::[...] without type annotations when dynamic keys are allowed
      */
     private fun getMapTypes(annotations: List<String>): Pair<PType, PType> {
-        if (annotations.size >= 3 && annotations[0] == "\$map") {
-            val keyType = pTypeFromName(annotations[1])
-            val valueType = pTypeFromName(annotations[2])
+        if (annotations.size >= 3 && annotations[annotations.size - 3] == "\$map") {
+            val keyType = pTypeFromName(annotations[annotations.size - 2])
+            val valueType = pTypeFromName(annotations[annotations.size - 1])
             return keyType to valueType
         }
         error("MAP annotation requires key and value types: \$map::keytype::valuetype::[...]. Got annotations: $annotations")
