@@ -40,6 +40,7 @@ object ErrorMessageFormatter {
             ErrorCodeString.EXPERIMENTAL -> experimental(error)
             ErrorCodeString.SET_OP_SCHEMA_INCOMPATIBLE -> setOpSchemaIncompatible(error)
             ErrorCodeString.NOT_IMPLEMENTED -> notImplemented(error)
+            ErrorCodeString.MAP_KEY_NOT_FOUND -> mapKeyNotFound(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -198,6 +199,13 @@ object ErrorMessageFormatter {
         val name = error.getOrNull("FEATURE_NAME", String::class.java)
         val nameStr = prepare(name, " (", ")")
         return "Feature$nameStr not supported"
+    }
+
+    private fun mapKeyNotFound(error: PError): String {
+        val key = error.getOrNull("KEY", Any::class.java)
+        val mapType = error.getOrNull("MAP_TYPE", PType::class.java)
+        // TODO, we need to show Datum key as string in error message.
+        return "Key not found in the map."
     }
 
     private fun pathNeverSucceeds(type: String): String {

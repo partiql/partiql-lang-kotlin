@@ -124,6 +124,7 @@ internal class ExprCallDynamic(
         TIME,
         TIMESTAMP,
         COLLECTION,
+        MAP,
         UNKNOWN,
         DYNAMIC,
         INTERVAL_YM,
@@ -160,6 +161,7 @@ internal class ExprCallDynamic(
                 PType.STRUCT -> CoercionFamily.STRUCTURE
                 PType.ARRAY -> CoercionFamily.COLLECTION
                 PType.BAG -> CoercionFamily.COLLECTION
+                PType.MAP -> CoercionFamily.MAP
                 PType.ROW -> CoercionFamily.STRUCTURE
                 PType.CHAR -> CoercionFamily.STRING
                 PType.VARCHAR -> CoercionFamily.STRING

@@ -40,6 +40,7 @@ class PErrorCodeTests {
             "SET_OP_SCHEMA_INCOMPATIBLE" to 22,
             "NOT_IMPLEMENTED" to 23,
             "INTERRUPTED" to 24,
+            "MAP_KEY_NOT_FOUND" to 25,
         )
 
         // Preparation
