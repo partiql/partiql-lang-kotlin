@@ -40,9 +40,9 @@ class MapTests {
     fun existsTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
-    @MethodSource("containsKeyTestCases")
+    @MethodSource("mapContainsKeyTestCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun containsKeyTests(tc: SuccessTestCase) = tc.run()
+    fun mapContainsKeyTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("mapGetTestCases")
@@ -359,46 +359,46 @@ class MapTests {
         )
 
         @JvmStatic
-        fun containsKeyTestCases() = listOf(
+        fun mapContainsKeyTestCases() = listOf(
             SuccessTestCase(
-                name = "contains_key returns true when key exists",
-                input = "contains_key(MAP { 'a': 1, 'b': 2 }, 'a');",
+                name = "map_contains_key returns true when key exists",
+                input = "map_contains_key(MAP { 'a': 1, 'b': 2 }, 'a');",
                 expected = Datum.bool(true),
             ),
             SuccessTestCase(
-                name = "contains_key returns false when key absent",
-                input = "contains_key(MAP { 'a': 1, 'b': 2 }, 'z');",
+                name = "map_contains_key returns false when key absent",
+                input = "map_contains_key(MAP { 'a': 1, 'b': 2 }, 'z');",
                 expected = Datum.bool(false),
             ),
             SuccessTestCase(
-                name = "contains_key with integer key",
-                input = "contains_key(MAP { 1: 'one', 2: 'two' }, 1);",
+                name = "map_contains_key with integer key",
+                input = "map_contains_key(MAP { 1: 'one', 2: 'two' }, 1);",
                 expected = Datum.bool(true),
             ),
             SuccessTestCase(
-                name = "contains_key with null key returns null",
-                input = "contains_key(MAP { 'a': 1 }, NULL);",
+                name = "map_contains_key with null key returns null",
+                input = "map_contains_key(MAP { 'a': 1 }, NULL);",
                 expected = Datum.nullValue(),
             ),
             SuccessTestCase(
-                name = "contains_key with missing key returns missing",
+                name = "map_contains_key with missing key returns missing",
                 mode = Mode.PERMISSIVE(),
-                input = "contains_key(MAP { 'a': 1 }, MISSING);",
+                input = "map_contains_key(MAP { 'a': 1 }, MISSING);",
                 expected = Datum.missing(),
             ),
             SuccessTestCase(
-                name = "contains_key with decimal key matches same precision",
-                input = "contains_key(MAP { 1.0: 'a', 2.0: 'b' }, 1.0);",
+                name = "map_contains_key with decimal key matches same precision",
+                input = "map_contains_key(MAP { 1.0: 'a', 2.0: 'b' }, 1.0);",
                 expected = Datum.bool(true),
             ),
             SuccessTestCase(
-                name = "contains_key with integer key matches decimal map key (cross-type cast)",
-                input = "contains_key(MAP { 1.0: 'a', 2.0: 'b' }, 1);",
+                name = "map_contains_key with integer key matches decimal map key (cross-type cast)",
+                input = "map_contains_key(MAP { 1.0: 'a', 2.0: 'b' }, 1);",
                 expected = Datum.bool(true),
             ),
             SuccessTestCase(
-                name = "contains_key with explicit cast to different precision",
-                input = "contains_key(MAP { 1.0: 'a', 2.0: 'b' }, CAST(1.0 AS DECIMAL(10,1)));",
+                name = "map_contains_key with explicit cast to different precision",
+                input = "map_contains_key(MAP { 1.0: 'a', 2.0: 'b' }, CAST(1.0 AS DECIMAL(10,1)));",
                 expected = Datum.bool(true),
             ),
         )

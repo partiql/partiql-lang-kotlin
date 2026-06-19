@@ -8,10 +8,10 @@ import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_CONTAINS_KEY__MAP_ANY__BOOL: FnOverload = object : FnOverload() {
+internal object FnMapContainsKey : FnOverload() {
 
     override fun getSignature(): RoutineOverloadSignature {
-        return RoutineOverloadSignature("contains_key", listOf(PType.map(PType.string(), PType.dynamic()), PType.dynamic()))
+        return RoutineOverloadSignature("map_contains_key", listOf(PType.map(PType.string(), PType.dynamic()), PType.dynamic()))
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
@@ -19,7 +19,7 @@ internal val Fn_CONTAINS_KEY__MAP_ANY__BOOL: FnOverload = object : FnOverload() 
         if (mapType.code() != PType.MAP) return null
         val keyType = mapType.keyType
         return Function.instance(
-            name = "contains_key",
+            name = "map_contains_key",
             returns = PType.bool(),
             parameters = arrayOf(
                 Parameter("map", mapType),

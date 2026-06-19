@@ -8,7 +8,7 @@ import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
 
-internal val Fn_MAP_GET__MAP_ANY__ANY: FnOverload = object : FnOverload() {
+internal object FnMapGet : FnOverload() {
 
     override fun getSignature(): RoutineOverloadSignature {
         return RoutineOverloadSignature("map_get", listOf(PType.map(PType.string(), PType.dynamic()), PType.dynamic()))
