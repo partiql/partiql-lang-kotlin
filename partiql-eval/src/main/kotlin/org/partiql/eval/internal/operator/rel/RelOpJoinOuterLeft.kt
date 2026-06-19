@@ -10,11 +10,8 @@ import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
 /**
- * Left Outer Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true. For all
- * records from the [lhs] that do not evaluate to true, these are also returned along with a NULL record from the [rhs].
- *
- * Note: This is currently the lateral version of the left outer join. In the future, the two implementations
- * (lateral vs non-lateral) may be separated for performance improvements.
+ * Non-lateral left outer join. Both sides are opened independently. The RHS is materialized once
+ * and rescanned for each LHS row. LHS rows with no match are preserved with NULL-padded RHS.
  */
 internal class RelOpJoinOuterLeft(
     private val lhs: ExprRelation,
@@ -23,19 +20,23 @@ internal class RelOpJoinOuterLeft(
     rhsType: RelType,
 ) : RelOpPeeking() {
 
-    // TODO BETTER MECHANISM FOR NULL PADDING
-    private val rhsPadded =
-        Row(
-            rhsType.getFields().map { Datum.nullValue(it.type) }
-                .toTypedArray()
-        )
+    private val rhsPadded = Row(
+        rhsType.getFields().map { Datum.nullValue(it.type) }.toTypedArray()
+    )
 
     private lateinit var env: Environment
     private lateinit var iterator: Iterator<Row>
+    private lateinit var rhsRows: List<Row>
 
     override fun openPeeking(env: Environment) {
         this.env = env
         lhs.open(env)
+        rhs.open(env)
+        // Materialize RHS so we can rescan per LHS row
+        rhsRows = mutableListOf<Row>().also { list ->
+            for (row in rhs) { list.add(row) }
+        }
+        rhs.close()
         iterator = implementation()
     }
 
@@ -48,31 +49,29 @@ internal class RelOpJoinOuterLeft(
 
     override fun closePeeking() {
         lhs.close()
-        rhs.close()
         iterator = emptyList<Row>().iterator()
     }
 
     /**
-     * LEFT OUTER JOIN (LATERAL)
+     * LEFT OUTER JOIN (NON-LATERAL)
      *
      * Algorithm:
      * ```
+     * rhsRows = materialize(rhs)
      * for lhsRecord in lhs:
-     *   for rhsRecord in rhs(lhsRecord):
+     *   matched = false
+     *   for rhsRecord in rhsRows:
      *     if (condition matches):
-     *       conditionMatched = true
+     *       matched = true
      *       yield(lhsRecord + rhsRecord)
-     *   if (!conditionMatched):
+     *   if (!matched):
      *     yield(lhsRecord + NULL_RECORD)
      * ```
-     *
-     * Development Note: The non-lateral version wouldn't need to push to the current environment.
      */
     private fun implementation() = iterator {
         for (lhsRecord in lhs) {
             var lhsMatched = false
-            rhs.open(env.push(lhsRecord))
-            for (rhsRecord in rhs) {
+            for (rhsRecord in rhsRows) {
                 checkInterrupted()
                 val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
@@ -81,7 +80,6 @@ internal class RelOpJoinOuterLeft(
                     yield(lhsRecord.concat(rhsRecord))
                 }
             }
-            rhs.close()
             if (!lhsMatched) {
                 yield(lhsRecord.concat(rhsPadded))
             }

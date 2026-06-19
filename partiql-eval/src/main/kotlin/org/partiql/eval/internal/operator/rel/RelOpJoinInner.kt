@@ -8,10 +8,8 @@ import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.helpers.checkInterrupted
 
 /**
- * Inner Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true.
- *
- * Note: This is currently the lateral version of the inner join. In the future, the two implementations
- * (lateral vs non-lateral) may be separated for performance improvements.
+ * Non-lateral inner join. Both sides are opened independently. The RHS is materialized once and
+ * rescanned for each LHS row. The condition is evaluated on the combined row.
  */
 internal class RelOpJoinInner(
     private val lhs: ExprRelation,
@@ -25,8 +23,16 @@ internal class RelOpJoinInner(
     override fun openPeeking(env: Environment) {
         this.env = env
         lhs.open(env)
+        rhs.open(env)
+        // Materialize RHS so we can rescan per LHS row
+        rhsRows = mutableListOf<Row>().also { list ->
+            for (row in rhs) { list.add(row) }
+        }
+        rhs.close()
         iterator = implementation()
     }
+
+    private lateinit var rhsRows: List<Row>
 
     override fun peek(): Row? {
         return when (iterator.hasNext()) {
@@ -37,28 +43,24 @@ internal class RelOpJoinInner(
 
     override fun closePeeking() {
         lhs.close()
-        rhs.close()
         iterator = emptyList<Row>().iterator()
     }
 
     /**
-     * INNER JOIN (LATERAL)
+     * INNER JOIN (NON-LATERAL)
      *
      * Algorithm:
      * ```
+     * rhsRows = materialize(rhs)
      * for lhsRecord in lhs:
-     *   for rhsRecord in rhs(lhsRecord):
+     *   for rhsRecord in rhsRows:
      *     if (condition matches):
-     *       conditionMatched = true
      *       yield(lhsRecord + rhsRecord)
      * ```
-     *
-     * Development Note: The non-lateral version wouldn't need to push to the current environment.
      */
     private fun implementation() = iterator {
         for (lhsRecord in lhs) {
-            rhs.open(env.push(lhsRecord))
-            for (rhsRecord in rhs) {
+            for (rhsRecord in rhsRows) {
                 checkInterrupted()
                 val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))

@@ -243,8 +243,7 @@ internal class PlanToExecTransform(
             JoinType.LEFT -> PJoinType.LEFT
             else -> error("Unsupported correlate join type: ${rel.joinType}")
         }
-        val condition = PExpr.Lit(Datum.bool(true))
-        return PRel.Join(visitRel(rel.left), visitRel(rel.right), condition, joinType, rel.type)
+        return PRel.Correlate(visitRel(rel.left), visitRel(rel.right), joinType, rel.type)
     }
 
     override fun visitSort(rel: RelSort, ctx: Unit): Any =
