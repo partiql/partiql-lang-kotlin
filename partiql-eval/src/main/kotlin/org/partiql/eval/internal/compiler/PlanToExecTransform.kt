@@ -8,7 +8,6 @@ import org.partiql.eval.compiler.Strategy
 import org.partiql.eval.internal.plan.ExecutionPlanImpl
 import org.partiql.eval.internal.plan.PCollation
 import org.partiql.eval.internal.plan.PExpr
-import org.partiql.spi.value.Datum
 import org.partiql.eval.internal.plan.PJoinType
 import org.partiql.eval.internal.plan.PMeasure
 import org.partiql.eval.internal.plan.PRel

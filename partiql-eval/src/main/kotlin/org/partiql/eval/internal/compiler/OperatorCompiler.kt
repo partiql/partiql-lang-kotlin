@@ -7,6 +7,8 @@ import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.Collation
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
+import org.partiql.eval.internal.operator.rel.RelOpCorrelateInner
+import org.partiql.eval.internal.operator.rel.RelOpCorrelateLeft
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
 import org.partiql.eval.internal.operator.rel.RelOpExceptAll
 import org.partiql.eval.internal.operator.rel.RelOpExceptDistinct
@@ -16,8 +18,6 @@ import org.partiql.eval.internal.operator.rel.RelOpIntersectAll
 import org.partiql.eval.internal.operator.rel.RelOpIntersectDistinct
 import org.partiql.eval.internal.operator.rel.RelOpIterate
 import org.partiql.eval.internal.operator.rel.RelOpIteratePermissive
-import org.partiql.eval.internal.operator.rel.RelOpCorrelateInner
-import org.partiql.eval.internal.operator.rel.RelOpCorrelateLeft
 import org.partiql.eval.internal.operator.rel.RelOpJoinInner
 import org.partiql.eval.internal.operator.rel.RelOpJoinOuterFull
 import org.partiql.eval.internal.operator.rel.RelOpJoinOuterLeft

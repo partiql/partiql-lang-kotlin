@@ -19,6 +19,7 @@ internal class RelOpJoinInner(
 
     private lateinit var env: Environment
     private lateinit var iterator: Iterator<Row>
+    private lateinit var rhsRows: List<Row>
 
     override fun openPeeking(env: Environment) {
         this.env = env
@@ -31,8 +32,6 @@ internal class RelOpJoinInner(
         rhs.close()
         iterator = implementation()
     }
-
-    private lateinit var rhsRows: List<Row>
 
     override fun peek(): Row? {
         return when (iterator.hasNext()) {

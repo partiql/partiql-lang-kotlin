@@ -61,6 +61,7 @@ internal class RelOpCorrelateInner(
                 checkInterrupted()
                 yield(lhsRecord.concat(rhsRecord))
             }
+            rhs.close()
         }
     }
 }
