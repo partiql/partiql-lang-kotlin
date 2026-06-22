@@ -192,6 +192,70 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
     }
 
     /**
+     * Returns true if [node] contains any Rex.Op.Var.Local that references the join's LHS scope.
+     *
+     * We want to be able to assert on whether a variable introduced in LHS is referenced in RHS.
+     * For example:
+     *  1. Direct path reference: `FROM t, t.items`.
+     *  2. Subquery `FROM t INNER JOIN (SELECT ... FROM ... WHERE t.n > ...)
+     *
+     * Recall that RelTyper has a `List<Scope>` field, representing all scopes visible from enclosing contexts.
+     * We call the RelType's `List<Scope>` field `outer`.
+     *
+     * Now consider `FROM LHS, RHS`, LHS introduce a new Scope, `Scope(lhs.type.schema, outer)`,
+     * and when resolving the RHS, the environment we used are `outer + lhsScope`.
+     *
+     * It is entirely possible that RHS itself introduces additional scope (i.e, Subquery).
+     * To measure the scope introduced between the RHS root and node v, we defined a function `nesting`,
+     * nesting(v): For a node v in the typed RHS tree, defined recursively:
+     *  - nesting(RHS root) = 0
+     *  - nesting(v) = nesting(parent) + 1, if parent introduced an additional scope.
+     *  - nesting(v) = nesting(parent) otherwise.
+     *
+     * We claim: A Rex.Op.Var.Local(depth, ref) at node v in the RHS references the LHS scope
+     * iff depth == nesting(v) + 1.
+     *
+     * More formally: Let P(n) be the statement: "For any Rex.Op.Var.Local(depth, ref) at a node v with
+     * nesting(v) = n, the variable references lhsScope iff depth = n + 1.
+     *
+     * Base case (nesting=0):
+     * At nesting 0, the variable lives directly in the RHS scan's rex.
+     * The RHS scan types its rex by creating Scope(schema=[], outer=outer_rhs), that is: |outer_rhs| = |outer_lhs| + 1.
+     * Scope.matchRoot resolves at depth=d by accessing outer[|outer_rhs| - d].
+     * lhsScope is at index |outer_lhs| = |outer_rhs| - 1.
+     * So depth to reach lhsScope: |outer_rhs| - d = |outer_lhs| → d = |outer_rhs| - |outer_lhs| = 1.
+     * Therefore, depth = 1 === 0 + 1 (nesting + 1). P(0) holds true.
+     *
+     * Inductive step: Assume P(n) holds. We prove P(n + 1).
+     *
+     * A node v with nesting(v) = n + 1
+     * means v is inside a scope-introducing boundary (SELECT, Subquery, Pivot) whose parent has nesting n.
+     *
+     * This means upon resolving the node v, outer = previous_outer + [ previous_scope ].
+     *
+     * The new scope used for resolution has outer list size S_new = S_previous + 1.
+     * lhsScope is still at index |outer_lhs|.
+     *
+     * Depth to reach lhsScope = S_new - |outer_lhs| = (S_old + 1) - |outer_lhs| = (S_old - |outer_lhs|) + 1.
+     * Since S_old - |outer_lhs| was the previous depth (nesting_old + 1), we get:
+     * depth = nesting_old + 1 + 1 === nesting_new + 1.
+     *
+     * Depth to reach lhsScope from the new scope: S_new - |outer_lhs|.
+     *
+     * From P(n), we know S_previous - |outer_lhs| = n + 1. Therefore:
+     *  S_new - |outer_lhs| = (S_previous + 1) - |outer_lhs| = (S_previous - |outer_lhs|) + 1 = (n + 1) + 1 = n + 2.
+     */
+    private fun hasOuterReference(node: PlanNode, nesting: Int = 0): Boolean {
+        if (node is Rex && node.op is Rex.Op.Var.Local) {
+            return node.op.depth == nesting + 1
+        }
+        if (node is Rex && (node.op is Rex.Op.Select || node.op is Rex.Op.Subquery || node.op is Rex.Op.Pivot)) {
+            return node.children.any { hasOuterReference(it, nesting + 1) }
+        }
+        return node.children.any { hasOuterReference(it, nesting) }
+    }
+
+    /**
      * Types the relational operators of a query expression.
      *
      * @property outer represents the outer variable scopes of a query expression — only used by scan variable resolution.
@@ -708,15 +772,31 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             }
             val rhs = RelTyper(stack, Strategy.GLOBAL).visitRel(node.rhs, ctx)
 
+            // Detect correlation: does the RHS reference the LHS scope?
+            val isLateral = hasOuterReference(rhs)
+
             // Calculate output schema given JOIN type
             val schema = lhs.type.schema + rhs.type.schema
             val type = relType(schema, ctx!!.props)
 
-            // Type the condition on the output schema
-            val typeEnv = TypeEnv(env, Scope(type.schema, outer))
-            val condition = node.rex.type(typeEnv)
-
-            val op = relOpJoin(lhs, rhs, condition, node.type)
+            val op = if (isLateral) {
+                val correlateType = when (node.type) {
+                    Rel.Op.Join.Type.INNER -> Rel.Op.Correlate.Type.INNER
+                    Rel.Op.Join.Type.LEFT -> Rel.Op.Correlate.Type.LEFT
+                    else -> error("Correlated RIGHT/FULL join should not occur")
+                }
+                // Type condition in the RHS scope (LHS at depth=1, RHS at depth=0)
+                val rhsTypeEnv = TypeEnv(env, Scope(rhs.type.schema, stack))
+                val condition = node.rex.type(rhsTypeEnv)
+                // Wrap condition as filter on RHS
+                val finalRhs = rel(rhs.type, relOpFilter(rhs, condition))
+                Rel.Op.Correlate(lhs, finalRhs, correlateType)
+            } else {
+                // Type condition on the combined output schema
+                val typeEnv = TypeEnv(env, Scope(type.schema, outer))
+                val condition = node.rex.type(typeEnv)
+                relOpJoin(lhs, rhs, condition, node.type)
+            }
             return rel(type, op)
         }
 
