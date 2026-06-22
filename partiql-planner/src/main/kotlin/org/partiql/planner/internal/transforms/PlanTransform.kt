@@ -329,6 +329,16 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
             return operators.join(lhs, rhs, condition, joinType)
         }
 
+        override fun visitRelOpCorrelate(node: IRel.Op.Correlate, ctx: PType): Any {
+            val lhs = visitRel(node.lhs, ctx)
+            val rhs = visitRel(node.rhs, ctx)
+            val joinType = when (node.type) {
+                IRel.Op.Correlate.Type.INNER -> JoinType.INNER()
+                IRel.Op.Correlate.Type.LEFT -> JoinType.LEFT()
+            }
+            return operators.correlate(lhs, rhs, joinType)
+        }
+
         override fun visitRelOpExclude(node: IRel.Op.Exclude, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
             val paths = node.paths.mapNotNull { visitRelOpExcludePath(it, ctx) }

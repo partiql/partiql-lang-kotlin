@@ -11,6 +11,7 @@ import org.partiql.planner.internal.ir.builder.RelBuilder
 import org.partiql.planner.internal.ir.builder.RelOpAggregateBuilder
 import org.partiql.planner.internal.ir.builder.RelOpAggregateCallResolvedBuilder
 import org.partiql.planner.internal.ir.builder.RelOpAggregateCallUnresolvedBuilder
+import org.partiql.planner.internal.ir.builder.RelOpCorrelateBuilder
 import org.partiql.planner.internal.ir.builder.RelOpDistinctBuilder
 import org.partiql.planner.internal.ir.builder.RelOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExceptBuilder
@@ -823,6 +824,7 @@ internal data class Rel(
             is Offset -> visitor.visitRelOpOffset(this, ctx)
             is Project -> visitor.visitRelOpProject(this, ctx)
             is Join -> visitor.visitRelOpJoin(this, ctx)
+            is Correlate -> visitor.visitRelOpCorrelate(this, ctx)
             is Aggregate -> visitor.visitRelOpAggregate(this, ctx)
             is Exclude -> visitor.visitRelOpExclude(this, ctx)
             is Err -> visitor.visitRelOpErr(this, ctx)
@@ -1183,6 +1185,30 @@ internal data class Rel(
             internal companion object {
                 @JvmStatic
                 internal fun builder(): RelOpJoinBuilder = RelOpJoinBuilder()
+            }
+        }
+
+        internal data class Correlate(
+            @JvmField internal val lhs: Rel,
+            @JvmField internal val rhs: Rel,
+            @JvmField internal val type: Type,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(lhs)
+                kids.add(rhs)
+                kids.filterNotNull()
+            }
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpCorrelate(this, ctx)
+
+            internal enum class Type {
+                INNER, LEFT,
+            }
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RelOpCorrelateBuilder = RelOpCorrelateBuilder()
             }
         }
 
