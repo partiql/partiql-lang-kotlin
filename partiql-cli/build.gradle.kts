@@ -26,6 +26,7 @@ dependencies {
     implementation(project(":partiql-planner"))
     implementation(project(":partiql-spi"))
     implementation(testFixtures(project(":partiql-spi")))
+    implementation(Deps.jacksonDatabind)
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
