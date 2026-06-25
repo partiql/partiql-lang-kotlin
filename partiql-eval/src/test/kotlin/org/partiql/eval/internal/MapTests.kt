@@ -949,7 +949,6 @@ class MapTests {
                     )
                 ),
             ),
-            /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
                 name = "UNPIVOT map column with WHERE filter (iterates all rows including null)",
                 globals = catalogGlobals,
@@ -972,7 +971,7 @@ class MapTests {
                         ),
                     )
                 ),
-            ),*/
+            ),
             SuccessTestCase(
                 name = "UNPIVOT map column pre-filtered to Alice (returns key-value pairs)",
                 globals = catalogGlobals,
@@ -996,7 +995,6 @@ class MapTests {
                     )
                 ),
             ),
-            /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
                 name = "UNPIVOT map column pre-filtered to Charlie (typed null wraps as _1)",
                 globals = catalogGlobals,
@@ -1005,14 +1003,14 @@ class MapTests {
                     listOf(
                         Datum.struct(
                             listOf(
-                                Field.of("name", Datum.string("Peter")),
+                                Field.of("name", Datum.string("Charlie")),
                                 Field.of("setting_name", Datum.string("_1")),
-                                Field.of("setting_value", Datum.nullValue()),
+                                Field.of("setting_value", Datum.nullValue(PType.map(PType.string(), PType.string()))),
                             )
                         ),
                     )
                 ),
-            ),*/
+            ),
             SuccessTestCase(
                 name = "UNPIVOT map column pre-filtered to Peter (untyped null wraps as _1)",
                 globals = catalogGlobals,
