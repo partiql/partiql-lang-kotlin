@@ -983,6 +983,11 @@ internal object RexConverter {
                 DataType.LIST -> call(FunctionUtils.OP_IS_LIST, arg0)
                 DataType.BAG -> call(FunctionUtils.OP_IS_BAG, arg0)
                 DataType.SEXP -> call(FunctionUtils.OP_IS_SEXP, arg0)
+                DataType.MAP -> {
+                    val keyPTypeCode = visitType(targetType.keyType).code()
+                    val valuePTypeCode = visitType(targetType.elementType).code()
+                    call(FunctionUtils.OP_IS_MAP, keyPTypeCode.toRex(), valuePTypeCode.toRex(), arg0)
+                }
                 // <user defined type>
                 DataType.USER_DEFINED -> call(FunctionUtils.OP_IS_CUSTOM, arg0)
                 else -> error("Unexpected DataType type: $targetType")

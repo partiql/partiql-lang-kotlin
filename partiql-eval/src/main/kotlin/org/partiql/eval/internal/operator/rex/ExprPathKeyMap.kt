@@ -22,6 +22,12 @@ internal class ExprPathKeyMap(
         if (input.isMissing || k.isMissing) {
             return Datum.missing(input.type.valueType)
         }
-        return input.get(k).orElseThrow { PErrors.pathKeyFailureException() }
+        val mapKeyType = input.type.keyType
+        val castKey = if (k.type.code() != mapKeyType.code()) {
+            CastTable.cast(k, mapKeyType)
+        } else {
+            k
+        }
+        return input.get(castKey).orElseThrow { PErrors.mapKeyNotFoundException(k, input.type) }
     }
 }

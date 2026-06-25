@@ -25,7 +25,8 @@ internal class ExprPermissive(private var expr: ExprValue) :
                 PError.TYPE_UNEXPECTED,
                 PError.UNDEFINED_CAST,
                 PError.INVALID_CHAR_VALUE_FOR_CAST,
-                PError.PATH_KEY_NEVER_SUCCEEDS -> Datum.missing()
+                PError.PATH_KEY_NEVER_SUCCEEDS,
+                PError.MAP_KEY_NOT_FOUND -> Datum.missing()
                 else -> throw e
             }
         } catch (e: InvalidOperationException) {
