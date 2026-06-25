@@ -18,7 +18,7 @@ internal object FnMapContainsKey : FnOverload() {
     override fun getInstance(args: Array<PType>): Fn? {
         val mapType = args[0]
         // Accept MAP, DYNAMIC, and UNKNOWN (NULL literal) so function resolution succeeds
-        // and the body can handle null propagation at runtime.
+        // and isNullCall can handle null propagation at runtime.
         if (mapType.code() != PType.MAP && mapType.code() != PType.DYNAMIC && mapType.code() != PType.UNKNOWN) return null
         // For MAP, extract the declared key type; for DYNAMIC/UNKNOWN, accept any key type
         val mapKeyType = if (mapType.code() == PType.MAP) mapType.keyType else PType.dynamic()

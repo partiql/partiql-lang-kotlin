@@ -41,11 +41,6 @@ internal class SqlTypeFamily private constructor(
             PType.INTEGER, PType.TINYINT, PType.SMALLINT, PType.BIGINT, PType.REAL, PType.DOUBLE, PType.DECIMAL, PType.NUMERIC -> NUMBER
             PType.CHAR, PType.VARCHAR, PType.STRING, PType.CLOB -> TEXT
             PType.BAG, PType.ARRAY -> COLLECTION
-            PType.BOOL -> BOOLEAN
-            PType.DATE, PType.TIMESTAMP, PType.TIMESTAMPZ -> DATE_TIMESTAMP
-            PType.TIME, PType.TIMEZ -> TIME
-            PType.INTERVAL_YM -> INTERVAL
-            PType.INTERVAL_DT -> INTERVAL
             else -> SqlTypeFamily(type)
         }
 

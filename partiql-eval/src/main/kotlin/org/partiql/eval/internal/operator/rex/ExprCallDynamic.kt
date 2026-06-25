@@ -132,9 +132,7 @@ internal class ExprCallDynamic(
                 }
                 val argType = arg.type
                 val paramType = function.signature.parameters[i]
-                // Skip cast for MAP params — function signatures default to MAP<STRING, DYNAMIC>,
-                // but the actual map may have non-string keys. The function body handles key casting.
-                when (paramType.type.code() == PType.MAP || paramType.type == argType) {
+                when (paramType.type == argType) {
                     true -> arg
                     false -> CastTable.cast(arg, paramType.type)
                 }
