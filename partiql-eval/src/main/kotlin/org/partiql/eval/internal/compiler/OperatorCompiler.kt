@@ -7,6 +7,8 @@ import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.Collation
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
+import org.partiql.eval.internal.operator.rel.RelOpCorrelateInner
+import org.partiql.eval.internal.operator.rel.RelOpCorrelateLeft
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
 import org.partiql.eval.internal.operator.rel.RelOpExceptAll
 import org.partiql.eval.internal.operator.rel.RelOpExceptDistinct
@@ -201,6 +203,16 @@ internal class OperatorCompiler(
                     PJoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType)
                     PJoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType)
                     PJoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType, rhsType)
+                }
+            }
+            is PRel.Correlate -> {
+                val lhs = compileRel(rel.lhs)
+                val rhs = compileRel(rel.rhs)
+                val rhsType = rel.rhs.type!!
+                when (rel.joinType) {
+                    PJoinType.INNER -> RelOpCorrelateInner(lhs, rhs)
+                    PJoinType.LEFT -> RelOpCorrelateLeft(lhs, rhs, rhsType)
+                    else -> error("Unsupported correlate join type: ${rel.joinType}")
                 }
             }
             is PRel.Sort -> RelOpSort(compileRel(rel.input), rel.collations.map { toCollation(it) })
