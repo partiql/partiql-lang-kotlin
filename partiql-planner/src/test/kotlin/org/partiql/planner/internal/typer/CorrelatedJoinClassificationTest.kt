@@ -121,6 +121,12 @@ internal class CorrelatedJoinClassificationTest {
     }
 
     @Test
+    fun `correlated - implicit path lateral reference (nesting=0)`() {
+        val stmt = plan("SELECT VALUE x FROM << {'items': [1, 2]} >> AS t INNER JOIN items AS x ON true")
+        assertCorrelate(stmt, "Path lateral: t.items references LHS at nesting=0")
+    }
+
+    @Test
     fun `correlated - path lateral with ON condition`() {
         // Path lateral with non-trivial ON condition. Condition should be pushed as Filter on RHS.
         val stmt = plan(
