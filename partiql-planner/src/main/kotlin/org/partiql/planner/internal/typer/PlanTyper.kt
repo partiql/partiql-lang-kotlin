@@ -16,6 +16,7 @@
 
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.internal.CoercionFamily
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.PlannerFlag
@@ -275,7 +276,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel {
             val rex = node.rex.type(emptyList(), outer, Strategy.GLOBAL)
             val op = relOpUnpivot(rex)
-            val kType = PType.string()
+            val kType = PType.dynamic()
 
             // Check Root (Dynamic)
             if (rex.type.code() == PType.DYNAMIC || rex.type.code() == PType.VARIANT) {
@@ -283,15 +284,19 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 return rel(type, op)
             }
 
-            // Check Root
+            val resolvedKeyType = when (rex.type.code()) {
+                PType.MAP -> rex.type.keyType
+                else -> kType
+            }
             val vType = when (rex.type.code()) {
                 PType.ROW -> anyOf(rex.type.fields.map { it.type }) ?: PType.dynamic()
                 PType.STRUCT -> PType.dynamic()
+                PType.MAP -> rex.type.valueType
                 else -> rex.type
             }
 
             // rewrite
-            val type = ctx!!.copyWithSchema(listOf(kType, vType).toCType())
+            val type = ctx!!.copyWithSchema(listOf(resolvedKeyType, vType).toCType())
             return rel(type, op)
         }
 
@@ -953,6 +958,9 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 val mapKeyType = CompilerType(root.type.keyType)
                 val valueType = CompilerType(root.type.valueType)
                 val castKey = if (key.type != mapKeyType) {
+                    if (!CoercionFamily.canCoerce(key.type, mapKeyType)) {
+                        return errorRexAndReport(_listener, PErrors.mapKeyTypeMismatch(null, key.type, mapKeyType))
+                    }
                     val cast = env.resolveCast(key, mapKeyType)
                     if (cast != null) rex(mapKeyType, cast) else key
                 } else {

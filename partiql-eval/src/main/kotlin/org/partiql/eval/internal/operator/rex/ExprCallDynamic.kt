@@ -3,10 +3,9 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
+import org.partiql.eval.internal.helpers.CoercionFamily
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.helpers.PErrors
-import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
-import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
@@ -83,7 +82,7 @@ internal class ExprCallDynamic(
     private fun match(args: Array<PType>): Candidate? {
         var exactMatches: Int = -1
         var currentMatch: Int? = null
-        val argFamilies = args.map { family(it.code()) }
+        val argFamilies = args.map { CoercionFamily.family(it.code()) }
         functions.indices.forEach { candidateIndex ->
             var currentExactMatches = 0
             val params = functions[candidateIndex].getInstance(args)?.signature?.parameters ?: return@forEach
@@ -92,8 +91,8 @@ internal class ExprCallDynamic(
                 val paramType = params[paramIndex]
                 if (paramType.type.code() == argType.code()) { currentExactMatches++ } // TODO: Convert all functions to use the new modelling, or else we need to only check kinds
                 val argFamily = argFamilies[paramIndex]
-                val paramFamily = family(paramType.type.code())
-                if (paramFamily != argFamily && argFamily != UNKNOWN && paramFamily != DYNAMIC) { return@forEach }
+                val paramFamily = CoercionFamily.family(paramType.type.code())
+                if (paramFamily != argFamily && argFamily != CoercionFamily.UNKNOWN && paramFamily != CoercionFamily.DYNAMIC) { return@forEach }
             }
             if (currentExactMatches > exactMatches) {
                 currentMatch = candidateIndex
@@ -103,77 +102,6 @@ internal class ExprCallDynamic(
         return if (currentMatch == null) null else {
             val instance = functions[currentMatch!!].getInstance(args) ?: return null
             Candidate(instance)
-        }
-    }
-
-    /**
-     * This represents SQL:1999 Section 4.1.2 "Type conversions and mixing of data types" and breaks down the different
-     * coercion groups.
-     *
-     * TODO: [UNKNOWN] should likely be removed in the future. However, it is needed due to literal nulls and missings.
-     * TODO: [DYNAMIC] should likely be removed in the future. This is currently only kept to map function signatures.
-     */
-    private enum class CoercionFamily {
-        NUMBER,
-        STRING,
-        BINARY,
-        BOOLEAN,
-        STRUCTURE,
-        DATE,
-        DATE_TIMESTAMP,
-        TIME,
-        TIMESTAMP,
-        COLLECTION,
-        MAP,
-        UNKNOWN,
-        DYNAMIC,
-        INTERVAL_YM,
-        INTERVAL_DT,
-        ;
-    }
-
-    private companion object {
-        /**
-         * Gets the coercion family for the given [PType.Kind].
-         *
-         * @see CoercionFamily
-         * @see PType.Kind
-         * @see family
-         */
-        @JvmStatic
-        fun family(type: Int): CoercionFamily {
-            return when (type) {
-                PType.TINYINT -> CoercionFamily.NUMBER
-                PType.SMALLINT -> CoercionFamily.NUMBER
-                PType.INTEGER -> CoercionFamily.NUMBER
-                PType.NUMERIC -> CoercionFamily.NUMBER
-                PType.BIGINT -> CoercionFamily.NUMBER
-                PType.REAL -> CoercionFamily.NUMBER
-                PType.DOUBLE -> CoercionFamily.NUMBER
-                PType.DECIMAL -> CoercionFamily.NUMBER
-                PType.STRING -> CoercionFamily.STRING
-                PType.BOOL -> CoercionFamily.BOOLEAN
-                PType.TIMEZ -> CoercionFamily.TIME
-                PType.TIME -> CoercionFamily.TIME
-                PType.TIMESTAMPZ -> CoercionFamily.DATE_TIMESTAMP
-                PType.TIMESTAMP -> CoercionFamily.DATE_TIMESTAMP
-                PType.DATE -> CoercionFamily.DATE_TIMESTAMP
-                PType.STRUCT -> CoercionFamily.STRUCTURE
-                PType.ARRAY -> CoercionFamily.COLLECTION
-                PType.BAG -> CoercionFamily.COLLECTION
-                PType.MAP -> CoercionFamily.MAP
-                PType.ROW -> CoercionFamily.STRUCTURE
-                PType.CHAR -> CoercionFamily.STRING
-                PType.VARCHAR -> CoercionFamily.STRING
-                PType.DYNAMIC -> DYNAMIC // TODO: REMOVE
-                PType.BLOB -> CoercionFamily.BINARY
-                PType.CLOB -> CoercionFamily.STRING
-                PType.INTERVAL_YM -> CoercionFamily.INTERVAL_YM
-                PType.INTERVAL_DT -> CoercionFamily.INTERVAL_DT
-                PType.UNKNOWN -> UNKNOWN // TODO: REMOVE
-                PType.VARIANT -> UNKNOWN // TODO: HANDLE VARIANT
-                else -> error("Unknown type: $type")
-            }
         }
     }
 
@@ -204,7 +132,9 @@ internal class ExprCallDynamic(
                 }
                 val argType = arg.type
                 val paramType = function.signature.parameters[i]
-                when (paramType.type == argType) {
+                // Skip cast for MAP params — function signatures default to MAP<STRING, DYNAMIC>,
+                // but the actual map may have non-string keys. The function body handles key casting.
+                when (paramType.type.code() == PType.MAP || paramType.type == argType) {
                     true -> arg
                     false -> CastTable.cast(arg, paramType.type)
                 }

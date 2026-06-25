@@ -130,6 +130,23 @@ internal object PErrors {
         )
     }
 
+    internal fun mapKeyTypeMismatch(
+        location: SourceLocation?,
+        keyType: PType,
+        mapKeyType: PType
+    ): PError {
+        return PError(
+            PError.MAP_KEY_TYPE_MISMATCH,
+            Severity.WARNING(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf(
+                "KEY_TYPE" to keyType,
+                "MAP_KEY_TYPE" to mapKeyType
+            )
+        )
+    }
+
     /**
      * @param location see [PError.location]
      * @return an error representing [PError.PATH_SYMBOL_NEVER_SUCCEEDS]

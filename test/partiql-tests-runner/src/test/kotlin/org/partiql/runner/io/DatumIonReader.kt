@@ -428,7 +428,7 @@ class DatumIonReader(
         "integer", "int" -> PType.integer()
         "bigint" -> PType.bigint()
         "numeric" -> PType.numeric()
-        "decimal" -> PType.decimal()
+        "decimal" -> PType.decimal(38, 19)
         "real" -> PType.real()
         "double" -> PType.doublePrecision()
         "string" -> PType.string()

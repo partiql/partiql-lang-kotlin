@@ -41,6 +41,7 @@ object ErrorMessageFormatter {
             ErrorCodeString.SET_OP_SCHEMA_INCOMPATIBLE -> setOpSchemaIncompatible(error)
             ErrorCodeString.NOT_IMPLEMENTED -> notImplemented(error)
             ErrorCodeString.MAP_KEY_NOT_FOUND -> mapKeyNotFound(error)
+            ErrorCodeString.MAP_KEY_TYPE_MISMATCH -> mapKeyTypeMismatch(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -206,6 +207,12 @@ object ErrorMessageFormatter {
         val mapType = error.getOrNull("MAP_TYPE", PType::class.java)
         // TODO, we need to show Datum key as string in error message.
         return "Key not found in the map."
+    }
+
+    private fun mapKeyTypeMismatch(error: PError): String {
+        val keyType = error.getOrNull("KEY_TYPE", PType::class.java)
+        val mapKeyType = error.getOrNull("MAP_KEY_TYPE", PType::class.java)
+        return "MAP key type mismatch: cannot use $keyType key to access MAP<$mapKeyType, ...>."
     }
 
     private fun pathNeverSucceeds(type: String): String {

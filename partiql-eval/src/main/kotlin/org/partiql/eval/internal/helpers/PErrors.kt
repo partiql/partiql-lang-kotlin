@@ -57,6 +57,21 @@ internal object PErrors {
         )
     }
 
+    fun mapKeyTypeMismatchException(keyType: PType, mapKeyType: PType): PRuntimeException {
+        return PRuntimeException(
+            PError(
+                PError.MAP_KEY_TYPE_MISMATCH,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                mapOf(
+                    "KEY_TYPE" to keyType,
+                    "MAP_KEY_TYPE" to mapKeyType
+                )
+            )
+        )
+    }
+
     /**
      * Returns a PRuntimeException with code: [PError.PATH_SYMBOL_NEVER_SUCCEEDS].
      */
