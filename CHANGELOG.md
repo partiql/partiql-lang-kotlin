@@ -38,6 +38,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+Fixed that `SELECT *` does not display column name correctly when `UNPIVOT` is present in `FROM`
 
 ### Removed
 

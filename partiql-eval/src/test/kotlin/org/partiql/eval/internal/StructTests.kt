@@ -74,6 +74,92 @@ class StructTests {
 
         @JvmStatic
         fun unpivotTestCases() = listOf(
+            // SELECT * from UNPIVOT — exercises the isUnpivot path in NormalizeSelect
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT struct with AS and AT",
+                input = "SELECT * FROM UNPIVOT {'a': 1, 'b': 2} AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("v", Datum.integer(1)),
+                                Field.of("k", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("v", Datum.integer(2)),
+                                Field.of("k", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT struct with only AT",
+                input = "SELECT * FROM UNPIVOT {'a': 1, 'b': 2} AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("_0", Datum.integer(1)),
+                                Field.of("k", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("_0", Datum.integer(2)),
+                                Field.of("k", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT struct with only AS",
+                input = "SELECT * FROM UNPIVOT {'a': 1, 'b': 2} AS v;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("v", Datum.integer(1)),
+                                Field.of("_0", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("v", Datum.integer(2)),
+                                Field.of("_0", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT struct without AS or AT",
+                input = "SELECT * FROM UNPIVOT {'a': 1, 'b': 2};",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("_0", Datum.integer(1)),
+                                Field.of("_1", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("_0", Datum.integer(2)),
+                                Field.of("_1", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT empty struct",
+                input = "SELECT * FROM UNPIVOT {} AS v AT k;",
+                expected = Datum.bag(emptyList()),
+            ),
             /* TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1930
             SuccessTestCase(
                 name = "UNPIVOT struct column with WHERE filter (iterates all rows including null)",
@@ -98,6 +184,47 @@ class StructTests {
                     )
                 ),
             ),*/
+            SuccessTestCase(
+                name = "SELECT * FROM join with UNPIVOT struct column (pre-filtered to Alice)",
+                globals = catalogGlobals,
+                input = "SELECT * FROM (SELECT * FROM users WHERE users.name = 'Alice') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of(
+                                    "settings",
+                                    Datum.struct(
+                                        listOf(
+                                            Field.of("theme", Datum.string("dark")),
+                                            Field.of("lang", Datum.string("en")),
+                                        )
+                                    )
+                                ),
+                                Field.of("v", Datum.string("dark")),
+                                Field.of("k", Datum.string("theme")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of(
+                                    "settings",
+                                    Datum.struct(
+                                        listOf(
+                                            Field.of("theme", Datum.string("dark")),
+                                            Field.of("lang", Datum.string("en")),
+                                        )
+                                    )
+                                ),
+                                Field.of("v", Datum.string("en")),
+                                Field.of("k", Datum.string("lang")),
+                            )
+                        ),
+                    )
+                ),
+            ),
             SuccessTestCase(
                 name = "UNPIVOT struct column pre-filtered to Alice (returns key-value pairs)",
                 globals = catalogGlobals,
