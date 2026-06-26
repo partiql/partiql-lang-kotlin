@@ -236,6 +236,8 @@ public final class PError extends Enum {
                 return "MAP_KEY_NOT_FOUND";
             case MAP_KEY_TYPE_MISMATCH:
                 return "MAP_KEY_TYPE_MISMATCH";
+            case MAP_DUPLICATE_KEY:
+                return "MAP_DUPLICATE_KEY";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -670,4 +672,17 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int MAP_KEY_TYPE_MISMATCH = 26;
+
+    /**
+     * <p>
+     * A duplicate key was encountered during MAP construction in strict mode.
+     * </p>
+     * <p>
+     * Properties:
+     * <ul>
+     * <li><b>KEY</b> ({@link Datum}): The duplicate key.</li>
+     * </ul>
+     * </p>
+     */
+    public static final int MAP_DUPLICATE_KEY = 27;
 }

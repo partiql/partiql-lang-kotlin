@@ -42,6 +42,7 @@ object ErrorMessageFormatter {
             ErrorCodeString.NOT_IMPLEMENTED -> notImplemented(error)
             ErrorCodeString.MAP_KEY_NOT_FOUND -> mapKeyNotFound(error)
             ErrorCodeString.MAP_KEY_TYPE_MISMATCH -> mapKeyTypeMismatch(error)
+            ErrorCodeString.MAP_DUPLICATE_KEY -> mapDuplicateKey(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -213,6 +214,10 @@ object ErrorMessageFormatter {
         val keyType = error.getOrNull("KEY_TYPE", PType::class.java)
         val mapKeyType = error.getOrNull("MAP_KEY_TYPE", PType::class.java)
         return "MAP key type mismatch: cannot use $keyType key to access MAP<$mapKeyType, ...>."
+    }
+
+    private fun mapDuplicateKey(error: PError): String {
+        return "Duplicate key in MAP constructor."
     }
 
     private fun pathNeverSucceeds(type: String): String {

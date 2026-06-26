@@ -42,6 +42,20 @@ internal object PErrors {
         return PRuntimeException(pError)
     }
 
+    fun mapDuplicateKeyException(key: Datum): PRuntimeException {
+        return PRuntimeException(
+            PError(
+                PError.MAP_DUPLICATE_KEY,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                mapOf(
+                    "KEY" to key
+                )
+            )
+        )
+    }
+
     fun mapKeyNotFoundException(key: Datum, mapType: PType): PRuntimeException {
         return PRuntimeException(
             PError(
