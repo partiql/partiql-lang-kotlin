@@ -286,7 +286,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
 
             val resolvedKeyType = when (rex.type.code()) {
                 PType.MAP -> rex.type.keyType
-                else -> kType
+                else -> PType.string()
             }
             val vType = when (rex.type.code()) {
                 PType.ROW -> anyOf(rex.type.fields.map { it.type }) ?: PType.dynamic()
