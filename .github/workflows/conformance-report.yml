@@ -37,6 +37,12 @@ jobs:
       - name: gradle test of the conformance tests (can fail) and save to Ion file
         continue-on-error: true
         run: gradle :test:partiql-tests-runner:generateTestReport
+      # Upload HTML test reports which has detailed test execution results
+      - name: Upload HTML test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-test-report
+          path: ${{ env.PATH_TO_TEST_RUNNER }}/build/reports/tests/generateTestReport/
       # Upload conformance report for future viewing and comparison with future runs.
       - name: Upload `conformance-test-report` folder
         uses: actions/upload-artifact@v4
