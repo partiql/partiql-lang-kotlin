@@ -153,7 +153,7 @@ class VMEvalExecutor(
             "date" -> PType.date()
             "time" -> PType.time(6)
             "timestamp" -> PType.timestamp(6)
-            else -> PType.dynamic()
+            else -> error("unsupported PType name: $name")
         }
 
         private fun Catalog.Builder.load(env: StructElement, schemas: Map<String, PType>) {
