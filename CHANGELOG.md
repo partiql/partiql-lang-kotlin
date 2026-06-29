@@ -39,7 +39,8 @@ Thank you to all who have contributed!
 
 ### Fixed
 - Fixed NullPointerException in RelOpUnpivot when UNPIVOT encounters a typed null value
-Fixed that `SELECT *` does not display column name correctly when `UNPIVOT` is present in `FROM`
+- Fixed SELECT * with UNPIVOT to use named aliases instead of positional names
+
 
 ### Removed
 
