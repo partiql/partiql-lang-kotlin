@@ -118,6 +118,12 @@ class VMEvalExecutor(
         }
 
         private fun inferEnv(env: AnyElement): PType {
+            val annotations = env.annotations
+            if (annotations.size >= 3 && annotations[annotations.size - 3] == "\$map") {
+                val keyType = pTypeFromName(annotations[annotations.size - 2])
+                val valueType = pTypeFromName(annotations[annotations.size - 1])
+                return PType.map(keyType, valueType)
+            }
             val catalog = Catalog.builder().name("default").build()
             val session = Session.builder()
                 .catalog("default")
@@ -128,6 +134,26 @@ class VMEvalExecutor(
             val stmt = parseResult.statements[0]
             val plan = PartiQLPlanner.standard().plan(stmt, session).plan
             return (plan.action as Query).getRex().getType().pType
+        }
+
+        private fun pTypeFromName(name: String): PType = when (name.lowercase()) {
+            "dynamic" -> PType.dynamic()
+            "bool" -> PType.bool()
+            "tinyint" -> PType.tinyint()
+            "smallint" -> PType.smallint()
+            "integer", "int" -> PType.integer()
+            "bigint" -> PType.bigint()
+            "numeric" -> PType.numeric()
+            "decimal" -> PType.decimal(38, 19)
+            "real" -> PType.real()
+            "double" -> PType.doublePrecision()
+            "string" -> PType.string()
+            "char" -> PType.character(255)
+            "varchar" -> PType.varchar(255)
+            "date" -> PType.date()
+            "time" -> PType.time(6)
+            "timestamp" -> PType.timestamp(6)
+            else -> error("unsupported PType name: $name")
         }
 
         private fun Catalog.Builder.load(env: StructElement, schemas: Map<String, PType>) {

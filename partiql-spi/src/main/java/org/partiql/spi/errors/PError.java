@@ -232,6 +232,12 @@ public final class PError extends Enum {
                 return "NOT_IMPLEMENTED";
             case INTERRUPTED:
                 return "INTERRUPTED";
+            case MAP_KEY_NOT_FOUND:
+                return "MAP_KEY_NOT_FOUND";
+            case MAP_KEY_TYPE_MISMATCH:
+                return "MAP_KEY_TYPE_MISMATCH";
+            case MAP_DUPLICATE_KEY:
+                return "MAP_DUPLICATE_KEY";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -648,4 +654,35 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int MAP_KEY_NOT_FOUND = 25;
+
+    /**
+     * <p>
+     * This is a runtime error indicating that a MAP key lookup was attempted with an incompatible key type.
+     * The lookup key type is not in the same coercion family as the MAP's declared key type.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>KEY_TYPE</b> ({@link String}): The type of the lookup key.</li>
+     * <li><b>MAP_KEY_TYPE</b> ({@link String}): The declared key type of the MAP.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>MAP key type mismatch: cannot use STRING key to access MAP&lt;INTEGER, STRING&gt;.</code>
+     * </p>
+     */
+    public static final int MAP_KEY_TYPE_MISMATCH = 26;
+
+    /**
+     * <p>
+     * A duplicate key was encountered during MAP construction in strict mode.
+     * </p>
+     * <p>
+     * Properties:
+     * <ul>
+     * <li><b>KEY</b> ({@link Datum}): The duplicate key.</li>
+     * </ul>
+     * </p>
+     */
+    public static final int MAP_DUPLICATE_KEY = 27;
 }

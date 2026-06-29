@@ -41,6 +41,8 @@ class PErrorCodeTests {
             "NOT_IMPLEMENTED" to 23,
             "INTERRUPTED" to 24,
             "MAP_KEY_NOT_FOUND" to 25,
+            "MAP_KEY_TYPE_MISMATCH" to 26,
+            "MAP_DUPLICATE_KEY" to 27,
         )
 
         // Preparation
