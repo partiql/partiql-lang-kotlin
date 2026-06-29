@@ -37,6 +37,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed NullPointerException in RelOpUnpivot when UNPIVOT encounters a typed null value
 
 ### Removed
 
