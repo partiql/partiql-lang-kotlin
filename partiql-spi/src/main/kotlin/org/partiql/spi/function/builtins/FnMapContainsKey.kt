@@ -5,6 +5,7 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.internal.CoercionFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -34,11 +35,13 @@ internal object FnMapContainsKey : FnOverload() {
         ) { fnArgs ->
             val map = fnArgs[0]
             val key = fnArgs[1]
+            // Potentially, we needs return false in permissive mode,
+            // https://github.com/partiql/partiql-lang-kotlin/pull/1935
             if (!compatible) {
-                Datum.bool(false)
-            } else {
-                Datum.bool(map.containsKey(key))
+                throw PErrors.mapKeyTypeMismatchException(argKeyType, mapKeyType)
             }
+
+            Datum.bool(map.containsKey(key))
         }
     }
 }
