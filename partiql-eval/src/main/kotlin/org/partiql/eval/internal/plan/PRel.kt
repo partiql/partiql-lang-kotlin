@@ -15,6 +15,7 @@ internal sealed class PRel {
     data class Filter(val input: PRel, val predicate: PExpr, override val type: RelType? = null) : PRel()
     data class Project(val input: PRel, val projections: List<PExpr>, override val type: RelType? = null) : PRel()
     data class Join(val lhs: PRel, val rhs: PRel, val condition: PExpr, val joinType: PJoinType, override val type: RelType? = null) : PRel()
+    data class Correlate(val lhs: PRel, val rhs: PRel, val joinType: PJoinType, override val type: RelType? = null) : PRel()
     data class Sort(val input: PRel, val collations: List<PCollation>, override val type: RelType? = null) : PRel()
     data class Distinct(val input: PRel, override val type: RelType? = null) : PRel()
     data class Limit(val input: PRel, val limit: PExpr, override val type: RelType? = null) : PRel()

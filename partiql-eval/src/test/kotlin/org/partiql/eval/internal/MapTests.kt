@@ -884,6 +884,92 @@ class MapTests {
 
         @JvmStatic
         fun unpivotTestCases() = listOf(
+            // SELECT * from UNPIVOT — exercises the isUnpivot path in NormalizeSelect
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT map with AS and AT",
+                input = "SELECT * FROM UNPIVOT MAP { 'a': 1, 'b': 2 } AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("v", Datum.integer(1)),
+                                Field.of("k", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("v", Datum.integer(2)),
+                                Field.of("k", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT map with only AT",
+                input = "SELECT * FROM UNPIVOT MAP { 'a': 1, 'b': 2 } AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("_0", Datum.integer(1)),
+                                Field.of("k", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("_0", Datum.integer(2)),
+                                Field.of("k", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT map with only AS",
+                input = "SELECT * FROM UNPIVOT MAP { 'a': 1, 'b': 2 } AS v;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("v", Datum.integer(1)),
+                                Field.of("_0", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("v", Datum.integer(2)),
+                                Field.of("_0", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT map without AS or AT",
+                input = "SELECT * FROM UNPIVOT MAP { 'a': 1, 'b': 2 };",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("_0", Datum.integer(1)),
+                                Field.of("_1", Datum.string("a")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("_0", Datum.integer(2)),
+                                Field.of("_1", Datum.string("b")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM UNPIVOT empty map",
+                input = "SELECT * FROM UNPIVOT MAP { } AS v AT k;",
+                expected = Datum.bag(emptyList()),
+            ),
             SuccessTestCase(
                 name = "UNPIVOT literal map with string keys",
                 input = "SELECT k, v FROM UNPIVOT MAP { 'a': 1, 'b': 2 } AS v AT k;",
@@ -967,6 +1053,73 @@ class MapTests {
                                 Field.of("name", Datum.string("Alice")),
                                 Field.of("setting_name", Datum.string("lang")),
                                 Field.of("setting_value", Datum.string("en")),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "SELECT * FROM join with UNPIVOT map column (pre-filtered to Alice)",
+                globals = catalogGlobals,
+                input = "SELECT * FROM (SELECT * FROM users WHERE users.name = 'Alice') AS u, UNPIVOT u.settings AS v AT k;",
+                expected = Datum.bag(
+                    listOf(
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of(
+                                    "settings",
+                                    Datum.map(
+                                        PType.string(),
+                                        PType.string(),
+                                        listOf(
+                                            Entry.of(Datum.string("theme"), Datum.string("dark")),
+                                            Entry.of(Datum.string("lang"), Datum.string("en")),
+                                        )
+                                    )
+                                ),
+                                Field.of(
+                                    "scores",
+                                    Datum.map(
+                                        PType.integer(),
+                                        PType.integer(),
+                                        listOf(
+                                            Entry.of(Datum.integer(100), Datum.integer(5)),
+                                            Entry.of(Datum.integer(200), Datum.integer(10)),
+                                        )
+                                    )
+                                ),
+                                Field.of("v", Datum.string("dark")),
+                                Field.of("k", Datum.string("theme")),
+                            )
+                        ),
+                        Datum.struct(
+                            listOf(
+                                Field.of("name", Datum.string("Alice")),
+                                Field.of(
+                                    "settings",
+                                    Datum.map(
+                                        PType.string(),
+                                        PType.string(),
+                                        listOf(
+                                            Entry.of(Datum.string("theme"), Datum.string("dark")),
+                                            Entry.of(Datum.string("lang"), Datum.string("en")),
+                                        )
+                                    )
+                                ),
+                                Field.of(
+                                    "scores",
+                                    Datum.map(
+                                        PType.integer(),
+                                        PType.integer(),
+                                        listOf(
+                                            Entry.of(Datum.integer(100), Datum.integer(5)),
+                                            Entry.of(Datum.integer(200), Datum.integer(10)),
+                                        )
+                                    )
+                                ),
+                                Field.of("v", Datum.string("en")),
+                                Field.of("k", Datum.string("lang")),
                             )
                         ),
                     )

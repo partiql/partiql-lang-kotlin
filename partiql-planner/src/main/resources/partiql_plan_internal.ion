@@ -359,6 +359,16 @@ rel::{
       ],
     },
 
+    // Correlated (lateral) join. The RHS references bindings from the LHS.
+    correlate::{
+      lhs: rel,
+      rhs: rel,
+      type: [
+        INNER, // Inner Join
+        LEFT,  // Left Outer Join
+      ],
+    },
+
     aggregate::{
       input:    rel,
       strategy: [ FULL, PARTIAL ],
