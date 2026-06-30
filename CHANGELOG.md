@@ -38,7 +38,9 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
-Fixed that `SELECT *` does not display column name correctly when `UNPIVOT` is present in `FROM`
+- Fixed NullPointerException in RelOpUnpivot when UNPIVOT encounters a typed null value
+- Fixed SELECT * with UNPIVOT to use named aliases instead of positional names
+
 
 ### Removed
 
