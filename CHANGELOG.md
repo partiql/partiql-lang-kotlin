@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.5.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.5.0) - 2026-07-01
+
+### Added
 - Added SqlDialect support for MAP expression and type serialization
 - Added MAP functions: map_contains_key, map_get, map_keys, map_values, map_entries, size, exists, cardinality and `IS MAP<K, V>
 - Added implicit cast for `MAP` lookup key type if needed for bracket notation, map_contains_key function and map_get function.
@@ -40,7 +57,6 @@ Thank you to all who have contributed!
 ### Fixed
 - Fixed NullPointerException in RelOpUnpivot when UNPIVOT encounters a typed null value
 - Fixed SELECT * with UNPIVOT to use named aliases instead of positional names
-
 
 ### Removed
 
