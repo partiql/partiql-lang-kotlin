@@ -21,6 +21,7 @@ import org.partiql.plan.OperatorVisitor
 import org.partiql.plan.Plan
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
+import org.partiql.plan.rel.RelCorrelate
 import org.partiql.plan.rel.RelDistinct
 import org.partiql.plan.rel.RelExcept
 import org.partiql.plan.rel.RelExclude
@@ -233,6 +234,15 @@ internal class PlanToExecTransform(
             else -> error("Unsupported join type: ${rel.joinType}")
         }
         return PRel.Join(visitRel(rel.left), visitRel(rel.right), visitRex(rel.condition), joinType, rel.type)
+    }
+
+    override fun visitCorrelate(rel: RelCorrelate, ctx: Unit): Any {
+        val joinType = when (rel.joinType.code()) {
+            JoinType.INNER -> PJoinType.INNER
+            JoinType.LEFT -> PJoinType.LEFT
+            else -> error("Unsupported correlate join type: ${rel.joinType}")
+        }
+        return PRel.Correlate(visitRel(rel.left), visitRel(rel.right), joinType, rel.type)
     }
 
     override fun visitSort(rel: RelSort, ctx: Unit): Any =

@@ -7,6 +7,8 @@ import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.Collation
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
+import org.partiql.eval.internal.operator.rel.RelOpCorrelateInner
+import org.partiql.eval.internal.operator.rel.RelOpCorrelateLeft
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
 import org.partiql.eval.internal.operator.rel.RelOpExceptAll
 import org.partiql.eval.internal.operator.rel.RelOpExceptDistinct
@@ -42,6 +44,8 @@ import org.partiql.eval.internal.operator.rex.ExprError
 import org.partiql.eval.internal.operator.rex.ExprLit
 import org.partiql.eval.internal.operator.rex.ExprMapConstruct
 import org.partiql.eval.internal.operator.rex.ExprMapConstructDynamic
+import org.partiql.eval.internal.operator.rex.ExprMapConstructDynamicStrict
+import org.partiql.eval.internal.operator.rex.ExprMapConstructStrict
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
@@ -119,11 +123,19 @@ internal class OperatorCompiler(
             }
             is PExpr.Map -> {
                 val entries = expr.entries.map { ExprStructField(compile(it.key), compile(it.value).catch()) }
-                ExprMapConstruct(expr.keyType, expr.valueType, entries)
+                when (MODE) {
+                    Mode.PERMISSIVE -> ExprMapConstruct(expr.keyType, expr.valueType, entries)
+                    Mode.STRICT -> ExprMapConstructStrict(expr.keyType, expr.valueType, entries)
+                    else -> error("Unsupported mode: $MODE")
+                }
             }
             is PExpr.MapDynamic -> {
                 val entries = expr.entries.map { ExprStructField(compile(it.key), compile(it.value).catch()) }
-                ExprMapConstructDynamic(entries)
+                when (MODE) {
+                    Mode.PERMISSIVE -> ExprMapConstructDynamic(entries)
+                    Mode.STRICT -> ExprMapConstructDynamicStrict(entries)
+                    else -> error("Unsupported mode: $MODE")
+                }
             }
             is PExpr.Spread -> ExprSpread(expr.args.map { compile(it) }.toTypedArray())
             is PExpr.Select -> {
@@ -201,6 +213,16 @@ internal class OperatorCompiler(
                     PJoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType)
                     PJoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType)
                     PJoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType, rhsType)
+                }
+            }
+            is PRel.Correlate -> {
+                val lhs = compileRel(rel.lhs)
+                val rhs = compileRel(rel.rhs)
+                val rhsType = rel.rhs.type!!
+                when (rel.joinType) {
+                    PJoinType.INNER -> RelOpCorrelateInner(lhs, rhs)
+                    PJoinType.LEFT -> RelOpCorrelateLeft(lhs, rhs, rhsType)
+                    else -> error("Unsupported correlate join type: ${rel.joinType}")
                 }
             }
             is PRel.Sort -> RelOpSort(compileRel(rel.input), rel.collations.map { toCollation(it) })

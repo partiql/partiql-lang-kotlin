@@ -81,6 +81,9 @@ internal sealed class RelOpUnpivot : ExprRelation {
             if (v.isMissing) {
                 return Datum.struct(emptyList())
             }
+            if (v.isNull) {
+                return Datum.struct(listOf(Field.of("_1", v)))
+            }
             return when (v.type.code()) {
                 PType.STRUCT, PType.ROW, PType.MAP -> v
                 else -> Datum.struct(listOf(Field.of("_1", v)))

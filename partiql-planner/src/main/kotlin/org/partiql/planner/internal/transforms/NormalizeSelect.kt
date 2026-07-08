@@ -34,6 +34,7 @@ import org.partiql.ast.From
 import org.partiql.ast.FromExpr
 import org.partiql.ast.FromJoin
 import org.partiql.ast.FromTableRef
+import org.partiql.ast.FromType
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Literal.string
@@ -258,14 +259,17 @@ internal object NormalizeSelect {
          */
         private fun visitSelectAll(select: SelectStar, from: From): SelectValue {
             val tupleUnionArgs = from.tableRefs.flatMap { it.aliases() }.flatMapIndexed { i, binding ->
-                val asAlias = binding.first
-                val atAlias = binding.second
-                val atAliasItem = atAlias?.simple()?.let {
+                val atAliasItem = binding.atAlias?.simple()?.let {
                     val alias = it.asAlias ?: error("The AT alias should be present. This wasn't normalized.")
                     buildSimpleStruct(it.expr, alias.text)
                 }
+                val asAliasItem = if (binding.isUnpivot) {
+                    buildSimpleStruct(binding.asAlias.star(i).expr, binding.asAlias)
+                } else {
+                    buildCaseWhenStruct(binding.asAlias.star(i).expr, i)
+                }
                 listOfNotNull(
-                    buildCaseWhenStruct(asAlias.star(i).expr, i),
+                    asAliasItem,
                     atAliasItem,
                 )
             }
@@ -366,12 +370,14 @@ internal object NormalizeSelect {
             isQualified = true
         )
 
-        private fun FromTableRef.aliases(): List<Pair<String, String?>> = when (this) {
+        private data class FromAlias(val asAlias: String, val atAlias: String?, val isUnpivot: Boolean)
+
+        private fun FromTableRef.aliases(): List<FromAlias> = when (this) {
             is FromJoin -> lhs.aliases() + rhs.aliases()
             is FromExpr -> {
                 val asAlias = asAlias?.text ?: error("AST not normalized, missing asAlias on FROM source.")
                 val atAlias = atAlias?.text
-                listOf(Pair(asAlias, atAlias))
+                listOf(FromAlias(asAlias, atAlias, fromType.code() == FromType.UNPIVOT))
             }
             else -> error("Unexpected FromTableRef type: $this")
         }

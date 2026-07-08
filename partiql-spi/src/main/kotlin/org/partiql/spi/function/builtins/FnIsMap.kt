@@ -16,8 +16,6 @@ internal val Fn_IS_MAP__ANY__BOOL = FunctionUtils.hidden(
         Parameter("value_type_code", PType.integer()),
         Parameter("value", PType.dynamic()),
     ),
-    isNullCall = false,
-    isMissingCall = false,
 ) { args ->
     val expectedKeyTypeCode = args[0].int
     val expectedValueTypeCode = args[1].int

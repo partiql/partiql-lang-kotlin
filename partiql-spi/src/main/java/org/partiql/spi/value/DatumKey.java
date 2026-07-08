@@ -48,7 +48,7 @@ class DatumKey {
                 return Long.hashCode(_datum.getLong());
             case PType.NUMERIC:
             case PType.DECIMAL:
-                return _datum.getBigDecimal().hashCode();
+                return _datum.getBigDecimal().stripTrailingZeros().hashCode();
             case PType.REAL:
                 return Float.hashCode(_datum.getFloat());
             case PType.DOUBLE:
