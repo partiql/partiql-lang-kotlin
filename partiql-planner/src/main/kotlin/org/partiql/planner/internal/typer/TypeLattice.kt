@@ -339,12 +339,14 @@ internal class TypeLattice private constructor(
                 STRING to coercion(),
                 SYMBOL to explicit(),
                 CLOB to coercion(),
+                TIMESTAMP to unsafe(),
             )
             graph[SYMBOL] = relationships(
                 BOOL to explicit(),
                 STRING to coercion(),
                 SYMBOL to coercion(),
                 CLOB to coercion(),
+                TIMESTAMP to unsafe(),
             )
             graph[CLOB] = relationships(
                 CLOB to coercion(),
@@ -354,7 +356,9 @@ internal class TypeLattice private constructor(
             graph[BLOB] = arrayOfNulls(N)
             graph[DATE] = arrayOfNulls(N)
             graph[TIME] = arrayOfNulls(N)
-            graph[TIMESTAMP] = arrayOfNulls(N)
+            graph[TIMESTAMP] = relationships(
+                TIMESTAMP to coercion(),
+            )
             graph[INTERVAL] = arrayOfNulls(N)
             graph[BAG] = relationships(
                 BAG to coercion(),
