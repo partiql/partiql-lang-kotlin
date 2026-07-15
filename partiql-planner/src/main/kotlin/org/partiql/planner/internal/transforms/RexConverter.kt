@@ -577,7 +577,7 @@ internal object RexConverter {
                 is Type.Date -> rex(StaticType.DATE, call("cast_date", arg0))
                 is Type.Time -> rex(StaticType.TIME, call("cast_time", arg0))
                 is Type.TimeWithTz -> rex(TimeType(null, true), call("cast_timeWithTz", arg0))
-                is Type.Timestamp -> TODO("Need to rebase main")
+                is Type.Timestamp -> rex(StaticType.TIMESTAMP, call("cast_timestamp", arg0))
                 is Type.TimestampWithTz -> rex(StaticType.TIMESTAMP, call("cast_timeWithTz", arg0))
                 is Type.Interval -> TODO("Static Type does not have Interval type")
                 is Type.Bag -> rex(StaticType.BAG, call("cast_bag", arg0))
