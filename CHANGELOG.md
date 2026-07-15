@@ -23,6 +23,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
+## [0.14.10]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+- Fixed `NotImplementedError` thrown by `CAST(... AS TIMESTAMP)
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+@xd1313113
+
 ## [0.14.9]
 
 ### Changed
