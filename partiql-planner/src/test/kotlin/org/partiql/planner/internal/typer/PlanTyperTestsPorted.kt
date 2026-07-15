@@ -364,6 +364,20 @@ class PlanTyperTestsPorted {
         )
 
         @JvmStatic
+        fun timestampCastCases() = listOf<TestCase>(
+            SuccessTestCase(
+                name = "cast string to timestamp",
+                query = "CAST('2024-01-15' AS TIMESTAMP)",
+                expected = StaticType.unionOf(StaticType.TIMESTAMP, MISSING),
+            ),
+            SuccessTestCase(
+                name = "cast timestamp to timestamp",
+                query = "CAST(TIMESTAMP '2024-01-15 10:30:00' AS TIMESTAMP)",
+                expected = StaticType.TIMESTAMP,
+            ),
+        )
+
+        @JvmStatic
         fun selectStar() = listOf<TestCase>(
             SuccessTestCase(
                 name = "Test #8",
@@ -3840,6 +3854,11 @@ class PlanTyperTestsPorted {
     @MethodSource("decimalCastCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testDecimalCast(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("timestampCastCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testTimestampCast(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
     @MethodSource("selectStar")
