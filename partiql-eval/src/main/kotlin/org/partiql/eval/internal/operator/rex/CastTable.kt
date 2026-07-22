@@ -109,6 +109,8 @@ internal object CastTable {
         registerRow()
         registerMap()
         registerString()
+        registerVarchar()
+        registerChar()
         registerBag()
         registerList()
         registerDate()
@@ -496,6 +498,26 @@ internal object CastTable {
         register(STRING, VARCHAR) { x, t -> Datum.varchar(x.string, t.length) }
         register(STRING, CHAR) { x, t -> Datum.character(x.string, t.length) }
         register(STRING, CLOB) { x, t -> Datum.clob(x.string.toByteArray(), t.length) }
+    }
+
+    /**
+     * CAST(<varchar> AS <type>)
+     *
+     * VARCHAR belongs to the same coercion family as STRING (see [org.partiql.planner.internal.CoercionFamily]),
+     * so allow it to widen to the unbounded STRING type.
+     */
+    private fun registerVarchar() {
+        register(VARCHAR, STRING) { x, _ -> Datum.string(x.string) }
+    }
+
+    /**
+     * CAST(<char> AS <type>)
+     *
+     * CHAR belongs to the same coercion family as STRING (see [org.partiql.planner.internal.CoercionFamily]),
+     * so allow it to widen to the unbounded STRING type.
+     */
+    private fun registerChar() {
+        register(CHAR, STRING) { x, _ -> Datum.string(x.string) }
     }
 
     private fun registerBag() {
