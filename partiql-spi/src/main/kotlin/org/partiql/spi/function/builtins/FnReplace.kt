@@ -24,16 +24,16 @@ import org.partiql.spi.value.Datum
  * This mirrors the 3-argument form found in Redshift (`REPLACE`), DuckDB
  * (`replace`), Trino (`replace/3`), and Spark (`replace/3`).
  *
- * Accepted argument types:
- * - `string` (first argument): CHAR, VARCHAR, CLOB, STRING
- * - `from` / `to` (second and third arguments): CHAR, VARCHAR, STRING (CHAR/VARCHAR
- *   are implicitly coerced to STRING during function resolution).
+ * Argument types are resolved together based on the first argument:
+ * - When `string` is CHAR, VARCHAR, or STRING, `from` and `to` are STRING (a CHAR/VARCHAR
+ *   `from`/`to` is implicitly coerced to STRING during resolution).
+ * - When `string` is a CLOB, `from` and `to` are also CLOB.
  *
- * The declared type of the result is the declared type of the first argument
- * (following the SQL <string value function> convention used by [FnUpper]/[FnLower]):
- * - CHAR(n)    -> CHAR(n)
- * - VARCHAR(n) -> VARCHAR(n)
- * - CLOB(n)    -> CLOB(n)
+ * The result type follows the SQL <string value function> convention used by [FnTrim] (replace
+ * may change the length, so CHAR is not length-preserving and widens to VARCHAR):
+ * - CHAR(n)    -> VARCHAR
+ * - VARCHAR(n) -> VARCHAR
+ * - CLOB(n)    -> CLOB
  * - STRING     -> STRING (PartiQL extension)
  */
 internal object FnReplace : FnOverload() {
@@ -44,16 +44,12 @@ internal object FnReplace : FnOverload() {
 
     override fun getInstance(args: Array<PType>): Fn? {
         val stringType = args[0]
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance("replace", PType.string(), args)
+        }
         return when (stringType.code()) {
-            PType.CHAR -> Function.instance(
-                name = "replace",
-                returns = PType.character(),
-                parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.string()), Parameter("to", PType.string())),
-            ) { args ->
-                val result = replace(args[0].string, args[1].string, args[2].string)
-                Datum.character(result)
-            }
-            PType.VARCHAR -> Function.instance(
+            PType.CHAR, PType.VARCHAR -> Function.instance(
                 name = "replace",
                 returns = PType.varchar(),
                 parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.string()), Parameter("to", PType.string())),
@@ -61,22 +57,25 @@ internal object FnReplace : FnOverload() {
                 val result = replace(args[0].string, args[1].string, args[2].string)
                 Datum.varchar(result)
             }
-            PType.CLOB -> Function.instance(
-                name = "replace",
-                returns = PType.clob(),
-                parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.string()), Parameter("to", PType.string())),
-            ) { args ->
-                val result = replace(args[0].bytes.toString(Charsets.UTF_8), args[1].string, args[2].string)
-                Datum.clob(result.toByteArray())
-            }
-            // PType.UNKNOWN is for null propagation
-            PType.STRING, PType.UNKNOWN -> Function.instance(
+            PType.STRING -> Function.instance(
                 name = "replace",
                 returns = PType.string(),
                 parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.string()), Parameter("to", PType.string())),
             ) { args ->
                 val result = replace(args[0].string, args[1].string, args[2].string)
                 Datum.string(result)
+            }
+            PType.CLOB -> Function.instance(
+                name = "replace",
+                returns = PType.clob(),
+                parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.clob()), Parameter("to", PType.clob())),
+            ) { args ->
+                val string = args[0].bytes.toString(Charsets.UTF_8)
+                val from = args[1].bytes.toString(Charsets.UTF_8)
+                val to = args[2].bytes.toString(Charsets.UTF_8)
+
+                val result = replace(string, from, to)
+                Datum.clob(result.toByteArray())
             }
             else -> null
         }
