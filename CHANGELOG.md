@@ -28,7 +28,7 @@ Thank you to all who have contributed!
 ### Added
 - Added the `REPLACE` and `SPILIT` string functions
 
-### Changed
+### Changed 
 
 ### Deprecated
 
@@ -41,7 +41,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
--@xd1313113
+- @xd1313113
 
 ## [1.5.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.5.0) - 2026-07-01
 

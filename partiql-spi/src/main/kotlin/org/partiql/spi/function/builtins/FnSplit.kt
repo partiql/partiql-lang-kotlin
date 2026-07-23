@@ -36,7 +36,9 @@ import org.partiql.spi.value.Datum
  * - STRING     -> list<STRING> (PartiQL extension)
  *
  * Notes:
- * - An empty delimiter is matched between every character.
+ * - When the delimiter is empty, the input is treated as a single field and returned as a
+ *   single-element list (matching the literal-delimiter convention of PostgreSQL,
+ *   DuckDB, and Trino; unlike Spark, whose regex `split` splits into characters).
  * - If the delimiter is not found, the result is a single-element list holding
  *   the original string.
  */
@@ -81,12 +83,12 @@ internal object FnSplit : FnOverload() {
     }
 
     /**
-     * Splits [string] on the literal [delimiter]. An empty delimiter splits into individual
-     * characters (DuckDB behavior).
+     * Splits [string] on the literal [delimiter]. An empty delimiter treats the whole input as a
+     * single field.
      */
     private fun split(string: String, delimiter: String): List<String> {
         return if (delimiter.isEmpty()) {
-            string.map { it.toString() }
+            listOf(string)
         } else {
             string.split(delimiter)
         }
