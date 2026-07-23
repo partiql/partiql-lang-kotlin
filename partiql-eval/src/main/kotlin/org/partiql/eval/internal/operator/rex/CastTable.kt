@@ -503,21 +503,25 @@ internal object CastTable {
     /**
      * CAST(<varchar> AS <type>)
      *
-     * VARCHAR belongs to the same coercion family as STRING (see [org.partiql.planner.internal.CoercionFamily]),
-     * so allow it to widen to the unbounded STRING type.
+     * VARCHAR belongs to the same coercion family as STRING and CLOB (see
+     * [org.partiql.planner.internal.CoercionFamily]), so allow it to widen to the unbounded STRING
+     * type and to CLOB.
      */
     private fun registerVarchar() {
         register(VARCHAR, STRING) { x, _ -> Datum.string(x.string) }
+        register(VARCHAR, CLOB) { x, t -> Datum.clob(x.string.toByteArray(), t.length) }
     }
 
     /**
      * CAST(<char> AS <type>)
      *
-     * CHAR belongs to the same coercion family as STRING (see [org.partiql.planner.internal.CoercionFamily]),
-     * so allow it to widen to the unbounded STRING type.
+     * CHAR belongs to the same coercion family as STRING and CLOB (see
+     * [org.partiql.planner.internal.CoercionFamily]), so allow it to widen to the unbounded STRING
+     * type and to CLOB.
      */
     private fun registerChar() {
         register(CHAR, STRING) { x, _ -> Datum.string(x.string) }
+        register(CHAR, CLOB) { x, t -> Datum.clob(x.string.toByteArray(), t.length) }
     }
 
     private fun registerBag() {
