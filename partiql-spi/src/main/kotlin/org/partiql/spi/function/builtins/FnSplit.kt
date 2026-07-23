@@ -48,6 +48,10 @@ internal object FnSplit : FnOverload() {
 
     override fun getInstance(args: Array<PType>): Fn? {
         val stringType = args[0]
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance("split", PType.array(PType.string()), args)
+        }
         return when (stringType.code()) {
             PType.CHAR -> Function.instance(
                 name = "split",
@@ -70,8 +74,7 @@ internal object FnSplit : FnOverload() {
             ) { args ->
                 Datum.array(split(args[0].bytes.toString(Charsets.UTF_8), args[1].string).map { Datum.clob(it.toByteArray()) })
             }
-            // PType.UNKNOWN is for null propagation
-            PType.STRING, PType.UNKNOWN -> Function.instance(
+            PType.STRING -> Function.instance(
                 name = "split",
                 returns = PType.array(PType.string()),
                 parameters = arrayOf(Parameter("string", stringType), Parameter("delimiter", PType.string())),

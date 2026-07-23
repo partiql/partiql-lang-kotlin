@@ -44,6 +44,10 @@ internal object FnReplace : FnOverload() {
 
     override fun getInstance(args: Array<PType>): Fn? {
         val stringType = args[0]
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance("replace", PType.string(), args)
+        }
         return when (stringType.code()) {
             PType.CHAR -> Function.instance(
                 name = "replace",
@@ -69,8 +73,7 @@ internal object FnReplace : FnOverload() {
                 val result = replace(args[0].bytes.toString(Charsets.UTF_8), args[1].string, args[2].string)
                 Datum.clob(result.toByteArray())
             }
-            // PType.UNKNOWN is for null propagation
-            PType.STRING, PType.UNKNOWN -> Function.instance(
+            PType.STRING -> Function.instance(
                 name = "replace",
                 returns = PType.string(),
                 parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.string()), Parameter("to", PType.string())),
