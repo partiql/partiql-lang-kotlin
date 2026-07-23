@@ -20,16 +20,6 @@ class StringFunctionTests {
     fun splitTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
-    @MethodSource("replaceTypeTestCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun replaceTypeTests(tc: SuccessTestCase) = tc.run()
-
-    @ParameterizedTest
-    @MethodSource("splitTypeTestCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun splitTypeTests(tc: SuccessTestCase) = tc.run()
-
-    @ParameterizedTest
     @MethodSource("charLengthTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun charLengthTests(tc: SuccessTestCase) = tc.run()
@@ -78,6 +68,7 @@ class StringFunctionTests {
 
         @JvmStatic
         fun replaceTestCases() = listOf(
+            // --- Behavior ---
             SuccessTestCase(
                 name = "replace: basic substitution",
                 input = "replace('hello world', 'world', 'PartiQL');",
@@ -108,34 +99,103 @@ class StringFunctionTests {
                 input = "replace('', 'a', 'b');",
                 expected = Datum.string(""),
             ),
-            // null / missing propagation
             SuccessTestCase(
-                name = "replace: null first arg returns null",
+                name = "replace: overlapping matches are non-overlapping left-to-right",
+                input = "replace('aaa', 'aa', 'b');",
+                expected = Datum.string("ba"),
+            ),
+            SuccessTestCase(
+                name = "replace: to contains from is a single pass (no recursion)",
+                input = "replace('a', 'a', 'aa');",
+                expected = Datum.string("aa"),
+            ),
+            SuccessTestCase(
+                name = "replace: multi-byte (non-ASCII) codepoints",
+                input = "replace('héllo', 'é', 'e');",
+                expected = Datum.string("hello"),
+            ),
+            // --- Argument-type matrix (types resolve together based on arg0; STRICT mode) ---
+            //   - `string` (arg0): CHAR, VARCHAR, CLOB, STRING; CHAR/VARCHAR widen to VARCHAR in the result.
+            //   - `from` / `to`  : STRING for a CHAR/VARCHAR/STRING `string` (CHAR/VARCHAR coerced to
+            //                      STRING); CLOB for a CLOB `string`.
+            // arg0 type -> result type
+            SuccessTestCase(
+                name = "replace: STRING arg0 returns STRING",
+                input = "replace(CAST('hello' AS STRING), 'l', 'L');",
+                expected = Datum.string("heLLo"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "replace: CHAR arg0 returns VARCHAR",
+                input = "replace(CAST('hello' AS CHAR(5)), 'l', 'LL');",
+                expected = Datum.varchar("heLLLLo"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "replace: VARCHAR arg0 returns VARCHAR",
+                input = "replace(CAST('hello' AS VARCHAR(5)), 'l', 'L');",
+                expected = Datum.varchar("heLLo"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "replace: CLOB arg0 returns CLOB",
+                input = "replace(CAST('hello' AS CLOB), 'l', 'L');",
+                expected = Datum.clob("heLLo".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // from / to types
+            SuccessTestCase(
+                name = "replace: CHAR from/to",
+                input = "replace('hello', CAST('l' AS CHAR(1)), CAST('L' AS CHAR(1)));",
+                expected = Datum.string("heLLo"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "replace: VARCHAR from/to",
+                input = "replace('hello', CAST('l' AS VARCHAR(1)), CAST('L' AS VARCHAR(1)));",
+                expected = Datum.string("heLLo"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "replace: STRING from/to",
+                input = "replace('hello', CAST('l' AS STRING), CAST('L' AS STRING));",
+                expected = Datum.string("heLLo"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "replace: CLOB string with CLOB from/to",
+                input = "replace(CAST('hello' AS CLOB), CAST('l' AS CLOB), CAST('L' AS CLOB));",
+                expected = Datum.clob("heLLo".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // --- Null / missing propagation (every parameter) ---
+            SuccessTestCase(
+                name = "replace: null string returns null",
                 input = "replace(NULL, 'a', 'b');",
                 expected = Datum.nullValue(),
             ),
             SuccessTestCase(
-                name = "replace: null second arg returns null",
+                name = "replace: null from returns null",
                 input = "replace('hello', NULL, 'b');",
                 expected = Datum.nullValue(),
             ),
             SuccessTestCase(
-                name = "replace: null third arg returns null",
+                name = "replace: null to returns null",
                 input = "replace('hello', 'a', NULL);",
                 expected = Datum.nullValue(),
             ),
             SuccessTestCase(
-                name = "replace: missing first arg returns missing",
+                name = "replace: missing string returns missing",
                 input = "replace(MISSING, 'a', 'b');",
                 expected = Datum.missing(),
             ),
             SuccessTestCase(
-                name = "replace: missing second arg returns missing",
+                name = "replace: missing from returns missing",
                 input = "replace('hello', MISSING, 'b');",
                 expected = Datum.missing(),
             ),
             SuccessTestCase(
-                name = "replace: missing third arg returns missing",
+                name = "replace: missing to returns missing",
                 input = "replace('hello', 'a', MISSING);",
                 expected = Datum.missing(),
             ),
@@ -143,6 +203,7 @@ class StringFunctionTests {
 
         @JvmStatic
         fun splitTestCases() = listOf(
+            // --- Behavior ---
             SuccessTestCase(
                 name = "split: basic delimiter",
                 input = "split('a,b,c', ',');",
@@ -181,106 +242,36 @@ class StringFunctionTests {
                 input = "split('', ',');",
                 expected = Datum.array(listOf(Datum.string(""))),
             ),
-            // null / missing propagation
             SuccessTestCase(
-                name = "split: null first arg returns null",
-                input = "split(NULL, ',');",
-                expected = Datum.nullValue(),
+                name = "split: empty delimiter returns whole input as single element",
+                input = "split('abc', '');",
+                expected = Datum.array(listOf(Datum.string("abc"))),
             ),
             SuccessTestCase(
-                name = "split: null delimiter returns null",
-                input = "split('a,b', NULL);",
-                expected = Datum.nullValue(),
+                name = "split: multi-byte (non-ASCII) delimiter",
+                input = "split('aXbXc', 'X');",
+                expected = Datum.array(listOf(Datum.string("a"), Datum.string("b"), Datum.string("c"))),
             ),
             SuccessTestCase(
-                name = "split: missing first arg returns missing",
-                input = "split(MISSING, ',');",
-                expected = Datum.missing(),
+                name = "split: multi-byte value preserves surrogate-pair codepoints",
+                input = "split('👍,a', ',');",
+                expected = Datum.array(listOf(Datum.string("👍"), Datum.string("a"))),
             ),
+            // --- Argument-type matrix (types resolve together based on arg0; STRICT mode) ---
+            //   - `string` (arg0): CHAR, VARCHAR, CLOB, STRING; CHAR/VARCHAR widen to VARCHAR list elements.
+            //   - `delimiter`    : STRING for a CHAR/VARCHAR/STRING `string` (CHAR/VARCHAR coerced to
+            //                      STRING); CLOB for a CLOB `string`.
+            // arg0 type -> list element type
             SuccessTestCase(
-                name = "split: missing delimiter returns missing",
-                input = "split('a,b', MISSING);",
-                expected = Datum.missing(),
-            ),
-        )
-
-        /**
-         * Argument-type matrix for `replace(string, from, to)`:
-         * - `string` (arg0) should accept CHAR, VARCHAR, CLOB, STRING
-         * - `from` / `to` (arg1, arg2) should accept CHAR, VARCHAR, STRING
-         *
-         * STRICT mode is used so that an unresolved overload surfaces as an error rather than
-         * silently evaluating to MISSING.
-         */
-        @JvmStatic
-        fun replaceTypeTestCases() = listOf(
-            // arg0 types
-            SuccessTestCase(
-                name = "replace: STRING arg0",
-                input = "replace(CAST('hello' AS STRING), 'l', 'L');",
-                expected = Datum.string("heLLo"),
-                mode = Mode.STRICT(),
-            ),
-            SuccessTestCase(
-                name = "replace: CHAR arg0 returns CHAR",
-                input = "replace(CAST('hello' AS CHAR(5)), 'l', 'L');",
-                expected = Datum.character("heLLo"),
-                mode = Mode.STRICT(),
-            ),
-            SuccessTestCase(
-                name = "replace: VARCHAR arg0 returns VARCHAR",
-                input = "replace(CAST('hello' AS VARCHAR(5)), 'l', 'L');",
-                expected = Datum.varchar("heLLo"),
-                mode = Mode.STRICT(),
-            ),
-            SuccessTestCase(
-                name = "replace: CLOB arg0 returns CLOB",
-                input = "replace(CAST('hello' AS CLOB), 'l', 'L');",
-                expected = Datum.clob("heLLo".toByteArray()),
-                mode = Mode.STRICT(),
-            ),
-            // arg1 / arg2 types
-            SuccessTestCase(
-                name = "replace: CHAR from/to",
-                input = "replace('hello', CAST('l' AS CHAR(1)), CAST('L' AS CHAR(1)));",
-                expected = Datum.string("heLLo"),
-                mode = Mode.STRICT(),
-            ),
-            SuccessTestCase(
-                name = "replace: VARCHAR from/to",
-                input = "replace('hello', CAST('l' AS VARCHAR(1)), CAST('L' AS VARCHAR(1)));",
-                expected = Datum.string("heLLo"),
-                mode = Mode.STRICT(),
-            ),
-            SuccessTestCase(
-                name = "replace: STRING from/to",
-                input = "replace('hello', CAST('l' AS STRING), CAST('L' AS STRING));",
-                expected = Datum.string("heLLo"),
-                mode = Mode.STRICT(),
-            ),
-        )
-
-        /**
-         * Argument-type matrix for `split(string, delimiter)`:
-         * - `string` (arg0) should accept CHAR, VARCHAR, CLOB, STRING
-         * - `delimiter` (arg1) should accept CHAR, VARCHAR, STRING
-         *
-         * STRICT mode is used so that an unresolved overload surfaces as an error rather than
-         * silently evaluating to MISSING.
-         */
-        @JvmStatic
-        fun splitTypeTestCases() = listOf(
-            // arg0 types
-            SuccessTestCase(
-                name = "split: STRING arg0",
+                name = "split: STRING arg0 returns list of STRING",
                 input = "split(CAST('a,b' AS STRING), ',');",
                 expected = Datum.array(listOf(Datum.string("a"), Datum.string("b"))),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "split: CHAR arg0 returns list of CHAR",
+                name = "split: CHAR arg0 returns list of VARCHAR",
                 input = "split(CAST('a,b' AS CHAR(3)), ',');",
-                expected = Datum.array(listOf(Datum.character("a"), Datum.character("b"))),
+                expected = Datum.array(listOf(Datum.varchar("a"), Datum.varchar("b"))),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
@@ -295,7 +286,7 @@ class StringFunctionTests {
                 expected = Datum.array(listOf(Datum.clob("a".toByteArray()), Datum.clob("b".toByteArray()))),
                 mode = Mode.STRICT(),
             ),
-            // arg1 (delimiter) types
+            // delimiter types
             SuccessTestCase(
                 name = "split: CHAR delimiter",
                 input = "split('a,b', CAST(',' AS CHAR(1)));",
@@ -313,6 +304,33 @@ class StringFunctionTests {
                 input = "split('a,b', CAST(',' AS STRING));",
                 expected = Datum.array(listOf(Datum.string("a"), Datum.string("b"))),
                 mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "split: CLOB string with CLOB delimiter",
+                input = "split(CAST('a,b' AS CLOB), CAST(',' AS CLOB));",
+                expected = Datum.array(listOf(Datum.clob("a".toByteArray()), Datum.clob("b".toByteArray()))),
+                mode = Mode.STRICT(),
+            ),
+            // --- Null / missing propagation (every parameter) ---
+            SuccessTestCase(
+                name = "split: null string returns null",
+                input = "split(NULL, ',');",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "split: null delimiter returns null",
+                input = "split('a,b', NULL);",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "split: missing string returns missing",
+                input = "split(MISSING, ',');",
+                expected = Datum.missing(),
+            ),
+            SuccessTestCase(
+                name = "split: missing delimiter returns missing",
+                input = "split('a,b', MISSING);",
+                expected = Datum.missing(),
             ),
         )
 

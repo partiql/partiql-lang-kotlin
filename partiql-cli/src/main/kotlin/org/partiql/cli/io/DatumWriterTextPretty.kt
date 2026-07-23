@@ -73,7 +73,7 @@ class DatumWriterTextPretty(
             PType.DOUBLE -> format(format) { writeScalar(datum.double) }
             PType.CHAR, PType.VARCHAR, PType.STRING -> format(format) { writeString(datum.string) }
             PType.BLOB -> format(format) { writeBlob(datum) } // TODO: What is the correct way to write these?
-            PType.CLOB -> format(format) { writeString(datum.string) } // TODO: What is the correct way to write these?
+            PType.CLOB -> format(format) { writeClob(datum) } // TODO: What is the correct way to write these?
             PType.DATE -> format(format) { writeDate(datum) }
             PType.TIME -> format(format) { writeTime(datum) }
             PType.TIMEZ -> format(format) { writeTimez(datum) }
@@ -143,6 +143,13 @@ class DatumWriterTextPretty(
 
     private fun writeBlob(datum: Datum) {
         this.out.print("BLOB '")
+        this.out.print(datum.bytes.toString(Charsets.UTF_8))
+        this.out.print("'")
+    }
+
+    private fun writeClob(datum: Datum) {
+        // CLOB is byte-backed; decode the UTF-8 bytes and emit a CLOB literal.
+        this.out.print("CLOB '")
         this.out.print(datum.bytes.toString(Charsets.UTF_8))
         this.out.print("'")
     }
