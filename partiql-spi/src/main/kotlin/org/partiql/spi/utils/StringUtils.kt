@@ -78,7 +78,7 @@ internal object StringUtils {
      * @param end
      * @return
      */
-    internal fun String.codepointSubstring(start: Int, end: Int? = null): String {
+    internal fun String.codepointSubstring(start: Int, length: Int? = null): String {
         val codePointCount = this.codePointCount(0, this.length)
         if (start > codePointCount) {
             return ""
@@ -86,9 +86,11 @@ internal object StringUtils {
 
         // startPosition starts at 1
         // calculate this before adjusting start position to account for negative startPosition
-        val endPosition = when (end) {
+        // [length] is the number of characters to take (SQL `FOR <length>`), so the (inclusive) end
+        // position is `start + length - 1`, clamped to the string length.
+        val endPosition = when (length) {
             null -> codePointCount
-            else -> Integer.min(codePointCount, start + end - 1)
+            else -> Integer.min(codePointCount, start + length - 1)
         }
 
         // Clamp start indexes to values that make sense for java substring

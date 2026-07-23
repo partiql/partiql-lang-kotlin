@@ -3,41 +3,59 @@
 
 package org.partiql.spi.function.builtins
 
-// TODO: add support for CHAR/VARCHAR - https://github.com/partiql/partiql-lang-kotlin/issues/1838
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
+import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointPosition
 import org.partiql.spi.value.Datum
 
-internal val Fn_POSITION__STRING_STRING__INT64 = FunctionUtils.hidden(
+/**
+ * SQL `POSITION(probe IN value)` function.
+ *
+ * Returns the 1-based position of [probe] within [value], or 0 if not found. The result is always
+ * BIGINT, so — unlike the string value functions ([FnUpper]/[FnLower]) — the input type is not
+ * preserved in the result.
+ *
+ * Accepts CHAR, VARCHAR, CLOB, and STRING for both arguments. A single dynamic overload is
+ * registered and the concrete instance is resolved in [getInstance]; this avoids an ambiguous
+ * match between the STRING and CLOB overloads for CHAR/VARCHAR inputs.
+ */
+internal object FnPosition : FnOverload() {
 
-    name = "position",
-    returns = PType.bigint(),
-    parameters = arrayOf(
-        Parameter("probe", PType.string()),
-        Parameter("value", PType.string()),
-    ),
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature(FunctionUtils.hide("position"), listOf(PType.dynamic(), PType.dynamic()))
+    }
 
-) { args ->
-    val s1 = args[0].string
-    val s2 = args[1].string
-    val result = s2.codepointPosition(s1)
-    Datum.bigint(result.toLong())
-}
+    override fun getInstance(args: Array<PType>): Fn? {
+        val probeType = args[0]
+        val valueType = args[1]
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance(FunctionUtils.hide("position"), PType.bigint(), args)
+        }
+        if (probeType !in SqlTypeFamily.TEXT || valueType !in SqlTypeFamily.TEXT) return null
+        return Function.instance(
+            name = FunctionUtils.hide("position"),
+            returns = PType.bigint(),
+            parameters = arrayOf(Parameter("probe", probeType), Parameter("value", valueType)),
+        ) { params ->
+            val probe = params[0].text(probeType)
+            val value = params[1].text(valueType)
+            Datum.bigint(value.codepointPosition(probe).toLong())
+        }
+    }
 
-internal val Fn_POSITION__CLOB_CLOB__INT64 = FunctionUtils.hidden(
-
-    name = "position",
-    returns = PType.bigint(),
-    parameters = arrayOf(
-        Parameter("probe", PType.clob(Int.MAX_VALUE)),
-        Parameter("value", PType.clob(Int.MAX_VALUE)),
-    ),
-
-) { args ->
-    val s1 = args[0].bytes.toString(Charsets.UTF_8)
-    val s2 = args[1].bytes.toString(Charsets.UTF_8)
-    val result = s2.codepointPosition(s1)
-    Datum.bigint(result.toLong())
+    /**
+     * Reads a text [Datum] as a [String], handling CLOB (byte-backed) separately from the
+     * character types (CHAR/VARCHAR/STRING).
+     */
+    private fun Datum.text(type: PType): String = when (type.code()) {
+        PType.CLOB -> this.bytes.toString(Charsets.UTF_8)
+        else -> this.string
+    }
 }

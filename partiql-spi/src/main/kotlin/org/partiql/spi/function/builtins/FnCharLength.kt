@@ -3,34 +3,54 @@
 
 package org.partiql.spi.function.builtins
 
-// TODO: add support for CHAR/VARCHAR - https://github.com/partiql/partiql-lang-kotlin/issues/1838
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_CHAR_LENGTH__STRING__INT = Function.overload(
+/**
+ * SQL `CHAR_LENGTH` function.
+ *
+ * Returns the number of characters (code points) in the input string. The result is always an
+ * INTEGER, so — unlike the string value functions ([FnUpper]/[FnLower]) — the input type is not
+ * preserved in the result.
+ *
+ * Accepts CHAR, VARCHAR, CLOB, and STRING. A single dynamic overload is registered and the
+ * concrete instance is resolved in [getInstance]; this avoids an ambiguous match between the
+ * STRING and CLOB overloads for CHAR/VARCHAR inputs.
+ */
+internal object FnCharLength : FnOverload() {
 
-    name = "char_length",
-    returns = PType.integer(),
-    parameters = arrayOf(
-        Parameter("value", PType.string()),
-    ),
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature("char_length", listOf(PType.dynamic()))
+    }
 
-) { args ->
-    val value = args[0].string
-    Datum.integer(value.codePointCount(0, value.length))
-}
-
-internal val Fn_CHAR_LENGTH__CLOB__INT = Function.overload(
-
-    name = "char_length",
-    returns = PType.integer(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.clob(Int.MAX_VALUE)),
-    ),
-
-) { args ->
-    val value = args[0].bytes
-    Datum.integer(value.size)
+    override fun getInstance(args: Array<PType>): Fn? {
+        val inputType = args[0]
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance("char_length", PType.integer(), args)
+        }
+        return when (inputType.code()) {
+            PType.CHAR, PType.VARCHAR, PType.STRING -> Function.instance(
+                name = "char_length",
+                returns = PType.integer(),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                val value = args[0].string
+                Datum.integer(value.codePointCount(0, value.length))
+            }
+            PType.CLOB -> Function.instance(
+                name = "char_length",
+                returns = PType.integer(),
+                parameters = arrayOf(Parameter("value", inputType)),
+            ) { args ->
+                Datum.integer(args[0].bytes.size)
+            }
+            else -> null
+        }
+    }
 }

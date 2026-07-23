@@ -3,8 +3,11 @@
 
 package org.partiql.spi.function.builtins
 
-// TODO: add support for CHAR/VARCHAR - https://github.com/partiql/partiql-lang-kotlin/issues/1838
+import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnOverload
+import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.StringUtils.codepointSubstring
@@ -78,55 +81,106 @@ import org.partiql.spi.value.Datum
  *              E1 = lesser_of(endPos, strLength + 1)
  *              L1 = E1 - S1
  *              java's substring(C, S1, E1)
+ * ```
+ *
+ * Accepts CHAR, VARCHAR, CLOB, and STRING for `value`. The declared type of the result is the
+ * declared type of `value` (following the SQL <string value function> convention used by
+ * [FnUpper]/[FnLower]):
+ * - CHAR(n)    -> CHAR(n)
+ * - VARCHAR(n) -> VARCHAR(n)
+ * - CLOB(n)    -> CLOB(n)
+ * - STRING     -> STRING (PartiQL extension)
+ *
+ * A single dynamic overload is registered per arity and the concrete instance is resolved in
+ * [getInstance]; this avoids an ambiguous match between the STRING and CLOB overloads for
+ * CHAR/VARCHAR inputs.
  */
-internal val Fn_SUBSTRING__STRING_INT32__STRING = FnOverload.Builder("substring")
-    .returns(PType.string())
-    .addParameters(PType.string(), PType.integer())
-    .body { args ->
-        val value = args[0].string
-        val start = args[1].int
-        val result = value.codepointSubstring(start)
-        Datum.string(result)
-    }
-    .build()
+internal object FnSubstringTwoArg : FnOverload() {
 
-internal val Fn_SUBSTRING__CLOB_INT64__CLOB = FnOverload.Builder("substring")
-    .returns(PType.clob())
-    .addParameters(PType.clob(), PType.integer())
-    .body { args ->
-        val value = args[0].bytes.toString(Charsets.UTF_8)
-        val start = args[1].int
-        val result = value.codepointSubstring(start)
-        Datum.clob(result.toByteArray())
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature("substring", listOf(PType.dynamic(), PType.integer()))
     }
-    .build()
 
-internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = FnOverload.Builder("substring")
-    .returns(PType.string())
-    .addParameters(PType.string(), PType.integer(), PType.integer())
-    .body { args ->
-        val value = args[0].string
-        val start = args[1].int
-        val end = args[2].int
-        if (end < 0) {
-            throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+    override fun getInstance(args: Array<PType>): Fn? {
+        val valueType = args[0]
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance("substring", PType.string(), args)
         }
-        val result = value.codepointSubstring(start, end)
-        Datum.string(result)
-    }
-    .build()
-
-internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = FnOverload.Builder("substring")
-    .returns(PType.clob())
-    .addParameters(PType.clob(), PType.integer(), PType.integer())
-    .body { args ->
-        val string = args[0].bytes.toString(Charsets.UTF_8)
-        val start = args[1].int
-        val end = args[2].int
-        if (end < 0) {
-            throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+        if (!valueType.isText()) return null
+        return Function.instance(
+            name = "substring",
+            returns = valueType.asReturn(),
+            parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer())),
+        ) { params ->
+            val value = params[0].text(valueType)
+            val start = params[1].int
+            valueType.datum(value.codepointSubstring(start))
         }
-        val result = string.codepointSubstring(start, end)
-        Datum.clob(result.toByteArray())
     }
-    .build()
+}
+
+/**
+ * The `substring(value, start, length)` overload; see [FnSubstringTwoArg] for the full SQL-92
+ * semantics. `length` is the number of characters to take (the SQL `FOR <length>` clause), not an
+ * end position. Raises a data exception if `length` is negative.
+ */
+internal object FnSubstringThreeArg : FnOverload() {
+
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature("substring", listOf(PType.dynamic(), PType.integer(), PType.integer()))
+    }
+
+    override fun getInstance(args: Array<PType>): Fn? {
+        val valueType = args[0]
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance("substring", PType.string(), args)
+        }
+        if (!valueType.isText()) return null
+        return Function.instance(
+            name = "substring",
+            returns = valueType.asReturn(),
+            parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer()), Parameter("length", PType.integer())),
+        ) { params ->
+            val value = params[0].text(valueType)
+            val start = params[1].int
+            val length = params[2].int
+            if (length < 0) {
+                throw PErrors.internalErrorException(IllegalArgumentException("Length must be non-negative."))
+            }
+            valueType.datum(value.codepointSubstring(start, length))
+        }
+    }
+}
+
+private fun PType.isText(): Boolean = when (this.code()) {
+    PType.CHAR, PType.VARCHAR, PType.CLOB, PType.STRING -> true
+    else -> false
+}
+
+private fun PType.asReturn(): PType = when (this.code()) {
+    PType.CHAR -> PType.character()
+    PType.VARCHAR -> PType.varchar()
+    PType.CLOB -> PType.clob()
+    else -> PType.string()
+}
+
+/**
+ * Reads a text [Datum] as a [String], handling CLOB (byte-backed) separately from the
+ * character types (CHAR/VARCHAR/STRING).
+ */
+private fun Datum.text(type: PType): String = when (type.code()) {
+    PType.CLOB -> this.bytes.toString(Charsets.UTF_8)
+    else -> this.string
+}
+
+/**
+ * Wraps a result [String] as a [Datum] matching the input's type family.
+ */
+private fun PType.datum(result: String): Datum = when (this.code()) {
+    PType.CHAR -> Datum.character(result)
+    PType.VARCHAR -> Datum.varchar(result)
+    PType.CLOB -> Datum.clob(result.toByteArray())
+    else -> Datum.string(result)
+}
