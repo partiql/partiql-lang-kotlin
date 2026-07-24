@@ -482,9 +482,9 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "substring: CHAR (start only) returns CHAR",
+                name = "substring: CHAR (start only) returns VARCHAR",
                 input = "substring(CAST('hello' AS CHAR(5)), 2);",
-                expected = Datum.character("ello"),
+                expected = Datum.varchar("ello"),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
@@ -613,6 +613,12 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
+                name = "trim_leading: CHAR returns VARCHAR",
+                input = "TRIM(LEADING FROM CAST('  hi' AS CHAR(4)));",
+                expected = Datum.varchar("hi"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
                 name = "trim_leading: VARCHAR",
                 input = "TRIM(LEADING FROM CAST('  hi' AS VARCHAR(4)));",
                 expected = Datum.varchar("hi"),
@@ -672,6 +678,12 @@ class StringFunctionTests {
                 name = "trim_trailing: STRING",
                 input = "TRIM(TRAILING FROM CAST('hi  ' AS STRING));",
                 expected = Datum.string("hi"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim_trailing: CHAR returns VARCHAR",
+                input = "TRIM(TRAILING FROM CAST('hi  ' AS CHAR(4)));",
+                expected = Datum.varchar("hi"),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
@@ -737,6 +749,12 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
+                name = "trim_chars: CHAR returns VARCHAR",
+                input = "TRIM(BOTH 'x' FROM CAST('xxhixx' AS CHAR(6)));",
+                expected = Datum.varchar("hi"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
                 name = "trim_chars: VARCHAR",
                 input = "TRIM(BOTH 'x' FROM CAST('xxhixx' AS VARCHAR(6)));",
                 expected = Datum.varchar("hi"),
@@ -792,6 +810,12 @@ class StringFunctionTests {
                 name = "like: VARCHAR no match",
                 input = "CAST('abc' AS VARCHAR(3)) LIKE CAST('a%z' AS VARCHAR(3));",
                 expected = Datum.bool(false),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "like: CLOB match",
+                input = "CAST('abc' AS CLOB) LIKE CAST('a%' AS CLOB);",
+                expected = Datum.bool(true),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(

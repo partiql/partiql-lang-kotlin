@@ -8,8 +8,11 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.stringFnDatum
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturn
+import org.partiql.spi.function.builtins.FnUtils.textValue
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
-import org.partiql.spi.value.Datum
 
 /**
  * PartiQL `replace` function.
@@ -48,36 +51,18 @@ internal object FnReplace : FnOverload() {
         if (args.any { it.code() == PType.UNKNOWN }) {
             return FnUtils.nullResolutionInstance("replace", PType.string(), args)
         }
-        return when (stringType.code()) {
-            PType.CHAR, PType.VARCHAR -> Function.instance(
-                name = "replace",
-                returns = PType.varchar(),
-                parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.string()), Parameter("to", PType.string())),
-            ) { args ->
-                val result = replace(args[0].string, args[1].string, args[2].string)
-                Datum.varchar(result)
-            }
-            PType.STRING -> Function.instance(
-                name = "replace",
-                returns = PType.string(),
-                parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.string()), Parameter("to", PType.string())),
-            ) { args ->
-                val result = replace(args[0].string, args[1].string, args[2].string)
-                Datum.string(result)
-            }
-            PType.CLOB -> Function.instance(
-                name = "replace",
-                returns = PType.clob(),
-                parameters = arrayOf(Parameter("string", stringType), Parameter("from", PType.clob()), Parameter("to", PType.clob())),
-            ) { args ->
-                val string = args[0].bytes.toString(Charsets.UTF_8)
-                val from = args[1].bytes.toString(Charsets.UTF_8)
-                val to = args[2].bytes.toString(Charsets.UTF_8)
-
-                val result = replace(string, from, to)
-                Datum.clob(result.toByteArray())
-            }
-            else -> null
+        if (stringType !in SqlTypeFamily.TEXT) return null
+        // `from`/`to` match the CLOB family for a CLOB `string`, otherwise STRING.
+        val patternType = if (stringType.code() == PType.CLOB) PType.clob() else PType.string()
+        return Function.instance(
+            name = "replace",
+            returns = stringType.stringFnReturn(),
+            parameters = arrayOf(Parameter("string", stringType), Parameter("from", patternType), Parameter("to", patternType)),
+        ) { params ->
+            val string = params[0].textValue(stringType)
+            val from = params[1].textValue(patternType)
+            val to = params[2].textValue(patternType)
+            stringType.stringFnDatum(replace(string, from, to))
         }
     }
 

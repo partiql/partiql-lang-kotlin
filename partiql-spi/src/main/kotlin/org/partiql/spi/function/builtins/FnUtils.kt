@@ -4,9 +4,44 @@ import org.partiql.spi.function.Fn
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
+import org.partiql.spi.value.Datum
 
 internal object FnUtils {
     const val MAXLENGTH = Int.MAX_VALUE
+
+    /**
+     * Reads this text [Datum] of the given [type] as a [String]. CLOB is byte-backed (decoded as
+     * UTF-8); the character types (CHAR/VARCHAR/STRING) are read directly.
+     */
+    fun Datum.textValue(type: PType): String = when (type.code()) {
+        PType.CLOB -> this.bytes.toString(Charsets.UTF_8)
+        else -> this.string
+    }
+
+    /**
+     * The result type for a SQL <string value function> over this text type. CHAR/VARCHAR map to
+     * VARCHAR, CLOB stays CLOB, and everything else is STRING.
+     *
+     * Pass [length] to carry this type's declared length into the result — this is used by
+     * length-preserving functions such as TRIM (CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n)).
+     * Omit it for functions whose result length may differ from the input (e.g. REPLACE, SPLIT
+     * elements, SUBSTRING), which produce unbounded VARCHAR/CLOB.
+     */
+    fun PType.stringFnReturn(length: Int? = null): PType = when (this.code()) {
+        PType.CHAR, PType.VARCHAR -> if (length != null) PType.varchar(length) else PType.varchar()
+        PType.CLOB -> if (length != null) PType.clob(length) else PType.clob()
+        else -> PType.string()
+    }
+
+    /**
+     * Wraps a [result] string into a [Datum] whose type matches [stringFnReturn] for this type.
+     * See [stringFnReturn] for the meaning of [length].
+     */
+    fun PType.stringFnDatum(result: String, length: Int? = null): Datum = when (this.code()) {
+        PType.CHAR, PType.VARCHAR -> if (length != null) Datum.varchar(result, length) else Datum.varchar(result)
+        PType.CLOB -> if (length != null) Datum.clob(result.toByteArray(), length) else Datum.clob(result.toByteArray())
+        else -> Datum.string(result)
+    }
 
     /**
      * Returns an [Fn] instance whose only purpose is to let overload resolution succeed when an

@@ -8,10 +8,13 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.stringFnDatum
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturn
+import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.function.builtins.internal.PErrors
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.StringUtils.codepointSubstring
-import org.partiql.spi.value.Datum
 
 /**
  * Built-in function to the substring of an existing string. This function
@@ -83,12 +86,12 @@ import org.partiql.spi.value.Datum
  *              java's substring(C, S1, E1)
  * ```
  *
- * Accepts CHAR, VARCHAR, CLOB, and STRING for `value`. The declared type of the result is the
- * declared type of `value` (following the SQL <string value function> convention used by
- * [FnUpper]/[FnLower]):
- * - CHAR(n)    -> CHAR(n)
- * - VARCHAR(n) -> VARCHAR(n)
- * - CLOB(n)    -> CLOB(n)
+ * Accepts CHAR, VARCHAR, CLOB, and STRING for `value`. The result type follows the SQL
+ * <string value function> convention used by [FnTrim] (substring may change the length, so CHAR
+ * is not length-preserving and widens to VARCHAR):
+ * - CHAR(n)    -> VARCHAR
+ * - VARCHAR(n) -> VARCHAR
+ * - CLOB(n)    -> CLOB
  * - STRING     -> STRING (PartiQL extension)
  *
  * A single dynamic overload is registered per arity and the concrete instance is resolved in
@@ -107,15 +110,15 @@ internal object FnSubstringTwoArg : FnOverload() {
         if (args.any { it.code() == PType.UNKNOWN }) {
             return FnUtils.nullResolutionInstance("substring", PType.string(), args)
         }
-        if (!valueType.isText()) return null
+        if (valueType !in SqlTypeFamily.TEXT) return null
         return Function.instance(
             name = "substring",
-            returns = valueType.asReturn(),
+            returns = valueType.stringFnReturn(),
             parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer())),
         ) { params ->
-            val value = params[0].text(valueType)
+            val value = params[0].textValue(valueType)
             val start = params[1].int
-            valueType.datum(value.codepointSubstring(start))
+            valueType.stringFnDatum(value.codepointSubstring(start))
         }
     }
 }
@@ -137,50 +140,19 @@ internal object FnSubstringThreeArg : FnOverload() {
         if (args.any { it.code() == PType.UNKNOWN }) {
             return FnUtils.nullResolutionInstance("substring", PType.string(), args)
         }
-        if (!valueType.isText()) return null
+        if (valueType !in SqlTypeFamily.TEXT) return null
         return Function.instance(
             name = "substring",
-            returns = valueType.asReturn(),
+            returns = valueType.stringFnReturn(),
             parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer()), Parameter("length", PType.integer())),
         ) { params ->
-            val value = params[0].text(valueType)
+            val value = params[0].textValue(valueType)
             val start = params[1].int
             val length = params[2].int
             if (length < 0) {
                 throw PErrors.internalErrorException(IllegalArgumentException("Length must be non-negative."))
             }
-            valueType.datum(value.codepointSubstring(start, length))
+            valueType.stringFnDatum(value.codepointSubstring(start, length))
         }
     }
-}
-
-private fun PType.isText(): Boolean = when (this.code()) {
-    PType.CHAR, PType.VARCHAR, PType.CLOB, PType.STRING -> true
-    else -> false
-}
-
-private fun PType.asReturn(): PType = when (this.code()) {
-    PType.CHAR -> PType.character()
-    PType.VARCHAR -> PType.varchar()
-    PType.CLOB -> PType.clob()
-    else -> PType.string()
-}
-
-/**
- * Reads a text [Datum] as a [String], handling CLOB (byte-backed) separately from the
- * character types (CHAR/VARCHAR/STRING).
- */
-private fun Datum.text(type: PType): String = when (type.code()) {
-    PType.CLOB -> this.bytes.toString(Charsets.UTF_8)
-    else -> this.string
-}
-
-/**
- * Wraps a result [String] as a [Datum] matching the input's type family.
- */
-private fun PType.datum(result: String): Datum = when (this.code()) {
-    PType.CHAR -> Datum.character(result)
-    PType.VARCHAR -> Datum.varchar(result)
-    PType.CLOB -> Datum.clob(result.toByteArray())
-    else -> Datum.string(result)
 }

@@ -8,10 +8,13 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.stringFnDatum
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturn
+import org.partiql.spi.function.builtins.FnUtils.textValue
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointTrim
-import org.partiql.spi.value.Datum
 
 /**
  * SQL TRIM function implementation.
@@ -39,39 +42,18 @@ internal object FnTrim : FnOverload() {
 
     override fun getInstance(args: Array<PType>): Fn? {
         val inputType = args[0]
-        return when (inputType.code()) {
-            PType.CHAR, PType.VARCHAR -> {
-                Function.instance(
-                    name = FunctionUtils.hide("trim"),
-                    returns = PType.varchar(inputType.length),
-                    parameters = arrayOf(Parameter("value", inputType)),
-                ) { params ->
-                    val string = params[0].string
-                    val result = string.codepointTrim()
-                    Datum.varchar(result, inputType.length)
-                }
-            }
-            PType.CLOB -> {
-                Function.instance(
-                    name = FunctionUtils.hide("trim"),
-                    returns = PType.clob(inputType.length),
-                    parameters = arrayOf(Parameter("value", inputType)),
-                ) { params ->
-                    val string = params[0].bytes.toString(Charsets.UTF_8)
-                    val result = string.codepointTrim()
-                    Datum.clob(result.toByteArray(), inputType.length)
-                }
-            }
-            PType.STRING -> Function.instance(
-                name = FunctionUtils.hide("trim"),
-                returns = PType.string(),
-                parameters = arrayOf(Parameter("value", inputType)),
-            ) { params ->
-                val value = params[0].string
-                val result = value.codepointTrim()
-                Datum.string(result)
-            }
-            else -> null
+        if (inputType !in SqlTypeFamily.TEXT) return null
+        // Unlike the length-changing string functions, TRIM preserves the input length:
+        // CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n), STRING -> STRING. STRING carries no
+        // length, so only the bounded character types pass one to the length-aware helper.
+        val length = if (inputType.code() == PType.STRING) null else inputType.length
+        return Function.instance(
+            name = FunctionUtils.hide("trim"),
+            returns = inputType.stringFnReturn(length),
+            parameters = arrayOf(Parameter("value", inputType)),
+        ) { params ->
+            val value = params[0].textValue(inputType)
+            inputType.stringFnDatum(value.codepointTrim(), length)
         }
     }
 }

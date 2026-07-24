@@ -8,6 +8,7 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
@@ -44,18 +45,9 @@ internal object FnPosition : FnOverload() {
             returns = PType.bigint(),
             parameters = arrayOf(Parameter("probe", probeType), Parameter("value", valueType)),
         ) { params ->
-            val probe = params[0].text(probeType)
-            val value = params[1].text(valueType)
+            val probe = params[0].textValue(probeType)
+            val value = params[1].textValue(valueType)
             Datum.bigint(value.codepointPosition(probe).toLong())
         }
-    }
-
-    /**
-     * Reads a text [Datum] as a [String], handling CLOB (byte-backed) separately from the
-     * character types (CHAR/VARCHAR/STRING).
-     */
-    private fun Datum.text(type: PType): String = when (type.code()) {
-        PType.CLOB -> this.bytes.toString(Charsets.UTF_8)
-        else -> this.string
     }
 }

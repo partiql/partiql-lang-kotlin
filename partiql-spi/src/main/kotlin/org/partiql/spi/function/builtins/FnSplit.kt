@@ -8,6 +8,10 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.stringFnDatum
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturn
+import org.partiql.spi.function.builtins.FnUtils.textValue
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -54,31 +58,18 @@ internal object FnSplit : FnOverload() {
         if (args.any { it.code() == PType.UNKNOWN }) {
             return FnUtils.nullResolutionInstance("split", PType.array(PType.string()), args)
         }
-        return when (stringType.code()) {
-            PType.CHAR, PType.VARCHAR -> Function.instance(
-                name = "split",
-                returns = PType.array(PType.varchar()),
-                parameters = arrayOf(Parameter("string", stringType), Parameter("delimiter", PType.string())),
-            ) { args ->
-                Datum.array(split(args[0].string, args[1].string).map { Datum.varchar(it) })
-            }
-            PType.STRING -> Function.instance(
-                name = "split",
-                returns = PType.array(PType.string()),
-                parameters = arrayOf(Parameter("string", stringType), Parameter("delimiter", PType.string())),
-            ) { args ->
-                Datum.array(split(args[0].string, args[1].string).map { Datum.string(it) })
-            }
-            PType.CLOB -> Function.instance(
-                name = "split",
-                returns = PType.array(PType.clob()),
-                parameters = arrayOf(Parameter("string", stringType), Parameter("delimiter", PType.clob())),
-            ) { args ->
-                val string = args[0].bytes.toString(Charsets.UTF_8)
-                val delimiter = args[1].bytes.toString(Charsets.UTF_8)
-                Datum.array(split(string, delimiter).map { Datum.clob(it.toByteArray()) })
-            }
-            else -> null
+        if (stringType !in SqlTypeFamily.TEXT) return null
+        // The delimiter matches the CLOB family for a CLOB `string`, otherwise STRING.
+        val delimiterType = if (stringType.code() == PType.CLOB) PType.clob() else PType.string()
+        val elementType = stringType.stringFnReturn()
+        return Function.instance(
+            name = "split",
+            returns = PType.array(elementType),
+            parameters = arrayOf(Parameter("string", stringType), Parameter("delimiter", delimiterType)),
+        ) { params ->
+            val string = params[0].textValue(stringType)
+            val delimiter = params[1].textValue(delimiterType)
+            Datum.array(split(string, delimiter).map { stringType.stringFnDatum(it) })
         }
     }
 

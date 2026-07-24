@@ -8,10 +8,13 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.stringFnDatum
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturn
+import org.partiql.spi.function.builtins.FnUtils.textValue
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointTrimLeading
-import org.partiql.spi.value.Datum
 
 /**
  * `trim_leading(value)` — removes leading whitespace.
@@ -33,33 +36,14 @@ internal object FnTrimLeading : FnOverload() {
         if (args.any { it.code() == PType.UNKNOWN }) {
             return FnUtils.nullResolutionInstance(FunctionUtils.hide("trim_leading"), PType.string(), args)
         }
-        return when (valueType.code()) {
-            PType.CHAR, PType.VARCHAR -> Function.instance(
-                name = FunctionUtils.hide("trim_leading"),
-                returns = PType.varchar(),
-                parameters = arrayOf(Parameter("value", valueType)),
-            ) { args ->
-                val result = args[0].string.codepointTrimLeading()
-                Datum.varchar(result)
-            }
-            // PType.UNKNOWN is for null propagation
-            PType.STRING, PType.UNKNOWN -> Function.instance(
-                name = FunctionUtils.hide("trim_leading"),
-                returns = PType.string(),
-                parameters = arrayOf(Parameter("value", valueType)),
-            ) { args ->
-                val result = args[0].string.codepointTrimLeading()
-                Datum.string(result)
-            }
-            PType.CLOB -> Function.instance(
-                name = FunctionUtils.hide("trim_leading"),
-                returns = PType.clob(),
-                parameters = arrayOf(Parameter("value", valueType)),
-            ) { args ->
-                val result = args[0].bytes.toString(Charsets.UTF_8).codepointTrimLeading()
-                Datum.clob(result.toByteArray())
-            }
-            else -> null
+        if (valueType !in SqlTypeFamily.TEXT) return null
+        return Function.instance(
+            name = FunctionUtils.hide("trim_leading"),
+            returns = valueType.stringFnReturn(),
+            parameters = arrayOf(Parameter("value", valueType)),
+        ) { params ->
+            val value = params[0].textValue(valueType)
+            valueType.stringFnDatum(value.codepointTrimLeading())
         }
     }
 }
