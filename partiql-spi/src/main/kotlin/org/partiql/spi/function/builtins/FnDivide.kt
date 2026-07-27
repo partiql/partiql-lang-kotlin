@@ -108,15 +108,14 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
         val (p2, s2) = rhs.precision to rhs.scale
         val p = p1 - s1 + s2 + Math.max(6, s1 + p2 + 1)
         val s = Math.max(6, s1 + p2 + 1)
-        if (p <= 38) {
-            return p to s
-        }
+        val returnedP = p.coerceAtMost(38)
         val integralDigits = p - s
         val returnedS = when {
+            p <= 38 -> s
             integralDigits < 32 -> s.coerceAtMost(38 - integralDigits)
             else -> 6
         }
-        return 38 to returnedS
+        return returnedP to returnedS.coerceAtMost(returnedP)
     }
 
     override fun getRealInstance(realLhs: PType, realRhs: PType): Fn {

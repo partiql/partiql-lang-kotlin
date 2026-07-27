@@ -94,6 +94,20 @@ class FnDivideTest {
                 expectedType = PType.decimal(38, 38),
                 expectedValue = BigDecimal("0.50000000000000000000000000000000000000"),
             ),
+            DivisionCase(
+                name = "scale is clamped for malformed input below maximum precision",
+                lhs = Datum.decimal(BigDecimal.ZERO, 1, 2),
+                rhs = Datum.decimal(BigDecimal.ONE, 1, 0),
+                expectedType = PType.decimal(5, 5),
+                expectedValue = BigDecimal("0.00000"),
+            ),
+            DivisionCase(
+                name = "scale is clamped for malformed input above maximum precision",
+                lhs = Datum.decimal(BigDecimal.ZERO, 1, 2),
+                rhs = Datum.decimal(BigDecimal.ONE, 38, 0),
+                expectedType = PType.decimal(38, 38),
+                expectedValue = BigDecimal("0.00000000000000000000000000000000000000"),
+            ),
         )
     }
 }
