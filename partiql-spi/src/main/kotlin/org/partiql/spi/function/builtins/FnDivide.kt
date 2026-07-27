@@ -97,11 +97,10 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
     }
 
     /**
-     * SQL Server: p = p1 - s1 + s2 + max(6, s1 + p2 + 1)
-     * SQL Server: s = max(6, s1 + p2 + 1)
-     *
-     * If p exceeds 38, reduce the scale to preserve the integral part when it has fewer than 32 digits.
-     * Otherwise, reduce the scale to 6.
+     * SQL defines exact numeric result precision and scale as implementation-defined.
+     * Preserve PartiQL's existing division behavior:
+     * p = p1 - s1 + s2 + max(6, s1 + p2 + 1)
+     * s = max(6, s1 + p2 + 1)
      */
     private fun dividePrecisionScale(lhs: PType, rhs: PType): Pair<Int, Int> {
         val (p1, s1) = lhs.precision to lhs.scale
@@ -109,13 +108,8 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
         val p = p1 - s1 + s2 + Math.max(6, s1 + p2 + 1)
         val s = Math.max(6, s1 + p2 + 1)
         val returnedP = p.coerceAtMost(38)
-        val integralDigits = p - s
-        val returnedS = when {
-            p <= 38 -> s
-            integralDigits < 32 -> s.coerceAtMost(38 - integralDigits)
-            else -> 6
-        }
-        return returnedP to returnedS.coerceAtMost(returnedP)
+        val returnedS = s.coerceAtMost(returnedP)
+        return returnedP to returnedS
     }
 
     override fun getRealInstance(realLhs: PType, realRhs: PType): Fn {

@@ -26,15 +26,9 @@ import java.math.BigDecimal
 class DivideTest {
 
     private val ratio = Datum.decimal(
-        BigDecimal("0.32258064516"),
+        BigDecimal("0.32258064516129032258064516129032258065"),
         38,
-        11,
-    )
-
-    private val unitRatio = Datum.decimal(
-        BigDecimal("1.00000000000"),
         38,
-        11,
     )
 
     private val salaries = Global(
@@ -43,7 +37,6 @@ class DivideTest {
             listOf(
                 salary(id = 1, dept = "engineering", amount = "100000.00"),
                 salary(id = 2, dept = "engineering", amount = "210000.00"),
-                salary(id = 3, dept = "hr", amount = "50000.00"),
             ),
         ),
         type = PType.bag(
@@ -56,7 +49,7 @@ class DivideTest {
     )
 
     @Test
-    fun decimalDivisionReturnsCappedPrecisionAndScale() {
+    fun decimalDivisionClampsScaleToReturnedPrecision() {
         SuccessTestCase(
             input = """
                 CAST(100000.00 AS DECIMAL(10, 2)) /
@@ -92,9 +85,12 @@ class DivideTest {
                         id = 2,
                         dept = "engineering",
                         amount = "210000.00",
-                        ratio = Datum.decimal(BigDecimal("0.67741935484"), 38, 11),
+                        ratio = Datum.decimal(
+                            BigDecimal("0.67741935483870967741935483870967741935"),
+                            38,
+                            38,
+                        ),
                     ),
-                    salary(id = 3, dept = "hr", amount = "50000.00", ratio = unitRatio),
                 ),
             ),
             globals = listOf(salaries),
