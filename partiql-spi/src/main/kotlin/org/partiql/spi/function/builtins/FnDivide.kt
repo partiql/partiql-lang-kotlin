@@ -99,15 +99,24 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
     /**
      * SQL Server: p = p1 - s1 + s2 + max(6, s1 + p2 + 1)
      * SQL Server: s = max(6, s1 + p2 + 1)
+     *
+     * If p exceeds 38, reduce the scale to preserve the integral part when it has fewer than 32 digits.
+     * Otherwise, reduce the scale to 6.
      */
     private fun dividePrecisionScale(lhs: PType, rhs: PType): Pair<Int, Int> {
         val (p1, s1) = lhs.precision to lhs.scale
         val (p2, s2) = rhs.precision to rhs.scale
         val p = p1 - s1 + s2 + Math.max(6, s1 + p2 + 1)
         val s = Math.max(6, s1 + p2 + 1)
-        val returnedP = p.coerceAtMost(38)
-        val returnedS = s.coerceAtMost(p)
-        return returnedP to returnedS
+        if (p <= 38) {
+            return p to s
+        }
+        val integralDigits = p - s
+        val returnedS = when {
+            integralDigits < 32 -> s.coerceAtMost(38 - integralDigits)
+            else -> 6
+        }
+        return 38 to returnedS
     }
 
     override fun getRealInstance(realLhs: PType, realRhs: PType): Fn {
