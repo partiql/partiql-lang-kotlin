@@ -98,7 +98,9 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
 
     /**
      * SQL defines exact numeric result precision and scale as implementation-defined.
-     * Preserve PartiQL's existing division behavior:
+     * Preserve PartiQL's existing division behavior, introduced in
+     * [PR #1651](https://github.com/partiql/partiql-lang-kotlin/pull/1651) using the
+     * [SQL Server formula](https://learn.microsoft.com/sql/t-sql/data-types/precision-scale-and-length-transact-sql):
      * p = p1 - s1 + s2 + max(6, s1 + p2 + 1)
      * s = max(6, s1 + p2 + 1)
      */
