@@ -249,7 +249,9 @@ public abstract class WindowFunctionType extends AstNode {
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(extent);
-            kids.add(defaultValue);
+            if (defaultValue != null) {
+                kids.add(defaultValue);
+            }
             return kids;
         }
 
@@ -323,7 +325,9 @@ public abstract class WindowFunctionType extends AstNode {
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(extent);
-            kids.add(defaultValue);
+            if (defaultValue != null) {
+                kids.add(defaultValue);
+            }
             return kids;
         }
 
