@@ -34,7 +34,7 @@ Thank you to all who have contributed!
 
 ### Fixed
 - Fixed writing `CLOB` values in the CLI text-pretty output as `CAST('<value>' AS CLOB)` until `CLOB` literal is defined.
-- Fixed decimal division result types by preventing scale from exceeding returned precision
+- Fixed decimal division precision and scale reduction when computed precision exceeds 38, preventing invalid result types and missing projected fields
 
 ### Removed
 

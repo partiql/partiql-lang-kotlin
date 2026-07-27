@@ -53,18 +53,25 @@ class FnDivideTest {
         @JvmStatic
         fun divisionCases(): List<DivisionCase> = listOf(
             DivisionCase(
-                name = "decimal scale is clamped to returned precision",
+                name = "decimal scale is reduced to preserve integral digits",
                 lhs = Datum.decimal(BigDecimal("100000.00"), 10, 2),
                 rhs = Datum.decimal(BigDecimal("310000.00"), 38, 19),
-                expectedType = PType.decimal(38, 38),
-                expectedValue = BigDecimal("0.32258064516129032258064516129032258065"),
+                expectedType = PType.decimal(38, 11),
+                expectedValue = BigDecimal("0.32258064516"),
             ),
             DivisionCase(
-                name = "numeric scale is clamped to returned precision",
+                name = "numeric scale is reduced to preserve integral digits",
                 lhs = Datum.numeric(BigDecimal("100000.00"), 10, 2),
                 rhs = Datum.numeric(BigDecimal("310000.00"), 38, 19),
-                expectedType = PType.numeric(38, 38),
-                expectedValue = BigDecimal("0.32258064516129032258064516129032258065"),
+                expectedType = PType.numeric(38, 11),
+                expectedValue = BigDecimal("0.32258064516"),
+            ),
+            DivisionCase(
+                name = "scale reduction preserves capacity for a unit ratio",
+                lhs = Datum.decimal(BigDecimal("100000.00"), 10, 2),
+                rhs = Datum.decimal(BigDecimal("100000.00"), 38, 19),
+                expectedType = PType.decimal(38, 11),
+                expectedValue = BigDecimal("1.00000000000"),
             ),
             DivisionCase(
                 name = "uncapped precision and scale are unchanged",
@@ -74,18 +81,18 @@ class FnDivideTest {
                 expectedValue = BigDecimal("2.5000000000000"),
             ),
             DivisionCase(
-                name = "valid capped precision and scale are unchanged",
+                name = "scale uses remaining precision after preserving integral digits",
                 lhs = Datum.decimal(BigDecimal("10"), 29, 0),
                 rhs = Datum.decimal(BigDecimal("2"), 9, 0),
-                expectedType = PType.decimal(38, 10),
-                expectedValue = BigDecimal("5.0000000000"),
+                expectedType = PType.decimal(38, 9),
+                expectedValue = BigDecimal("5.000000000"),
             ),
             DivisionCase(
-                name = "large integral capacity does not force scale reduction",
+                name = "large integral part retains minimum division scale",
                 lhs = Datum.decimal(BigDecimal("10"), 38, 0),
                 rhs = Datum.decimal(BigDecimal("2.00"), 10, 2),
-                expectedType = PType.decimal(38, 11),
-                expectedValue = BigDecimal("5.00000000000"),
+                expectedType = PType.decimal(38, 6),
+                expectedValue = BigDecimal("5.000000"),
             ),
             DivisionCase(
                 name = "scale and precision are both capped at maximum precision",
