@@ -148,10 +148,11 @@ class DatumWriterTextPretty(
     }
 
     private fun writeClob(datum: Datum) {
-        // CLOB is byte-backed; decode the UTF-8 bytes and emit a CLOB literal.
-        this.out.print("CLOB '")
-        this.out.print(datum.bytes.toString(Charsets.UTF_8))
-        this.out.print("'")
+        // There is no CLOB literal in PartiQL, so emit a CAST over a string literal, which round-trips.
+        // CLOB is byte-backed; decode the UTF-8 bytes to get the character content.
+        this.out.print("CAST(")
+        writeString(datum.bytes.toString(Charsets.UTF_8))
+        this.out.print(" AS CLOB)")
     }
 
     private fun writeString(value: String) {
