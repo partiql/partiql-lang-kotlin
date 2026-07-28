@@ -34,6 +34,8 @@ Thank you to all who have contributed!
 
 ### Fixed
 - Fixed writing `CLOB` values in the CLI text-pretty output as `CAST('<value>' AS CLOB)` until `CLOB` literal is defined.
+- Fixed `LOWER`, `UPPER`, `TRIM`, and `||` failing to resolve when given an untyped `NULL` argument; they now return `NULL`.
+- Fixed `||` throwing when either operand is a `CLOB`.
 
 ### Removed
 
