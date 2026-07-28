@@ -8,11 +8,11 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
-import org.partiql.spi.function.builtins.FnUtils.stringFnDatum
-import org.partiql.spi.function.builtins.FnUtils.stringFnReturn
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
+import org.partiql.spi.function.builtins.FnUtils.stringFnResult
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturnType
 import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.function.builtins.internal.PErrors
-import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.StringUtils.codepointSubstring
 
@@ -105,20 +105,21 @@ internal object FnSubstringTwoArg : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // `value` must be a text type (or UNKNOWN, handled below); the integer args are fixed by the signature.
         val valueType = args[0]
+        if (!valueType.isTextOrUnknown()) return null
         // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
         if (args.any { it.code() == PType.UNKNOWN }) {
-            return FnUtils.nullResolutionInstance("substring", PType.string(), args)
+            return FnUtils.nullResolutionInstance("substring", valueType.stringFnReturnType(), args)
         }
-        if (valueType !in SqlTypeFamily.TEXT) return null
         return Function.instance(
             name = "substring",
-            returns = valueType.stringFnReturn(),
+            returns = valueType.stringFnReturnType(),
             parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer())),
         ) { params ->
             val value = params[0].textValue(valueType)
             val start = params[1].int
-            valueType.stringFnDatum(value.codepointSubstring(start))
+            valueType.stringFnResult(value.codepointSubstring(start))
         }
     }
 }
@@ -135,15 +136,16 @@ internal object FnSubstringThreeArg : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // `value` must be a text type (or UNKNOWN, handled below); the integer args are fixed by the signature.
         val valueType = args[0]
+        if (!valueType.isTextOrUnknown()) return null
         // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
         if (args.any { it.code() == PType.UNKNOWN }) {
-            return FnUtils.nullResolutionInstance("substring", PType.string(), args)
+            return FnUtils.nullResolutionInstance("substring", valueType.stringFnReturnType(), args)
         }
-        if (valueType !in SqlTypeFamily.TEXT) return null
         return Function.instance(
             name = "substring",
-            returns = valueType.stringFnReturn(),
+            returns = valueType.stringFnReturnType(),
             parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer()), Parameter("length", PType.integer())),
         ) { params ->
             val value = params[0].textValue(valueType)
@@ -152,7 +154,7 @@ internal object FnSubstringThreeArg : FnOverload() {
             if (length < 0) {
                 throw PErrors.internalErrorException(IllegalArgumentException("Length must be non-negative."))
             }
-            valueType.stringFnDatum(value.codepointSubstring(start, length))
+            valueType.stringFnResult(value.codepointSubstring(start, length))
         }
     }
 }

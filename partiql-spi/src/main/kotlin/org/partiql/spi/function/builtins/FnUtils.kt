@@ -29,8 +29,12 @@ internal object FnUtils {
     }
 
     /**
-     * The result type for a SQL <string value function> over this text type. CHAR/VARCHAR map to
-     * VARCHAR, CLOB stays CLOB, and everything else is STRING.
+     * The result type a SQL <string value function> (SQL2023 section 6.33) produces over this text
+     * type, per the spec's result-type rules:
+     * - CHAR(n)/VARCHAR(n) -> VARCHAR, because these functions may change the length, and a
+     *   fixed-length result would have to pad
+     * - CLOB(n)            -> CLOB
+     * - STRING             -> STRING (PartiQL extension)
      *
      * When [length] is omitted, CHAR/VARCHAR default to VARCHAR(255) and CLOB to its maximum length.
      *
@@ -38,21 +42,26 @@ internal object FnUtils {
      * length-preserving functions such as TRIM (CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n)).
      * Omit it for functions whose result length may differ from the input (e.g. REPLACE, SPLIT
      * elements, SUBSTRING), which produce unbounded VARCHAR/CLOB.
+     *
+     * Pairs with [stringFnResult], which boxes a value at this type. Keep the two in step: a function
+     * must declare `returns` from this and build its [Datum] from that, with the same [length].
      */
-    fun PType.stringFnReturn(length: Int? = null): PType = when (this.code()) {
+    fun PType.stringFnReturnType(length: Int? = null): PType = when (this.code()) {
         PType.CHAR, PType.VARCHAR -> if (length != null) PType.varchar(length) else PType.varchar(255)
         PType.CLOB -> if (length != null) PType.clob(length) else PType.clob()
         else -> PType.string()
     }
 
     /**
-     * Wraps a [result] string into a [Datum] whose type matches [stringFnReturn] for this type.
-     * See [stringFnReturn] for the meaning of [length].
+     * Wraps a computed [value] into a [Datum] typed as [stringFnReturnType] for this type — the value
+     * counterpart of that function, following the same SQL <string value function> convention (so a
+     * CHAR input yields a VARCHAR datum, not a padded CHAR). See [stringFnReturnType] for the meaning
+     * of [length], which must match the one passed there.
      */
-    fun PType.stringFnDatum(result: String, length: Int? = null): Datum = when (this.code()) {
-        PType.CHAR, PType.VARCHAR -> if (length != null) Datum.varchar(result, length) else Datum.varchar(result)
-        PType.CLOB -> if (length != null) Datum.clob(result.toByteArray(), length) else Datum.clob(result.toByteArray())
-        else -> Datum.string(result)
+    fun PType.stringFnResult(value: String, length: Int? = null): Datum = when (this.code()) {
+        PType.CHAR, PType.VARCHAR -> if (length != null) Datum.varchar(value, length) else Datum.varchar(value)
+        PType.CLOB -> if (length != null) Datum.clob(value.toByteArray(), length) else Datum.clob(value.toByteArray())
+        else -> Datum.string(value)
     }
 
     /**

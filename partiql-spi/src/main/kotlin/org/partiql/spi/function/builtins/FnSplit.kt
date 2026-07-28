@@ -6,8 +6,8 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
-import org.partiql.spi.function.builtins.FnUtils.stringFnDatum
-import org.partiql.spi.function.builtins.FnUtils.stringFnReturn
+import org.partiql.spi.function.builtins.FnUtils.stringFnResult
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturnType
 import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -28,7 +28,7 @@ import org.partiql.spi.value.Datum
  * its own argument type, so no coercion between text types is required. If either argument is a
  * literal NULL/MISSING (UNKNOWN), the call resolves and the framework propagates NULL/MISSING.
  *
- * The result is an ARRAY whose element type is derived from `string` via [FnUtils.stringFnReturn].
+ * The result is an ARRAY whose element type is derived from `string` via [FnUtils.stringFnReturnType].
  * Split may change element lengths, so no input length is carried over — CHAR is not
  * length-preserving and widens to VARCHAR:
  * - CHAR(n)    -> array<VARCHAR(255)>
@@ -54,17 +54,17 @@ internal object FnSplit : FnOverload() {
         if (args.any { !it.isTextOrUnknown() }) return null
         val stringType = args[0]
         if (args.any { it.code() == PType.UNKNOWN }) {
-            return FnUtils.nullResolutionInstance("split", PType.array(stringType.stringFnReturn()), args)
+            return FnUtils.nullResolutionInstance("split", PType.array(stringType.stringFnReturnType()), args)
         }
 
         return Function.instance(
             name = "split",
-            returns = PType.array(stringType.stringFnReturn()),
+            returns = PType.array(stringType.stringFnReturnType()),
             parameters = arrayOf(Parameter("string", stringType), Parameter("delimiter", args[1])),
         ) { params ->
             val string = params[0].textValue(stringType)
             val delimiter = params[1].textValue(args[1])
-            Datum.array(split(string, delimiter).map { stringType.stringFnDatum(it) })
+            Datum.array(split(string, delimiter).map { stringType.stringFnResult(it) })
         }
     }
 

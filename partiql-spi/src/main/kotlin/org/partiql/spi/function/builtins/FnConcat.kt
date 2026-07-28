@@ -8,7 +8,8 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
-import org.partiql.spi.internal.SqlTypeFamily
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
+import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.value.Datum
@@ -42,10 +43,14 @@ internal object FnConcat : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // Every argument must be a text type (or UNKNOWN, handled below); anything else does not match.
+        if (args.any { !it.isTextOrUnknown() }) return null
         val lhsType = args[0]
         val rhsType = args[1]
-        // Check if both are string types
-        if (lhsType !in SqlTypeFamily.TEXT || rhsType !in SqlTypeFamily.TEXT) return null
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance;
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance(FunctionUtils.hide("concat"), lhsType, args)
+        }
         // If string types are different, use coercibility: STRING > CLOB > VARCHAR > CHAR
         val resultType = if (lhsType.code() != rhsType.code()) {
             FnUtils.getHigherCoercibilityType(lhsType.code(), rhsType.code())
@@ -88,8 +93,10 @@ internal object FnConcat : FnOverload() {
                     returns = PType.clob(totalLength),
                     parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
                 ) { args ->
-                    val arg0 = args[0].string
-                    val arg1 = args[1].string
+                    // A CLOB result may have a CLOB operand, which is byte-backed rather than
+                    // character-backed, so read each side according to its own type.
+                    val arg0 = args[0].textValue(lhsType)
+                    val arg1 = args[1].textValue(rhsType)
                     Datum.clob((arg0 + arg1).toByteArray(), totalLength)
                 }
             }
@@ -98,6 +105,7 @@ internal object FnConcat : FnOverload() {
                 returns = PType.string(),
                 parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
             ) { args ->
+                // STRING has the highest coercibility, so the other operand may be a byte-backed CLOB.
                 val arg0 = args[0].string
                 val arg1 = args[1].string
                 Datum.string(arg0 + arg1)

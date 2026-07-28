@@ -8,8 +8,8 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
 import org.partiql.spi.function.builtins.FnUtils.textValue
-import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointPosition
@@ -33,13 +33,14 @@ internal object FnPosition : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // Every argument must be a text type (or UNKNOWN, handled below); anything else does not match.
+        if (args.any { !it.isTextOrUnknown() }) return null
         val probeType = args[0]
         val valueType = args[1]
         // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
         if (args.any { it.code() == PType.UNKNOWN }) {
             return FnUtils.nullResolutionInstance(FunctionUtils.hide("position"), PType.bigint(), args)
         }
-        if (probeType !in SqlTypeFamily.TEXT || valueType !in SqlTypeFamily.TEXT) return null
         return Function.instance(
             name = FunctionUtils.hide("position"),
             returns = PType.bigint(),

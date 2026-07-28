@@ -8,6 +8,7 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -28,9 +29,11 @@ internal object FnBitLength : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // The argument must be a text type (or UNKNOWN, handled below); anything else does not match.
         val inputType = args[0]
-        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
-        if (args.any { it.code() == PType.UNKNOWN }) {
+        if (!inputType.isTextOrUnknown()) return null
+        // An UNKNOWN argument (literal NULL) gets a resolution-only instance; the framework's isNullCall handles propagation.
+        if (inputType.code() == PType.UNKNOWN) {
             return FnUtils.nullResolutionInstance("bit_length", PType.integer(), args)
         }
         return when (inputType.code()) {

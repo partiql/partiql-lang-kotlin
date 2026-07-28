@@ -45,6 +45,26 @@ class StringFunctionTests {
     fun positionTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
+    @MethodSource("lowerTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun lowerTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("upperTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun upperTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("concatTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun concatTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("trimTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun trimTests(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
     @MethodSource("trimLeadingTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun trimLeadingTests(tc: SuccessTestCase) = tc.run()
@@ -596,6 +616,357 @@ class StringFunctionTests {
             SuccessTestCase(
                 name = "position: missing value returns missing",
                 input = "position('lo' IN MISSING);",
+                expected = Datum.missing(),
+            ),
+        )
+
+        /**
+         * `LOWER(value)` preserves the input type and length: CHAR(n) -> CHAR(n),
+         * VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n), STRING -> STRING.
+         */
+        @JvmStatic
+        fun lowerTestCases() = listOf(
+            // --- Behavior ---
+            SuccessTestCase(
+                name = "lower: basic",
+                input = "lower('HELLO');",
+                expected = Datum.string("hello"),
+            ),
+            SuccessTestCase(
+                name = "lower: mixed case",
+                input = "lower('HeLLo WoRLd');",
+                expected = Datum.string("hello world"),
+            ),
+            SuccessTestCase(
+                name = "lower: already lowercase is unchanged",
+                input = "lower('hello');",
+                expected = Datum.string("hello"),
+            ),
+            SuccessTestCase(
+                name = "lower: non-alphabetic characters are unchanged",
+                input = "lower('A1-B2!');",
+                expected = Datum.string("a1-b2!"),
+            ),
+            SuccessTestCase(
+                name = "lower: empty string",
+                input = "lower('');",
+                expected = Datum.string(""),
+            ),
+            // --- Argument-type matrix (type and length are preserved; STRICT mode) ---
+            SuccessTestCase(
+                name = "lower: STRING",
+                input = "lower(CAST('HI' AS STRING));",
+                expected = Datum.string("hi"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "lower: CHAR preserves CHAR(n)",
+                input = "lower(CAST('HI' AS CHAR(4)));",
+                expected = Datum.character("hi", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "lower: VARCHAR preserves VARCHAR(n)",
+                input = "lower(CAST('HI' AS VARCHAR(4)));",
+                expected = Datum.varchar("hi", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "lower: CLOB preserves CLOB",
+                input = "lower(CAST('HI' AS CLOB));",
+                expected = Datum.clob("hi".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // --- Null / missing propagation (untyped NULL resolves via the UNKNOWN instance) ---
+            SuccessTestCase(
+                name = "lower: null returns null",
+                input = "lower(NULL);",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "lower: typed null returns null",
+                input = "lower(CAST(NULL AS STRING));",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "lower: missing returns missing",
+                input = "lower(MISSING);",
+                expected = Datum.missing(),
+            ),
+        )
+
+        /**
+         * `UPPER(value)` preserves the input type and length: CHAR(n) -> CHAR(n),
+         * VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n), STRING -> STRING.
+         */
+        @JvmStatic
+        fun upperTestCases() = listOf(
+            // --- Behavior ---
+            SuccessTestCase(
+                name = "upper: basic",
+                input = "upper('hello');",
+                expected = Datum.string("HELLO"),
+            ),
+            SuccessTestCase(
+                name = "upper: mixed case",
+                input = "upper('HeLLo WoRLd');",
+                expected = Datum.string("HELLO WORLD"),
+            ),
+            SuccessTestCase(
+                name = "upper: already uppercase is unchanged",
+                input = "upper('HELLO');",
+                expected = Datum.string("HELLO"),
+            ),
+            SuccessTestCase(
+                name = "upper: non-alphabetic characters are unchanged",
+                input = "upper('a1-b2!');",
+                expected = Datum.string("A1-B2!"),
+            ),
+            SuccessTestCase(
+                name = "upper: empty string",
+                input = "upper('');",
+                expected = Datum.string(""),
+            ),
+            // --- Argument-type matrix (type and length are preserved; STRICT mode) ---
+            SuccessTestCase(
+                name = "upper: STRING",
+                input = "upper(CAST('hi' AS STRING));",
+                expected = Datum.string("HI"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "upper: CHAR preserves CHAR(n)",
+                input = "upper(CAST('hi' AS CHAR(4)));",
+                expected = Datum.character("HI", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "upper: VARCHAR preserves VARCHAR(n)",
+                input = "upper(CAST('hi' AS VARCHAR(4)));",
+                expected = Datum.varchar("HI", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "upper: CLOB preserves CLOB",
+                input = "upper(CAST('hi' AS CLOB));",
+                expected = Datum.clob("HI".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // --- Null / missing propagation (untyped NULL resolves via the UNKNOWN instance) ---
+            SuccessTestCase(
+                name = "upper: null returns null",
+                input = "upper(NULL);",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "upper: typed null returns null",
+                input = "upper(CAST(NULL AS STRING));",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "upper: missing returns missing",
+                input = "upper(MISSING);",
+                expected = Datum.missing(),
+            ),
+        )
+
+        /**
+         * `lhs || rhs`. The result type follows the coercibility order STRING > CLOB > VARCHAR > CHAR,
+         * and the result length is the sum of the operand lengths.
+         */
+        @JvmStatic
+        fun concatTestCases() = listOf(
+            // --- Behavior ---
+            SuccessTestCase(
+                name = "concat: basic",
+                input = "'hello' || ' world';",
+                expected = Datum.string("hello world"),
+            ),
+            SuccessTestCase(
+                name = "concat: empty lhs",
+                input = "'' || 'abc';",
+                expected = Datum.string("abc"),
+            ),
+            SuccessTestCase(
+                name = "concat: empty rhs",
+                input = "'abc' || '';",
+                expected = Datum.string("abc"),
+            ),
+            SuccessTestCase(
+                name = "concat: chained",
+                input = "'a' || 'b' || 'c';",
+                expected = Datum.string("abc"),
+            ),
+            SuccessTestCase(
+                name = "concat: multi-byte value preserves surrogate-pair codepoints",
+                input = "'👍' || 'a';",
+                expected = Datum.string("👍a"),
+            ),
+            // --- Argument-type matrix; result type follows STRING > CLOB > VARCHAR > CHAR ---
+            SuccessTestCase(
+                name = "concat: STRING || STRING is STRING",
+                input = "CAST('a' AS STRING) || CAST('b' AS STRING);",
+                expected = Datum.string("ab"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "concat: CHAR || CHAR is CHAR with summed length",
+                input = "CAST('a' AS CHAR(1)) || CAST('b' AS CHAR(2));",
+                expected = Datum.character("ab ", 3),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "concat: VARCHAR || VARCHAR is VARCHAR with summed length",
+                input = "CAST('a' AS VARCHAR(1)) || CAST('b' AS VARCHAR(2));",
+                expected = Datum.varchar("ab", 3),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "concat: VARCHAR || CHAR is VARCHAR",
+                input = "CAST('a' AS VARCHAR(1)) || CAST('b' AS CHAR(1));",
+                expected = Datum.varchar("ab", 2),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                // Note: unbounded `CLOB || CLOB` currently fails, because both operands carry the
+                // maximum CLOB length and the summed length overflows rather than being clamped.
+                name = "concat: CLOB || CLOB is CLOB with summed length",
+                input = "CAST('a' AS CLOB(1)) || CAST('b' AS CLOB(2));",
+                expected = Datum.clob("ab".toByteArray(), 3),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "concat: CLOB || VARCHAR is CLOB",
+                input = "CAST('a' AS CLOB(1)) || CAST('b' AS VARCHAR(1));",
+                expected = Datum.clob("ab".toByteArray(), 2),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "concat: STRING || CHAR is STRING",
+                input = "CAST('a' AS STRING) || CAST('b' AS CHAR(1));",
+                expected = Datum.string("ab"),
+                mode = Mode.STRICT(),
+            ),
+            // --- Null / missing propagation (untyped NULL resolves via the UNKNOWN instance) ---
+            SuccessTestCase(
+                name = "concat: null lhs returns null",
+                input = "NULL || 'a';",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "concat: null rhs returns null",
+                input = "'a' || NULL;",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "concat: both null returns null",
+                input = "NULL || NULL;",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "concat: typed null returns null",
+                input = "CAST(NULL AS STRING) || 'a';",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "concat: missing lhs returns missing",
+                input = "MISSING || 'a';",
+                expected = Datum.missing(),
+            ),
+            SuccessTestCase(
+                name = "concat: missing rhs returns missing",
+                input = "'a' || MISSING;",
+                expected = Datum.missing(),
+            ),
+        )
+
+        /**
+         * `TRIM(value)` / `TRIM(BOTH FROM value)`. Unlike the length-changing string functions, TRIM
+         * preserves the input length: CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n),
+         * STRING -> STRING.
+         */
+        @JvmStatic
+        fun trimTestCases() = listOf(
+            // --- Behavior ---
+            SuccessTestCase(
+                name = "trim: both sides",
+                input = "TRIM('  hi  ');",
+                expected = Datum.string("hi"),
+            ),
+            SuccessTestCase(
+                name = "trim: leading only",
+                input = "TRIM('  hi');",
+                expected = Datum.string("hi"),
+            ),
+            SuccessTestCase(
+                name = "trim: trailing only",
+                input = "TRIM('hi  ');",
+                expected = Datum.string("hi"),
+            ),
+            SuccessTestCase(
+                name = "trim: interior whitespace is preserved",
+                input = "TRIM('  a b  ');",
+                expected = Datum.string("a b"),
+            ),
+            SuccessTestCase(
+                name = "trim: no whitespace is unchanged",
+                input = "TRIM('hi');",
+                expected = Datum.string("hi"),
+            ),
+            SuccessTestCase(
+                name = "trim: all whitespace becomes empty",
+                input = "TRIM('   ');",
+                expected = Datum.string(""),
+            ),
+            SuccessTestCase(
+                name = "trim: BOTH FROM is the same as the one-argument form",
+                input = "TRIM(BOTH FROM '  hi  ');",
+                expected = Datum.string("hi"),
+            ),
+            // --- Argument-type matrix (length is preserved; STRICT mode) ---
+            SuccessTestCase(
+                name = "trim: STRING",
+                input = "TRIM(CAST('  hi  ' AS STRING));",
+                expected = Datum.string("hi"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim: CHAR returns VARCHAR(n)",
+                input = "TRIM(CAST('  hi  ' AS CHAR(6)));",
+                expected = Datum.varchar("hi", 6),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim: VARCHAR returns VARCHAR(n)",
+                input = "TRIM(CAST('  hi  ' AS VARCHAR(6)));",
+                expected = Datum.varchar("hi", 6),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim: CLOB returns CLOB",
+                input = "TRIM(CAST('  hi  ' AS CLOB));",
+                expected = Datum.clob("hi".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // --- Null / missing propagation (untyped NULL resolves via the UNKNOWN instance) ---
+            SuccessTestCase(
+                name = "trim: null returns null",
+                input = "TRIM(NULL);",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "trim: BOTH FROM null returns null",
+                input = "TRIM(BOTH FROM NULL);",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "trim: typed null returns null",
+                input = "TRIM(CAST(NULL AS STRING));",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "trim: missing returns missing",
+                input = "TRIM(MISSING);",
                 expected = Datum.missing(),
             ),
         )

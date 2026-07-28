@@ -8,10 +8,10 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
-import org.partiql.spi.function.builtins.FnUtils.stringFnDatum
-import org.partiql.spi.function.builtins.FnUtils.stringFnReturn
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
+import org.partiql.spi.function.builtins.FnUtils.stringFnResult
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturnType
 import org.partiql.spi.function.builtins.FnUtils.textValue
-import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointTrimLeading
@@ -31,19 +31,20 @@ internal object FnTrimLeading : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // The argument must be a text type (or UNKNOWN, handled below); anything else does not match.
         val valueType = args[0]
-        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
-        if (args.any { it.code() == PType.UNKNOWN }) {
-            return FnUtils.nullResolutionInstance(FunctionUtils.hide("trim_leading"), PType.string(), args)
+        if (!valueType.isTextOrUnknown()) return null
+        // An UNKNOWN argument (literal NULL) gets a resolution-only instance; the framework's isNullCall handles propagation.
+        if (valueType.code() == PType.UNKNOWN) {
+            return FnUtils.nullResolutionInstance(FunctionUtils.hide("trim_leading"), valueType.stringFnReturnType(), args)
         }
-        if (valueType !in SqlTypeFamily.TEXT) return null
         return Function.instance(
             name = FunctionUtils.hide("trim_leading"),
-            returns = valueType.stringFnReturn(),
+            returns = valueType.stringFnReturnType(),
             parameters = arrayOf(Parameter("value", valueType)),
         ) { params ->
             val value = params[0].textValue(valueType)
-            valueType.stringFnDatum(value.codepointTrimLeading())
+            valueType.stringFnResult(value.codepointTrimLeading())
         }
     }
 }
