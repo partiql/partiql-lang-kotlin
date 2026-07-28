@@ -27,6 +27,7 @@ Thank you to all who have contributed!
 
 ### Added
 - Added the `REPLACE` and `SPLIT` string functions
+- Added `CHAR` and `VARCHAR` support to the built-in text functions: `BIT_LENGTH`, `CHAR_LENGTH`, `OCTET_LENGTH`, `POSITION`, `SUBSTRING`, `TRIM` (and its `LEADING`/`TRAILING`/character-set variants), `LOWER`, `UPPER`, and `||`.
 
 ### Changed
 
@@ -34,8 +35,8 @@ Thank you to all who have contributed!
 
 ### Fixed
 - Fixed writing `CLOB` values in the CLI text-pretty output as `CAST('<value>' AS CLOB)` until `CLOB` literal is defined.
-- Fixed `LOWER`, `UPPER`, `TRIM`, and `||` failing to resolve when given an untyped `NULL` argument; they now return `NULL`.
-- Fixed `||` throwing when either operand is a `CLOB`.
+- Fixed the built-in text functions failing to propagate `NULL` parameter
+- Fixed `||` throwing `Operation "getString" is not valid for type CLOB(n)` when either operand is a `CLOB`.
 
 ### Removed
 
