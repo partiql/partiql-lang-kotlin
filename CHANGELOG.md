@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added the `REPLACE` and `SPLIT` string functions
 
 ### Changed
 
@@ -33,6 +34,7 @@ Thank you to all who have contributed!
 
 ### Fixed
 - Fixed `NullPointerException` during AST traversal by guarding nullable child fields in `getChildren()` for `WindowFunctionType.Lead`/`.Lag`, `AttributeConstraint`, and `TableConstraint.Unique`.
+- Fixed writing `CLOB` values in the CLI text-pretty output as `CAST('<value>' AS CLOB)` until `CLOB` literal is defined.
 
 ### Removed
 
@@ -40,6 +42,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @xd1313113
 
 ## [1.5.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.5.0) - 2026-07-01
 

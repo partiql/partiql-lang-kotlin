@@ -73,7 +73,7 @@ class DatumWriterTextPretty(
             PType.DOUBLE -> format(format) { writeScalar(datum.double) }
             PType.CHAR, PType.VARCHAR, PType.STRING -> format(format) { writeString(datum.string) }
             PType.BLOB -> format(format) { writeBlob(datum) } // TODO: What is the correct way to write these?
-            PType.CLOB -> format(format) { writeString(datum.string) } // TODO: What is the correct way to write these?
+            PType.CLOB -> format(format) { writeClob(datum) } // TODO: What is the correct way to write these?
             PType.DATE -> format(format) { writeDate(datum) }
             PType.TIME -> format(format) { writeTime(datum) }
             PType.TIMEZ -> format(format) { writeTimez(datum) }
@@ -145,6 +145,14 @@ class DatumWriterTextPretty(
         this.out.print("BLOB '")
         this.out.print(datum.bytes.toString(Charsets.UTF_8))
         this.out.print("'")
+    }
+
+    private fun writeClob(datum: Datum) {
+        // There is no CLOB literal in PartiQL, so emit a CAST over a string literal, which round-trips.
+        // CLOB is byte-backed; decode the UTF-8 bytes to get the character content.
+        this.out.print("CAST(")
+        writeString(datum.bytes.toString(Charsets.UTF_8))
+        this.out.print(" AS CLOB)")
     }
 
     private fun writeString(value: String) {
