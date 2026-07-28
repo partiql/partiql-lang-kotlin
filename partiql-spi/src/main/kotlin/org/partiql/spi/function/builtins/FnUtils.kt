@@ -29,6 +29,23 @@ internal object FnUtils {
     }
 
     /**
+     * Wraps [value] into a [Datum] of exactly this text type, carrying this type's declared length —
+     * the inverse of [textValue]. The receiver must be a text type (CHAR/VARCHAR/CLOB/STRING); any
+     * other type falls through to STRING, so callers must guard with [isTextOrUnknown] first.
+     *
+     * Unlike [stringFnResult], this applies no widening: a CHAR type yields a padded CHAR datum. Use
+     * it when the result type is computed up front and must be reproduced verbatim (e.g. the coerced
+     * result type of `||`, or a function that preserves its input type such as UPPER/LOWER); use
+     * [stringFnResult] for the SQL <string value function> convention.
+     */
+    fun PType.datumOf(value: String): Datum = when (this.code()) {
+        PType.CHAR -> Datum.character(value, this.length)
+        PType.VARCHAR -> Datum.varchar(value, this.length)
+        PType.CLOB -> Datum.clob(value.toByteArray(), this.length)
+        else -> Datum.string(value)
+    }
+
+    /**
      * The result type a SQL <string value function> (SQL2023 section 6.33) produces over this text
      * type, per the spec's result-type rules:
      * - CHAR(n)/VARCHAR(n) -> VARCHAR, because these functions may change the length, and a

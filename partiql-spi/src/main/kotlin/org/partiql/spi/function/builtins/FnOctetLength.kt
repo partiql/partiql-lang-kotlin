@@ -1,6 +1,3 @@
-// ktlint-disable filename
-@file:Suppress("ClassName")
-
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
@@ -15,13 +12,9 @@ import org.partiql.spi.value.Datum
 /**
  * SQL `OCTET_LENGTH` function.
  *
- * Returns the number of bytes (octets) in the input string. The result is always an INTEGER, so —
- * unlike the string value functions ([FnUpper]/[FnLower]) — the input type is not preserved in the
- * result.
+ * Returns the number of bytes (octets) in the input string.
  *
- * Accepts CHAR, VARCHAR, CLOB, and STRING. A single dynamic overload is registered and the
- * concrete instance is resolved in [getInstance]; this avoids an ambiguous match between the
- * STRING and CLOB overloads for CHAR/VARCHAR inputs.
+ * Accepts CHAR, VARCHAR, CLOB, and STRING.
  */
 internal object FnOctetLength : FnOverload() {
 

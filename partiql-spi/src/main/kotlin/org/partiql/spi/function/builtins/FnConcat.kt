@@ -1,6 +1,3 @@
-// ktlint-disable filename
-@file:Suppress("ClassName")
-
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
@@ -8,11 +5,11 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.datumOf
 import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
 import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
-import org.partiql.spi.value.Datum
 
 /**
  * SQL concatenation function implementation.
@@ -57,60 +54,26 @@ internal object FnConcat : FnOverload() {
         } else {
             lhsType.code()
         }
-        return createConcatFunction(lhsType, rhsType, resultType)
-    }
-
-    private fun createConcatFunction(lhsType: PType, rhsType: PType, resultType: Int): Fn? {
-        return when (resultType) {
-            PType.CHAR -> {
-                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
-                Function.instance(
-                    name = FunctionUtils.hide("concat"),
-                    returns = PType.character(totalLength),
-                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
-                ) { args ->
-                    val arg0 = args[0].string
-                    val arg1 = args[1].string
-                    Datum.character(arg0 + arg1, totalLength)
-                }
-            }
-            PType.VARCHAR -> {
-                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
-                Function.instance(
-                    name = FunctionUtils.hide("concat"),
-                    returns = PType.varchar(totalLength),
-                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
-                ) { args ->
-                    val arg0 = args[0].string
-                    val arg1 = args[1].string
-                    Datum.varchar(arg0 + arg1, totalLength)
-                }
-            }
-            PType.CLOB -> {
-                val totalLength = FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
-                Function.instance(
-                    name = FunctionUtils.hide("concat"),
-                    returns = PType.clob(totalLength),
-                    parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
-                ) { args ->
-                    // A CLOB result may have a CLOB operand, which is byte-backed rather than
-                    // character-backed, so read each side according to its own type.
-                    val arg0 = args[0].textValue(lhsType)
-                    val arg1 = args[1].textValue(rhsType)
-                    Datum.clob((arg0 + arg1).toByteArray(), totalLength)
-                }
-            }
-            PType.STRING -> Function.instance(
-                name = FunctionUtils.hide("concat"),
-                returns = PType.string(),
-                parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
-            ) { args ->
-                // STRING has the highest coercibility, so the other operand may be a byte-backed CLOB.
-                val arg0 = args[0].string
-                val arg1 = args[1].string
-                Datum.string(arg0 + arg1)
-            }
-            else -> null
+        // STRING is unbounded; the bounded text types carry length L1 + L2, which may overflow.
+        val returns = when (resultType) {
+            PType.STRING -> PType.string()
+            PType.CHAR -> PType.character(totalLength(lhsType, rhsType))
+            PType.VARCHAR -> PType.varchar(totalLength(lhsType, rhsType))
+            PType.CLOB -> PType.clob(totalLength(lhsType, rhsType))
+            else -> return null
+        }
+        return Function.instance(
+            name = FunctionUtils.hide("concat"),
+            returns = returns,
+            parameters = arrayOf(Parameter("lhs", lhsType), Parameter("rhs", rhsType)),
+        ) { params ->
+            // Either operand may be a byte-backed CLOB, so read each according to its own type.
+            val lhs = params[0].textValue(lhsType)
+            val rhs = params[1].textValue(rhsType)
+            returns.datumOf(lhs + rhs)
         }
     }
+
+    private fun totalLength(lhsType: PType, rhsType: PType): Int =
+        FnUtils.addLengths(FnUtils.getTypeLength(lhsType), FnUtils.getTypeLength(rhsType))
 }
