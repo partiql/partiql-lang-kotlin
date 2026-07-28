@@ -3,11 +3,21 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
 internal object FnUtils {
     const val MAXLENGTH = Int.MAX_VALUE
+
+    /**
+     * True when this type is a member of [SqlTypeFamily.TEXT] (CHAR/VARCHAR/STRING/CLOB) or is
+     * UNKNOWN (a literal NULL/MISSING, whose type is only known at resolution time).
+     *
+     * Overload resolution passes UNKNOWN through `getInstance`, so text-only functions must accept
+     * it here and then return a [nullResolutionInstance] rather than rejecting the call.
+     */
+    fun PType.isTextOrUnknown(): Boolean = this in SqlTypeFamily.TEXT || this.code() == PType.UNKNOWN
 
     /**
      * Reads this text [Datum] of the given [type] as a [String]. CLOB is byte-backed (decoded as
@@ -22,13 +32,15 @@ internal object FnUtils {
      * The result type for a SQL <string value function> over this text type. CHAR/VARCHAR map to
      * VARCHAR, CLOB stays CLOB, and everything else is STRING.
      *
+     * When [length] is omitted, CHAR/VARCHAR default to VARCHAR(255) and CLOB to its maximum length.
+     *
      * Pass [length] to carry this type's declared length into the result — this is used by
      * length-preserving functions such as TRIM (CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n)).
      * Omit it for functions whose result length may differ from the input (e.g. REPLACE, SPLIT
      * elements, SUBSTRING), which produce unbounded VARCHAR/CLOB.
      */
     fun PType.stringFnReturn(length: Int? = null): PType = when (this.code()) {
-        PType.CHAR, PType.VARCHAR -> if (length != null) PType.varchar(length) else PType.varchar()
+        PType.CHAR, PType.VARCHAR -> if (length != null) PType.varchar(length) else PType.varchar(255)
         PType.CLOB -> if (length != null) PType.clob(length) else PType.clob()
         else -> PType.string()
     }

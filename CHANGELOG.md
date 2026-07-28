@@ -26,14 +26,14 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
-- Added the `REPLACE` and `SPILIT` string functions
+- Added the `REPLACE` and `SPLIT` string functions
 
-### Changed 
+### Changed
 
 ### Deprecated
 
 ### Fixed
-- Fixed writing `CLOB` values in the CLI text-pretty output.
+- Fixed writing `CLOB` values in the CLI text-pretty output as `CAST('<value>' AS CLOB)` until `CLOB` literal is defined.
 
 ### Removed
 
