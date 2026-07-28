@@ -249,7 +249,10 @@ internal object Builtins {
         Fn_MAP_VALUES__MAP__BAG,
         Fn_MAP_ENTRIES__MAP__BAG,
         FnMapContainsKey,
-        FnMapGet
+        FnMapGet,
+
+        FnReplace,
+        FnSplit,
     ).groupBy { it.signature.name }
 
     @JvmStatic
