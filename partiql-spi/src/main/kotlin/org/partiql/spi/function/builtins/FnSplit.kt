@@ -46,7 +46,7 @@ import org.partiql.spi.value.Datum
 internal object FnSplit : FnOverload() {
 
     override fun getSignature(): RoutineOverloadSignature {
-        return RoutineOverloadSignature("split", listOf(PType.dynamic(), PType.string()))
+        return RoutineOverloadSignature("split", listOf(PType.dynamic(), PType.dynamic()))
     }
 
     override fun getInstance(args: Array<PType>): Fn? {

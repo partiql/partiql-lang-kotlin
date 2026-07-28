@@ -28,7 +28,7 @@ Thank you to all who have contributed!
 ### Added
 - Added the `REPLACE` and `SPLIT` string functions
 
-### Changed 
+### Changed
 
 ### Deprecated
 

@@ -38,7 +38,7 @@ import org.partiql.spi.types.PType
 internal object FnReplace : FnOverload() {
 
     override fun getSignature(): RoutineOverloadSignature {
-        return RoutineOverloadSignature("replace", listOf(PType.dynamic(), PType.string(), PType.string()))
+        return RoutineOverloadSignature("replace", listOf(PType.dynamic(), PType.dynamic(), PType.dynamic()))
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
