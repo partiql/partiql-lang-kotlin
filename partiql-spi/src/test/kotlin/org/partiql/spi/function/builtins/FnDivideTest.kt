@@ -17,8 +17,12 @@ package org.partiql.spi.function.builtins
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
@@ -36,6 +40,20 @@ class FnDivideTest {
         assertEquals(case.expectedType, result.type)
         assertEquals(case.expectedValue, result.bigDecimal)
         assertTrue(result.type.scale <= result.type.precision)
+    }
+
+    @Test
+    fun divisionRejectsIntegralOverflowWithoutTruncation() {
+        val lhs = Datum.decimal(BigDecimal("999999999999999999999999999999999"), 38, 0)
+        val rhs = Datum.decimal(BigDecimal("1.00"), 10, 2)
+        val fn = requireNotNull(FnDivide.getInstance(arrayOf(lhs.type, rhs.type)))
+
+        assertEquals(PType.decimal(38, 6), fn.signature.returns)
+
+        val error = assertThrows<PRuntimeException> {
+            fn.invoke(arrayOf(lhs, rhs))
+        }
+        assertEquals(PError.NUMERIC_VALUE_OUT_OF_RANGE, error.error.code())
     }
 
     data class DivisionCase(
@@ -81,18 +99,18 @@ class FnDivideTest {
                 expectedValue = BigDecimal("2.5000000000000"),
             ),
             DivisionCase(
-                name = "scale uses remaining precision after preserving integral digits",
-                lhs = Datum.decimal(BigDecimal("10"), 29, 0),
-                rhs = Datum.decimal(BigDecimal("2"), 9, 0),
+                name = "remaining scale preserves a 29-digit integral part",
+                lhs = Datum.decimal(BigDecimal("99999999999999999999999999999"), 29, 0),
+                rhs = Datum.decimal(BigDecimal.ONE, 9, 0),
                 expectedType = PType.decimal(38, 9),
-                expectedValue = BigDecimal("5.000000000"),
+                expectedValue = BigDecimal("99999999999999999999999999999.000000000"),
             ),
             DivisionCase(
-                name = "large integral part retains minimum division scale",
-                lhs = Datum.decimal(BigDecimal("10"), 38, 0),
-                rhs = Datum.decimal(BigDecimal("2.00"), 10, 2),
+                name = "minimum scale preserves a 32-digit integral part",
+                lhs = Datum.decimal(BigDecimal("99999999999999999999999999999999"), 38, 0),
+                rhs = Datum.decimal(BigDecimal("1.00"), 10, 2),
                 expectedType = PType.decimal(38, 6),
-                expectedValue = BigDecimal("5.000000"),
+                expectedValue = BigDecimal("99999999999999999999999999999999.000000"),
             ),
             DivisionCase(
                 name = "scale and precision are both capped at maximum precision",
