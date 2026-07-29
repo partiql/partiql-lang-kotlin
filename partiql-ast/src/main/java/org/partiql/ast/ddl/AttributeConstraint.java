@@ -27,7 +27,9 @@ public abstract class AttributeConstraint extends AstNode {
     @Override
     public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
-        kids.add(name);
+        if (name != null) {
+            kids.add(name);
+        }
         return kids;
     }
 
@@ -101,7 +103,9 @@ public abstract class AttributeConstraint extends AstNode {
         @Override
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
-            kids.add(name);
+            if (name != null) {
+                kids.add(name);
+            }
             kids.add(searchCondition);
             return kids;
         }

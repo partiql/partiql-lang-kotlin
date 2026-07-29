@@ -46,7 +46,9 @@ public abstract class TableConstraint extends AstNode {
         @Override
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
-            kids.add(getName());
+            if (getName() != null) {
+                kids.add(getName());
+            }
             kids.addAll(columns);
             return kids;
         }
