@@ -35,6 +35,7 @@ Thank you to all who have contributed!
 ### Fixed
 - Fixed `NullPointerException` during AST traversal by guarding nullable child fields in `getChildren()` for `WindowFunctionType.Lead`/`.Lag`, `AttributeConstraint`, and `TableConstraint.Unique`.
 - Fixed writing `CLOB` values in the CLI text-pretty output as `CAST('<value>' AS CLOB)` until `CLOB` literal is defined.
+- Fixed decimal division precision and scale reduction when computed precision exceeds 38, preventing invalid result types and missing projected fields
 
 ### Removed
 
@@ -43,6 +44,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @xd1313113
+- @XuechunHHH
 
 ## [1.5.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.5.0) - 2026-07-01
 
