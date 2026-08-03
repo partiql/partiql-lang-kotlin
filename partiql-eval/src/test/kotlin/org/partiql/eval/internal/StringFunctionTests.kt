@@ -294,7 +294,8 @@ class StringFunctionTests {
                 expected = Datum.array(listOf(Datum.string("👍"), Datum.string("a"))),
             ),
             // --- Argument-type matrix (types resolve together based on arg0; STRICT mode) ---
-            //   - `string` (arg0): CHAR, VARCHAR, CLOB, STRING; CHAR/VARCHAR widen to VARCHAR list elements.
+            //   - `string` (arg0): CHAR, VARCHAR, CLOB, STRING; CHAR/VARCHAR widen to VARCHAR list
+            //                      elements, keeping arg0's declared length (a part is never longer).
             //   - `delimiter`    : STRING for a CHAR/VARCHAR/STRING `string` (CHAR/VARCHAR coerced to
             //                      STRING); CLOB for a CLOB `string`.
             // arg0 type -> list element type
@@ -305,21 +306,21 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "split: CHAR arg0 returns list of VARCHAR",
+                name = "split: CHAR arg0 returns list of VARCHAR(n)",
                 input = "split(CAST('a,b' AS CHAR(3)), ',');",
-                expected = Datum.array(listOf(Datum.varchar("a"), Datum.varchar("b"))),
+                expected = Datum.array(listOf(Datum.varchar("a", 3), Datum.varchar("b", 3))),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "split: VARCHAR arg0 returns list of VARCHAR",
+                name = "split: VARCHAR arg0 returns list of VARCHAR(n)",
                 input = "split(CAST('a,b' AS VARCHAR(3)), ',');",
-                expected = Datum.array(listOf(Datum.varchar("a"), Datum.varchar("b"))),
+                expected = Datum.array(listOf(Datum.varchar("a", 3), Datum.varchar("b", 3))),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "split: CLOB arg0 returns list of CLOB",
-                input = "split(CAST('a,b' AS CLOB), ',');",
-                expected = Datum.array(listOf(Datum.clob("a".toByteArray()), Datum.clob("b".toByteArray()))),
+                name = "split: CLOB arg0 returns list of CLOB(n)",
+                input = "split(CAST('a,b' AS CLOB(3)), ',');",
+                expected = Datum.array(listOf(Datum.clob("a".toByteArray(), 3), Datum.clob("b".toByteArray(), 3))),
                 mode = Mode.STRICT(),
             ),
             // --- Length boundary: content longer/shorter than the declared type length ---
@@ -329,13 +330,13 @@ class StringFunctionTests {
             SuccessTestCase(
                 name = "split: CHAR arg0 longer than n is truncated before splitting",
                 input = "split(CAST('a,b,c' AS CHAR(3)), ',');",
-                expected = Datum.array(listOf(Datum.varchar("a"), Datum.varchar("b"))),
+                expected = Datum.array(listOf(Datum.varchar("a", 3), Datum.varchar("b", 3))),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 name = "split: CHAR arg0 shorter than n keeps padded single element",
                 input = "split(CAST('a' AS CHAR(5)), ',');",
-                expected = Datum.array(listOf(Datum.varchar("a    "))),
+                expected = Datum.array(listOf(Datum.varchar("a    ", 5))),
                 mode = Mode.STRICT(),
             ),
             // delimiter types

@@ -27,6 +27,10 @@ import org.partiql.spi.types.PType
  * - VARCHAR(n) → VARCHAR(n)
  * - CLOB(n) → CLOB(n)
  * - STRING → STRING (PartiQL extension)
+ *
+ * TODO: preserving `n` silently truncates, because case mapping is not length-preserving. 'İ'
+ *   (U+0130) lowercases to two characters, so an n-character input can fold to more than n. See the
+ *   TODO on [FnUpper], where the same defect is described in full; both should be fixed together.
  */
 internal object FnLower : FnOverload() {
 

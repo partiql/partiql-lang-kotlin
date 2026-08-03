@@ -28,12 +28,26 @@ import org.partiql.spi.types.PType
  * keeps its own argument type, so no coercion between text types is required. If any argument is a
  * literal NULL/MISSING (UNKNOWN), the call resolves and the framework propagates NULL/MISSING.
  *
- * The result type is derived from `string` via [FnUtils.stringFnReturnType]. Replace may change the
- * length, so no input length is carried over — CHAR is not length-preserving and widens to VARCHAR:
+ * The result type is derived from `string` via [FnUtils.stringFnReturnType], with no input length
+ * carried over. Unlike TRIM/SUBSTRING/SPLIT, replace can make the string *longer* — a `to` longer than
+ * `from` grows it by `occurrences * (to.length - from.length)`, a factor that depends on the runtime
+ * values of `string`, `from`, and `to`, none of which are known at plan time. CHAR also widens to
+ * VARCHAR, since a fixed-length result would have to pad:
  * - CHAR(n)    -> VARCHAR(255)
  * - VARCHAR(n) -> VARCHAR(255)
  * - CLOB(n)    -> CLOB
  * - STRING     -> STRING (PartiQL extension)
+ *
+ * TODO: the VARCHAR(255) result length is unsound and silently truncates. Because no upper bound is
+ *   computable from the argument types (see above), [FnUtils.stringFnReturnType] falls back to its
+ *   arbitrary 255 default, and [FnUtils.stringFnResult] boxes the value with `Datum.varchar(value, 255)`,
+ *   which truncates to that length. So a correct result longer than 255 characters is silently cut:
+ *   `replace(CAST(<300 a's> AS VARCHAR(300)), 'a', 'bb')` should be 600 characters but yields 255.
+ *   CLOB is unaffected (it defaults to the maximum length) and STRING is unbounded; only CHAR/VARCHAR
+ *   inputs are wrong. Fixing this means giving CHAR/VARCHAR an unbounded result here rather than
+ *   inheriting the 255 default — note that `stringFnReturnType`/`stringFnResult` are shared with the
+ *   length-preserving functions, so the default cannot simply be changed in place without checking
+ *   every caller.
  */
 internal object FnReplace : FnOverload() {
 

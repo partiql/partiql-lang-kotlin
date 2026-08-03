@@ -27,6 +27,17 @@ import org.partiql.spi.types.PType
  * - VARCHAR(n) → VARCHAR(n)
  * - CLOB(n) → CLOB(n)
  * - STRING → STRING (PartiQL extension)
+ *
+ * TODO: preserving `n` silently truncates, because case mapping is not length-preserving. Some
+ *   codepoints uppercase to more than one character — 'ß' → "SS", 'ﬁ' → "FI" — so an n-character input
+ *   can fold to more than n characters. [FnUtils.datumOf] then boxes it with the input's declared
+ *   length, and `Datum.varchar`/`Datum.character` truncate to that length, dropping the excess:
+ *   `upper(CAST('aßb' AS VARCHAR(3)))` yields 'ASS' instead of 'ASSB'. CHAR(1)/VARCHAR(1) inputs of
+ *   'ß' yield 'S' instead of 'SS'. STRING is unaffected (unbounded) and CLOB happens to survive only
+ *   because `Datum.clob` does not enforce its length. This is what the SQL spec's result type
+ *   prescribes, so the fix is not simply to widen `n`; it likely needs the growth accounted for
+ *   (SQL2023 gives CHAR/VARCHAR folds an implementation-defined maximum length) or an explicit error
+ *   rather than a silent truncation. [FnLower] has the same defect ('İ' lowercases to 2 characters).
  */
 internal object FnUpper : FnOverload() {
 

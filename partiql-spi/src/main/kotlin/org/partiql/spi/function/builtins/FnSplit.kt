@@ -29,11 +29,12 @@ import org.partiql.spi.value.Datum
  * literal NULL/MISSING (UNKNOWN), the call resolves and the framework propagates NULL/MISSING.
  *
  * The result is an ARRAY whose element type is derived from `string` via [FnUtils.stringFnReturnType].
- * Split may change element lengths, so no input length is carried over — CHAR is not
- * length-preserving and widens to VARCHAR:
- * - CHAR(n)    -> array<VARCHAR(255)>
- * - VARCHAR(n) -> array<VARCHAR(255)>
- * - CLOB(n)    -> array<CLOB>
+ * CHAR widens to VARCHAR (a part may be shorter than the input, and a fixed-length element would have
+ * to pad), but the declared length is preserved because splitting only removes delimiters, so no part
+ * is ever longer than the input:
+ * - CHAR(n)    -> array<VARCHAR(n)>
+ * - VARCHAR(n) -> array<VARCHAR(n)>
+ * - CLOB(n)    -> array<CLOB(n)>
  * - STRING     -> array<STRING> (PartiQL extension)
  *
  * Notes:
@@ -53,18 +54,22 @@ internal object FnSplit : FnOverload() {
         // Every argument must be a text type (or UNKNOWN, handled below); anything else does not match.
         if (args.any { !it.isTextOrUnknown() }) return null
         val stringType = args[0]
+        val delimiterType = args[1]
         if (args.any { it.code() == PType.UNKNOWN }) {
             return FnUtils.nullResolutionInstance("split", PType.array(stringType.stringFnReturnType()), args)
         }
-
+        // Splitting only removes delimiters, so no part is longer than the input and the element max
+        // length is the input length: CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n),
+        // STRING -> STRING. STRING carries no length, so only the bounded types pass one along.
+        val length = if (stringType.code() == PType.STRING) null else stringType.length
         return Function.instance(
             name = "split",
-            returns = PType.array(stringType.stringFnReturnType()),
-            parameters = arrayOf(Parameter("string", stringType), Parameter("delimiter", args[1])),
+            returns = PType.array(stringType.stringFnReturnType(length)),
+            parameters = arrayOf(Parameter("string", stringType), Parameter("delimiter", delimiterType)),
         ) { params ->
             val string = params[0].textValue(stringType)
-            val delimiter = params[1].textValue(args[1])
-            Datum.array(split(string, delimiter).map { stringType.stringFnResult(it) })
+            val delimiter = params[1].textValue(delimiterType)
+            Datum.array(split(string, delimiter).map { stringType.stringFnResult(it, length) })
         }
     }
 
