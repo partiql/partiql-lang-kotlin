@@ -1590,6 +1590,57 @@ class StringFunctionTests {
                 input = "'abc' LIKE MISSING;",
                 expected = Datum.missing(),
             ),
+            // Untyped NULL/MISSING literals resolve as UNKNOWN, which the overload must accept so the
+            // framework can propagate null/missing — rather than failing to resolve.
+            SuccessTestCase(
+                name = "like: untyped null value returns null",
+                input = "NULL LIKE 'a%';",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "like: untyped null pattern returns null",
+                input = "'abc' LIKE NULL;",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "like: untyped missing value returns missing",
+                input = "MISSING LIKE 'a%';",
+                expected = Datum.missing(),
+            ),
+            // The result of `NULL || VARCHAR(1)` is a typed null of type UNKNOWN; LIKE must resolve on
+            // it just as it does for the other operand order. This is the reported regression.
+            SuccessTestCase(
+                name = "like: UNKNOWN-typed concat result value returns null",
+                input = "(NULL || CAST('a' AS VARCHAR(1))) LIKE 'a';",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "like: VARCHAR concat result with trailing null returns null",
+                input = "(CAST('a' AS VARCHAR(1)) || NULL) LIKE 'a';",
+                expected = Datum.nullValue(),
+            ),
+            // like_escape null/missing propagation, including an untyped escape argument.
+            SuccessTestCase(
+                name = "like_escape: untyped null value returns null",
+                input = "NULL LIKE 'a\\_c' ESCAPE '\\';",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "like_escape: untyped null escape returns null",
+                input = "'a_c' LIKE 'a\\_c' ESCAPE NULL;",
+                expected = Datum.nullValue(),
+            ),
+            SuccessTestCase(
+                name = "like_escape: untyped missing escape returns missing",
+                input = "'a_c' LIKE 'a\\_c' ESCAPE MISSING;",
+                expected = Datum.missing(),
+            ),
+            SuccessTestCase(
+                name = "like_escape: CLOB arguments match",
+                input = "CAST('a_c' AS CLOB) LIKE CAST('a\\_c' AS CLOB) ESCAPE CAST('\\' AS CLOB);",
+                expected = Datum.bool(true),
+                mode = Mode.STRICT(),
+            ),
         )
     }
 }

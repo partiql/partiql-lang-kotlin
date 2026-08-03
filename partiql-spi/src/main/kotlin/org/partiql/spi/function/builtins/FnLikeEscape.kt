@@ -8,8 +8,9 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
+import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.function.builtins.internal.PErrors
-import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.PatternUtils
@@ -34,9 +35,9 @@ import java.util.regex.Pattern
  *     represents a literal.
  *   - Invalid escape sequences raise a data exception (e.g. ESCAPE character length ≠ 1).
  *
- * Type coercion follows SQL coercibility with PartiQL extensions:
- * - Coercibility order: STRING > CLOB > VARCHAR > CHAR
- * - STRING has highest coercibility (PartiQL extension)
+ * All three arguments must belong to the text family (CHAR, VARCHAR, STRING, CLOB); each parameter
+ * keeps its own argument type, so no coercion between text types is required. If any argument is a
+ * literal NULL/MISSING (UNKNOWN), the call resolves and the framework propagates NULL/MISSING.
  *
  * Behavior:
  * - If any of value, pattern, or escape are NULL, the result is UNKNOWN (null).
@@ -63,59 +64,35 @@ internal object FnLikeEscape : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // All arguments must be a text type (or UNKNOWN, handled below); anything else does not match.
+        if (args.any { !it.isTextOrUnknown() }) return null
         val valueType = args[0]
         val patternType = args[1]
         val escapeType = args[2]
-        // Check if all are string types
-        if (valueType !in SqlTypeFamily.TEXT || patternType !in SqlTypeFamily.TEXT || escapeType !in SqlTypeFamily.TEXT) return null
-        // Use type coercibility for coercion: STRING > CLOB > VARCHAR > CHAR
-        val resultType = FnUtils.getHigherCoercibilityType(FnUtils.getHigherCoercibilityType(valueType.code(), patternType.code()), escapeType.code())
-        return when (resultType) {
-            PType.CHAR, PType.VARCHAR, PType.STRING -> {
-                Function.instance(
-                    name = FunctionUtils.hide("like_escape"),
-                    returns = PType.bool(),
-                    parameters = arrayOf(Parameter("value", valueType), Parameter("pattern", patternType), Parameter("escape", escapeType)),
-                ) { params ->
-                    val value = params[0].string
-                    val pattern = params[1].string
-                    val escape = params[2].string
-                    val (patternString, escapeChar) =
-                        try {
-                            checkPattern(pattern, escape)
-                        } catch (e: IllegalStateException) {
-                            throw PErrors.internalErrorException(e)
-                        }
-                    val likeRegexPattern = when {
-                        patternString.isEmpty() -> Pattern.compile("")
-                        else -> parsePattern(patternString, escapeChar)
-                    }
-                    Datum.bool(PatternUtils.matchRegexPattern(value, likeRegexPattern))
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance(FunctionUtils.hide("like_escape"), PType.bool(), args)
+        }
+        return Function.instance(
+            name = FunctionUtils.hide("like_escape"),
+            returns = PType.bool(),
+            parameters = arrayOf(Parameter("value", valueType), Parameter("pattern", patternType), Parameter("escape", escapeType)),
+        ) { params ->
+            // Any operand may be a byte-backed CLOB, so read each according to its own type.
+            val value = params[0].textValue(valueType)
+            val pattern = params[1].textValue(patternType)
+            val escape = params[2].textValue(escapeType)
+            val (patternString, escapeChar) =
+                try {
+                    checkPattern(pattern, escape)
+                } catch (e: IllegalStateException) {
+                    throw PErrors.internalErrorException(e)
                 }
+            val likeRegexPattern = when {
+                patternString.isEmpty() -> Pattern.compile("")
+                else -> parsePattern(patternString, escapeChar)
             }
-            PType.CLOB -> {
-                Function.instance(
-                    name = FunctionUtils.hide("like_escape"),
-                    returns = PType.bool(),
-                    parameters = arrayOf(Parameter("value", valueType), Parameter("pattern", patternType), Parameter("escape", escapeType)),
-                ) { params ->
-                    val value = params[0].bytes.toString(Charsets.UTF_8)
-                    val pattern = params[1].bytes.toString(Charsets.UTF_8)
-                    val escape = params[2].bytes.toString(Charsets.UTF_8)
-                    val (patternString, escapeChar) =
-                        try {
-                            checkPattern(pattern, escape)
-                        } catch (e: IllegalStateException) {
-                            throw PErrors.internalErrorException(e)
-                        }
-                    val likeRegexPattern = when {
-                        patternString.isEmpty() -> Pattern.compile("")
-                        else -> parsePattern(patternString, escapeChar)
-                    }
-                    Datum.bool(PatternUtils.matchRegexPattern(value, likeRegexPattern))
-                }
-            }
-            else -> null
+            Datum.bool(PatternUtils.matchRegexPattern(value, likeRegexPattern))
         }
     }
 }

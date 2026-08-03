@@ -8,7 +8,8 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
-import org.partiql.spi.internal.SqlTypeFamily
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
+import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.PatternUtils.matchRegexPattern
@@ -28,9 +29,9 @@ import java.util.regex.Pattern
  * - `'_'` matches exactly one character
  * - `'%'` matches zero or more characters
  *
- * Type coercion follows SQL coercibility with PartiQL extensions:
- * - Coercibility order: STRING > CLOB > VARCHAR > CHAR
- * - STRING has highest coercibility (PartiQL extension)
+ * Both arguments must belong to the text family (CHAR, VARCHAR, STRING, CLOB); each parameter keeps
+ * its own argument type, so no coercion between text types is required. If either argument is a
+ * literal NULL/MISSING (UNKNOWN), the call resolves and the framework propagates NULL/MISSING.
  *
  * Behavior:
  * - If either value or pattern is NULL, result is UNKNOWN (null).
@@ -53,48 +54,27 @@ internal object FnLike : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // Both arguments must be a text type (or UNKNOWN, handled below); anything else does not match.
+        if (args.any { !it.isTextOrUnknown() }) return null
         val valueType = args[0]
         val patternType = args[1]
-        // Check if both are string types
-        if (valueType !in SqlTypeFamily.TEXT || patternType !in SqlTypeFamily.TEXT) return null
-        // Use type coercibility for coercion: STRING > CLOB > VARCHAR > CHAR
-        val resultType = if (valueType.code() != patternType.code()) {
-            FnUtils.getHigherCoercibilityType(valueType.code(), patternType.code())
-        } else {
-            valueType.code()
+        // If either argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance(FunctionUtils.hide("like"), PType.bool(), args)
         }
-        return when (resultType) {
-            PType.CHAR, PType.VARCHAR, PType.STRING -> {
-                Function.instance(
-                    name = FunctionUtils.hide("like"),
-                    returns = PType.bool(),
-                    parameters = arrayOf(Parameter("value", valueType), Parameter("pattern", patternType)),
-                ) { params ->
-                    val value = params[0].string
-                    val pattern = params[1].string
-                    val likeRegexPattern = when {
-                        pattern.isEmpty() -> Pattern.compile("")
-                        else -> parsePattern(pattern, null)
-                    }
-                    Datum.bool(matchRegexPattern(value, likeRegexPattern))
-                }
+        return Function.instance(
+            name = FunctionUtils.hide("like"),
+            returns = PType.bool(),
+            parameters = arrayOf(Parameter("value", valueType), Parameter("pattern", patternType)),
+        ) { params ->
+            // Either operand may be a byte-backed CLOB, so read each according to its own type.
+            val value = params[0].textValue(valueType)
+            val pattern = params[1].textValue(patternType)
+            val likeRegexPattern = when {
+                pattern.isEmpty() -> Pattern.compile("")
+                else -> parsePattern(pattern, null)
             }
-            PType.CLOB -> {
-                Function.instance(
-                    name = FunctionUtils.hide("like"),
-                    returns = PType.bool(),
-                    parameters = arrayOf(Parameter("value", valueType), Parameter("pattern", patternType)),
-                ) { params ->
-                    val value = params[0].bytes.toString(Charsets.UTF_8)
-                    val pattern = params[1].bytes.toString(Charsets.UTF_8)
-                    val likeRegexPattern = when {
-                        pattern.isEmpty() -> Pattern.compile("")
-                        else -> parsePattern(pattern, null)
-                    }
-                    Datum.bool(matchRegexPattern(value, likeRegexPattern))
-                }
-            }
-            else -> null
+            Datum.bool(matchRegexPattern(value, likeRegexPattern))
         }
     }
 }
