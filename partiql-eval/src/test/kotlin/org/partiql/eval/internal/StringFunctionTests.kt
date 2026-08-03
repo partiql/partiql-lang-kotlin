@@ -179,6 +179,23 @@ class StringFunctionTests {
                 expected = Datum.varchar("hI   "),
                 mode = Mode.STRICT(),
             ),
+            // Replace can grow the string past arg0's declared length, so the result type must be
+            // unbounded — a bounded one would truncate. 300 a's -> 600 b's, well past the former
+            // VARCHAR(255) default that used to cut the value at 255 characters.
+            SuccessTestCase(
+                // Note: the expected value needs an explicit length, since `Datum.varchar(value)`
+                // defaults to 255 and would truncate the 600-character expectation itself.
+                name = "replace: result longer than arg0's declared length is not truncated",
+                input = "replace(CAST('${"a".repeat(300)}' AS VARCHAR(300)), 'a', 'bb');",
+                expected = Datum.varchar("b".repeat(600), 600),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "replace: result longer than a short arg0 is not truncated",
+                input = "replace(CAST('aaa' AS VARCHAR(3)), 'a', 'bb');",
+                expected = Datum.varchar("bbbbbb", 6),
+                mode = Mode.STRICT(),
+            ),
             // from / to types
             SuccessTestCase(
                 name = "replace: CHAR from/to",
@@ -1009,11 +1026,25 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                // Note: unbounded `CLOB || CLOB` currently fails, because both operands carry the
-                // maximum CLOB length and the summed length overflows rather than being clamped.
                 name = "concat: CLOB || CLOB is CLOB with summed length",
                 input = "CAST('a' AS CLOB(1)) || CAST('b' AS CLOB(2));",
                 expected = Datum.clob("ab".toByteArray(), 3),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                // Both operands carry the maximum CLOB length, so the summed length clamps back to the
+                // maximum rather than overflowing. This used to fail as a length overflow.
+                name = "concat: unbounded CLOB || CLOB clamps length to the maximum",
+                input = "CAST('a' AS CLOB) || CAST('b' AS CLOB);",
+                expected = Datum.clob("ab".toByteArray(), Int.MAX_VALUE),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                // replace's result type is unbounded VARCHAR (its length is not computable at plan
+                // time), so concatenating onto it clamps to the maximum instead of overflowing.
+                name = "concat: unbounded replace result || VARCHAR clamps length to the maximum",
+                input = "replace(CAST('abc' AS VARCHAR(5)), 'a', 'z') || CAST('x' AS VARCHAR(1));",
+                expected = Datum.varchar("zbcx", Int.MAX_VALUE),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(

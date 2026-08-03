@@ -53,19 +53,31 @@ internal object FnUtils {
      * - CLOB(n)            -> CLOB
      * - STRING             -> STRING (PartiQL extension)
      *
-     * When [length] is omitted, CHAR/VARCHAR default to VARCHAR(255) and CLOB to its maximum length.
+     * [length] is the result's maximum length, and callers pick it by what they can prove about the
+     * result at plan time:
+     * 1. The result can only be *shorter* than the input — pass the input's length (the bounded text
+     *    types expose it, STRING carries none). TRIM and its variants, SUBSTRING, and SPLIT elements
+     *    are all in this group: the input length is a correct upper bound, so CHAR(n)/VARCHAR(n) ->
+     *    VARCHAR(n) and CLOB(n) -> CLOB(n).
+     * 2. The result's length is *computable* from the argument types — pass the computed value. `||`
+     *    is the only such case (L1 + L2, exact), and it builds its type directly rather than going
+     *    through here.
+     * 3. The result's length *cannot be determined* at plan time — omit [length]. REPLACE is the case:
+     *    growth is `occurrences * (to.length - from.length)`, all runtime values. The result is then
+     *    unbounded and takes [MAXLENGTH].
      *
-     * Pass [length] to carry this type's declared length into the result — this is used by
-     * length-preserving functions such as TRIM (CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n)).
-     * Omit it for functions whose result length may differ from the input (e.g. REPLACE, SPLIT
-     * elements, SUBSTRING), which produce unbounded VARCHAR/CLOB.
+     * Never substitute a smaller arbitrary bound for case 3: [stringFnResult] truncates a value that
+     * exceeds the length it is given, so an invented bound silently cuts correct output.
+     *
+     * Note that [MAXLENGTH] participates in `||`'s length arithmetic; a variable-length concat clamps
+     * the sum back to [MAXLENGTH] rather than overflowing — see [addLengthsClamped].
      *
      * Pairs with [stringFnResult], which boxes a value at this type. Keep the two in step: a function
      * must declare `returns` from this and build its [Datum] from that, with the same [length].
      */
     fun PType.stringFnReturnType(length: Int? = null): PType = when (this.code()) {
-        PType.CHAR, PType.VARCHAR -> if (length != null) PType.varchar(length) else PType.varchar(255)
-        PType.CLOB -> if (length != null) PType.clob(length) else PType.clob()
+        PType.CHAR, PType.VARCHAR -> PType.varchar(length ?: MAXLENGTH)
+        PType.CLOB -> PType.clob(length ?: MAXLENGTH)
         else -> PType.string()
     }
 
@@ -76,8 +88,8 @@ internal object FnUtils {
      * of [length], which must match the one passed there.
      */
     fun PType.stringFnResult(value: String, length: Int? = null): Datum = when (this.code()) {
-        PType.CHAR, PType.VARCHAR -> if (length != null) Datum.varchar(value, length) else Datum.varchar(value)
-        PType.CLOB -> if (length != null) Datum.clob(value.toByteArray(), length) else Datum.clob(value.toByteArray())
+        PType.CHAR, PType.VARCHAR -> Datum.varchar(value, length ?: MAXLENGTH)
+        PType.CLOB -> Datum.clob(value.toByteArray(), length ?: MAXLENGTH)
         else -> Datum.string(value)
     }
 
@@ -114,12 +126,35 @@ internal object FnUtils {
     }
 
     /**
-     * Safely adds two lengths and returns the result, throwing if overflow occurs.
+     * Safely adds two lengths and returns the result, throwing if the sum exceeds [MAXLENGTH].
+     *
+     * Use this for a *fixed-length* result (CHAR), where the declared length is the exact length of
+     * every value: there is nothing to clamp to, since a shorter length would describe a different
+     * value. Variable-length results should use [addLengthsClamped] instead.
      */
     fun addLengths(length1: Int, length2: Int): Int {
         checkLengthOverflow(length1, length2)
         return length1 + length2
     }
+
+    /**
+     * Adds two lengths, clamping the result to [MAXLENGTH] rather than overflowing.
+     *
+     * Use this for a *variable-length* result (VARCHAR/CLOB), where the declared length is only an
+     * upper bound: clamping an over-long bound down to [MAXLENGTH] loses nothing, because no value can
+     * exceed [MAXLENGTH] characters anyway. This mirrors SQL2023 section 6.32 <string value
+     * expression>, whose result length is `min(L1 + L2, maximum length)` for the variable-length and
+     * large-object cases but an error for the fixed-length one.
+     *
+     * Clamping (rather than raising) is what lets an unbounded length participate in concatenation at
+     * all: [stringFnReturnType] assigns [MAXLENGTH] when a function's result length is not computable
+     * (REPLACE), and an unbounded CLOB defaults to [MAXLENGTH], so `replace(...) || x` and
+     * `CLOB || CLOB` would otherwise be errors for a sum that is merely imprecise, not invalid.
+     *
+     * The addition is done in [Long] so the sum itself cannot overflow before being clamped.
+     */
+    fun addLengthsClamped(length1: Int, length2: Int): Int =
+        minOf(length1.toLong() + length2.toLong(), MAXLENGTH.toLong()).toInt()
 
     /**
      * Gets the length of a type, handling STRING types that don't have length constraints.

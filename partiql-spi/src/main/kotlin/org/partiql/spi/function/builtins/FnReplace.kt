@@ -32,22 +32,15 @@ import org.partiql.spi.types.PType
  * carried over. Unlike TRIM/SUBSTRING/SPLIT, replace can make the string *longer* — a `to` longer than
  * `from` grows it by `occurrences * (to.length - from.length)`, a factor that depends on the runtime
  * values of `string`, `from`, and `to`, none of which are known at plan time. CHAR also widens to
- * VARCHAR, since a fixed-length result would have to pad:
- * - CHAR(n)    -> VARCHAR(255)
- * - VARCHAR(n) -> VARCHAR(255)
- * - CLOB(n)    -> CLOB
+ * VARCHAR, since a fixed-length result would have to pad. The result is therefore unbounded:
+ * - CHAR(n)    -> VARCHAR(max)
+ * - VARCHAR(n) -> VARCHAR(max)
+ * - CLOB(n)    -> CLOB(max)
  * - STRING     -> STRING (PartiQL extension)
  *
- * TODO: the VARCHAR(255) result length is unsound and silently truncates. Because no upper bound is
- *   computable from the argument types (see above), [FnUtils.stringFnReturnType] falls back to its
- *   arbitrary 255 default, and [FnUtils.stringFnResult] boxes the value with `Datum.varchar(value, 255)`,
- *   which truncates to that length. So a correct result longer than 255 characters is silently cut:
- *   `replace(CAST(<300 a's> AS VARCHAR(300)), 'a', 'bb')` should be 600 characters but yields 255.
- *   CLOB is unaffected (it defaults to the maximum length) and STRING is unbounded; only CHAR/VARCHAR
- *   inputs are wrong. Fixing this means giving CHAR/VARCHAR an unbounded result here rather than
- *   inheriting the 255 default — note that `stringFnReturnType`/`stringFnResult` are shared with the
- *   length-preserving functions, so the default cannot simply be changed in place without checking
- *   every caller.
+ * Carrying `n` over would be wrong, not merely imprecise: [FnUtils.stringFnResult] truncates a value
+ * that exceeds the length it is given, so a bounded result type would silently cut correct output —
+ * `replace(CAST('aaa' AS VARCHAR(3)), 'a', 'bb')` would yield 'bbb' instead of 'bbbbbb'.
  */
 internal object FnReplace : FnOverload() {
 
