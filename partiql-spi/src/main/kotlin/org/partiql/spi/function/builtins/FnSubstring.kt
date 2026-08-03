@@ -87,11 +87,12 @@ import org.partiql.spi.utils.StringUtils.codepointSubstring
  * ```
  *
  * Accepts CHAR, VARCHAR, CLOB, and STRING for `value`. The result type follows the SQL
- * <string value function> convention used by [FnTrim] (substring may change the length, so CHAR
- * is not length-preserving and widens to VARCHAR):
- * - CHAR(n)    -> VARCHAR
- * - VARCHAR(n) -> VARCHAR
- * - CLOB(n)    -> CLOB
+ * <string value function> convention used by [FnTrim]: CHAR widens to VARCHAR (a substring may be
+ * shorter, and a fixed-length result would have to pad), but the declared length is preserved
+ * because a substring is never longer than its input:
+ * - CHAR(n)    -> VARCHAR(n)
+ * - VARCHAR(n) -> VARCHAR(n)
+ * - CLOB(n)    -> CLOB(n)
  * - STRING     -> STRING (PartiQL extension)
  *
  * A single dynamic overload is registered per arity and the concrete instance is resolved in
@@ -110,16 +111,20 @@ internal object FnSubstringTwoArg : FnOverload() {
         if (!valueType.isTextOrUnknown()) return null
         // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
         if (args.any { it.code() == PType.UNKNOWN }) {
-            return FnUtils.nullResolutionInstance("substring", valueType.stringFnReturnType(), args)
+            return FnUtils.nullResolutionInstance("substring", valueType.stringFnReturnType(), listOf(valueType, PType.integer()).toTypedArray())
         }
+        // A substring is never longer than its input, so the result max length is the input length:
+        // CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n), STRING -> STRING. STRING carries no
+        // length, so only the bounded character types pass one to the length-aware helper.
+        val length = if (valueType.code() == PType.STRING) null else valueType.length
         return Function.instance(
             name = "substring",
-            returns = valueType.stringFnReturnType(),
+            returns = valueType.stringFnReturnType(length),
             parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer())),
         ) { params ->
             val value = params[0].textValue(valueType)
             val start = params[1].int
-            valueType.stringFnResult(value.codepointSubstring(start))
+            valueType.stringFnResult(value.codepointSubstring(start), length)
         }
     }
 }
@@ -141,11 +146,15 @@ internal object FnSubstringThreeArg : FnOverload() {
         if (!valueType.isTextOrUnknown()) return null
         // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
         if (args.any { it.code() == PType.UNKNOWN }) {
-            return FnUtils.nullResolutionInstance("substring", valueType.stringFnReturnType(), args)
+            return FnUtils.nullResolutionInstance("substring", valueType.stringFnReturnType(), listOf(valueType, PType.integer(), PType.integer()).toTypedArray())
         }
+        // A substring is never longer than its input, so the result max length is the input length:
+        // CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n), STRING -> STRING. STRING carries no
+        // length, so only the bounded character types pass one to the length-aware helper.
+        val returnLength = if (valueType.code() == PType.STRING) null else valueType.length
         return Function.instance(
             name = "substring",
-            returns = valueType.stringFnReturnType(),
+            returns = valueType.stringFnReturnType(returnLength),
             parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer()), Parameter("length", PType.integer())),
         ) { params ->
             val value = params[0].textValue(valueType)
@@ -154,7 +163,7 @@ internal object FnSubstringThreeArg : FnOverload() {
             if (length < 0) {
                 throw PErrors.internalErrorException(IllegalArgumentException("Length must be non-negative."))
             }
-            valueType.stringFnResult(value.codepointSubstring(start, length))
+            valueType.stringFnResult(value.codepointSubstring(start, length), returnLength)
         }
     }
 }

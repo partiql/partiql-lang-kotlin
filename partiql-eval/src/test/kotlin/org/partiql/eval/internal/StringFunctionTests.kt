@@ -163,6 +163,22 @@ class StringFunctionTests {
                 expected = Datum.clob("heLLo".toByteArray()),
                 mode = Mode.STRICT(),
             ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates before replace: 'hello' truncated to CHAR(3) = 'hel', replacing 'e' -> 'hEl'.
+            // Content shorter than n is space-padded, and the padding is unaffected by a replace that
+            // does not target spaces, so it survives into the result.
+            SuccessTestCase(
+                name = "replace: CHAR arg0 longer than n is truncated before replacing",
+                input = "replace(CAST('hello' AS CHAR(3)), 'e', 'E');",
+                expected = Datum.varchar("hEl"),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "replace: CHAR arg0 shorter than n keeps padding",
+                input = "replace(CAST('hi' AS CHAR(5)), 'i', 'I');",
+                expected = Datum.varchar("hI   "),
+                mode = Mode.STRICT(),
+            ),
             // from / to types
             SuccessTestCase(
                 name = "replace: CHAR from/to",
@@ -306,6 +322,22 @@ class StringFunctionTests {
                 expected = Datum.array(listOf(Datum.clob("a".toByteArray()), Datum.clob("b".toByteArray()))),
                 mode = Mode.STRICT(),
             ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates before split: 'a,b,c' truncated to CHAR(3) = 'a,b', split on ',' = [a, b].
+            // Content shorter than n is space-padded by the CHAR cast, and that padding is part of the
+            // value: CHAR(5) 'a' is 'a    ', which has no delimiter, so it splits to one padded element.
+            SuccessTestCase(
+                name = "split: CHAR arg0 longer than n is truncated before splitting",
+                input = "split(CAST('a,b,c' AS CHAR(3)), ',');",
+                expected = Datum.array(listOf(Datum.varchar("a"), Datum.varchar("b"))),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "split: CHAR arg0 shorter than n keeps padded single element",
+                input = "split(CAST('a' AS CHAR(5)), ',');",
+                expected = Datum.array(listOf(Datum.varchar("a    "))),
+                mode = Mode.STRICT(),
+            ),
             // delimiter types
             SuccessTestCase(
                 name = "split: CHAR delimiter",
@@ -386,6 +418,40 @@ class StringFunctionTests {
                 expected = Datum.integer(5),
                 mode = Mode.STRICT(),
             ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST to CHAR(n)/VARCHAR(n) truncates content longer than n. Only CHAR space-pads content
+            // shorter than n (so CHAR always counts n); VARCHAR keeps the true content length, as does
+            // CLOB(n), which enforces neither bound.
+            SuccessTestCase(
+                name = "char_length: CHAR content longer than n is truncated to n",
+                input = "char_length(CAST('hello world' AS CHAR(5)));",
+                expected = Datum.integer(5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "char_length: CHAR content shorter than n is padded to n",
+                input = "char_length(CAST('hi' AS CHAR(5)));",
+                expected = Datum.integer(5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "char_length: VARCHAR content longer than n is truncated to n",
+                input = "char_length(CAST('hello world' AS VARCHAR(5)));",
+                expected = Datum.integer(5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "char_length: VARCHAR content shorter than n is not padded",
+                input = "char_length(CAST('hi' AS VARCHAR(5)));",
+                expected = Datum.integer(2),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "char_length: CLOB does not enforce n; counts true content length",
+                input = "char_length(CAST('hello world' AS CLOB(5)));",
+                expected = Datum.integer(11),
+                mode = Mode.STRICT(),
+            ),
             // null / missing propagation
             SuccessTestCase(
                 name = "char_length: null arg returns null",
@@ -426,6 +492,27 @@ class StringFunctionTests {
                 name = "bit_length: CLOB",
                 input = "bit_length(CAST('hello' AS CLOB));",
                 expected = Datum.integer(40),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CHAR(5)/VARCHAR(5) truncate or space-pad to 5 characters => 5 bytes => 40 bits; CLOB(5)
+            // keeps the full content, so 'hello world' is 11 bytes => 88 bits.
+            SuccessTestCase(
+                name = "bit_length: CHAR content longer than n is truncated to n",
+                input = "bit_length(CAST('hello world' AS CHAR(5)));",
+                expected = Datum.integer(40),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "bit_length: CHAR content shorter than n is padded to n",
+                input = "bit_length(CAST('hi' AS CHAR(5)));",
+                expected = Datum.integer(40),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "bit_length: CLOB does not enforce n; counts true content length",
+                input = "bit_length(CAST('hello world' AS CLOB(5)));",
+                expected = Datum.integer(88),
                 mode = Mode.STRICT(),
             ),
             // null / missing propagation
@@ -470,6 +557,26 @@ class StringFunctionTests {
                 expected = Datum.integer(5),
                 mode = Mode.STRICT(),
             ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CHAR(5)/VARCHAR(5) truncate or space-pad to 5 bytes; CLOB(5) keeps all 11 bytes.
+            SuccessTestCase(
+                name = "octet_length: CHAR content longer than n is truncated to n",
+                input = "octet_length(CAST('hello world' AS CHAR(5)));",
+                expected = Datum.integer(5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "octet_length: CHAR content shorter than n is padded to n",
+                input = "octet_length(CAST('hi' AS CHAR(5)));",
+                expected = Datum.integer(5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "octet_length: CLOB does not enforce n; counts true content length",
+                input = "octet_length(CAST('hello world' AS CLOB(5)));",
+                expected = Datum.integer(11),
+                mode = Mode.STRICT(),
+            ),
             // null / missing propagation
             SuccessTestCase(
                 name = "octet_length: null arg returns null",
@@ -502,21 +609,37 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "substring: CHAR (start only) returns VARCHAR",
+                name = "substring: CHAR (start only) returns VARCHAR(n)",
                 input = "substring(CAST('hello' AS CHAR(5)), 2);",
-                expected = Datum.varchar("ello"),
+                expected = Datum.varchar("ello", 5),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "substring: VARCHAR (start, length) returns VARCHAR",
+                name = "substring: VARCHAR (start, length) returns VARCHAR(n)",
                 input = "substring(CAST('hello' AS VARCHAR(5)) FROM 2 FOR 3);",
-                expected = Datum.varchar("ell"),
+                expected = Datum.varchar("ell", 5),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 name = "substring: CLOB (start only) returns CLOB",
                 input = "substring(CAST('hello' AS CLOB), 2);",
                 expected = Datum.clob("ello".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates 'hello world' to CHAR(5) = 'hello' before substring, so FROM 2 FOR 3 = 'ell'.
+            // Content shorter than n is space-padded, so extracting past the content yields that padding:
+            // CHAR(5) 'hi' is 'hi   ', and FROM 2 FOR 3 takes 'i  '.
+            SuccessTestCase(
+                name = "substring: value truncated to n before extraction",
+                input = "substring(CAST('hello world' AS CHAR(5)) FROM 2 FOR 3);",
+                expected = Datum.varchar("ell", 5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "substring: value padded to n, extraction past content is trailing space",
+                input = "substring(CAST('hi' AS CHAR(5)) FROM 2 FOR 3);",
+                expected = Datum.varchar("i  ", 5),
                 mode = Mode.STRICT(),
             ),
             // null / missing propagation
@@ -595,6 +718,21 @@ class StringFunctionTests {
                 name = "position: CLOB",
                 input = "position(CAST('lo' AS CLOB) IN CAST('hello' AS CLOB));",
                 expected = Datum.bigint(4),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CHAR truncates 'hello world' to 'hello', so 'w' is no longer present (0). Content shorter
+            // than n is space-padded, so a probe still matches within the original characters.
+            SuccessTestCase(
+                name = "position: value truncated to n so probe past n is not found",
+                input = "position('w' IN CAST('hello world' AS CHAR(5)));",
+                expected = Datum.bigint(0),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "position: value padded to n still matches original characters",
+                input = "position('i' IN CAST('hi' AS CHAR(5)));",
+                expected = Datum.bigint(2),
                 mode = Mode.STRICT(),
             ),
             // null / missing propagation
@@ -677,6 +815,27 @@ class StringFunctionTests {
                 expected = Datum.clob("hi".toByteArray()),
                 mode = Mode.STRICT(),
             ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates content longer than n and space-pads content shorter than n before LOWER
+            // runs; LOWER preserves the CHAR(n) type. CLOB(n) does not enforce n.
+            SuccessTestCase(
+                name = "lower: CHAR content longer than n is truncated to n",
+                input = "lower(CAST('HELLO WORLD' AS CHAR(5)));",
+                expected = Datum.character("hello", 5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "lower: CHAR content shorter than n is padded to n",
+                input = "lower(CAST('HI' AS CHAR(5)));",
+                expected = Datum.character("hi", 5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "lower: CLOB does not enforce n; keeps full content",
+                input = "lower(CAST('HELLO WORLD' AS CLOB(5)));",
+                expected = Datum.clob("hello world".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
             // --- Null / missing propagation (untyped NULL resolves via the UNKNOWN instance) ---
             SuccessTestCase(
                 name = "lower: null returns null",
@@ -750,6 +909,27 @@ class StringFunctionTests {
                 name = "upper: CLOB preserves CLOB",
                 input = "upper(CAST('hi' AS CLOB));",
                 expected = Datum.clob("HI".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates content longer than n and space-pads content shorter than n before UPPER
+            // runs; UPPER preserves the VARCHAR(n) type. CLOB(n) does not enforce n.
+            SuccessTestCase(
+                name = "upper: VARCHAR content longer than n is truncated to n",
+                input = "upper(CAST('hello world' AS VARCHAR(5)));",
+                expected = Datum.varchar("HELLO", 5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "upper: VARCHAR content shorter than n is padded to n",
+                input = "upper(CAST('hi' AS VARCHAR(5)));",
+                expected = Datum.varchar("HI", 5),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "upper: CLOB does not enforce n; keeps full content",
+                input = "upper(CAST('hello world' AS CLOB(5)));",
+                expected = Datum.clob("HELLO WORLD".toByteArray()),
                 mode = Mode.STRICT(),
             ),
             // --- Null / missing propagation (untyped NULL resolves via the UNKNOWN instance) ---
@@ -845,6 +1025,28 @@ class StringFunctionTests {
                 name = "concat: STRING || CHAR is STRING",
                 input = "CAST('a' AS STRING) || CAST('b' AS CHAR(1));",
                 expected = Datum.string("ab"),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: operand content longer/shorter than its declared length ---
+            // CHAR pads each operand to its own length before concatenation, so 'hi'/CHAR(5) contributes
+            // 'hi   ' and 'yo'/CHAR(3) contributes 'yo ', giving CHAR(8) 'hi   yo '. Content longer than
+            // the declared length is truncated first, so 'hello world'/CHAR(3) contributes only 'hel'.
+            SuccessTestCase(
+                name = "concat: CHAR operands shorter than n keep interior padding",
+                input = "CAST('hi' AS CHAR(5)) || CAST('yo' AS CHAR(3));",
+                expected = Datum.character("hi   yo ", 8),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "concat: CHAR operand longer than n is truncated before concatenation",
+                input = "CAST('hello world' AS CHAR(3)) || CAST('x' AS CHAR(1));",
+                expected = Datum.character("helx", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "concat: VARCHAR operand longer than n is truncated before concatenation",
+                input = "CAST('hello world' AS VARCHAR(3)) || CAST('x' AS VARCHAR(1));",
+                expected = Datum.varchar("helx", 4),
                 mode = Mode.STRICT(),
             ),
             // --- Null / missing propagation (untyped NULL resolves via the UNKNOWN instance) ---
@@ -948,6 +1150,28 @@ class StringFunctionTests {
                 expected = Datum.clob("hi".toByteArray()),
                 mode = Mode.STRICT(),
             ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates before TRIM runs: '  hi  ' truncated to CHAR(3) = '  h', trimmed = 'h';
+            // '  hello world  ' truncated to VARCHAR(4) = '  he', trimmed = 'he'. Content shorter than n
+            // is space-padded, which TRIM then removes.
+            SuccessTestCase(
+                name = "trim: CHAR content longer than n is truncated before trimming",
+                input = "TRIM(CAST('  hi  ' AS CHAR(3)));",
+                expected = Datum.varchar("h", 3),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim: VARCHAR content longer than n is truncated before trimming",
+                input = "TRIM(CAST('  hello world  ' AS VARCHAR(4)));",
+                expected = Datum.varchar("he", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim: CHAR content shorter than n has its padding trimmed away",
+                input = "TRIM(CAST('hi' AS CHAR(6)));",
+                expected = Datum.varchar("hi", 6),
+                mode = Mode.STRICT(),
+            ),
             // --- Null / missing propagation (untyped NULL resolves via the UNKNOWN instance) ---
             SuccessTestCase(
                 name = "trim: null returns null",
@@ -984,15 +1208,15 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "trim_leading: CHAR returns VARCHAR",
+                name = "trim_leading: CHAR returns VARCHAR(n)",
                 input = "TRIM(LEADING FROM CAST('  hi' AS CHAR(4)));",
-                expected = Datum.varchar("hi"),
+                expected = Datum.varchar("hi", 4),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 name = "trim_leading: VARCHAR",
                 input = "TRIM(LEADING FROM CAST('  hi' AS VARCHAR(4)));",
-                expected = Datum.varchar("hi"),
+                expected = Datum.varchar("hi", 4),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
@@ -1005,6 +1229,37 @@ class StringFunctionTests {
                 name = "trim_leading_chars: STRING",
                 input = "TRIM(LEADING 'x' FROM CAST('xxhi' AS STRING));",
                 expected = Datum.string("hi"),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates before trimming: '  hello world' truncated to CHAR(4) = '  he', leading
+            // trimmed = 'he'. Content shorter than n is space-padded, which becomes leading/trailing
+            // space that trimming removes.
+            SuccessTestCase(
+                name = "trim_leading: CHAR content longer than n is truncated before trimming",
+                input = "TRIM(LEADING FROM CAST('  hello world' AS CHAR(4)));",
+                expected = Datum.varchar("he", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                // The CHAR(6) cast pads '  hi' to '  hi  '; leading-trim removes only the leading spaces,
+                // so the trailing padding remains in the result.
+                name = "trim_leading: CHAR content shorter than n has only its leading padding trimmed",
+                input = "TRIM(LEADING FROM CAST('  hi' AS CHAR(6)));",
+                expected = Datum.varchar("hi  ", 6),
+                mode = Mode.STRICT(),
+            ),
+            // --- `chars` keeps its own text type (no coercion to STRING) ---
+            SuccessTestCase(
+                name = "trim_leading_chars: CLOB chars",
+                input = "TRIM(LEADING CAST('x' AS CLOB) FROM CAST('xxhi' AS VARCHAR(4)));",
+                expected = Datum.varchar("hi", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim_leading_chars: VARCHAR chars",
+                input = "TRIM(LEADING CAST('x' AS VARCHAR(1)) FROM CAST('xxhi' AS CLOB));",
+                expected = Datum.clob("hi".toByteArray()),
                 mode = Mode.STRICT(),
             ),
             // null / missing propagation
@@ -1052,15 +1307,15 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "trim_trailing: CHAR returns VARCHAR",
+                name = "trim_trailing: CHAR returns VARCHAR(n)",
                 input = "TRIM(TRAILING FROM CAST('hi  ' AS CHAR(4)));",
-                expected = Datum.varchar("hi"),
+                expected = Datum.varchar("hi", 4),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 name = "trim_trailing: VARCHAR",
                 input = "TRIM(TRAILING FROM CAST('hi  ' AS VARCHAR(4)));",
-                expected = Datum.varchar("hi"),
+                expected = Datum.varchar("hi", 4),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
@@ -1073,6 +1328,34 @@ class StringFunctionTests {
                 name = "trim_trailing_chars: STRING",
                 input = "TRIM(TRAILING 'x' FROM CAST('hixx' AS STRING));",
                 expected = Datum.string("hi"),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates before trimming: 'hello world  ' truncated to CHAR(4) = 'hell' (no trailing
+            // space left to trim). Content shorter than n is space-padded, which trailing-trim removes.
+            SuccessTestCase(
+                name = "trim_trailing: CHAR content longer than n is truncated before trimming",
+                input = "TRIM(TRAILING FROM CAST('hello world  ' AS CHAR(4)));",
+                expected = Datum.varchar("hell", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim_trailing: CHAR content shorter than n has its trailing padding trimmed",
+                input = "TRIM(TRAILING FROM CAST('hi' AS CHAR(6)));",
+                expected = Datum.varchar("hi", 6),
+                mode = Mode.STRICT(),
+            ),
+            // --- `chars` keeps its own text type (no coercion to STRING) ---
+            SuccessTestCase(
+                name = "trim_trailing_chars: CLOB chars",
+                input = "TRIM(TRAILING CAST('x' AS CLOB) FROM CAST('hixx' AS VARCHAR(4)));",
+                expected = Datum.varchar("hi", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim_trailing_chars: VARCHAR chars",
+                input = "TRIM(TRAILING CAST('x' AS VARCHAR(1)) FROM CAST('hixx' AS CLOB));",
+                expected = Datum.clob("hi".toByteArray()),
                 mode = Mode.STRICT(),
             ),
             // null / missing propagation
@@ -1120,21 +1403,58 @@ class StringFunctionTests {
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
-                name = "trim_chars: CHAR returns VARCHAR",
+                name = "trim_chars: CHAR returns VARCHAR(n)",
                 input = "TRIM(BOTH 'x' FROM CAST('xxhixx' AS CHAR(6)));",
-                expected = Datum.varchar("hi"),
+                expected = Datum.varchar("hi", 6),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 name = "trim_chars: VARCHAR",
                 input = "TRIM(BOTH 'x' FROM CAST('xxhixx' AS VARCHAR(6)));",
-                expected = Datum.varchar("hi"),
+                expected = Datum.varchar("hi", 6),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 name = "trim_chars: CLOB",
                 input = "TRIM(BOTH 'x' FROM CAST('xxhixx' AS CLOB));",
                 expected = Datum.clob("hi".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates before trimming: 'xxhelloxx' truncated to CHAR(4) = 'xxhe', trimming 'x'
+            // leaves 'he'. Content shorter than n is space-padded, and that padding survives in the
+            // result because ' ' is not in the trimmed character set.
+            SuccessTestCase(
+                name = "trim_chars: CHAR content longer than n is truncated before trimming",
+                input = "TRIM(BOTH 'x' FROM CAST('xxhelloxx' AS CHAR(4)));",
+                expected = Datum.varchar("he", 4),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim_chars: CHAR content shorter than n keeps padding not matching trim char",
+                input = "TRIM(BOTH 'x' FROM CAST('xxhi' AS CHAR(6)));",
+                expected = Datum.varchar("hi  ", 6),
+                mode = Mode.STRICT(),
+            ),
+            // --- `chars` keeps its own text type (no coercion to STRING) ---
+            SuccessTestCase(
+                name = "trim_chars: CLOB chars",
+                input = "TRIM(BOTH CAST('x' AS CLOB) FROM CAST('xxhixx' AS VARCHAR(6)));",
+                expected = Datum.varchar("hi", 6),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "trim_chars: VARCHAR chars",
+                input = "TRIM(BOTH CAST('x' AS VARCHAR(1)) FROM CAST('xxhixx' AS CLOB));",
+                expected = Datum.clob("hi".toByteArray()),
+                mode = Mode.STRICT(),
+            ),
+            // CHAR chars are space-padded by the CAST, so the padding widens the trimmed character
+            // set: CHAR(3) 'x' is 'x  ', which trims both 'x' and ' '.
+            SuccessTestCase(
+                name = "trim_chars: CHAR chars padding widens the trimmed character set",
+                input = "TRIM(BOTH CAST('x' AS CHAR(3)) FROM CAST('  xxhixx  ' AS STRING));",
+                expected = Datum.string("hi"),
                 mode = Mode.STRICT(),
             ),
             // null / missing propagation
@@ -1192,6 +1512,28 @@ class StringFunctionTests {
             SuccessTestCase(
                 name = "like_escape: STRING literal underscore",
                 input = "CAST('a_c' AS STRING) LIKE CAST('a\\_c' AS STRING) ESCAPE '\\';",
+                expected = Datum.bool(true),
+                mode = Mode.STRICT(),
+            ),
+            // --- Length boundary: content longer/shorter than the declared type length ---
+            // CAST truncates 'hello world' to CHAR(5) = 'hello', which matches the pattern 'hello'.
+            // Content shorter than n is space-padded, so CHAR(5) <- 'hi' is 'hi   ' and does NOT match
+            // the bare pattern 'hi'; a trailing '%' is needed to match the padding.
+            SuccessTestCase(
+                name = "like: CHAR value longer than n is truncated to n and matches",
+                input = "CAST('hello world' AS CHAR(5)) LIKE 'hello';",
+                expected = Datum.bool(true),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "like: CHAR value shorter than n is padded so bare pattern does not match",
+                input = "CAST('hi' AS CHAR(5)) LIKE 'hi';",
+                expected = Datum.bool(false),
+                mode = Mode.STRICT(),
+            ),
+            SuccessTestCase(
+                name = "like: CHAR value shorter than n matches with trailing wildcard",
+                input = "CAST('hi' AS CHAR(5)) LIKE 'hi%';",
                 expected = Datum.bool(true),
                 mode = Mode.STRICT(),
             ),
