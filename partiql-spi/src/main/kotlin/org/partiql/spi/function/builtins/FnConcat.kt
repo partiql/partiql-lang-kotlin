@@ -54,16 +54,18 @@ internal object FnConcat : FnOverload() {
         if (args.any { !it.isTextOrUnknown() }) return null
         val lhsType = args[0]
         val rhsType = args[1]
-        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance;
-        if (args.any { it.code() == PType.UNKNOWN }) {
-            return FnUtils.nullResolutionInstance(FunctionUtils.hide("concat"), lhsType, args)
-        }
+
         // If string types are different, use coercibility: STRING > CLOB > VARCHAR > CHAR
         val resultType = if (lhsType.code() != rhsType.code()) {
             FnUtils.getHigherCoercibilityType(lhsType.code(), rhsType.code())
         } else {
             lhsType.code()
         }
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance;
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance(FunctionUtils.hide("concat"), resultType, args)
+        }
+
         // STRING is unbounded; the bounded text types carry length L1 + L2. CHAR is fixed-length, so an
         // over-long sum is an error; VARCHAR/CLOB are upper bounds, so an over-long sum clamps.
         val returns = when (resultType) {
