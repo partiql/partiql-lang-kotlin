@@ -36,6 +36,7 @@ Thank you to all who have contributed!
 - Fixed `NullPointerException` during AST traversal by guarding nullable child fields in `getChildren()` for `WindowFunctionType.Lead`/`.Lag`, `AttributeConstraint`, and `TableConstraint.Unique`.
 - Fixed writing `CLOB` values in the CLI text-pretty output as `CAST('<value>' AS CLOB)` until `CLOB` literal is defined.
 - Fixed decimal division precision and scale reduction when computed precision exceeds 38, preventing invalid result types and missing projected fields
+- Fixed `VARCHAR` casts padding values shorter than the declared maximum length.
 
 ### Removed
 

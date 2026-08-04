@@ -710,17 +710,10 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum varchar(@NotNull String value, int length) throws PRuntimeException {
         // TODO: Error or coerce here? Right now coerce, though I think this should likely error.
-        String newValue;
         if (length <= 0) {
             throw PErrors.wrappedException(new IllegalArgumentException("VARCHAR of length " + length + " not allowed."));
         }
-        if (value.length() < length) {
-            newValue = String.format("%-" + length + "." + length + "s", value);
-        } else if (value.length() == length) {
-            newValue = value;
-        } else {
-            newValue = value.substring(0, length);
-        }
+        String newValue = value.length() <= length ? value : value.substring(0, length);
         return new DatumString(newValue, PType.varchar(length));
     }
 
