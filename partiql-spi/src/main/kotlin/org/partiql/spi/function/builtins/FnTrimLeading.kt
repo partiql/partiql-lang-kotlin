@@ -3,33 +3,53 @@
 
 package org.partiql.spi.function.builtins
 
-// TODO: add support for CHAR/VARCHAR - https://github.com/partiql/partiql-lang-kotlin/issues/1838
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnOverload
+import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
+import org.partiql.spi.function.builtins.FnUtils.stringFnResult
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturnType
+import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.FunctionUtils
 import org.partiql.spi.utils.StringUtils.codepointTrimLeading
-import org.partiql.spi.value.Datum
 
-internal val Fn_TRIM_LEADING__STRING__STRING = FunctionUtils.hidden(
+/**
+ * `trim_leading(value)` — removes leading whitespace.
+ *
+ * Accepts CHAR, VARCHAR, CLOB, and STRING. Follows the [FnTrim] type convention (length preserved,
+ * since trimming only removes characters):
+ * - CHAR(n)/VARCHAR(n) -> VARCHAR(n)
+ * - CLOB(n)            -> CLOB(n)
+ * - STRING             -> STRING
+ */
+internal object FnTrimLeading : FnOverload() {
 
-    name = "trim_leading",
-    returns = PType.string(),
-    parameters = arrayOf(Parameter("value", PType.string())),
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature(FunctionUtils.hide("trim_leading"), listOf(PType.dynamic()))
+    }
 
-) { args ->
-    val value = args[0].string
-    val result = value.codepointTrimLeading()
-    Datum.string(result)
-}
-
-internal val Fn_TRIM_LEADING__CLOB__CLOB = FunctionUtils.hidden(
-
-    name = "trim_leading",
-    returns = PType.clob(Int.MAX_VALUE),
-    parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
-
-) { args ->
-    val string = args[0].bytes.toString(Charsets.UTF_8)
-    val result = string.codepointTrimLeading()
-    Datum.clob(result.toByteArray())
+    override fun getInstance(args: Array<PType>): Fn? {
+        // The argument must be a text type (or UNKNOWN, handled below); anything else does not match.
+        val valueType = args[0]
+        if (!valueType.isTextOrUnknown()) return null
+        // An UNKNOWN argument (literal NULL) gets a resolution-only instance; the framework's isNullCall handles propagation.
+        if (valueType.code() == PType.UNKNOWN) {
+            return FnUtils.nullResolutionInstance(FunctionUtils.hide("trim_leading"), valueType.stringFnReturnType(), args)
+        }
+        // Trimming only removes characters, so the result max length is the input length:
+        // CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n), STRING -> STRING. STRING carries no
+        // length, so only the bounded character types pass one to the length-aware helper.
+        val length = if (valueType.code() == PType.STRING) null else valueType.length
+        return Function.instance(
+            name = FunctionUtils.hide("trim_leading"),
+            returns = valueType.stringFnReturnType(length),
+            parameters = arrayOf(Parameter("value", valueType)),
+        ) { params ->
+            val value = params[0].textValue(valueType)
+            valueType.stringFnResult(value.codepointTrimLeading(), length)
+        }
+    }
 }

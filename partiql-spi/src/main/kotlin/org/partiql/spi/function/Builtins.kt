@@ -32,15 +32,13 @@ internal object Builtins {
         Fn_AND__BOOL_BOOL__BOOL,
         FnBetween,
         FnOverlaps,
-        Fn_BIT_LENGTH__STRING__INT32,
-        Fn_BIT_LENGTH__CLOB__INT32,
+        FnBitLength,
         FnBitwiseAnd,
         Fn_CARDINALITY__BAG__INT32,
         Fn_CARDINALITY__LIST__INT32,
         Fn_CARDINALITY__STRUCT__INT32,
         Fn_CARDINALITY__MAP__INT32,
-        Fn_CHAR_LENGTH__STRING__INT,
-        Fn_CHAR_LENGTH__CLOB__INT,
+        FnCharLength,
 
         Fn_COLL_AGG__BAG__ANY.ANY_ALL,
         Fn_COLL_AGG__BAG__ANY.AVG_ALL,
@@ -193,8 +191,7 @@ internal object Builtins {
         Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
         Fn_NOT__BOOL__BOOL,
         Fn_OR__BOOL_BOOL__BOOL,
-        Fn_OCTET_LENGTH__STRING__INT32,
-        Fn_OCTET_LENGTH__CLOB__INT32,
+        FnOctetLength,
         FnPlus,
         Fn_POS__INT8__INT8,
         Fn_POS__INT16__INT16,
@@ -204,31 +201,23 @@ internal object Builtins {
         Fn_POS__FLOAT32__FLOAT32,
         Fn_POS__FLOAT64__FLOAT64,
         Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
-        Fn_POSITION__STRING_STRING__INT64,
-        Fn_POSITION__CLOB_CLOB__INT64,
+        FnPosition,
 
-        Fn_SUBSTRING__STRING_INT32__STRING,
-        Fn_SUBSTRING__STRING_INT32_INT32__STRING,
-        Fn_SUBSTRING__CLOB_INT64__CLOB,
-        Fn_SUBSTRING__CLOB_INT64_INT64__CLOB,
+        FnSubstringTwoArg,
+        FnSubstringThreeArg,
 
         FnTimes,
         FnTrim,
 
-        Fn_TRIM_CHARS__STRING_STRING__STRING,
-        Fn_TRIM_CHARS__CLOB_CLOB__CLOB,
+        FnTrimChars,
 
-        Fn_TRIM_LEADING__STRING__STRING,
-        Fn_TRIM_LEADING__CLOB__CLOB,
+        FnTrimLeading,
 
-        Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING,
-        Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB,
+        FnTrimLeadingChars,
 
-        Fn_TRIM_TRAILING__STRING__STRING,
-        Fn_TRIM_TRAILING__CLOB__CLOB,
+        FnTrimTrailing,
 
-        Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING,
-        Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB,
+        FnTrimTrailingChars,
 
         FnUpper,
 

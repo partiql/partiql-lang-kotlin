@@ -1,6 +1,3 @@
-// ktlint-disable filename
-@file:Suppress("ClassName")
-
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
@@ -8,8 +5,10 @@ import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.datumOf
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
+import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.types.PType
-import org.partiql.spi.value.Datum
 
 /**
  * SQL LOWER function implementation.
@@ -28,6 +27,11 @@ import org.partiql.spi.value.Datum
  * - VARCHAR(n) → VARCHAR(n)
  * - CLOB(n) → CLOB(n)
  * - STRING → STRING (PartiQL extension)
+ *
+ * KNOWN ISSUE (https://github.com/partiql/partiql-lang-kotlin/issues/1952): preserving `n` silently
+ *   truncates, because case mapping is not length-preserving. 'İ' (U+0130) lowercases to two
+ *   characters, so an n-character input can fold to more than n. See the note on [FnUpper], where the
+ *   same defect is described in full; both should be fixed together.
  */
 internal object FnLower : FnOverload() {
 
@@ -36,51 +40,22 @@ internal object FnLower : FnOverload() {
     }
 
     override fun getInstance(args: Array<PType>): Fn? {
+        // The argument must be a text type (or UNKNOWN, handled below); anything else does not match.
         val inputType = args[0]
-        return when (inputType.code()) {
-            PType.CHAR -> {
-                Function.instance(
-                    name = "lower",
-                    returns = PType.character(inputType.length),
-                    parameters = arrayOf(Parameter("value", inputType)),
-                ) { params ->
-                    val string = params[0].string
-                    val result = string.lowercase()
-                    Datum.character(result, inputType.length)
-                }
-            }
-            PType.VARCHAR -> {
-                Function.instance(
-                    name = "lower",
-                    returns = PType.varchar(inputType.length),
-                    parameters = arrayOf(Parameter("value", inputType)),
-                ) { params ->
-                    val string = params[0].string
-                    val result = string.lowercase()
-                    Datum.varchar(result, inputType.length)
-                }
-            }
-            PType.CLOB -> {
-                Function.instance(
-                    name = "lower",
-                    returns = PType.clob(inputType.length),
-                    parameters = arrayOf(Parameter("value", inputType)),
-                ) { params ->
-                    val string = params[0].bytes.toString(Charsets.UTF_8)
-                    val result = string.lowercase()
-                    Datum.clob(result.toByteArray(), inputType.length)
-                }
-            }
-            PType.STRING -> Function.instance(
-                name = "lower",
-                returns = PType.string(),
-                parameters = arrayOf(Parameter("value", inputType)),
-            ) { params ->
-                val string = params[0].string
-                val result = string.lowercase()
-                Datum.string(result)
-            }
-            else -> null
+        if (!inputType.isTextOrUnknown()) return null
+        // An UNKNOWN argument (literal NULL) gets a resolution-only instance; the framework's isNullCall handles propagation.
+        if (inputType.code() == PType.UNKNOWN) {
+            return FnUtils.nullResolutionInstance("lower", PType.string(), args)
+        }
+        // <fold> preserves the input type and length exactly, so the result type is the input type.
+        return Function.instance(
+            name = "lower",
+            returns = inputType,
+            parameters = arrayOf(Parameter("value", inputType)),
+        ) { params ->
+            val value = params[0].textValue(inputType)
+            val result = value.lowercase()
+            inputType.datumOf(result)
         }
     }
 }

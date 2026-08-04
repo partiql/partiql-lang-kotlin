@@ -3,12 +3,18 @@
 
 package org.partiql.spi.function.builtins
 
-// TODO: add support for CHAR/VARCHAR - https://github.com/partiql/partiql-lang-kotlin/issues/1838
+import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnOverload
+import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineOverloadSignature
+import org.partiql.spi.function.builtins.FnUtils.isTextOrUnknown
+import org.partiql.spi.function.builtins.FnUtils.stringFnResult
+import org.partiql.spi.function.builtins.FnUtils.stringFnReturnType
+import org.partiql.spi.function.builtins.FnUtils.textValue
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.utils.StringUtils.codepointSubstring
-import org.partiql.spi.value.Datum
 
 /**
  * Built-in function to the substring of an existing string. This function
@@ -78,55 +84,86 @@ import org.partiql.spi.value.Datum
  *              E1 = lesser_of(endPos, strLength + 1)
  *              L1 = E1 - S1
  *              java's substring(C, S1, E1)
+ * ```
+ *
+ * Accepts CHAR, VARCHAR, CLOB, and STRING for `value`. The result type follows the SQL
+ * <string value function> convention used by [FnTrim]: CHAR widens to VARCHAR (a substring may be
+ * shorter, and a fixed-length result would have to pad), but the declared length is preserved
+ * because a substring is never longer than its input:
+ * - CHAR(n)    -> VARCHAR(n)
+ * - VARCHAR(n) -> VARCHAR(n)
+ * - CLOB(n)    -> CLOB(n)
+ * - STRING     -> STRING (PartiQL extension)
+ *
+ * A single dynamic overload is registered per arity and the concrete instance is resolved in
+ * [getInstance]; this avoids an ambiguous match between the STRING and CLOB overloads for
+ * CHAR/VARCHAR inputs.
  */
-internal val Fn_SUBSTRING__STRING_INT32__STRING = FnOverload.Builder("substring")
-    .returns(PType.string())
-    .addParameters(PType.string(), PType.integer())
-    .body { args ->
-        val value = args[0].string
-        val start = args[1].int
-        val result = value.codepointSubstring(start)
-        Datum.string(result)
-    }
-    .build()
+internal object FnSubstringTwoArg : FnOverload() {
 
-internal val Fn_SUBSTRING__CLOB_INT64__CLOB = FnOverload.Builder("substring")
-    .returns(PType.clob())
-    .addParameters(PType.clob(), PType.integer())
-    .body { args ->
-        val value = args[0].bytes.toString(Charsets.UTF_8)
-        val start = args[1].int
-        val result = value.codepointSubstring(start)
-        Datum.clob(result.toByteArray())
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature("substring", listOf(PType.dynamic(), PType.integer()))
     }
-    .build()
 
-internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = FnOverload.Builder("substring")
-    .returns(PType.string())
-    .addParameters(PType.string(), PType.integer(), PType.integer())
-    .body { args ->
-        val value = args[0].string
-        val start = args[1].int
-        val end = args[2].int
-        if (end < 0) {
-            throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+    override fun getInstance(args: Array<PType>): Fn? {
+        // `value` must be a text type (or UNKNOWN, handled below); the integer args are fixed by the signature.
+        val valueType = args[0]
+        if (!valueType.isTextOrUnknown()) return null
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance("substring", valueType.stringFnReturnType(), listOf(valueType, PType.integer()).toTypedArray())
         }
-        val result = value.codepointSubstring(start, end)
-        Datum.string(result)
-    }
-    .build()
-
-internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = FnOverload.Builder("substring")
-    .returns(PType.clob())
-    .addParameters(PType.clob(), PType.integer(), PType.integer())
-    .body { args ->
-        val string = args[0].bytes.toString(Charsets.UTF_8)
-        val start = args[1].int
-        val end = args[2].int
-        if (end < 0) {
-            throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+        // A substring is never longer than its input, so the result max length is the input length:
+        // CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n), STRING -> STRING. STRING carries no
+        // length, so only the bounded character types pass one to the length-aware helper.
+        val length = if (valueType.code() == PType.STRING) null else valueType.length
+        return Function.instance(
+            name = "substring",
+            returns = valueType.stringFnReturnType(length),
+            parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer())),
+        ) { params ->
+            val value = params[0].textValue(valueType)
+            val start = params[1].int
+            valueType.stringFnResult(value.codepointSubstring(start), length)
         }
-        val result = string.codepointSubstring(start, end)
-        Datum.clob(result.toByteArray())
     }
-    .build()
+}
+
+/**
+ * The `substring(value, start, length)` overload; see [FnSubstringTwoArg] for the full SQL-92
+ * semantics. `length` is the number of characters to take (the SQL `FOR <length>` clause), not an
+ * end position. Raises a data exception if `length` is negative.
+ */
+internal object FnSubstringThreeArg : FnOverload() {
+
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature("substring", listOf(PType.dynamic(), PType.integer(), PType.integer()))
+    }
+
+    override fun getInstance(args: Array<PType>): Fn? {
+        // `value` must be a text type (or UNKNOWN, handled below); the integer args are fixed by the signature.
+        val valueType = args[0]
+        if (!valueType.isTextOrUnknown()) return null
+        // If any argument is UNKNOWN (literal NULL), return a resolution-only instance; the framework's isNullCall handles propagation.
+        if (args.any { it.code() == PType.UNKNOWN }) {
+            return FnUtils.nullResolutionInstance("substring", valueType.stringFnReturnType(), listOf(valueType, PType.integer(), PType.integer()).toTypedArray())
+        }
+        // A substring is never longer than its input, so the result max length is the input length:
+        // CHAR(n)/VARCHAR(n) -> VARCHAR(n), CLOB(n) -> CLOB(n), STRING -> STRING. STRING carries no
+        // length, so only the bounded character types pass one to the length-aware helper.
+        val returnLength = if (valueType.code() == PType.STRING) null else valueType.length
+        return Function.instance(
+            name = "substring",
+            returns = valueType.stringFnReturnType(returnLength),
+            parameters = arrayOf(Parameter("value", valueType), Parameter("start", PType.integer()), Parameter("length", PType.integer())),
+        ) { params ->
+            val value = params[0].textValue(valueType)
+            val start = params[1].int
+            val length = params[2].int
+            if (length < 0) {
+                throw PErrors.internalErrorException(IllegalArgumentException("Length must be non-negative."))
+            }
+            valueType.stringFnResult(value.codepointSubstring(start, length), returnLength)
+        }
+    }
+}

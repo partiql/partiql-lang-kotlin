@@ -27,14 +27,22 @@ Thank you to all who have contributed!
 
 ### Added
 - Added the `REPLACE` and `SPLIT` string functions
+- Added `CHAR` and `VARCHAR` support to the built-in text functions: `BIT_LENGTH`, `CHAR_LENGTH`, `OCTET_LENGTH`, `POSITION`, `SUBSTRING`, `TRIM` (and its `LEADING`/`TRAILING`/character-set variants), `LOWER`, `UPPER`, and `||`.
 
 ### Changed
+- `VARCHAR(n)` values are no longer space-padded to their declared length; a value shorter than `n` keeps its own length (only `CHAR(n)` pads). Values longer than `n` are still truncated.
+- The result length of the "shrink-only" text functions (`TRIM` and its `LEADING`/`TRAILING`/character-set variants, `SUBSTRING`, and `SPLIT` elements) now preserves the input's declared length, since these functions can only remove characters: `CHAR(n)`/`VARCHAR(n)` -> `VARCHAR(n)`, `CLOB(n)` -> `CLOB(n)`.
+- `REPLACE` now returns an unbounded result type (`VARCHAR`/`CLOB` of maximum length), because its result may be longer than the input and its length is not computable at plan time. Previously it defaulted to `VARCHAR(255)` and silently truncated longer results.
+- `||` (`concat`) now clamps the result length of the variable-length result types (`VARCHAR`/`CLOB`) to the maximum length instead of raising an overflow error when `L1 + L2` exceeds it; fixed-length `CHAR` results still raise. This also lets `CLOB || CLOB` and concatenation of an unbounded function result (such as `REPLACE`) resolve rather than fail.
 
 ### Deprecated
 
 ### Fixed
 - Fixed `NullPointerException` during AST traversal by guarding nullable child fields in `getChildren()` for `WindowFunctionType.Lead`/`.Lag`, `AttributeConstraint`, and `TableConstraint.Unique`.
 - Fixed writing `CLOB` values in the CLI text-pretty output as `CAST('<value>' AS CLOB)` until `CLOB` literal is defined.
+- Fixed the built-in text functions failing to resolve (returning `MISSING`, with an `Undefined function` warning) when an argument is an untyped `NULL`/`MISSING`, instead of propagating `NULL`/`MISSING`. Affects `BIT_LENGTH`, `CHAR_LENGTH`, `OCTET_LENGTH`, `POSITION`, `SUBSTRING`, `TRIM` (and its `LEADING`/`TRAILING`/character-set variants), `LOWER`, `UPPER`, `LIKE`, `LIKE ... ESCAPE ...`, and `||`.
+- Fixed `LIKE` and `LIKE ... ESCAPE ...` rejecting `CLOB` arguments.
+- Fixed `||` throwing `Operation "getString" is not valid for type CLOB(n)` when either operand is a `CLOB`.
 - Fixed decimal division precision and scale reduction when computed precision exceeds 38, preventing invalid result types and missing projected fields
 - Fixed `VARCHAR` casts padding values shorter than the declared maximum length.
 
