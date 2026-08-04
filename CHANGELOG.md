@@ -44,6 +44,7 @@ Thank you to all who have contributed!
 - Fixed `LIKE` and `LIKE ... ESCAPE ...` rejecting `CLOB` arguments.
 - Fixed `||` throwing `Operation "getString" is not valid for type CLOB(n)` when either operand is a `CLOB`.
 - Fixed decimal division precision and scale reduction when computed precision exceeds 38, preventing invalid result types and missing projected fields
+- Fixed `VARCHAR` casts padding values shorter than the declared maximum length.
 
 ### Removed
 
