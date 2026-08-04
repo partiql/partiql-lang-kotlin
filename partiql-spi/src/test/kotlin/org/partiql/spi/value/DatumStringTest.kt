@@ -20,9 +20,24 @@ import kotlin.test.assertEquals
 
 class DatumStringTest {
     @Test
-    fun varcharDoesNotPadValues() {
+    fun varcharPreservesValuesShorterThanLength() {
         val datum = Datum.varchar("a", 20)
 
         assertEquals("a", datum.string)
+    }
+
+    @Test
+    fun varcharPreservesValuesAtLength() {
+        val value = "a".repeat(20)
+        val datum = Datum.varchar(value, 20)
+
+        assertEquals(value, datum.string)
+    }
+
+    @Test
+    fun varcharTruncatesValuesLongerThanLength() {
+        val datum = Datum.varchar("a".repeat(30), 20)
+
+        assertEquals("a".repeat(20), datum.string)
     }
 }
