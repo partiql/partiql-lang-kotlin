@@ -172,11 +172,10 @@ internal object FnUtils {
      */
     fun getHigherCoercibilityType(type1: Int, type2: Int): Int {
         val coercibility = mapOf(
-            PType.STRING to 5,
-            PType.CLOB to 4,
-            PType.VARCHAR to 3,
-            PType.CHAR to 2,
-            PType.UNKNOWN to 1
+            PType.STRING to 4,
+            PType.CLOB to 3,
+            PType.VARCHAR to 2,
+            PType.CHAR to 1
         )
         val coer1 = coercibility[type1] ?: error("Unknown type: $type1")
         val coer2 = coercibility[type2] ?: error("Unknown type: $type2")
