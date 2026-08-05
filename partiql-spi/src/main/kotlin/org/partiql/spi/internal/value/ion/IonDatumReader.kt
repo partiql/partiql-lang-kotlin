@@ -4,6 +4,7 @@ import com.amazon.ion.IonException
 import com.amazon.ion.IonType
 import com.amazon.ion.Span
 import com.amazon.ion.SpanProvider
+import com.amazon.ion.Timestamp.Precision
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.spi.value.Datum
@@ -14,6 +15,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -290,15 +292,29 @@ internal class IonDatumReader internal constructor(
     }
 
     private fun timestamp(): Datum {
+        if (reader.isNullValue) {
+            return Datum.nullValue()
+        }
+
         val value = reader.timestampValue()
-        val offset = value.localOffset?.let { ZoneOffset.ofTotalSeconds(it * 60) } ?: ZoneOffset.UTC
+        val date = LocalDate.of(value.year, value.month, value.day)
+        if (value.precision == Precision.YEAR || value.precision == Precision.MONTH || value.precision == Precision.DAY) {
+            return Datum.date(date)
+        }
+
         val decimalSecond = value.decimalSecond
         val second = decimalSecond.toInt()
         val nano = decimalSecond.remainder(BigDecimal.ONE).movePointRight(TIMESTAMP_PRECISION).toInt()
-        val date = LocalDate.of(value.year, value.month, value.day)
         val time = LocalTime.of(value.hour, value.minute, second, nano)
+        val dateTime = LocalDateTime.of(date, time)
+        val precision = value.fractionalSecond?.scale() ?: 0
+        val offset = value.localOffset
 
-        return Datum.timestampz(OffsetDateTime.of(date, time, offset), TIMESTAMP_PRECISION)
+        return if (offset == null) {
+            Datum.timestamp(dateTime, precision)
+        } else {
+            Datum.timestampz(OffsetDateTime.of(dateTime, ZoneOffset.ofTotalSeconds(offset * 60)), precision)
+        }
     }
 
     private fun date0(): Datum {
