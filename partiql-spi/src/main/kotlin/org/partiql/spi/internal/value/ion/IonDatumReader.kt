@@ -12,6 +12,13 @@ import org.partiql.spi.value.Encoding
 import org.partiql.spi.value.Field
 import java.io.IOException
 import java.io.InputStream
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+
+private const val TIMESTAMP_PRECISION = 9
 
 /**
  * A [DatumReader] implementation for Ion encoded PartiQL data.
@@ -71,7 +78,7 @@ internal class IonDatumReader internal constructor(
         IonType.INT -> bigint()
         IonType.FLOAT -> double()
         IonType.DECIMAL -> decimal0()
-        IonType.TIMESTAMP -> TODO("timestamp without annotation")
+        IonType.TIMESTAMP -> timestamp()
         IonType.STRING -> varchar0()
         IonType.CLOB -> clob0()
         IonType.BLOB -> clob0()
@@ -280,6 +287,18 @@ internal class IonDatumReader internal constructor(
             throw IonDatumException("blob($size) had size $s", null, span())
         }
         return Datum.blob(v, s)
+    }
+
+    private fun timestamp(): Datum {
+        val value = reader.timestampValue()
+        val offset = value.localOffset?.let { ZoneOffset.ofTotalSeconds(it * 60) } ?: ZoneOffset.UTC
+        val decimalSecond = value.decimalSecond
+        val second = decimalSecond.toInt()
+        val nano = decimalSecond.remainder(BigDecimal.ONE).movePointRight(TIMESTAMP_PRECISION).toInt()
+        val date = LocalDate.of(value.year, value.month, value.day)
+        val time = LocalTime.of(value.hour, value.minute, second, nano)
+
+        return Datum.timestampz(OffsetDateTime.of(date, time, offset), TIMESTAMP_PRECISION)
     }
 
     private fun date0(): Datum {
