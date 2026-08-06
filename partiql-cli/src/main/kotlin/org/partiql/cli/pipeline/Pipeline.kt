@@ -25,8 +25,16 @@ internal class Pipeline private constructor(
     private val ctx: Context,
     private val mode: Mode,
     private val debug: Boolean,
+    private val schemaFormat: SchemaFormat,
     private val out: PrintStream
 ) {
+
+    /**
+     * Schema output format for debug mode.
+     */
+    enum class SchemaFormat {
+        NONE, JSON, DDL
+    }
 
     /**
      * TODO replace with the ResultSet equivalent?
@@ -68,6 +76,20 @@ internal class Pipeline private constructor(
         val plan = result.plan
         if (debug) {
             PlanPrinter.print(plan, System.err)
+            if (schemaFormat != SchemaFormat.NONE) {
+                val type = (plan.action as? Action.Query)?.rex?.type?.pType
+                if (type != null) {
+                    val schema = when (schemaFormat) {
+                        SchemaFormat.JSON -> PTypeSerde.toJson(type)
+                        SchemaFormat.DDL -> PTypeSerde.toDDL(type)
+                        else -> null
+                    }
+                    if (schema != null) {
+                        System.err.println("[DEBUG] Schema (${schemaFormat.name}):")
+                        System.err.println(schema)
+                    }
+                }
+            }
         }
         return plan
     }
@@ -99,21 +121,27 @@ internal class Pipeline private constructor(
 
     companion object {
 
-        fun default(out: PrintStream, config: Config, debug: Boolean = false): Pipeline {
-            return create(Mode.PERMISSIVE(), out, config, debug)
+        fun parseSchema(schema: String, format: SchemaFormat): PType = when (format) {
+            SchemaFormat.DDL -> PTypeSerde.fromDDL(schema)
+            SchemaFormat.JSON -> PTypeSerde.fromJson(schema)
+            else -> throw IllegalArgumentException("Schema type must be DDL or JSON")
         }
 
-        fun strict(out: PrintStream, config: Config, debug: Boolean = false): Pipeline {
-            return create(Mode.STRICT(), out, config, debug)
+        fun default(out: PrintStream, config: Config, debug: Boolean = false, schemaFormat: SchemaFormat = SchemaFormat.NONE): Pipeline {
+            return create(Mode.PERMISSIVE(), out, config, debug, schemaFormat)
         }
 
-        private fun create(mode: Mode, out: PrintStream, config: Config, debug: Boolean = false): Pipeline {
+        fun strict(out: PrintStream, config: Config, debug: Boolean = false, schemaFormat: SchemaFormat = SchemaFormat.NONE): Pipeline {
+            return create(Mode.STRICT(), out, config, debug, schemaFormat)
+        }
+
+        private fun create(mode: Mode, out: PrintStream, config: Config, debug: Boolean = false, schemaFormat: SchemaFormat = SchemaFormat.NONE): Pipeline {
             val listener = config.getErrorListener(out)
             val ctx = Context.of(listener)
             val parser = PartiQLParser.Builder().build()
             val planner = PartiQLPlanner.builder().build()
             val compiler = PartiQLCompiler.builder().build()
-            return Pipeline(parser, planner, compiler, ctx, mode, debug, out)
+            return Pipeline(parser, planner, compiler, ctx, mode, debug, schemaFormat, out)
         }
     }
 
