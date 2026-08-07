@@ -20,7 +20,8 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-private const val TIMESTAMP_PRECISION = 9
+private const val NANOSECOND_SCALE = 9
+private const val MAX_STORED_TIMESTAMP_PRECISION = 9
 
 /**
  * A [DatumReader] implementation for Ion encoded PartiQL data.
@@ -304,10 +305,10 @@ internal class IonDatumReader internal constructor(
 
         val decimalSecond = value.decimalSecond
         val second = decimalSecond.toInt()
-        val nano = decimalSecond.remainder(BigDecimal.ONE).movePointRight(TIMESTAMP_PRECISION).toInt()
+        val nano = decimalSecond.remainder(BigDecimal.ONE).movePointRight(NANOSECOND_SCALE).toInt()
         val time = LocalTime.of(value.hour, value.minute, second, nano)
         val dateTime = LocalDateTime.of(date, time)
-        val precision = value.fractionalSecond?.scale() ?: 0
+        val precision = decimalSecond.scale().coerceAtMost(MAX_STORED_TIMESTAMP_PRECISION)
         val offset = value.localOffset
 
         return if (offset == null) {
