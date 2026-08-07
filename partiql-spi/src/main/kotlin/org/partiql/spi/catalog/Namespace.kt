@@ -1,5 +1,6 @@
 package org.partiql.spi.catalog
 
+import java.util.Objects
 import java.util.Spliterator
 import java.util.function.Consumer
 
@@ -10,12 +11,15 @@ import java.util.function.Consumer
  *  - Iceberg — https://github.com/apache/iceberg/blob/main/api/src/main/java/org/apache/iceberg/catalog/Namespace.java
  *  - Calcite — https://github.com/apache/calcite/blob/main/core/src/main/java/org/apache/calcite/schema/Schema.java
  */
-public class Namespace private constructor(
-    private val levels: Array<String>,
-) : Iterable<String> {
+public class Namespace private constructor(levels: Array<String>) : Iterable<String> {
+
+    private val levels: Array<String> =
+        levels.copyOf().also { copy ->
+            copy.forEach { Objects.requireNonNull(it, "level") }
+        }
 
     public fun getLevels(): Array<String> {
-        return levels
+        return levels.copyOf()
     }
 
     public fun getLength(): Int {
@@ -83,6 +87,9 @@ public class Namespace private constructor(
 
         public fun empty(): Namespace = EMPTY
 
+        /**
+         * @throws NullPointerException if any level is null
+         */
         @JvmStatic
         public fun of(vararg levels: String): Namespace {
             if (levels.isEmpty()) {
@@ -91,6 +98,9 @@ public class Namespace private constructor(
             return Namespace(arrayOf(*levels))
         }
 
+        /**
+         * @throws NullPointerException if any level is null
+         */
         @JvmStatic
         public fun of(levels: List<String>): Namespace {
             if (levels.isEmpty()) {

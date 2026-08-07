@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>
@@ -24,12 +25,19 @@ public final class RoutineOverloadSignature {
 
     /**
      * Creates a new {@link RoutineOverloadSignature} with the given name and parameters.
+     * Parameter-type metadata is recursively snapshotted. Supported metadata values are {@code null}, strings, boxed
+     * primitive values, lists, sets, maps, and arrays composed from those values. Unsupported values and cyclic
+     * containers are rejected. A reference array is widened to {@code Object[]} when a copied element is not assignable
+     * to its original component type.
+     *
      * @param name the name of the function
      * @param parameterTypes the types of the parameters of the function
+     * @throws NullPointerException if the name, parameter-type list, or one of its elements is null
+     * @throws IllegalArgumentException if parameter metadata contains an unsupported value or a cycle
      */
     public RoutineOverloadSignature(@NotNull String name, @NotNull List<PType> parameterTypes) {
-        this.name = name;
-        this.paramTypes = parameterTypes;
+        this.name = Objects.requireNonNull(name, "name");
+        this.paramTypes = RoutineParameterTypes.snapshot(parameterTypes);
     }
 
     /**
@@ -55,6 +63,6 @@ public final class RoutineOverloadSignature {
      * @return the preferred types of the parameters of the function
      */
     public List<PType> getParameterTypes() {
-        return paramTypes;
+        return RoutineParameterTypes.snapshot(paramTypes);
     }
 }
