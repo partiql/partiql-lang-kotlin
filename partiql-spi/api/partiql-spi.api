@@ -447,10 +447,26 @@ public final class org/partiql/spi/function/FnOverload$Builder {
 	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnOverload$Builder;
 }
 
+public final class org/partiql/spi/function/LoadedRoutineProvider {
+	public static final field Companion Lorg/partiql/spi/function/LoadedRoutineProvider$Companion;
+	public synthetic fun <init> (Ljava/util/Collection;Ljava/util/Collection;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun load (Lorg/partiql/spi/function/RoutineProvider;)Lorg/partiql/spi/function/LoadedRoutineProvider;
+}
+
+public final class org/partiql/spi/function/LoadedRoutineProvider$Companion {
+	public final fun load (Lorg/partiql/spi/function/RoutineProvider;)Lorg/partiql/spi/function/LoadedRoutineProvider;
+}
+
 public final class org/partiql/spi/function/Parameter {
 	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/types/PType;)V
 	public fun getName ()Ljava/lang/String;
 	public fun getType ()Lorg/partiql/spi/types/PType;
+}
+
+public final class org/partiql/spi/function/RoutineDefinition {
+	public fun <init> (Lorg/partiql/spi/catalog/Name;Ljava/util/Collection;)V
+	public final fun getOverloads ()Ljava/util/List;
+	public final fun getSourceName ()Lorg/partiql/spi/catalog/Name;
 }
 
 public final class org/partiql/spi/function/RoutineOverloadSignature {
@@ -458,6 +474,40 @@ public final class org/partiql/spi/function/RoutineOverloadSignature {
 	public fun getArity ()I
 	public fun getName ()Ljava/lang/String;
 	public fun getParameterTypes ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/spi/function/RoutineProvider {
+	public fun getAggregations ()Ljava/util/Collection;
+	public fun getFunctions ()Ljava/util/Collection;
+}
+
+public final class org/partiql/spi/function/RoutineProviderValidationException : java/lang/IllegalArgumentException {
+	public synthetic fun <init> (Ljava/util/Collection;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getIssues ()Ljava/util/List;
+}
+
+public final class org/partiql/spi/function/RoutineProviderValidationIssue {
+	public synthetic fun <init> (Lorg/partiql/spi/function/RoutineProviderValidationReason;ZLorg/partiql/spi/catalog/Name;Lorg/partiql/spi/catalog/Name;Ljava/lang/String;Ljava/util/Collection;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCallback ()Ljava/lang/String;
+	public final fun getConflictingSourceName ()Lorg/partiql/spi/catalog/Name;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getParameterTypes ()Ljava/util/List;
+	public final fun getReason ()Lorg/partiql/spi/function/RoutineProviderValidationReason;
+	public final fun getSignatureName ()Ljava/lang/String;
+	public final fun getSourceName ()Lorg/partiql/spi/catalog/Name;
+	public final fun isAggregate ()Z
+}
+
+public final class org/partiql/spi/function/RoutineProviderValidationReason : java/lang/Enum {
+	public static final field DUPLICATE_OVERLOAD_SIGNATURE Lorg/partiql/spi/function/RoutineProviderValidationReason;
+	public static final field DUPLICATE_SOURCE_NAME Lorg/partiql/spi/function/RoutineProviderValidationReason;
+	public static final field EMPTY_OVERLOADS Lorg/partiql/spi/function/RoutineProviderValidationReason;
+	public static final field EMPTY_SOURCE_SEGMENT Lorg/partiql/spi/function/RoutineProviderValidationReason;
+	public static final field PROVIDER_ACCESS_FAILED Lorg/partiql/spi/function/RoutineProviderValidationReason;
+	public static final field SIGNATURE_NAME_MISMATCH Lorg/partiql/spi/function/RoutineProviderValidationReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/spi/function/RoutineProviderValidationReason;
+	public static fun values ()[Lorg/partiql/spi/function/RoutineProviderValidationReason;
 }
 
 public final class org/partiql/spi/function/RoutineSignature {
