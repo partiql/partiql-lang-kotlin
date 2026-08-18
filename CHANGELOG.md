@@ -28,6 +28,7 @@ Thank you to all who have contributed!
 ### Added
 - Added the `REPLACE` and `SPLIT` string functions
 - Added `CHAR` and `VARCHAR` support to the built-in text functions: `BIT_LENGTH`, `CHAR_LENGTH`, `OCTET_LENGTH`, `POSITION`, `SUBSTRING`, `TRIM` (and its `LEADING`/`TRAILING`/character-set variants), `LOWER`, `UPPER`, and `||`.
+- Added Ion timestamp support to `IonDatumReader`.
 
 ### Changed
 - `VARCHAR(n)` values are no longer space-padded to their declared length; a value shorter than `n` keeps its own length (only `CHAR(n)` pads). Values longer than `n` are still truncated.
