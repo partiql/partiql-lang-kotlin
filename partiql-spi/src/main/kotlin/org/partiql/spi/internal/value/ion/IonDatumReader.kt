@@ -4,6 +4,7 @@ import com.amazon.ion.IonException
 import com.amazon.ion.IonType
 import com.amazon.ion.Span
 import com.amazon.ion.SpanProvider
+import com.amazon.ion.Timestamp.Precision
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.spi.value.Datum
@@ -12,6 +13,15 @@ import org.partiql.spi.value.Encoding
 import org.partiql.spi.value.Field
 import java.io.IOException
 import java.io.InputStream
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+
+private const val NANOSECOND_SCALE = 9
+private const val MAX_STORED_TIMESTAMP_PRECISION = 9
 
 /**
  * A [DatumReader] implementation for Ion encoded PartiQL data.
@@ -71,7 +81,7 @@ internal class IonDatumReader internal constructor(
         IonType.INT -> bigint()
         IonType.FLOAT -> double()
         IonType.DECIMAL -> decimal0()
-        IonType.TIMESTAMP -> TODO("timestamp without annotation")
+        IonType.TIMESTAMP -> timestamp()
         IonType.STRING -> varchar0()
         IonType.CLOB -> clob0()
         IonType.BLOB -> clob0()
@@ -280,6 +290,32 @@ internal class IonDatumReader internal constructor(
             throw IonDatumException("blob($size) had size $s", null, span())
         }
         return Datum.blob(v, s)
+    }
+
+    private fun timestamp(): Datum {
+        if (reader.isNullValue) {
+            return Datum.nullValue()
+        }
+
+        val value = reader.timestampValue()
+        val date = LocalDate.of(value.year, value.month, value.day)
+        if (value.precision == Precision.YEAR || value.precision == Precision.MONTH || value.precision == Precision.DAY) {
+            return Datum.date(date)
+        }
+
+        val decimalSecond = value.decimalSecond
+        val second = decimalSecond.toInt()
+        val nano = decimalSecond.remainder(BigDecimal.ONE).movePointRight(NANOSECOND_SCALE).toInt()
+        val time = LocalTime.of(value.hour, value.minute, second, nano)
+        val dateTime = LocalDateTime.of(date, time)
+        val precision = decimalSecond.scale().coerceAtMost(MAX_STORED_TIMESTAMP_PRECISION)
+        val offset = value.localOffset
+
+        return if (offset == null) {
+            Datum.timestamp(dateTime, precision)
+        } else {
+            Datum.timestampz(OffsetDateTime.of(dateTime, ZoneOffset.ofTotalSeconds(offset * 60)), precision)
+        }
     }
 
     private fun date0(): Datum {
