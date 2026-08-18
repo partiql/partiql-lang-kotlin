@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.5.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.5.1) - 2026-08-18
+
+### Added
 - Added the `REPLACE` and `SPLIT` string functions
 - Added `CHAR` and `VARCHAR` support to the built-in text functions: `BIT_LENGTH`, `CHAR_LENGTH`, `OCTET_LENGTH`, `POSITION`, `SUBSTRING`, `TRIM` (and its `LEADING`/`TRAILING`/character-set variants), `LOWER`, `UPPER`, and `||`.
 - Added Ion timestamp support to `IonDatumReader`.
