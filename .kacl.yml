@@ -1,0 +1,31 @@
+kacl:
+  changelog_file: CHANGELOG.md
+  allowed_header_titles:
+    - Changelog
+  allowed_version_sections:
+    - Added
+    - Changed
+    - Deprecated
+    - Removed
+    - Fixed
+    - Security
+    - Contributors
+  default_content:
+    - All notable changes to this project will be documented in this file.
+    - The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+  git:
+    commit: False
+    commit_message: "Releasing version {new_version}"
+    commit_additional_files: ["gradle.properties"]
+    tag: False
+    tag_name: "v{new_version}"
+    tag_description: "Version v{new_version} released"
+  links:
+    # The host url is optional and will be automatically determined using your the git repository
+    # host_url: https://github.com/mschmieder/kacl-cli
+    compare_versions_template: '{host}/compare/v{previous_version}...v{version}'
+    unreleased_changes_template: '{host}/compare/v{latest_version}...main'
+    initial_version_template: '{host}/tree/{version}'
+    auto_generate: True
+  extension:
+    post_release_version_prefix: null

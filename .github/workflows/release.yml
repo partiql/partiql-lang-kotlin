@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.3.11)'
+        required: true
+      bump:
+        description: 'Which version segment to bump for the next snapshot'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Use Java 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: 11
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          VERSION="${TAG#v}"
+          BUMP="${{ inputs.bump || 'patch' }}"
+          echo "release=${VERSION}" >> "$GITHUB_OUTPUT"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          case "$BUMP" in
+            major) NEXT="$((MAJOR + 1)).0.0" ;;
+            minor) NEXT="${MAJOR}.$((MINOR + 1)).0" ;;
+            patch) NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
+          esac
+          echo "snapshot=${NEXT}-SNAPSHOT" >> "$GITHUB_OUTPUT"
+          echo "Release version: ${VERSION}"
+          echo "Next snapshot:   ${NEXT}-SNAPSHOT"
+
+      # --- Release commit ---
+      - name: Set release version in gradle.properties
+        run: sed -i "s/^version=.*/version=${{ steps.version.outputs.release }}/" gradle.properties
+
+      - name: Update CHANGELOG.md with release info
+        run: |
+          VERSION="${{ steps.version.outputs.release }}"
+          DATE="$(date +%Y-%m-%d)"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }}"
+          sed -i "s|^## \[Unreleased\].*|## [Unreleased](https://TODO.com) - YYYY-MM-DD\n\n### Added\n\n### Changed\n\n### Deprecated\n\n### Fixed\n\n### Removed\n\n### Security\n\n### Contributors\nThank you to all who have contributed!\n\n## [${VERSION}](${RELEASE_URL}) - ${DATE}|" CHANGELOG.md
+
+      - name: Commit release version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add gradle.properties CHANGELOG.md
+          git commit -m "Release v${{ steps.version.outputs.release }}"
+          git push
+
+      # --- Build and publish to Maven Central ---
+      - name: Build
+        env:
+          DOKKA: true
+        run: ./gradlew build
+
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_centralPortalUsername: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
+          ORG_GRADLE_PROJECT_centralPortalPassword: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+        run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
+
+      # --- Bump to next snapshot ---
+      - name: Set snapshot version in gradle.properties
+        run: sed -i "s/^version=.*/version=${{ steps.version.outputs.snapshot }}/" gradle.properties
+
+      - name: Commit snapshot version
+        run: |
+          git add gradle.properties
+          git commit -m "Prepare next development iteration: ${{ steps.version.outputs.snapshot }}"
+          git push

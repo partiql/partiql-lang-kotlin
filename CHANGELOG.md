@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.13] - 2026-04-28
+## [1.3.13](https://github.com/partiql/partiql-lang-kotlin/v1.3.11) - 2026-04-28
 
 ### Added
 

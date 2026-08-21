@@ -1,0 +1,67 @@
+name: Pre-Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version number (e.g. 1.3.11)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  pre-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update CHANGELOG.md
+        run: |
+          VERSION="${{ inputs.version }}"
+          DATE="$(date +%Y-%m-%d)"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v${VERSION}"
+
+          # Extract the template from between the comment markers into a temp file
+          awk '/^<!-- Template: after a release, copy and paste out below/{found=1; next} /^-->/{found=0; next} found{print}' CHANGELOG.md > /tmp/changelog_template.txt
+
+          # Replace the Unreleased header with: template + versioned header
+          # The first occurrence is inside the HTML comment and is left untouched
+          awk -v version="$VERSION" -v url="$RELEASE_URL" -v date="$DATE" '
+            BEGIN { while ((getline line < "/tmp/changelog_template.txt") > 0) template = template (template ? "\n" : "") line }
+            /^## \[Unreleased\]/ {
+              count++
+              if (count == 2) {
+                print template
+                print ""
+                print "## [" version "](" url ") - " date
+                next
+              }
+            }
+            { print }
+          ' CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
+
+      - name: Update version in gradle.properties
+        run: |
+          VERSION="${{ inputs.version }}"
+          sed -i "s/^version=.*/version=${VERSION}/" gradle.properties
+
+      - name: Get user info
+        id: user
+        run: |
+          USER_JSON=$(gh api users/${{ github.actor }})
+          echo "name=$(echo "$USER_JSON" | jq -r '.name // "${{ github.actor }}"')" >> "$GITHUB_OUTPUT"
+          echo "email=$(echo "$USER_JSON" | jq -r '.email // "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"')" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Commit changes
+        run: |
+          git config user.name "${{ steps.user.outputs.name }}"
+          git config user.email "${{ steps.user.outputs.email }}"
+          git add CHANGELOG.md gradle.properties
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: release v${{ inputs.version }}"
+          git push
