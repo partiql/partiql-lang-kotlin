@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added `RoutineProvider`, `MemRoutineProvider`, `RoutineBinding`, and `RoutineCatalog` APIs for explicit scalar and aggregate routine registration with exact catalog-local lookup.
 
 ### Changed
 

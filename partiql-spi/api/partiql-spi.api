@@ -230,6 +230,24 @@ public final class org/partiql/spi/catalog/Path$Companion {
 	public final fun of ([Lorg/partiql/spi/catalog/Namespace;)Lorg/partiql/spi/catalog/Path;
 }
 
+public final class org/partiql/spi/catalog/RoutineBinding {
+	public fun <init> (Lorg/partiql/spi/catalog/Name;Ljava/util/Collection;)V
+	public final fun getCanonicalName ()Lorg/partiql/spi/catalog/Name;
+	public final fun getOverloads ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/spi/catalog/RoutineCatalog : org/partiql/spi/catalog/Catalog {
+	public abstract fun resolveAggregations (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Ljava/util/Collection;
+	public abstract fun resolveFunctions (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Ljava/util/Collection;
+}
+
+public final class org/partiql/spi/catalog/RoutineCatalog$DefaultImpls {
+	public static fun getAggregations (Lorg/partiql/spi/catalog/RoutineCatalog;Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
+	public static fun getFunctions (Lorg/partiql/spi/catalog/RoutineCatalog;Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
+	public static fun getTable (Lorg/partiql/spi/catalog/RoutineCatalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
+	public static fun resolveTable (Lorg/partiql/spi/catalog/RoutineCatalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Name;
+}
+
 public abstract interface class org/partiql/spi/catalog/Session {
 	public static final field Companion Lorg/partiql/spi/catalog/Session$Companion;
 	public static fun builder ()Lorg/partiql/spi/catalog/Session$Builder;
@@ -447,6 +465,28 @@ public final class org/partiql/spi/function/FnOverload$Builder {
 	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnOverload$Builder;
 }
 
+public final class org/partiql/spi/function/MemRoutineProvider : org/partiql/spi/function/RoutineProvider {
+	public static final field Companion Lorg/partiql/spi/function/MemRoutineProvider$Companion;
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder ()Lorg/partiql/spi/function/MemRoutineProvider$Builder;
+	public fun getAggregations (Lorg/partiql/spi/catalog/Identifier;)Ljava/util/Collection;
+	public fun getFunctions (Lorg/partiql/spi/catalog/Identifier;)Ljava/util/Collection;
+}
+
+public final class org/partiql/spi/function/MemRoutineProvider$Builder {
+	public final fun build ()Lorg/partiql/spi/function/MemRoutineProvider;
+	public final fun register (Lorg/partiql/spi/function/AggOverload;)Lorg/partiql/spi/function/MemRoutineProvider$Builder;
+	public final fun register (Lorg/partiql/spi/function/AggOverload;Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/function/MemRoutineProvider$Builder;
+	public final fun register (Lorg/partiql/spi/function/AggOverload;Lorg/partiql/spi/catalog/Namespace;)Lorg/partiql/spi/function/MemRoutineProvider$Builder;
+	public final fun register (Lorg/partiql/spi/function/FnOverload;)Lorg/partiql/spi/function/MemRoutineProvider$Builder;
+	public final fun register (Lorg/partiql/spi/function/FnOverload;Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/function/MemRoutineProvider$Builder;
+	public final fun register (Lorg/partiql/spi/function/FnOverload;Lorg/partiql/spi/catalog/Namespace;)Lorg/partiql/spi/function/MemRoutineProvider$Builder;
+}
+
+public final class org/partiql/spi/function/MemRoutineProvider$Companion {
+	public final fun builder ()Lorg/partiql/spi/function/MemRoutineProvider$Builder;
+}
+
 public final class org/partiql/spi/function/Parameter {
 	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/types/PType;)V
 	public fun getName ()Ljava/lang/String;
@@ -458,6 +498,11 @@ public final class org/partiql/spi/function/RoutineOverloadSignature {
 	public fun getArity ()I
 	public fun getName ()Ljava/lang/String;
 	public fun getParameterTypes ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/spi/function/RoutineProvider {
+	public fun getAggregations (Lorg/partiql/spi/catalog/Identifier;)Ljava/util/Collection;
+	public fun getFunctions (Lorg/partiql/spi/catalog/Identifier;)Ljava/util/Collection;
 }
 
 public final class org/partiql/spi/function/RoutineSignature {
