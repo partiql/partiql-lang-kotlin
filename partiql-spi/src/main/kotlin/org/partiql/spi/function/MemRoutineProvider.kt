@@ -30,8 +30,8 @@ import java.util.Collections
  * retained and must be treated as immutable.
  */
 public class MemRoutineProvider private constructor(
-    private val functions: List<RoutineBinding<FnOverload>>,
-    private val aggregations: List<RoutineBinding<AggOverload>>,
+    private val functions: List<LookupEntry<FnOverload>>,
+    private val aggregations: List<LookupEntry<AggOverload>>,
 ) : RoutineProvider {
 
     override fun getFunctions(identifier: Identifier): Collection<RoutineBinding<FnOverload>> =
@@ -50,18 +50,18 @@ public class MemRoutineProvider private constructor(
 
         private fun <T> resolve(
             identifier: Identifier,
-            bindings: List<RoutineBinding<T>>,
+            entries: List<LookupEntry<T>>,
         ): Collection<RoutineBinding<T>> {
             val identifierParts = identifier.getParts()
-            val binding = bindings.firstOrNull { candidate ->
-                val nameParts = candidate.canonicalName.toList()
+            val entry = entries.firstOrNull { candidate ->
+                val nameParts = candidate.canonicalNameParts
                 identifierParts.size == nameParts.size &&
                     identifierParts.indices.all { identifierParts[it].matches(nameParts[it]) }
             }
-            return if (binding == null) {
+            return if (entry == null) {
                 Collections.emptyList()
             } else {
-                Collections.singletonList(binding)
+                Collections.singletonList(entry.binding)
             }
         }
 
@@ -170,7 +170,7 @@ public class MemRoutineProvider private constructor(
             kind: String,
             registrations: List<Registration<T>>,
             signature: (T) -> RoutineOverloadSignature,
-        ): List<RoutineBinding<T>> {
+        ): List<LookupEntry<T>> {
             val byName = linkedMapOf<Name, MutableList<T>>()
             registrations.forEach { registration ->
                 val overloadSignature = signature(registration.overload)
@@ -190,7 +190,10 @@ public class MemRoutineProvider private constructor(
             }
             return Collections.unmodifiableList(
                 byName.map { (name, overloads) ->
-                    RoutineBinding(name, overloads)
+                    LookupEntry(
+                        canonicalNameParts = name.toList(),
+                        binding = RoutineBinding(name, overloads),
+                    )
                 },
             )
         }
@@ -205,5 +208,10 @@ public class MemRoutineProvider private constructor(
     private class Registration<T>(
         val name: Name,
         val overload: T,
+    )
+
+    private class LookupEntry<T>(
+        val canonicalNameParts: List<String>,
+        val binding: RoutineBinding<T>,
     )
 }
