@@ -29,7 +29,9 @@ public class RoutineBinding<T>(
     canonicalName: Name,
     overloads: Collection<T>,
 ) {
-    private val canonicalNameParts: List<String> = canonicalName.toList()
+    private val canonicalNameParts: List<String> = canonicalName.toList().also { parts ->
+        require(parts.none(String::isEmpty)) { "Routine binding canonical name cannot contain an empty part" }
+    }
 
     public val canonicalName: Name
         get() = Name.of(canonicalNameParts)
