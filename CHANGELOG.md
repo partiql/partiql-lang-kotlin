@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added support for a (non-recursive) `WITH` list element (CTE) referencing sibling elements defined earlier in the same `WITH` list, e.g. `WITH x AS (...), y AS (SELECT * FROM x) SELECT * FROM y`. Forward references (referencing a sibling defined later) and self references remain unsupported, matching Redshift, Trino, and Spark. See [#1868](https://github.com/partiql/partiql-lang-kotlin/issues/1868).
 
 ### Changed
 

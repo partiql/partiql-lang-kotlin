@@ -151,6 +151,58 @@ class CteTests {
                 mode = Mode.STRICT(),
                 expected = Datum.bagVararg(Datum.integer(105))
             ),
+            // A (non-recursive) WITH list element may reference sibling elements defined earlier in the same
+            // WITH list, matching the behavior of Redshift, Trino, and Spark.
+            SuccessTestCase(
+                name = "WITH list element references an earlier sibling element",
+                input = """
+                    WITH
+                        x AS (SELECT VALUE t FROM << 1, 2, 3 >> t),
+                        y AS (SELECT VALUE v FROM x AS v)
+                    SELECT VALUE y FROM y;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    Datum.integer(1),
+                    Datum.integer(2),
+                    Datum.integer(3)
+                )
+            ),
+            SuccessTestCase(
+                name = "WITH list element references an earlier sibling element (used with cross join)",
+                input = """
+                    WITH
+                        x AS (SELECT VALUE t FROM << 1, 2, 3 >> t),
+                        y AS (SELECT VALUE v FROM x AS v)
+                    SELECT * FROM x, y;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("_1", Datum.integer(1)), Field.of("_2", Datum.integer(1))),
+                    Datum.struct(Field.of("_1", Datum.integer(1)), Field.of("_2", Datum.integer(2))),
+                    Datum.struct(Field.of("_1", Datum.integer(1)), Field.of("_2", Datum.integer(3))),
+                    Datum.struct(Field.of("_1", Datum.integer(2)), Field.of("_2", Datum.integer(1))),
+                    Datum.struct(Field.of("_1", Datum.integer(2)), Field.of("_2", Datum.integer(2))),
+                    Datum.struct(Field.of("_1", Datum.integer(2)), Field.of("_2", Datum.integer(3))),
+                    Datum.struct(Field.of("_1", Datum.integer(3)), Field.of("_2", Datum.integer(1))),
+                    Datum.struct(Field.of("_1", Datum.integer(3)), Field.of("_2", Datum.integer(2))),
+                    Datum.struct(Field.of("_1", Datum.integer(3)), Field.of("_2", Datum.integer(3)))
+                )
+            ),
+            // Chained references: z references y, which references x.
+            SuccessTestCase(
+                name = "WITH list elements reference chained earlier siblings",
+                input = """
+                    WITH
+                        x AS (SELECT VALUE t FROM << 1, 2, 3 >> t),
+                        y AS (SELECT VALUE v * 10 FROM x AS v),
+                        z AS (SELECT VALUE v + 1 FROM y AS v)
+                    SELECT VALUE z FROM z;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    Datum.integer(11),
+                    Datum.integer(21),
+                    Datum.integer(31)
+                )
+            ),
         )
 
         @JvmStatic
@@ -182,24 +234,15 @@ class CteTests {
                     SELECT * FROM << 1, 2, 3>> AS t, x
                 """.trimIndent(),
             ),
-            // TODO: Figure out if this should be allowed. In PostgreSQL, it is allowed. In SQL Spec, I'm not sure.
-            //  As such, updating the implementation to allow for this would be a non-breaking change.
+            // A WITH list element may only reference siblings defined *earlier* in the same WITH list. A forward
+            // reference (referencing a sibling defined later) must fail, matching Redshift, Trino, and Spark.
             FailureTestCase(
-                name = "Attempting to reference another with list element",
+                name = "Attempting to make a forward reference to a later with list element",
                 input = """
                     WITH
-                        x AS (SELECT VALUE t FROM << 1, 2, 3 >> t),
-                        y AS (SELECT VALUE x FROM x) -- x should not be able to be referenced.
-                    SELECT * FROM y;
-                """.trimIndent(),
-            ),
-            FailureTestCase(
-                name = "Attempting to reference another with list element (2)",
-                input = """
-                    WITH
-                        x AS (SELECT VALUE t FROM << 1, 2, 3 >> t),
-                        y AS (SELECT VALUE x FROM x)
-                    SELECT * FROM x, y; -- x & y should not be able to be referenced
+                        x AS (SELECT VALUE v FROM y AS v), -- y is defined later; forward reference is not allowed.
+                        y AS (SELECT VALUE t FROM << 1, 2, 3 >> t)
+                    SELECT * FROM x;
                 """.trimIndent(),
             ),
             FailureTestCase(
@@ -235,6 +278,31 @@ class CteTests {
                 SELECT * FROM x;
             """.trimIndent(),
             mode = Mode.STRICT(),
+        )
+        tc.run()
+    }
+
+    /**
+     * End-to-end verification (issue #1868) that a WITH list element which references an earlier sibling
+     * element plans, evaluates, and produces the expected result. The reference is resolved and its
+     * sub-plan is transformed before it is consumed by the referencing element.
+     */
+    @Test
+    fun siblingReferenceProducesExpectedResult() {
+        val tc = SuccessTestCase(
+            name = "WITH list element references and transforms an earlier sibling",
+            input = """
+                WITH
+                    base AS (SELECT VALUE n FROM << 1, 2, 3 >> AS n),
+                    doubled AS (SELECT VALUE v * 2 FROM base AS v)
+                SELECT VALUE d FROM doubled AS d;
+            """.trimIndent(),
+            mode = Mode.STRICT(),
+            expected = Datum.bagVararg(
+                Datum.integer(2),
+                Datum.integer(4),
+                Datum.integer(6)
+            )
         )
         tc.run()
     }

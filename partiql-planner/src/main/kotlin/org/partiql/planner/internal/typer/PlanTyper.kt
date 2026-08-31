@@ -415,11 +415,19 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         override fun visitRelOpWith(node: Rel.Op.With, ctx: Rel.Type?): Rel {
-            val elements = node.elements.map { element ->
-                val representation = element.representation.type(emptyList(), outer)
-                element.copy(representation = representation)
+            // Type each WITH list element, accumulating the already-typed elements as we go. This lets a
+            // (non-recursive) CTE reference sibling CTEs defined earlier in the same WITH list, matching the
+            // behavior of Redshift, Trino, and Spark. Prior siblings are exposed to the representation via the
+            // scope's `withElements` and resolved through Scope.matchRoot. Because an element is only added to
+            // the accumulator after it has been typed, self-references and forward references remain unresolved
+            // (and thus continue to error), which is the correct behavior for non-recursive WITH.
+            val elements = mutableListOf<Rel.Op.With.WithListElement>()
+            node.elements.forEach { element ->
+                val scope = Scope(schema = emptyList(), outer = outer, withElements = elements.toList())
+                val representation = element.representation.type(TypeEnv(env, scope))
+                elements.add(element.copy(representation = representation))
             }
-            // Include the WITH elements iff the `flags` contains the `REPLACE_WITH_REFS` planner flag.
+            // Include the WITH elements iff the `flags` contains the `FORCE_INLINE_WITH_CLAUSE` planner flag.
             val rewriteWith = flags.contains(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
             val withElements = if (rewriteWith) {
                 elements
