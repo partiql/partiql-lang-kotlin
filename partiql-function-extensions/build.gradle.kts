@@ -23,6 +23,10 @@ dependencies {
     api(project(":partiql-spi"))
 }
 
+tasks.withType<Javadoc> {
+    enabled = false
+}
+
 tasks.shadowJar {
     configurations = listOf(project.configurations.shadow.get())
 }
