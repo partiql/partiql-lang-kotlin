@@ -26,7 +26,25 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.6.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.6.0) - 2026-09-01
+
+### Added
 - Added `RoutineProvider`, `MemRoutineProvider`, `RoutineBinding`, and `RoutineCatalog` APIs for explicit scalar and aggregate routine registration with exact catalog-local lookup.
+- Added the separately published `partiql-function-extensions` artifact with executable `contains`, `date_add`, `utcnow`, `to_unixtime`, `pow`, and `hex_to_bigint` functions.
 - Added namespace-aware scalar and aggregate routine resolution with configurable session paths, qualified catalog names, ambiguity diagnostics, and canonical `RoutineRef` plan identity.
 
 ### Changed
