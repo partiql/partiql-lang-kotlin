@@ -38,22 +38,12 @@ PERMISSIVE:::SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, di
 STRICT:::SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g
 PERMISSIVE:::select fld3,period from t1,t2 where fld1 = 011401
 PERMISSIVE:::select fld3,period from t2,t1 where companynr*10 = 37*10
-PERMISSIVE:::MYSQL_SELECT_20
-STRICT:::MYSQL_SELECT_20
-PERMISSIVE:::MYSQL_SELECT_21
-STRICT:::MYSQL_SELECT_21
+
 
 // TODO: NOT NEEDED FOR V1 RELEASE. Negative offset. No API change. No impact.
 PERMISSIVE:::offset -1
 STRICT:::offset -1
 STRICT:::offset 1-2
-
-// TODO: NOT NEEDED FOR V1 RELEASE. Special forms. No API change.
-PERMISSIVE:::More than one character given for ESCAPE
-
-// TODO: MAYBE NEEDED FOR V1 RELEASE. Bag ops.
-PERMISSIVE:::Example 6 - Value Coercion not union-compatible
-STRICT:::Example 6 - Value Coercion not union-compatible
 
 // TODO: NOT NEEDED FOR V1 RELEASE. Sexp tests. This is hotly debated.
 PERMISSIVE:::projectOfSexp
