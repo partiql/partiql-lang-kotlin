@@ -237,6 +237,23 @@ class CteTests {
                     Datum.struct(Field.of("name", Datum.string("c")), Field.of("city", Datum.string("sf")))
                 )
             ),
+            // End-to-end verification (issue #1868) that a WITH list element referencing an earlier sibling
+            // plans, evaluates, and has its sub-plan transformed before it is consumed by the referencing element.
+            SuccessTestCase(
+                name = "WITH list element references and transforms an earlier sibling",
+                input = """
+                    WITH
+                        base AS (SELECT VALUE n FROM << 1, 2, 3 >> AS n),
+                        doubled AS (SELECT VALUE v * 2 FROM base AS v)
+                    SELECT VALUE d FROM doubled AS d;
+                """.trimIndent(),
+                mode = Mode.STRICT(),
+                expected = Datum.bagVararg(
+                    Datum.integer(2),
+                    Datum.integer(4),
+                    Datum.integer(6)
+                )
+            ),
         )
 
         @JvmStatic
@@ -312,31 +329,6 @@ class CteTests {
                 SELECT * FROM x;
             """.trimIndent(),
             mode = Mode.STRICT(),
-        )
-        tc.run()
-    }
-
-    /**
-     * End-to-end verification (issue #1868) that a WITH list element which references an earlier sibling
-     * element plans, evaluates, and produces the expected result. The reference is resolved and its
-     * sub-plan is transformed before it is consumed by the referencing element.
-     */
-    @Test
-    fun siblingReferenceProducesExpectedResult() {
-        val tc = SuccessTestCase(
-            name = "WITH list element references and transforms an earlier sibling",
-            input = """
-                WITH
-                    base AS (SELECT VALUE n FROM << 1, 2, 3 >> AS n),
-                    doubled AS (SELECT VALUE v * 2 FROM base AS v)
-                SELECT VALUE d FROM doubled AS d;
-            """.trimIndent(),
-            mode = Mode.STRICT(),
-            expected = Datum.bagVararg(
-                Datum.integer(2),
-                Datum.integer(4),
-                Datum.integer(6)
-            )
         )
         tc.run()
     }
