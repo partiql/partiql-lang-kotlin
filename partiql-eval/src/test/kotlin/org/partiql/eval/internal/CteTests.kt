@@ -203,6 +203,40 @@ class CteTests {
                     Datum.integer(31)
                 )
             ),
+            // Three chained sibling CTEs (y references x, z references y), then join all three.
+            SuccessTestCase(
+                name = "Chained sibling CTEs joined together",
+                input = """
+                    WITH
+                        x AS (SELECT t.id AS id, t.a AS a FROM << { 'id': 1, 'a': 'a1' }, { 'id': 2, 'a': 'a2' } >> AS t),
+                        y AS (SELECT x.id AS id, x.a AS b FROM x),
+                        z AS (SELECT y.id AS id, y.b AS c FROM y)
+                    SELECT x.a AS a, y.b AS b, z.c AS c
+                    FROM x
+                        INNER JOIN y ON x.id = y.id
+                        INNER JOIN z ON y.id = z.id;
+                """.trimIndent(),
+                mode = Mode.STRICT(),
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("a", Datum.string("a1")), Field.of("b", Datum.string("a1")), Field.of("c", Datum.string("a1"))),
+                    Datum.struct(Field.of("a", Datum.string("a2")), Field.of("b", Datum.string("a2")), Field.of("c", Datum.string("a2")))
+                )
+            ),
+            // Query body joins two CTEs with an explicit INNER JOIN ... ON.
+            SuccessTestCase(
+                name = "Query joins two WITH elements with INNER JOIN ON",
+                input = """
+                    WITH
+                        x AS (SELECT t.id AS id, t.name AS name FROM << { 'id': 1, 'name': 'a' }, { 'id': 2, 'name': 'b' }, { 'id': 3, 'name': 'c' } >> AS t),
+                        y AS (SELECT t.id AS id, t.city AS city FROM << { 'id': 2, 'city': 'nyc' }, { 'id': 3, 'city': 'sf' } >> AS t)
+                    SELECT x.name AS name, y.city AS city FROM x INNER JOIN y ON x.id = y.id;
+                """.trimIndent(),
+                mode = Mode.STRICT(),
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("name", Datum.string("b")), Field.of("city", Datum.string("nyc"))),
+                    Datum.struct(Field.of("name", Datum.string("c")), Field.of("city", Datum.string("sf")))
+                )
+            ),
         )
 
         @JvmStatic

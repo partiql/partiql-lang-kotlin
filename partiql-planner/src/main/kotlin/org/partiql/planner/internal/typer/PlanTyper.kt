@@ -417,18 +417,10 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         override fun visitRelOpWith(node: Rel.Op.With, ctx: Rel.Type?): Rel {
             // Include the WITH elements iff the `flags` contains the `FORCE_INLINE_WITH_CLAUSE` planner flag.
             val rewriteWith = flags.contains(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
-            // Type each WITH list element, accumulating the already-typed elements as we go. This lets a
-            // (non-recursive) CTE reference sibling CTEs defined earlier in the same WITH list, matching the
-            // behavior of Redshift, Trino, and Spark. Because an element is only added to the accumulator
-            // after it has been typed, self-references and forward references remain unresolved (and thus
-            // continue to error), which is the correct behavior for non-recursive WITH.
-            //
-            // How a sibling reference resolves depends on whether we are inlining the WITH clause:
-            //   - When inlining (`rewriteWith`), expose prior siblings via the scope's `withElements` so
-            //     Scope.matchRoot substitutes the sibling's representation, allowing it to be inlined.
-            //   - Otherwise, expose prior siblings as ordinary local bindings so the reference resolves to a
-            //     named variable. This preserves the CTE name (rather than inlining the whole subquery) for
-            //     consumers that keep the WITH clause, e.g. transpilation.
+            // Type each element against the already-typed prior siblings; since an element is added only
+            // after typing, self- and forward-references stay unresolved.
+            // When inlining (`rewriteWith`), expose siblings via `withElements` so Scope.matchRoot inlines them;
+            // otherwise expose them as named bindings, preserving the CTE name for consumers that keep the WITH clause).
             val elements = mutableListOf<Rel.Op.With.WithListElement>()
             node.elements.forEach { element ->
                 val scope = if (rewriteWith) {
@@ -448,6 +440,10 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             } else {
                 emptyList()
             }
+            // Build the scope used to type the WITH's input (the main query body). All CTEs are now fully
+            // typed, so every element is exposed as a named local binding. When inlining, `withElements` is
+            // also carried so references in the body can be substituted/inlined; otherwise it is empty and
+            // references resolve to the named bindings, preserving the CTE names.
             val newStack = outer + Scope(
                 elements.map { element ->
                     Rel.Binding(element.name, element.representation.type)
