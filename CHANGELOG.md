@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added support for a (non-recursive) `WITH` list element (CTE) referencing sibling elements defined earlier. See [#1868](https://github.com/partiql/partiql-lang-kotlin/issues/1868).
 
 ### Changed
 

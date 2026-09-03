@@ -415,17 +415,35 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         override fun visitRelOpWith(node: Rel.Op.With, ctx: Rel.Type?): Rel {
-            val elements = node.elements.map { element ->
-                val representation = element.representation.type(emptyList(), outer)
-                element.copy(representation = representation)
-            }
-            // Include the WITH elements iff the `flags` contains the `REPLACE_WITH_REFS` planner flag.
+            // Include the WITH elements iff the `flags` contains the `FORCE_INLINE_WITH_CLAUSE` planner flag.
             val rewriteWith = flags.contains(PlannerFlag.FORCE_INLINE_WITH_CLAUSE)
+            // Type each element against the already-typed prior siblings; since an element is added only
+            // after typing, self- and forward-references stay unresolved.
+            // When inlining (`rewriteWith`), expose siblings via `withElements` so Scope.matchRoot inlines them;
+            // otherwise expose them as named bindings, preserving the CTE name for consumers that keep the WITH clause).
+            val elements = mutableListOf<Rel.Op.With.WithListElement>()
+            node.elements.forEach { element ->
+                val scope = if (rewriteWith) {
+                    Scope(schema = emptyList(), outer = outer, withElements = elements.toList())
+                } else {
+                    Scope(
+                        schema = elements.map { Rel.Binding(it.name, it.representation.type) },
+                        outer = outer,
+                        withElements = emptyList(),
+                    )
+                }
+                val representation = element.representation.type(TypeEnv(env, scope))
+                elements.add(element.copy(representation = representation))
+            }
             val withElements = if (rewriteWith) {
                 elements
             } else {
                 emptyList()
             }
+            // Build the scope used to type the WITH's input (the main query body). All CTEs are now fully
+            // typed, so every element is exposed as a named local binding. When inlining, `withElements` is
+            // also carried so references in the body can be substituted/inlined; otherwise it is empty and
+            // references resolve to the named bindings, preserving the CTE names.
             val newStack = outer + Scope(
                 elements.map { element ->
                     Rel.Binding(element.name, element.representation.type)
