@@ -64,7 +64,6 @@ tasks.test {
         events.add(TestLogEvent.FAILED)
         exceptionFormat = TestExceptionFormat.FULL
     }
-    dependsOn(tasks.ktlintCheck) // check style before unit tests
     finalizedBy(tasks.jacocoTestReport)
 }
 

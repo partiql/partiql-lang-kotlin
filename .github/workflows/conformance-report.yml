@@ -1,5 +1,9 @@
 name: Conformance Test Report Generation
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main     # Triggers only when code is merged into main
+  pull_request:  # Triggers for any PR creation or update
 
 env:
   LEGACY_VERSION: v0.14.8
@@ -37,6 +41,12 @@ jobs:
       - name: gradle test of the conformance tests (can fail) and save to Ion file
         continue-on-error: true
         run: gradle :test:partiql-tests-runner:generateTestReport
+      # Upload HTML test reports which has detailed test execution results
+      - name: Upload HTML test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-test-report
+          path: ${{ env.PATH_TO_TEST_RUNNER }}/build/reports/tests/generateTestReport/
       # Upload conformance report for future viewing and comparison with future runs.
       - name: Upload `conformance-test-report` folder
         uses: actions/upload-artifact@v4
