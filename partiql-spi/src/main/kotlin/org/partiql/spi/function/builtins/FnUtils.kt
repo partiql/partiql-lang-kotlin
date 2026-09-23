@@ -22,6 +22,10 @@ internal object FnUtils {
     /**
      * Reads this text [Datum] of the given [type] as a [String]. CLOB is byte-backed (decoded as
      * UTF-8); the character types (CHAR/VARCHAR/STRING) are read directly.
+     *
+     * This is a pure value extractor: callers must check [Datum.isNull] first.
+     *
+     * @throws NullPointerException if the value is null.
      */
     fun Datum.textValue(type: PType): String = when (type.code()) {
         PType.CLOB -> this.bytes.toString(Charsets.UTF_8)

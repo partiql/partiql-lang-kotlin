@@ -63,6 +63,10 @@ internal sealed class RelOpUnpivot : ExprRelation {
             if (type.code() != PType.STRUCT && type.code() != PType.ROW && type.code() != PType.MAP) {
                 throw PErrors.structureExpectedException(type)
             }
+            // A typed-null struct/row/map passes the type gate; strict rejects it rather than dereferencing (NPE).
+            if (v.isNull || v.isMissing) {
+                throw PErrors.structureExpectedException(type)
+            }
             return v
         }
     }

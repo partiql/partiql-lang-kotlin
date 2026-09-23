@@ -27,6 +27,10 @@ internal class ExprPathIndexCollection(
         // TODO: The PLANNER should be in charge of adding a necessary coercion for the index. AKA, getInt32Coerced()
         //  should never need to be called.
         val k = key.eval(env)
+        // A null/missing index cannot address an element; treat it as a path index failure.
+        if (k.isNull || k.isMissing) {
+            throw PErrors.pathIndexFailureException()
+        }
         val index = k.getInt32Coerced()
         var i = 0
         while (iterator.hasNext()) {

@@ -77,10 +77,14 @@ internal class RelOpExclude(
     /**
      * Entry-point to apply exclusions to an arbitrary [Datum].
      */
-    private fun Datum.exclude(exclusions: List<Exclusion.Item>): Datum = when (this.type.code()) {
-        PType.ROW, PType.STRUCT -> this.structExclude(exclusions)
-        PType.BAG, PType.ARRAY -> this.collExclude(exclusions)
-        else -> this
+    private fun Datum.exclude(exclusions: List<Exclusion.Item>): Datum = when {
+        // A null/missing value has nothing to exclude; return it unchanged (getters would throw on null).
+        this.isNull || this.isMissing -> this
+        else -> when (this.type.code()) {
+            PType.ROW, PType.STRUCT -> this.structExclude(exclusions)
+            PType.BAG, PType.ARRAY -> this.collExclude(exclusions)
+            else -> this
+        }
     }
 
     private fun Datum.structExclude(exclusions: List<Exclusion.Item>): Datum {

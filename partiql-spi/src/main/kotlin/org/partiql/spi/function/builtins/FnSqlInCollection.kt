@@ -52,6 +52,12 @@ internal val FnSqlInCollection = FnOverload.Builder(NAME)
             isEmpty = false
             val element = iter.next()
 
+            // A null/missing element yields an Unknown comparison (SQL 3-valued logic).
+            if (element.isNull || element.isMissing) {
+                sawNull = true
+                continue
+            }
+
             // Not a struct/row — skip
             if (element.type.code() != PType.STRUCT && element.type.code() != PType.ROW) {
                 continue

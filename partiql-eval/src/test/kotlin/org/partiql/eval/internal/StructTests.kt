@@ -4,6 +4,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.eval.Mode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -15,7 +16,23 @@ class StructTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun unpivotTests(tc: SuccessTestCase) = tc.run()
 
+    @ParameterizedTest
+    @MethodSource("unpivotFailureTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun unpivotFailureTests(tc: FailureTestCase) = tc.run()
+
     companion object {
+
+        @JvmStatic
+        fun unpivotFailureTestCases() = listOf(
+            // STRICT UNPIVOT of a typed-null struct ('Charlie' settings = null.struct) errors; PERMISSIVE wraps it as `_1`.
+            FailureTestCase(
+                name = "UNPIVOT typed-null struct in STRICT mode throws",
+                input = "SELECT u.name, k AS setting_name, v AS setting_value FROM (SELECT * FROM users WHERE users.name = 'Charlie') AS u, UNPIVOT u.settings AS v AT k;",
+                mode = Mode.STRICT(),
+                globals = catalogGlobals,
+            ),
+        )
 
         private val catalogGlobals = listOf(
             Global(

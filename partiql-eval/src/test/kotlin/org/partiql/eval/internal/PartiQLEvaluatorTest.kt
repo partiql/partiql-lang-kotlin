@@ -25,6 +25,11 @@ class PartiQLEvaluatorTest {
     fun sanityTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
+    @MethodSource("sanityFailureTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun sanityFailureTests(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
     @MethodSource("typingModeTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun typingModeTests(tc: TypingTestCase) = tc.run()
@@ -60,6 +65,16 @@ class PartiQLEvaluatorTest {
     fun intervalAbsTests(tc: SuccessTestCase) = tc.run()
 
     companion object {
+
+        @JvmStatic
+        fun sanityFailureTestCases() = listOf(
+            // STRICT: a typed-null collection index raises PATH_INDEX_FAILURE (PERMISSIVE yields MISSING).
+            FailureTestCase(
+                name = "Array index by typed-null throws (strict)",
+                input = "[1, 2, 3][CAST(NULL AS INTEGER)];",
+                mode = Mode.STRICT(),
+            ),
+        )
 
         @JvmStatic
         fun castTestCases() = listOf(
@@ -956,6 +971,36 @@ class PartiQLEvaluatorTest {
                         )
                     )
                 )
+            ),
+            // EXCLUDE descending into a typed-null struct must leave it unchanged, not dereference it (NPE).
+            SuccessTestCase(
+                name = "EXCLUDE on typed-null nested struct leaves value unchanged",
+                globals = listOf(
+                    Global(
+                        name = "t_null",
+                        value = Datum.bag(
+                            listOf(
+                                Datum.struct(
+                                    Field.of("a", Datum.nullValue(PType.struct())),
+                                    Field.of("foo", Datum.string("bar")),
+                                )
+                            )
+                        ),
+                    )
+                ),
+                input = "SELECT x.a AS a, x.foo AS foo EXCLUDE x.a.b FROM t_null AS x",
+                expected = Datum.bagVararg(
+                    Datum.struct(
+                        Field.of("a", Datum.nullValue(PType.struct())),
+                        Field.of("foo", Datum.string("bar")),
+                    )
+                )
+            ),
+            // A typed-null collection index yields MISSING in PERMISSIVE mode (path failure), not an NPE.
+            SuccessTestCase(
+                name = "Array index by typed-null yields MISSING (permissive)",
+                input = "[1, 2, 3][CAST(NULL AS INTEGER)];",
+                expected = Datum.missing()
             ),
             SuccessTestCase(
                 input = """
