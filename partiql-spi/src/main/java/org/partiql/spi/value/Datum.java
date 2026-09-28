@@ -644,9 +644,11 @@ public interface Datum extends Iterable<Datum> {
      */
     @NotNull
     static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws PRuntimeException {
-        BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
-        PType type = PType.decimal(precision, scale);
-        if (d.precision() > precision) {
+        int s = Math.max(scale, 0);
+        int p = Math.max(Math.max(precision - scale, 0) + s, 1);
+        BigDecimal d = value.round(new MathContext(p)).setScale(s, RoundingMode.HALF_UP);
+        PType type = PType.decimal(p, s);
+        if (d.precision() > p) {
             throw PErrors.numericValueOutOfRangeException(value.toString(), type);
         }
         return new DatumDecimal(d, type);
@@ -671,9 +673,12 @@ public interface Datum extends Iterable<Datum> {
      */
     @NotNull
     static Datum numeric(@NotNull BigDecimal value, int precision, int scale) throws PRuntimeException {
-        BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
-        PType type = PType.numeric(precision, scale);
-        if (d.precision() > precision) {
+        // See Datum.decimal(BigDecimal, int, int): normalize to a SQL-valid (precision, scale).
+        int s = Math.max(scale, 0);
+        int p = Math.max(Math.max(precision - scale, 0) + s, 1);
+        BigDecimal d = value.round(new MathContext(p)).setScale(s, RoundingMode.HALF_UP);
+        PType type = PType.numeric(p, s);
+        if (d.precision() > p) {
             throw PErrors.numericValueOutOfRangeException(value.toString(), type);
         }
         return new DatumDecimal(d, type);
