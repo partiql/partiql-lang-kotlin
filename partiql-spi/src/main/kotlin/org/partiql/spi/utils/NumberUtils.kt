@@ -271,15 +271,9 @@ internal object NumberUtils {
         PType.DOUBLE -> Datum.doublePrecision(this.toDouble())
         PType.DECIMAL -> {
             when (this) {
-                is BigDecimal -> Datum.decimal(this, this.precision(), this.scale())
-                is BigInteger -> {
-                    val d = this.toBigDecimal()
-                    Datum.decimal(d, d.precision(), d.scale())
-                }
-                else -> {
-                    val d = BigDecimal.valueOf(this.toDouble())
-                    Datum.decimal(d, d.precision(), d.scale())
-                }
+                is BigDecimal -> Datum.decimal(this)
+                is BigInteger -> Datum.decimal(this.toBigDecimal())
+                else -> Datum.decimal(BigDecimal.valueOf(this.toDouble()))
             }
         }
         PType.TINYINT -> Datum.tinyint(this.toByte())
@@ -298,7 +292,7 @@ internal object NumberUtils {
         is Int -> Datum.integer(this)
         is Long -> Datum.bigint(this)
         is Double -> Datum.doublePrecision(this)
-        is BigDecimal -> Datum.decimal(this, this.precision(), this.scale())
+        is BigDecimal -> Datum.decimal(this)
         is BigInteger -> Datum.numeric(this.toBigDecimal())
         else -> TODO("Could not convert $this to PartiQL Value")
     }

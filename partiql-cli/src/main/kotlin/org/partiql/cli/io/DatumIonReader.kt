@@ -114,7 +114,7 @@ class DatumIonReader(
             IonType.INT -> {
                 val d = reader.bigIntegerValue().toBigDecimal()
                 if (d.scale() != 0) {
-                    Datum.decimal(d, d.precision(), d.scale())
+                    Datum.decimal(d)
                 }
                 if (d.precision() > 38) {
                     Datum.decimal(d, 38, d.scale())
@@ -128,7 +128,7 @@ class DatumIonReader(
             IonType.FLOAT -> Datum.doublePrecision(reader.doubleValue())
             IonType.DECIMAL -> {
                 val d = reader.bigDecimalValue()
-                Datum.decimal(d, d.precision(), d.scale())
+                Datum.decimal(d)
             }
             IonType.TIMESTAMP -> {
                 val ts = reader.timestampValue()
