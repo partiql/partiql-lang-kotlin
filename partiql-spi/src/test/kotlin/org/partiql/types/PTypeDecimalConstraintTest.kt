@@ -57,25 +57,41 @@ class PTypeDecimalConstraintTest {
     }
 
     /**
-     * java.math.BigDecimal reports precision 1 and scale 3 for 0.001, which violates precision >= scale.
-     * The value-to-type conversion must normalize this to a valid DECIMAL (here, decimal(3, 3)).
+     * The three-argument Datum.decimal factory trusts its caller: it rejects a scale greater than precision instead
+     * of silently coercing to a different type.
      */
     @Test
-    fun `datum decimal normalizes a sub-one value whose precision is less than scale`() {
-        val datum = Datum.decimal(BigDecimal("0.001"), 1, 3)
+    fun `datum decimal rejects scale greater than precision`() {
+        assertThrows(IllegalArgumentException::class.java) { Datum.decimal(BigDecimal("0.001"), 1, 3) }
+    }
+
+    /**
+     * The three-argument Datum.decimal factory rejects a negative scale.
+     */
+    @Test
+    fun `datum decimal rejects negative scale`() {
+        assertThrows(IllegalArgumentException::class.java) { Datum.decimal(BigDecimal("1000"), 1, -3) }
+    }
+
+    /**
+     * java.math.BigDecimal reports precision 1 and scale 3 for 0.001, which violates precision >= scale. The
+     * value-only Datum.decimal factory derives a valid DECIMAL (here, decimal(3, 3)) from the value itself.
+     */
+    @Test
+    fun `datum decimal derives a valid type for a sub-one value whose precision is less than scale`() {
+        val datum = Datum.decimal(BigDecimal("0.001"))
         assertEquals(3, datum.type.precision)
         assertEquals(3, datum.type.scale)
         assertEquals(0, BigDecimal("0.001").compareTo(datum.bigDecimal))
     }
 
     /**
-     * java.math.BigDecimal permits a negative scale (e.g. 1E+3 -> precision 1, scale -3). The conversion must
-     * clamp the scale to a non-negative value.
+     * java.math.BigDecimal permits a negative scale (e.g. 1E+3 -> scale -3). The value-only Datum.decimal factory
+     * clamps the scale to a non-negative value.
      */
     @Test
-    fun `datum decimal normalizes a negative scale`() {
-        val value = BigDecimal("1E+3")
-        val datum = Datum.decimal(value, value.precision(), value.scale())
+    fun `datum decimal derives a non-negative scale`() {
+        val datum = Datum.decimal(BigDecimal("1E+3"))
         assertEquals(0, datum.type.scale)
         assertEquals(0, BigDecimal("1000").compareTo(datum.bigDecimal))
     }

@@ -120,16 +120,15 @@ class FnDivideTest {
                 expectedValue = BigDecimal("0.50000000000000000000000000000000000000"),
             ),
             DivisionCase(
-                // Datum.decimal normalizes the malformed (1, 2) input to a valid (2, 2) before division.
-                name = "scale is clamped for normalized input below maximum precision",
-                lhs = Datum.decimal(BigDecimal.ZERO, 1, 2),
+                name = "scale is clamped to the minimum for small-precision inputs",
+                lhs = Datum.decimal(BigDecimal.ZERO, 2, 2),
                 rhs = Datum.decimal(BigDecimal.ONE, 1, 0),
                 expectedType = PType.decimal(6, 6),
                 expectedValue = BigDecimal("0.000000"),
             ),
             DivisionCase(
-                name = "scale is clamped for malformed input above maximum precision",
-                lhs = Datum.decimal(BigDecimal.ZERO, 1, 2),
+                name = "scale is capped at the maximum precision",
+                lhs = Datum.decimal(BigDecimal.ZERO, 2, 2),
                 rhs = Datum.decimal(BigDecimal.ONE, 38, 0),
                 expectedType = PType.decimal(38, 38),
                 expectedValue = BigDecimal("0.00000000000000000000000000000000000000"),
