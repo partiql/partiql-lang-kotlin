@@ -4405,6 +4405,13 @@ class SqlDialectTest {
                     )
                 )
             ),
+            expect(
+                "RANK() OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Rank(),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
+                )
+            ),
             // Window functions with named window reference
             expect(
                 "RANK() OVER w",

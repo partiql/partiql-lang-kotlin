@@ -52,6 +52,7 @@ Thank you to all who have contributed!
 - Fixed strict mode raising `INTERNAL_ERROR` for an expression the planner proved will fail ([#1988](https://github.com/partiql/partiql-lang-kotlin/issues/1988)). It now raises the planner's error code, such as `PATH_SYMBOL_NEVER_SUCCEEDS`, `PATH_KEY_NEVER_SUCCEEDS`, `PATH_INDEX_NEVER_SUCCEEDS`, `FUNCTION_TYPE_MISMATCH` or `TYPE_UNEXPECTED`, with the planner's location and properties. The error has severity `ERROR` and kind `EXECUTION`, like errors from checks that run only at runtime. Permissive mode is unchanged.
   - Hosts that match on `INTERNAL_ERROR` for these queries now see the specific code.
 - Fixed a non-numeric `OFFSET` being planned as a second `LIMIT`.
+- Fixed the SQL printing of a window specification with a `PARTITION BY` clause but no `ORDER BY` clause.
 
 ### Removed
 
