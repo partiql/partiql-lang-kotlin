@@ -10,8 +10,8 @@ internal object WindowBuiltIns {
             "row_number" -> RowNumberFunction()
             "rank" -> RankFunction()
             "dense_rank" -> DenseRankFunction()
-            "percent_rank" -> TODO()
-            "cume_dist" -> TODO()
+            "percent_rank" -> PercentRankFunction()
+            "cume_dist" -> CumeDistFunction()
             "ntile" -> TODO()
             "lag" -> {
                 val expr = arguments[0]

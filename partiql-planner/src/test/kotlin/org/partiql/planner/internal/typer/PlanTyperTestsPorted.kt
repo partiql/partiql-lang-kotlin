@@ -4926,6 +4926,41 @@ internal class PlanTyperTestsPorted {
                 )
             ),
             SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST return DOUBLE PRECISION",
+                catalog = CATALOG_AWS,
+                catalogPath = listOf("ddb"),
+                query = """
+                    SELECT
+                        PERCENT_RANK() OVER (PARTITION BY p.breed ORDER BY p.id) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY p.id DESC) AS _cume_dist
+                    FROM pets AS p
+                """.trimIndent(),
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "_percent_rank" to StaticType.FLOAT,
+                            "_cume_dist" to StaticType.FLOAT,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause")),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST without ORDER BY return DOUBLE PRECISION",
+                query = """
+                    SELECT VALUE PERCENT_RANK() OVER () + CUME_DIST() OVER ()
+                    FROM << { 'a': 1 }, { 'a': 2 } >> AS t
+                """.trimIndent(),
+                expected = BagType(StaticType.FLOAT),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause")),
+            ),
+            SuccessTestCase(
                 name = "LAG with IGNORE NULLS",
                 query = """
                     SELECT VALUE

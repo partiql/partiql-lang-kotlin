@@ -526,6 +526,179 @@ class WindowTests {
                     )
                 ),
             ),
+
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with ties and multiple partitions",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER _w AS _rank,
+                        PERCENT_RANK() OVER _w AS _percent_rank,
+                        CUME_DIST() OVER _w AS _cume_dist
+                    FROM employee AS t
+                    WINDOW _w AS (PARTITION BY t.department ORDER BY t.age);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    // Marketing (n = 2)
+                    rowOfDistribution(6, 1, 0.0, 1.0 / 2.0),
+                    rowOfDistribution(0, 2, 1.0, 1.0),
+                    // Research (n = 5)
+                    rowOfDistribution(5, 1, 0.0, 1.0 / 5.0),
+                    rowOfDistribution(3, 2, 1.0 / 4.0, 3.0 / 5.0),
+                    rowOfDistribution(9, 2, 1.0 / 4.0, 3.0 / 5.0),
+                    rowOfDistribution(7, 4, 3.0 / 4.0, 4.0 / 5.0),
+                    rowOfDistribution(2, 5, 1.0, 1.0),
+                    // Sales (n = 3)
+                    rowOfDistribution(1, 1, 0.0, 2.0 / 3.0),
+                    rowOfDistribution(4, 1, 0.0, 2.0 / 3.0),
+                    rowOfDistribution(8, 3, 1.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with DESC ordering",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER _w AS _rank,
+                        PERCENT_RANK() OVER _w AS _percent_rank,
+                        CUME_DIST() OVER _w AS _cume_dist
+                    FROM employee AS t
+                    WINDOW _w AS (PARTITION BY t.department ORDER BY t.age DESC);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    // Marketing (n = 2)
+                    rowOfDistribution(0, 1, 0.0, 1.0 / 2.0),
+                    rowOfDistribution(6, 2, 1.0, 1.0),
+                    // Research (n = 5)
+                    rowOfDistribution(2, 1, 0.0, 1.0 / 5.0),
+                    rowOfDistribution(7, 2, 1.0 / 4.0, 2.0 / 5.0),
+                    rowOfDistribution(3, 3, 2.0 / 4.0, 4.0 / 5.0),
+                    rowOfDistribution(9, 3, 2.0 / 4.0, 4.0 / 5.0),
+                    rowOfDistribution(5, 5, 1.0, 1.0),
+                    // Sales (n = 3)
+                    rowOfDistribution(8, 1, 0.0, 1.0 / 3.0),
+                    rowOfDistribution(1, 2, 1.0 / 2.0, 1.0),
+                    rowOfDistribution(4, 2, 1.0 / 2.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST without PARTITION BY",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER (ORDER BY t.age) AS _rank,
+                        PERCENT_RANK() OVER (ORDER BY t.age) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.age) AS _cume_dist
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfDistribution(5, 1, 0.0, 1.0 / 10.0),
+                    rowOfDistribution(1, 2, 1.0 / 9.0, 3.0 / 10.0),
+                    rowOfDistribution(4, 2, 1.0 / 9.0, 3.0 / 10.0),
+                    rowOfDistribution(8, 4, 3.0 / 9.0, 4.0 / 10.0),
+                    rowOfDistribution(3, 5, 4.0 / 9.0, 6.0 / 10.0),
+                    rowOfDistribution(9, 5, 4.0 / 9.0, 6.0 / 10.0),
+                    rowOfDistribution(6, 7, 6.0 / 9.0, 8.0 / 10.0),
+                    rowOfDistribution(7, 7, 6.0 / 9.0, 8.0 / 10.0),
+                    rowOfDistribution(2, 9, 8.0 / 9.0, 9.0 / 10.0),
+                    rowOfDistribution(0, 10, 1.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with single-row partitions",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER _w AS _rank,
+                        PERCENT_RANK() OVER _w AS _percent_rank,
+                        CUME_DIST() OVER _w AS _cume_dist
+                    FROM employee AS t
+                    WINDOW _w AS (PARTITION BY t.id ORDER BY t.age);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST without ORDER BY (all rows are peers)",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER (PARTITION BY t.department) AS _rank,
+                        PERCENT_RANK() OVER (PARTITION BY t.department) AS _percent_rank,
+                        CUME_DIST() OVER (PARTITION BY t.department) AS _cume_dist
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with empty OVER clause (all rows are peers)",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER () AS _rank,
+                        PERCENT_RANK() OVER () AS _percent_rank,
+                        CUME_DIST() OVER () AS _cume_dist
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with NULL sort keys (NULLS FIRST)",
+                mode = Mode.STRICT(),
+                input = """
+                    SELECT
+                        t.k AS k,
+                        PERCENT_RANK() OVER (ORDER BY t.v ASC NULLS FIRST) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.v ASC NULLS FIRST) AS _cume_dist
+                    FROM << { 'k': 1, 'v': NULL }, { 'k': 2, 'v': 10 }, { 'k': 3, 'v': NULL }, { 'k': 4, 'v': 20 } >> AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfDistribution(1, 0.0, 2.0 / 4.0),
+                    rowOfDistribution(3, 0.0, 2.0 / 4.0),
+                    rowOfDistribution(2, 2.0 / 3.0, 3.0 / 4.0),
+                    rowOfDistribution(4, 1.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with NULL sort keys (NULLS LAST)",
+                mode = Mode.STRICT(),
+                input = """
+                    SELECT
+                        t.k AS k,
+                        PERCENT_RANK() OVER (ORDER BY t.v ASC NULLS LAST) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.v ASC NULLS LAST) AS _cume_dist
+                    FROM << { 'k': 1, 'v': NULL }, { 'k': 2, 'v': 10 }, { 'k': 3, 'v': NULL }, { 'k': 4, 'v': 20 } >> AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfDistribution(2, 0.0, 1.0 / 4.0),
+                    rowOfDistribution(4, 1.0 / 3.0, 2.0 / 4.0),
+                    rowOfDistribution(1, 2.0 / 3.0, 1.0),
+                    rowOfDistribution(3, 2.0 / 3.0, 1.0),
+                ),
+            ),
             SuccessTestCase(
                 name = "LAG/LEAD IGNORE NULLS with offset 1 and 2",
                 mode = Mode.STRICT(),
@@ -712,6 +885,29 @@ class WindowTests {
             return Datum.struct(fields)
         }
 
+        /**
+         * @param id The employee's id
+         * @param rank The employee's rank within the window
+         * @param percentRank The employee's percent rank within the window
+         * @param cumeDist The employee's cumulative distribution within the window
+         */
+        private fun rowOfDistribution(id: Int, rank: Long, percentRank: Double, cumeDist: Double): Datum {
+            return Datum.struct(
+                Field.of("_id", Datum.integer(id)),
+                Field.of("_name", Datum.string(employees[id].name)),
+                Field.of("_rank", Datum.bigint(rank)),
+                Field.of("_percent_rank", Datum.doublePrecision(percentRank)),
+                Field.of("_cume_dist", Datum.doublePrecision(cumeDist)),
+            )
+        }
+
+        private fun rowOfDistribution(k: Int, percentRank: Double, cumeDist: Double): Datum {
+            return Datum.struct(
+                Field.of("k", Datum.integer(k)),
+                Field.of("_percent_rank", Datum.doublePrecision(percentRank)),
+                Field.of("_cume_dist", Datum.doublePrecision(cumeDist)),
+            )
+        }
         private fun rowOfStockPrice(month: Int, ticker: String, avg: Double, prevAvg: Double?): Datum {
             val fields = mutableListOf(
                 Field.of("current_month", Datum.integer(month)),

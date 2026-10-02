@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
 
 ### Changed
 
