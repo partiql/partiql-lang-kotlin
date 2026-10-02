@@ -117,6 +117,7 @@ DAY: 'DAY';
 FALSE: 'FALSE';
 FETCH: 'FETCH';
 FIRST: 'FIRST';
+FIRST_VALUE: 'FIRST_VALUE'; // Reserved, as per SQL:2023 (non-reserved in PartiQL)
 FLOAT: 'FLOAT';
 FOR: 'FOR';
 FOREIGN: 'FOREIGN';
@@ -153,6 +154,7 @@ KEY: 'KEY';
 LANGUAGE: 'LANGUAGE';
 LAG: 'LAG'; // Reserved, as per SQL:2023
 LAST: 'LAST';
+LAST_VALUE: 'LAST_VALUE'; // Reserved, as per SQL:2023 (non-reserved in PartiQL)
 LATERAL: 'LATERAL';
 LEAD: 'LEAD'; // Reserved, as per SQL:2023
 LEFT: 'LEFT';
@@ -174,6 +176,8 @@ NCHAR: 'NCHAR';
 NEXT: 'NEXT';
 NO: 'NO';
 NOT: 'NOT';
+NTH_VALUE: 'NTH_VALUE'; // Reserved, as per SQL:2023 (non-reserved in PartiQL)
+NTILE: 'NTILE'; // Reserved, as per SQL:2023 (non-reserved in PartiQL)
 NULL: 'NULL';
 NULLS: 'NULLS';
 NULLIF: 'NULLIF';

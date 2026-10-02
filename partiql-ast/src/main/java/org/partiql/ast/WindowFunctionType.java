@@ -421,4 +421,261 @@ public abstract class WindowFunctionType extends AstNode {
         }
     }
 
+    /**
+     * Represents the NTILE window function.
+     * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    @Deprecated
+    public static final class Ntile extends WindowFunctionType {
+        private final Expr numberOfTiles;
+
+        /**
+         * Constructs a new NTILE window function type.
+         * @param numberOfTiles the number of tiles (buckets) to divide each partition into
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public Ntile(@NotNull Expr numberOfTiles) {
+            super();
+            this.numberOfTiles = numberOfTiles;
+        }
+
+        /**
+         * Returns the number of tiles.
+         * @return the number of tiles
+         */
+        @NotNull
+        public Expr getNumberOfTiles() {
+            return this.numberOfTiles;
+        }
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(numberOfTiles);
+            return kids;
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeNtile(this, ctx);
+        }
+    }
+
+    /**
+     * Represents either the FIRST_VALUE or LAST_VALUE window function.
+     * @see ExprWindowFunction#getFunctionType()
+     * @see FirstValue
+     * @see LastValue
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public interface FirstOrLastValue {
+        /**
+         * Returns the value expression of the window function.
+         * @return the value expression of the window function
+         */
+        @NotNull
+        Expr getValue();
+
+        /**
+         * Returns the null treatment of the window function.
+         * @return the null treatment of the window function
+         */
+        @Nullable
+        WindowFunctionNullTreatment getNullTreatment();
+    }
+
+    /**
+     * Represents the FIRST_VALUE window function.
+     * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    @Deprecated
+    public static final class FirstValue extends WindowFunctionType implements FirstOrLastValue {
+        private final Expr value;
+        private final WindowFunctionNullTreatment nullTreatment;
+
+        /**
+         * Constructs a new FIRST_VALUE window function type.
+         * @param value the value expression of the window function
+         * @param nullTreatment the null treatment of the window function
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public FirstValue(@NotNull Expr value, @Nullable WindowFunctionNullTreatment nullTreatment) {
+            super();
+            this.value = value;
+            this.nullTreatment = nullTreatment;
+        }
+
+        @NotNull
+        @Override
+        public Expr getValue() {
+            return this.value;
+        }
+
+        @Nullable
+        @Override
+        public WindowFunctionNullTreatment getNullTreatment() {
+            return this.nullTreatment;
+        }
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(value);
+            return kids;
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeFirstValue(this, ctx);
+        }
+    }
+
+    /**
+     * Represents the LAST_VALUE window function.
+     * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    @Deprecated
+    public static final class LastValue extends WindowFunctionType implements FirstOrLastValue {
+        private final Expr value;
+        private final WindowFunctionNullTreatment nullTreatment;
+
+        /**
+         * Constructs a new LAST_VALUE window function type.
+         * @param value the value expression of the window function
+         * @param nullTreatment the null treatment of the window function
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public LastValue(@NotNull Expr value, @Nullable WindowFunctionNullTreatment nullTreatment) {
+            super();
+            this.value = value;
+            this.nullTreatment = nullTreatment;
+        }
+
+        @NotNull
+        @Override
+        public Expr getValue() {
+            return this.value;
+        }
+
+        @Nullable
+        @Override
+        public WindowFunctionNullTreatment getNullTreatment() {
+            return this.nullTreatment;
+        }
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(value);
+            return kids;
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeLastValue(this, ctx);
+        }
+    }
+
+    /**
+     * Represents the NTH_VALUE window function.
+     * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    @Deprecated
+    public static final class NthValue extends WindowFunctionType {
+        private final Expr value;
+        private final Expr nthRow;
+        private final WindowFunctionFromFirstOrLast fromFirstOrLast;
+        private final WindowFunctionNullTreatment nullTreatment;
+
+        /**
+         * Constructs a new NTH_VALUE window function type.
+         * @param value the value expression of the window function
+         * @param nthRow the (1-based) row of the window frame to return the value of
+         * @param fromFirstOrLast whether to count from the first or the last row of the window frame; null if not specified
+         * @param nullTreatment the null treatment of the window function; null if not specified
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public NthValue(
+                @NotNull Expr value,
+                @NotNull Expr nthRow,
+                @Nullable WindowFunctionFromFirstOrLast fromFirstOrLast,
+                @Nullable WindowFunctionNullTreatment nullTreatment
+        ) {
+            super();
+            this.value = value;
+            this.nthRow = nthRow;
+            this.fromFirstOrLast = fromFirstOrLast;
+            this.nullTreatment = nullTreatment;
+        }
+
+        /**
+         * Returns the value expression of the window function.
+         * @return the value expression of the window function
+         */
+        @NotNull
+        public Expr getValue() {
+            return this.value;
+        }
+
+        /**
+         * Returns the nth row expression of the window function.
+         * @return the nth row expression of the window function
+         */
+        @NotNull
+        public Expr getNthRow() {
+            return this.nthRow;
+        }
+
+        /**
+         * Returns the FROM FIRST/FROM LAST option of the window function.
+         * @return the FROM FIRST/FROM LAST option of the window function; null if not specified
+         */
+        @Nullable
+        public WindowFunctionFromFirstOrLast getFromFirstOrLast() {
+            return this.fromFirstOrLast;
+        }
+
+        /**
+         * Returns the null treatment of the window function.
+         * @return the null treatment of the window function; null if not specified
+         */
+        @Nullable
+        public WindowFunctionNullTreatment getNullTreatment() {
+            return this.nullTreatment;
+        }
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(value);
+            kids.add(nthRow);
+            return kids;
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeNthValue(this, ctx);
+        }
+    }
 }

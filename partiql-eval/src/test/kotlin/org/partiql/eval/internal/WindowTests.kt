@@ -1,6 +1,7 @@
 package org.partiql.eval.internal
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
@@ -20,8 +21,11 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -94,6 +98,23 @@ class WindowTests {
         val collector = PErrorCollector()
         PartiQLPlanner.standard().plan(statement, session, Context.of(collector))
         return collector
+    }
+
+    /**
+     * The number of tiles (NTILE) and the nth row (NTH_VALUE) must be exact numerics with scale 0.
+     */
+    @ParameterizedTest
+    @MethodSource("functionNotFoundTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun functionNotFoundTests(input: String) {
+        val statement = PartiQLParser.standard().parse(input).statements.single()
+        val catalog = Catalog.builder()
+            .name("memory")
+            .apply { globals.forEach { define(Table.standard(Name.of(it.name), it.type, it.value)) } }
+            .build()
+        val session = Session.builder().catalog("memory").catalogs(catalog).build()
+        val e = assertThrows<PRuntimeException> { PartiQLPlanner.standard().plan(statement, session) }
+        assertEquals(PError.FUNCTION_NOT_FOUND, e.error.code())
     }
 
     /**
@@ -316,6 +337,39 @@ class WindowTests {
 
         private fun intOrNull(v: Int?): Datum = v?.let { Datum.integer(it) } ?: Datum.nullValue(PType.integer())
 
+        /**
+         * A row of the `samples` table; [x] is explicitly NULL when null.
+         */
+        private class Sample(
+            val id: Int,
+            val p: String,
+            val k: Int,
+            val x: Int?,
+        ) {
+            fun toDatum(): Datum = Datum.struct(
+                Field.of("id", Datum.integer(id)),
+                Field.of("p", Datum.string(p)),
+                Field.of("k", Datum.integer(k)),
+                Field.of("x", x?.let { Datum.integer(it) } ?: Datum.nullValue(PType.integer())),
+            )
+        }
+
+        /**
+         * Partition `a` has 4 peer groups when ordered by `k` (k = 1, 2, 3, 4) with leading/trailing/interleaved nulls;
+         * partition `b` has only nulls; partition `c` has a single row.
+         */
+        private val samples = listOf(
+            Sample(1, "a", 1, null),
+            Sample(2, "a", 1, 10),
+            Sample(3, "a", 2, 20),
+            Sample(4, "a", 3, null),
+            Sample(5, "a", 3, 40),
+            Sample(6, "a", 4, null),
+            Sample(7, "b", 1, null),
+            Sample(8, "b", 2, null),
+            Sample(9, "c", 1, 90),
+        )
+
         private val globals = listOf(
             Global(
                 name = "employee",
@@ -354,6 +408,10 @@ class WindowTests {
                     Datum.struct(Field.of("id", Datum.integer(3)), Field.of("v", Datum.nullValue())),
                     Datum.struct(Field.of("id", Datum.integer(4)), Field.of("v", Datum.integer(4))),
                 )
+            ),
+            Global(
+                name = "samples",
+                value = Datum.bag(samples.map { it.toDatum() })
             ),
         )
 
@@ -913,6 +971,373 @@ class WindowTests {
                     rowOfNav(8, null, null, -1, -1),
                 ),
             ),
+        ) + ntileTestCases() + firstLastValueTestCases() + nthValueTestCases()
+
+        /**
+         * Employees ordered by (age, name) within each department:
+         *  - Marketing (2 rows): 6, 0
+         *  - Research (5 rows): 5, 3, 9, 7, 2
+         *  - Sales (3 rows): 1, 4, 8
+         */
+        private fun ntileTestCases() = listOf(
+            SuccessTestCase(
+                name = "NTILE with partitions that are (and are not) divisible by the number of tiles, and with more tiles than rows",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        NTILE(1) OVER (PARTITION BY t.department ORDER BY t.age, t.name) AS _n1,
+                        NTILE(2) OVER (PARTITION BY t.department ORDER BY t.age, t.name) AS _n2,
+                        NTILE(3) OVER (PARTITION BY t.department ORDER BY t.age, t.name) AS _n3,
+                        NTILE(4) OVER (PARTITION BY t.department ORDER BY t.age, t.name) AS _n4,
+                        NTILE(100) OVER (PARTITION BY t.department ORDER BY t.age, t.name) AS _n100
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    // Marketing: 2 rows
+                    rowOfNtile(6, 1, 1, 1, 1, 1),
+                    rowOfNtile(0, 1, 2, 2, 2, 2),
+                    // Research: 5 rows
+                    rowOfNtile(5, 1, 1, 1, 1, 1),
+                    rowOfNtile(3, 1, 1, 1, 1, 2),
+                    rowOfNtile(9, 1, 1, 2, 2, 3),
+                    rowOfNtile(7, 1, 2, 2, 3, 4),
+                    rowOfNtile(2, 1, 2, 3, 4, 5),
+                    // Sales: 3 rows
+                    rowOfNtile(1, 1, 1, 1, 1, 1),
+                    rowOfNtile(4, 1, 1, 2, 2, 2),
+                    rowOfNtile(8, 1, 2, 3, 3, 3),
+                ),
+            ),
+            SuccessTestCase(
+                name = "NTILE without partitions",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT t.id AS _id, NTILE(4) OVER (ORDER BY t.id) AS _n
+                    FROM employee AS t;
+                """.trimIndent(),
+                // 10 rows into 4 tiles: 3, 3, 2, 2
+                expected = Datum.bagVararg(
+                    *listOf(1L, 1L, 1L, 2L, 2L, 2L, 3L, 3L, 4L, 4L).mapIndexed { id, n ->
+                        row("_id" to Datum.integer(id), "_n" to Datum.bigint(n))
+                    }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "NTILE with a NULL number of tiles",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT t.id AS _id, NTILE(NULL) OVER (PARTITION BY t.p ORDER BY t.k) AS _n
+                    FROM samples AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *samples.map { row("_id" to Datum.integer(it.id), "_n" to null) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "NTILE with ties and a number of tiles of a non-INT exact numeric type",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT t.id AS _id, NTILE(CAST(2 AS BIGINT)) OVER (PARTITION BY t.p ORDER BY t.id) AS _n
+                    FROM samples AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    row("_id" to Datum.integer(1), "_n" to Datum.bigint(1)),
+                    row("_id" to Datum.integer(2), "_n" to Datum.bigint(1)),
+                    row("_id" to Datum.integer(3), "_n" to Datum.bigint(1)),
+                    row("_id" to Datum.integer(4), "_n" to Datum.bigint(2)),
+                    row("_id" to Datum.integer(5), "_n" to Datum.bigint(2)),
+                    row("_id" to Datum.integer(6), "_n" to Datum.bigint(2)),
+                    row("_id" to Datum.integer(7), "_n" to Datum.bigint(1)),
+                    row("_id" to Datum.integer(8), "_n" to Datum.bigint(2)),
+                    row("_id" to Datum.integer(9), "_n" to Datum.bigint(1)),
+                ),
+            ),
+        )
+
+        /**
+         * Samples ordered by (k, id) within each partition:
+         *  - a: 1 (x=NULL, k=1), 2 (x=10, k=1), 3 (x=20, k=2), 4 (x=NULL, k=3), 5 (x=40, k=3), 6 (x=NULL, k=4)
+         *  - b: 7 (x=NULL), 8 (x=NULL)
+         *  - c: 9 (x=90)
+         */
+        private fun firstLastValueTestCases() = listOf(
+            SuccessTestCase(
+                name = "FIRST_VALUE and LAST_VALUE with RESPECT NULLS (implicit and explicit) and IGNORE NULLS",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        FIRST_VALUE(t.x) OVER _w AS _first,
+                        FIRST_VALUE(t.x) RESPECT NULLS OVER _w AS _first_respect,
+                        FIRST_VALUE(t.x) IGNORE NULLS OVER _w AS _first_ignore,
+                        LAST_VALUE(t.x) OVER _w AS _last,
+                        LAST_VALUE(t.x) RESPECT NULLS OVER _w AS _last_respect,
+                        LAST_VALUE(t.x) IGNORE NULLS OVER _w AS _last_ignore
+                    FROM samples AS t
+                    WINDOW _w AS (PARTITION BY t.p ORDER BY t.k, t.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfFirstLast(1, null, null, null, null),
+                    rowOfFirstLast(2, null, 10, 10, 10),
+                    rowOfFirstLast(3, null, 10, 20, 20),
+                    rowOfFirstLast(4, null, 10, null, 20),
+                    rowOfFirstLast(5, null, 10, 40, 40),
+                    rowOfFirstLast(6, null, 10, null, 40),
+                    rowOfFirstLast(7, null, null, null, null),
+                    rowOfFirstLast(8, null, null, null, null),
+                    rowOfFirstLast(9, 90, 90, 90, 90),
+                ),
+            ),
+            SuccessTestCase(
+                name = "LAST_VALUE returns the value of the last peer (not the last row of the partition) with ties",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        FIRST_VALUE(t.k * 10) OVER (PARTITION BY t.p ORDER BY t.k) AS _first,
+                        LAST_VALUE(t.k * 10) OVER (PARTITION BY t.p ORDER BY t.k) AS _last,
+                        LAST_VALUE(t.k * 10) OVER (PARTITION BY t.p ORDER BY t.k DESC) AS _last_desc
+                    FROM samples AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *samples.map {
+                        row(
+                            "_id" to Datum.integer(it.id),
+                            // every partition's first peer group has k = 1
+                            "_first" to Datum.integer(10),
+                            "_last" to Datum.integer(it.k * 10),
+                            "_last_desc" to Datum.integer(it.k * 10),
+                        )
+                    }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "FIRST_VALUE and LAST_VALUE without ORDER BY use the entire partition as the window frame",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        FIRST_VALUE(t.p) OVER (PARTITION BY t.p) AS _first,
+                        LAST_VALUE(t.x) IGNORE NULLS OVER (PARTITION BY t.p) AS _last_ignore,
+                        LAST_VALUE(t.x) OVER (PARTITION BY t.p) AS _last
+                    FROM samples AS t
+                    WHERE t.p <> 'a';
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    row("_id" to Datum.integer(7), "_first" to Datum.string("b"), "_last_ignore" to null, "_last" to null),
+                    row("_id" to Datum.integer(8), "_first" to Datum.string("b"), "_last_ignore" to null, "_last" to null),
+                    row("_id" to Datum.integer(9), "_first" to Datum.string("c"), "_last_ignore" to Datum.integer(90), "_last" to Datum.integer(90)),
+                ),
+            ),
+            SuccessTestCase(
+                name = "FIRST_VALUE and LAST_VALUE IGNORE NULLS over a window without partitions",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        FIRST_VALUE(t.x) IGNORE NULLS OVER (ORDER BY t.id) AS _first,
+                        LAST_VALUE(t.x) IGNORE NULLS OVER (ORDER BY t.id) AS _last
+                    FROM samples AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    row("_id" to Datum.integer(1), "_first" to null, "_last" to null),
+                    row("_id" to Datum.integer(2), "_first" to Datum.integer(10), "_last" to Datum.integer(10)),
+                    row("_id" to Datum.integer(3), "_first" to Datum.integer(10), "_last" to Datum.integer(20)),
+                    row("_id" to Datum.integer(4), "_first" to Datum.integer(10), "_last" to Datum.integer(20)),
+                    row("_id" to Datum.integer(5), "_first" to Datum.integer(10), "_last" to Datum.integer(40)),
+                    row("_id" to Datum.integer(6), "_first" to Datum.integer(10), "_last" to Datum.integer(40)),
+                    row("_id" to Datum.integer(7), "_first" to Datum.integer(10), "_last" to Datum.integer(40)),
+                    row("_id" to Datum.integer(8), "_first" to Datum.integer(10), "_last" to Datum.integer(40)),
+                    row("_id" to Datum.integer(9), "_first" to Datum.integer(10), "_last" to Datum.integer(90)),
+                ),
+            ),
+            SuccessTestCase(
+                name = "FIRST_VALUE and LAST_VALUE IGNORE NULLS over a sometimes-missing attribute",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        FIRST_VALUE(t.partner) IGNORE NULLS OVER (PARTITION BY t.department ORDER BY t.age, t.name) AS _first,
+                        LAST_VALUE(t.partner) IGNORE NULLS OVER (PARTITION BY t.department ORDER BY t.age, t.name) AS _last
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    // Marketing: 6 (no partner), 0 (Alexa)
+                    row("_id" to Datum.integer(6), "_first" to null, "_last" to null),
+                    row("_id" to Datum.integer(0), "_first" to Datum.string("Alexa"), "_last" to Datum.string("Alexa")),
+                    // Research: 5 (Raghavan), 3 (no partner), 9 (Samantha), 7 (no partner), 2 (Michael)
+                    row("_id" to Datum.integer(5), "_first" to Datum.string("Raghavan"), "_last" to Datum.string("Raghavan")),
+                    row("_id" to Datum.integer(3), "_first" to Datum.string("Raghavan"), "_last" to Datum.string("Raghavan")),
+                    row("_id" to Datum.integer(9), "_first" to Datum.string("Raghavan"), "_last" to Datum.string("Samantha")),
+                    row("_id" to Datum.integer(7), "_first" to Datum.string("Raghavan"), "_last" to Datum.string("Samantha")),
+                    row("_id" to Datum.integer(2), "_first" to Datum.string("Raghavan"), "_last" to Datum.string("Michael")),
+                    // Sales: 1 (Gary), 4 (Yi), 8 (Mason)
+                    row("_id" to Datum.integer(1), "_first" to Datum.string("Gary"), "_last" to Datum.string("Gary")),
+                    row("_id" to Datum.integer(4), "_first" to Datum.string("Gary"), "_last" to Datum.string("Yi")),
+                    row("_id" to Datum.integer(8), "_first" to Datum.string("Gary"), "_last" to Datum.string("Mason")),
+                ),
+            ),
+        )
+
+        /**
+         * See [firstLastValueTestCases] for the ordering of the samples.
+         */
+        private fun nthValueTestCases() = listOf(
+            SuccessTestCase(
+                name = "NTH_VALUE FROM FIRST (implicit and explicit) and FROM LAST with RESPECT NULLS",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        NTH_VALUE(t.id, 2) OVER _w AS _second,
+                        NTH_VALUE(t.id, 2) FROM FIRST OVER _w AS _second_from_first,
+                        NTH_VALUE(t.id, 2) FROM LAST OVER _w AS _second_from_last,
+                        NTH_VALUE(t.id, 1) FROM LAST RESPECT NULLS OVER _w AS _first_from_last,
+                        NTH_VALUE(t.x, 3) OVER _w AS _third_x
+                    FROM samples AS t
+                    WINDOW _w AS (PARTITION BY t.p ORDER BY t.k, t.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNthValue(1, null, null, 1, null),
+                    rowOfNthValue(2, 2, 1, 2, null),
+                    rowOfNthValue(3, 2, 2, 3, 20),
+                    rowOfNthValue(4, 2, 3, 4, 20),
+                    rowOfNthValue(5, 2, 4, 5, 20),
+                    rowOfNthValue(6, 2, 5, 6, 20),
+                    rowOfNthValue(7, null, null, 7, null),
+                    rowOfNthValue(8, 8, 7, 8, null),
+                    rowOfNthValue(9, null, null, 9, null),
+                ),
+            ),
+            SuccessTestCase(
+                name = "NTH_VALUE with IGNORE NULLS, FROM FIRST/LAST, and an nth row beyond the window frame",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        NTH_VALUE(t.x, 2) IGNORE NULLS OVER _w AS _second,
+                        NTH_VALUE(t.x, 2) FROM LAST IGNORE NULLS OVER _w AS _second_from_last,
+                        NTH_VALUE(t.x, 4) IGNORE NULLS OVER _w AS _fourth,
+                        NTH_VALUE(t.x, 100) OVER _w AS _hundredth
+                    FROM samples AS t
+                    WINDOW _w AS (PARTITION BY t.p ORDER BY t.k, t.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    row("_id" to Datum.integer(1), "_second" to null, "_second_from_last" to null, "_fourth" to null, "_hundredth" to null),
+                    row("_id" to Datum.integer(2), "_second" to null, "_second_from_last" to null, "_fourth" to null, "_hundredth" to null),
+                    row("_id" to Datum.integer(3), "_second" to Datum.integer(20), "_second_from_last" to Datum.integer(10), "_fourth" to null, "_hundredth" to null),
+                    row("_id" to Datum.integer(4), "_second" to Datum.integer(20), "_second_from_last" to Datum.integer(10), "_fourth" to null, "_hundredth" to null),
+                    row("_id" to Datum.integer(5), "_second" to Datum.integer(20), "_second_from_last" to Datum.integer(20), "_fourth" to null, "_hundredth" to null),
+                    row("_id" to Datum.integer(6), "_second" to Datum.integer(20), "_second_from_last" to Datum.integer(20), "_fourth" to null, "_hundredth" to null),
+                    row("_id" to Datum.integer(7), "_second" to null, "_second_from_last" to null, "_fourth" to null, "_hundredth" to null),
+                    row("_id" to Datum.integer(8), "_second" to null, "_second_from_last" to null, "_fourth" to null, "_hundredth" to null),
+                    row("_id" to Datum.integer(9), "_second" to null, "_second_from_last" to null, "_fourth" to null, "_hundredth" to null),
+                ),
+            ),
+            SuccessTestCase(
+                name = "NTH_VALUE with ties includes the peers of the current row in the window frame",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        NTH_VALUE(t.k, 2) OVER (PARTITION BY t.p ORDER BY t.k) AS _second,
+                        NTH_VALUE(t.k, 1) FROM LAST OVER (PARTITION BY t.p ORDER BY t.k) AS _last
+                    FROM samples AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    // partition a: k = 1, 1, 2, 3, 3, 4 -- the second row is always a peer of the first (k = 1)
+                    row("_id" to Datum.integer(1), "_second" to Datum.integer(1), "_last" to Datum.integer(1)),
+                    row("_id" to Datum.integer(2), "_second" to Datum.integer(1), "_last" to Datum.integer(1)),
+                    row("_id" to Datum.integer(3), "_second" to Datum.integer(1), "_last" to Datum.integer(2)),
+                    row("_id" to Datum.integer(4), "_second" to Datum.integer(1), "_last" to Datum.integer(3)),
+                    row("_id" to Datum.integer(5), "_second" to Datum.integer(1), "_last" to Datum.integer(3)),
+                    row("_id" to Datum.integer(6), "_second" to Datum.integer(1), "_last" to Datum.integer(4)),
+                    // partition b: k = 1, 2
+                    row("_id" to Datum.integer(7), "_second" to null, "_last" to Datum.integer(1)),
+                    row("_id" to Datum.integer(8), "_second" to Datum.integer(2), "_last" to Datum.integer(2)),
+                    // partition c: k = 1
+                    row("_id" to Datum.integer(9), "_second" to null, "_last" to Datum.integer(1)),
+                ),
+            ),
+            SuccessTestCase(
+                name = "NTH_VALUE without ORDER BY uses the entire partition as the window frame",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        NTH_VALUE(t.p, 6) OVER (PARTITION BY t.p) AS _sixth,
+                        NTH_VALUE(CASE WHEN t.x IS NULL THEN NULL ELSE 'present' END, 3) IGNORE NULLS OVER (PARTITION BY t.p) AS _third_non_null,
+                        NTH_VALUE(t.x, 4) IGNORE NULLS OVER (PARTITION BY t.p) AS _fourth_non_null,
+                        NTH_VALUE(CASE WHEN t.x IS NULL THEN NULL ELSE 'present' END, 1) FROM LAST IGNORE NULLS OVER (PARTITION BY t.p) AS _last_non_null
+                    FROM samples AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *samples.map {
+                        row(
+                            "_id" to Datum.integer(it.id),
+                            "_sixth" to if (it.p == "a") Datum.string("a") else null,
+                            // partition a has exactly 3 non-null values (10, 20, 40), but their order is unspecified
+                            "_third_non_null" to if (it.p == "a") Datum.string("present") else null,
+                            "_fourth_non_null" to null,
+                            "_last_non_null" to if (it.p == "b") null else Datum.string("present"),
+                        )
+                    }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "NTH_VALUE with a NULL nth row",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT t.id AS _id, NTH_VALUE(t.x, NULL) OVER (PARTITION BY t.p ORDER BY t.k) AS _n
+                    FROM samples AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *samples.map { row("_id" to Datum.integer(it.id), "_n" to null) }.toTypedArray()
+                ),
+            ),
+        )
+
+        private fun rowOfNtile(id: Int, n1: Long, n2: Long, n3: Long, n4: Long, n100: Long): Datum = row(
+            "_id" to Datum.integer(id),
+            "_n1" to Datum.bigint(n1),
+            "_n2" to Datum.bigint(n2),
+            "_n3" to Datum.bigint(n3),
+            "_n4" to Datum.bigint(n4),
+            "_n100" to Datum.bigint(n100),
+        )
+
+        private fun rowOfFirstLast(id: Int, first: Int?, firstIgnore: Int?, last: Int?, lastIgnore: Int?): Datum = row(
+            "_id" to Datum.integer(id),
+            "_first" to first?.let { Datum.integer(it) },
+            "_first_respect" to first?.let { Datum.integer(it) },
+            "_first_ignore" to firstIgnore?.let { Datum.integer(it) },
+            "_last" to last?.let { Datum.integer(it) },
+            "_last_respect" to last?.let { Datum.integer(it) },
+            "_last_ignore" to lastIgnore?.let { Datum.integer(it) },
+        )
+
+        private fun rowOfNthValue(id: Int, second: Int?, secondFromLast: Int?, firstFromLast: Int?, thirdX: Int?): Datum = row(
+            "_id" to Datum.integer(id),
+            "_second" to second?.let { Datum.integer(it) },
+            "_second_from_first" to second?.let { Datum.integer(it) },
+            "_second_from_last" to secondFromLast?.let { Datum.integer(it) },
+            "_first_from_last" to firstFromLast?.let { Datum.integer(it) },
+            "_third_x" to thirdX?.let { Datum.integer(it) },
         )
 
         private fun rowOfNav(id: Int, lag1: Int?, lag2: Int?, lead1: Int?, lead2: Int?): Datum {
@@ -1083,6 +1508,8 @@ class WindowTests {
             "SELECT CUME_DIST() OVER () AS r FROM $ORDER_DATA AS t" to listOf("CUME_DIST"),
             "SELECT LEAD(t.v) OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("LEAD"),
             "SELECT LAG(t.v, 1, 0) OVER () AS r FROM $ORDER_DATA AS t" to listOf("LAG"),
+            "SELECT NTILE(2) OVER () AS r FROM $ORDER_DATA AS t" to listOf("NTILE"),
+            "SELECT NTILE(2) OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("NTILE"),
             // Named window without an ORDER BY, referenced as `OVER w` and `OVER (w)`.
             "SELECT RANK() OVER w AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)" to listOf("RANK"),
             "SELECT RANK() OVER (w) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)" to listOf("RANK"),
@@ -1104,6 +1531,11 @@ class WindowTests {
             "SELECT CUME_DIST() OVER w AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g ORDER BY t.v)",
             "SELECT CUME_DIST() OVER (w) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g ORDER BY t.v)",
             "SELECT LAG(t.v) OVER (ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
+            "SELECT NTILE(2) OVER (PARTITION BY t.g ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
+            // FIRST_VALUE, LAST_VALUE, and NTH_VALUE do not require a window ordering clause.
+            "SELECT FIRST_VALUE(t.v) OVER () AS r FROM $ORDER_DATA AS t",
+            "SELECT LAST_VALUE(t.v) OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t",
+            "SELECT NTH_VALUE(t.v, 2) OVER () AS r FROM $ORDER_DATA AS t",
             // ROW_NUMBER does not require a window ordering clause.
             "SELECT ROW_NUMBER() OVER () AS n FROM $ORDER_DATA AS t",
             "SELECT ROW_NUMBER() OVER (PARTITION BY t.g) AS n FROM $ORDER_DATA AS t",
@@ -1479,6 +1911,29 @@ class WindowTests {
                         ),
                     ),
                 ),
+                // FIRST_VALUE/LAST_VALUE/NTH_VALUE evaluate their value against other rows of the window frame; outer
+                // references (o.k) must still resolve to the outer row. x in partition 'a' ordered: 2, 4, 6, 8.
+                SuccessTestCase(
+                    name = "FIRST_VALUE, LAST_VALUE, and NTH_VALUE in a correlated subquery reference the outer row ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            o.g AS g,
+                            (SELECT VALUE FIRST_VALUE(t.x + o.k) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS f,
+                            (SELECT VALUE LAST_VALUE(t.x + o.k) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS l,
+                            (SELECT VALUE NTH_VALUE(t.x + o.k, 2) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS n
+                        FROM << { 'g': 'a', 'k': 100 } >> AS o
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row(
+                            "g" to "a",
+                            "f" to Datum.bagVararg(Datum.integer(102), Datum.integer(102), Datum.integer(102), Datum.integer(102)),
+                            "l" to Datum.bagVararg(Datum.integer(102), Datum.integer(104), Datum.integer(106), Datum.integer(108)),
+                            "n" to Datum.bagVararg(Datum.nullValue(), Datum.integer(104), Datum.integer(104), Datum.integer(104)),
+                        ),
+                    ),
+                ),
                 // The window is reopened for each outer row, so each must see its own o.k (not the first outer row's).
                 // Partition 'a' x ordered: 2, 4, 6, 8; partition 'b': 10.
                 SuccessTestCase(
@@ -1554,6 +2009,14 @@ class WindowTests {
         )
 
         @JvmStatic
+        fun functionNotFoundTestCases() = listOf(
+            "SELECT NTILE(2.5) OVER (ORDER BY t.id) AS _n FROM employee AS t;",
+            "SELECT NTILE('2') OVER (ORDER BY t.id) AS _n FROM employee AS t;",
+            "SELECT NTH_VALUE(t.id, 1.5) OVER (ORDER BY t.id) AS _n FROM employee AS t;",
+            "SELECT NTH_VALUE(t.id, 'first') FROM LAST OVER (ORDER BY t.id) AS _n FROM employee AS t;",
+        )
+
+        @JvmStatic
         fun failureTestCases() = listOf(
             // SUM of a non-numeric argument fails at evaluation, as it does for the group aggregate (asserted below too).
             FailureTestCase(
@@ -1595,6 +2058,30 @@ class WindowTests {
                         LEAD(t.partner, 1, '$FALLBACK') OVER (PARTITION BY t.department ORDER BY t.age, t.name) AS _lead
                     FROM employee AS t;
                 """.trimIndent(),
+            ),
+            FailureTestCase(
+                name = "NTILE with a number of tiles of 0",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = "SELECT NTILE(0) OVER (ORDER BY t.id) AS _n FROM employee AS t;",
+            ),
+            FailureTestCase(
+                name = "NTILE with a negative number of tiles",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = "SELECT NTILE(-1) OVER (ORDER BY t.id) AS _n FROM employee AS t;",
+            ),
+            FailureTestCase(
+                name = "NTH_VALUE with an nth row of 0",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = "SELECT NTH_VALUE(t.id, 0) OVER (ORDER BY t.id) AS _n FROM employee AS t;",
+            ),
+            FailureTestCase(
+                name = "NTH_VALUE with a negative nth row",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = "SELECT NTH_VALUE(t.id, -2) FROM LAST OVER (ORDER BY t.id) AS _n FROM employee AS t;",
             ),
         )
     }

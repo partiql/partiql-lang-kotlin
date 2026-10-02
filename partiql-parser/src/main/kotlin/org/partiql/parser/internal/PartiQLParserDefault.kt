@@ -174,6 +174,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
 import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionFromFirstOrLast
 import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowPartition
@@ -2066,6 +2067,37 @@ internal class PartiQLParserDefault : PartiQLParser {
             when (isLead) {
                 true -> WindowFunctionType.Lead(extent, offset, default, nullTreatment)
                 false -> WindowFunctionType.Lag(extent, offset, default, nullTreatment)
+            }
+        }
+
+        override fun visitNtileFunction(ctx: GeneratedParser.NtileFunctionContext) = translate(ctx) {
+            val tiles = visitExpr(ctx.tiles)
+            WindowFunctionType.Ntile(tiles)
+        }
+
+        override fun visitFirstOrLastValueFunction(ctx: GeneratedParser.FirstOrLastValueFunctionContext) = translate(ctx) {
+            val value = visitExpr(ctx.value)
+            val nullTreatment = ctx.windowFunctionNullTreatment()?.let { visitWindowFunctionNullTreatment(it) }
+            when (ctx.name.type) {
+                GeneratedLexer.FIRST_VALUE -> WindowFunctionType.FirstValue(value, nullTreatment)
+                GeneratedLexer.LAST_VALUE -> WindowFunctionType.LastValue(value, nullTreatment)
+                else -> throw error(ctx, "Expected FIRST_VALUE or LAST_VALUE")
+            }
+        }
+
+        override fun visitNthValueFunction(ctx: GeneratedParser.NthValueFunctionContext) = translate(ctx) {
+            val value = visitExpr(ctx.value)
+            val nthRow = visitExpr(ctx.nthRow)
+            val fromFirstOrLast = ctx.windowFunctionFromFirstOrLast()?.let { visitWindowFunctionFromFirstOrLast(it) }
+            val nullTreatment = ctx.windowFunctionNullTreatment()?.let { visitWindowFunctionNullTreatment(it) }
+            WindowFunctionType.NthValue(value, nthRow, fromFirstOrLast, nullTreatment)
+        }
+
+        override fun visitWindowFunctionFromFirstOrLast(ctx: GeneratedParser.WindowFunctionFromFirstOrLastContext) = translate(ctx) {
+            when {
+                ctx.FIRST() != null -> WindowFunctionFromFirstOrLast.FROM_FIRST()
+                ctx.LAST() != null -> WindowFunctionFromFirstOrLast.FROM_LAST()
+                else -> throw error(ctx, "Expected one of: FROM FIRST, FROM LAST")
             }
         }
 

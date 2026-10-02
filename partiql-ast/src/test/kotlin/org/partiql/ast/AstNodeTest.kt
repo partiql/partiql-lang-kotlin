@@ -157,6 +157,24 @@ class AstNodeTest {
     }
 
     @Test
+    fun windowFunctionTypeFirstValue() = assertNullSafe(
+        @Suppress("DEPRECATION")
+        WindowFunctionType.FirstValue(lit(), null),
+    ) // nullTreatment null
+
+    @Test
+    fun windowFunctionTypeLastValue() = assertNullSafe(
+        @Suppress("DEPRECATION")
+        WindowFunctionType.LastValue(lit(), null),
+    ) // nullTreatment null
+
+    @Test
+    fun windowFunctionTypeNthValue() = assertNullSafe(
+        @Suppress("DEPRECATION")
+        WindowFunctionType.NthValue(lit(), lit(), null, null),
+    ) // fromFirstOrLast/nullTreatment null
+
+    @Test
     fun attributeConstraintNull() = assertNullSafe(Ast.columnConstraintNullable(name = null, isNullable = false))
 
     @Test
@@ -330,12 +348,17 @@ class AstNodeTest {
             "org.partiql.ast.Sort",
             "org.partiql.ast.WindowClause",
             "org.partiql.ast.WindowClause.Definition",
+            "org.partiql.ast.WindowFunctionFromFirstOrLast",
             "org.partiql.ast.WindowFunctionNullTreatment",
             "org.partiql.ast.WindowFunctionType.Aggregate",
             "org.partiql.ast.WindowFunctionType.CumeDist",
             "org.partiql.ast.WindowFunctionType.DenseRank",
+            "org.partiql.ast.WindowFunctionType.FirstValue",
             "org.partiql.ast.WindowFunctionType.Lag",
+            "org.partiql.ast.WindowFunctionType.LastValue",
             "org.partiql.ast.WindowFunctionType.Lead",
+            "org.partiql.ast.WindowFunctionType.NthValue",
+            "org.partiql.ast.WindowFunctionType.Ntile",
             "org.partiql.ast.WindowFunctionType.PercentRank",
             "org.partiql.ast.WindowFunctionType.Rank",
             "org.partiql.ast.WindowFunctionType.RowNumber",

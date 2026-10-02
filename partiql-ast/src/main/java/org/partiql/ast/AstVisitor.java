@@ -464,6 +464,54 @@ public abstract class AstVisitor<R, C> {
     }
 
     /**
+     * Visits a {@link WindowFunctionType.Ntile} node.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeNtile(WindowFunctionType.Ntile node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * Visits a {@link WindowFunctionType.FirstValue} node.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeFirstValue(WindowFunctionType.FirstValue node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * Visits a {@link WindowFunctionType.LastValue} node.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeLastValue(WindowFunctionType.LastValue node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * Visits a {@link WindowFunctionType.NthValue} node.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeNthValue(WindowFunctionType.NthValue node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
      * TODO
      * @param node TODO
      * @param ctx TODO

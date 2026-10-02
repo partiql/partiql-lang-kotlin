@@ -993,14 +993,20 @@ windowFunction: funcType=windowFunctionType OVER spec=windowNameOrSpecification;
  *   <rank function type> <left paren> <right paren>
  *   | ROW_NUMBER <left paren> <right paren>
  *   | <aggregate function>
+ *   | <ntile function>
  *   | <lead or lag function>
+ *   | <first or last value function>
+ *   | <nth value function>
  *   | and more...
  */
 windowFunctionType
     : rankFunctionType PAREN_LEFT PAREN_RIGHT # WindowFunctionTypeRank
     | ROW_NUMBER PAREN_LEFT PAREN_RIGHT       # WindowFunctionTypeRowNumber
     | aggregateWindowFunction                 # WindowFunctionTypeAggregate
+    | ntileFunction                           # WindowFunctionTypeNtile
     | leadOrLagFunction                       # WindowFunctionTypeLeadOrLag
+    | firstOrLastValueFunction                # WindowFunctionTypeFirstOrLastValue
+    | nthValueFunction                        # WindowFunctionTypeNthValue
     ;
 
 /**
@@ -1038,6 +1044,49 @@ rankFunctionType
  */
 leadOrLagFunction
     : name=(LEAD|LAG) PAREN_LEFT extent=expr (COMMA offset=LITERAL_INTEGER (COMMA default=expr)? )? PAREN_RIGHT windowFunctionNullTreatment?
+    ;
+
+/**
+ * EBNF 2023:
+ * <ntile function> ::= NTILE <left paren> <number of tiles> <right paren>
+ * <number of tiles> ::= <simple value specification> | <dynamic parameter specification>
+ *
+ * NOTE: PartiQL accepts any <value expression> as the <number of tiles>.
+ */
+ntileFunction
+    : NTILE PAREN_LEFT tiles=expr PAREN_RIGHT
+    ;
+
+/**
+ * EBNF 2023:
+ * <first or last value function> ::=
+ *   <first or last value> <left paren> <value expression> <right paren> [ <null treatment> ]
+ * <first or last value> ::= FIRST_VALUE | LAST_VALUE
+ */
+firstOrLastValueFunction
+    : name=(FIRST_VALUE|LAST_VALUE) PAREN_LEFT value=expr PAREN_RIGHT windowFunctionNullTreatment?
+    ;
+
+/**
+ * EBNF 2023:
+ * <nth value function> ::=
+ *   NTH_VALUE <left paren> <value expression> <comma> <nth row> <right paren>
+ *   [ <from first or last> ] [ <null treatment> ]
+ * <nth row> ::= <simple value specification> | <dynamic parameter specification>
+ *
+ * NOTE: PartiQL accepts any <value expression> as the <nth row>.
+ */
+nthValueFunction
+    : NTH_VALUE PAREN_LEFT value=expr COMMA nthRow=expr PAREN_RIGHT windowFunctionFromFirstOrLast? windowFunctionNullTreatment?
+    ;
+
+/**
+ * EBNF 2023:
+ * <from first or last> ::= FROM FIRST | FROM LAST
+ */
+windowFunctionFromFirstOrLast
+    : FROM FIRST
+    | FROM LAST
     ;
 
 /**
@@ -1183,15 +1232,15 @@ nonReserved
     | DATETIME_INTERVAL_CODE | DATETIME_INTERVAL_PRECISION | DEFINED
     | DEFINER | DEGREE | DENSE_RANK | DERIVED | DISPATCH
     | EVERY | EXTRACT
-    | FINAL | FORTRAN
+    | FINAL | FIRST_VALUE | FORTRAN
     | G | GENERATED | GRANTED
     | HIERARCHY
     | IGNORE | IMPLEMENTATION | INSENSITIVE | INSTANCE | INSTANTIABLE | INVOKER
     | K | KEY_MEMBER | KEY_TYPE
-    | LENGTH | LOWER
+    | LAST_VALUE | LENGTH | LOWER
     | M | MAX | MIN | MESSAGE_LENGTH | MESSAGE_OCTET_LENGTH | MESSAGE_TEXT
     | MOD | MORE | MUMPS
-    | NAME | NULLABLE | NUMBER | NULLIF
+    | NAME | NTH_VALUE | NTILE | NULLABLE | NUMBER | NULLIF
     | OCTET_LENGTH | ORDERING | OPTIONS | OVERLAY | OVERRIDING
     | PASCAL | PARAMETER_MODE | PARAMETER_NAME
     | PARAMETER_ORDINAL_POSITION | PARAMETER_SPECIFIC_CATALOG

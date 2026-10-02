@@ -271,6 +271,35 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     }
 
     @Deprecated("This feature is experimental and is subject to change.")
+    override fun visitWindowFunctionTypeNtile(node: WindowFunctionType.Ntile, tail: SqlBlock): SqlBlock {
+        var t = tail concat "NTILE("
+        t = visitExpr(node.numberOfTiles, t)
+        return t concat ")"
+    }
+
+    @Deprecated("This feature is experimental and is subject to change.")
+    override fun visitWindowFunctionTypeFirstValue(node: WindowFunctionType.FirstValue, tail: SqlBlock): SqlBlock {
+        return visitWindowFunctionTypeFirstOrLastValue("FIRST_VALUE(", node, tail)
+    }
+
+    @Deprecated("This feature is experimental and is subject to change.")
+    override fun visitWindowFunctionTypeLastValue(node: WindowFunctionType.LastValue, tail: SqlBlock): SqlBlock {
+        return visitWindowFunctionTypeFirstOrLastValue("LAST_VALUE(", node, tail)
+    }
+
+    @Deprecated("This feature is experimental and is subject to change.")
+    override fun visitWindowFunctionTypeNthValue(node: WindowFunctionType.NthValue, tail: SqlBlock): SqlBlock {
+        var t = tail concat "NTH_VALUE("
+        t = visitExpr(node.value, t)
+        t = t concat ", "
+        t = visitExpr(node.nthRow, t)
+        t = t concat ")"
+        node.fromFirstOrLast?.let { t = t concat " ${it.name()}" }
+        node.nullTreatment?.let { t = t concat " ${it.name()}" }
+        return t
+    }
+
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowPartition(node: WindowPartition, tail: SqlBlock): SqlBlock {
         return visitIdentifier(node.columnReference, tail)
     }
@@ -1094,6 +1123,19 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     private infix fun SqlBlock.concat(rhs: SqlBlock): SqlBlock {
         next = rhs
         return next!!
+    }
+
+    @Suppress("DEPRECATION")
+    private fun visitWindowFunctionTypeFirstOrLastValue(
+        prefix: String,
+        node: WindowFunctionType.FirstOrLastValue,
+        tail: SqlBlock
+    ): SqlBlock {
+        var t = tail concat prefix
+        t = visitExpr(node.value, t)
+        t = t concat ")"
+        node.nullTreatment?.let { t = t concat " ${it.name()}" }
+        return t
     }
 
     private fun visitWindowFunctionTypeLeadOrLag(

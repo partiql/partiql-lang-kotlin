@@ -12,8 +12,7 @@ internal object WindowBuiltIns {
             "dense_rank" -> DenseRankFunction()
             "percent_rank" -> PercentRankFunction()
             "cume_dist" -> CumeDistFunction()
-            // TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1997
-            "ntile" -> TODO()
+            "ntile" -> NtileFunction(arguments[0])
             "lag" -> {
                 val expr = arguments[0]
                 val offset = arguments[1]
@@ -26,10 +25,14 @@ internal object WindowBuiltIns {
                 val default = arguments[2]
                 LeadFunction(expr, offset, default, signature.isIgnoreNulls)
             }
-            // TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1997
-            "first_value" -> TODO()
-            "last_value" -> TODO()
-            "nth_value" -> TODO()
+            "first_value" -> FirstValueFunction(arguments[0], signature.isIgnoreNulls, signature.returnType)
+            "last_value" -> LastValueFunction(arguments[0], signature.isIgnoreNulls, signature.returnType)
+            "nth_value" -> {
+                val value = arguments[0]
+                val nthRow = arguments[1]
+                val fromLast = arguments[2]
+                NthValueFunction(value, nthRow, fromLast, signature.isIgnoreNulls, signature.returnType)
+            }
             else -> throw IllegalArgumentException("Unknown window function: ${signature.name}")
         }
     }

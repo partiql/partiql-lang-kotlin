@@ -31,9 +31,10 @@ Thank you to all who have contributed!
 - `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions. Window frame clauses are not supported yet ([#1837](https://github.com/partiql/partiql-lang-kotlin/issues/1837)), so the default frame is used. With a window `ORDER BY`, `SUM`/`AVG`/`MIN`/`MAX(DISTINCT)` report `INVALID_WINDOW_FUNCTION` and `COUNT(DISTINCT)` reports `FEATURE_NOT_SUPPORTED`.
+- Added experimental support for the `NTILE`, `FIRST_VALUE`, `LAST_VALUE`, and `NTH_VALUE` window functions.
 
 ### Changed
-- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
+- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `NTILE`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
 ### Deprecated
 

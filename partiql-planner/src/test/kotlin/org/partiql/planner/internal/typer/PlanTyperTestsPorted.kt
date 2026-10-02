@@ -5094,6 +5094,50 @@ internal class PlanTyperTestsPorted {
                 expected = BagType(StaticType.INT4),
                 warnings = assertWarningExists(PErrors.experimental("Window Clause"))
             ),
+            SuccessTestCase(
+                name = "NTILE returns BIGINT",
+                query = "SELECT VALUE NTILE(2) OVER (ORDER BY t.a) FROM << { 'a': 1, 'b': 'x' }, { 'a': 3, 'b': 'y' } >> AS t",
+                expected = BagType(StaticType.INT8),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause"))
+            ),
+            SuccessTestCase(
+                name = "NTILE with a BIGINT number of tiles",
+                query = "SELECT VALUE NTILE(CAST(2 AS BIGINT)) OVER (ORDER BY t.a) FROM << { 'a': 1, 'b': 'x' }, { 'a': 3, 'b': 'y' } >> AS t",
+                expected = BagType(StaticType.INT8),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause"))
+            ),
+            SuccessTestCase(
+                name = "FIRST_VALUE returns the type of the value expression",
+                query = "SELECT VALUE FIRST_VALUE(t.a) OVER (ORDER BY t.a) FROM << { 'a': 1, 'b': 'x' }, { 'a': 3, 'b': 'y' } >> AS t",
+                expected = BagType(StaticType.INT4),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause"))
+            ),
+            SuccessTestCase(
+                name = "LAST_VALUE IGNORE NULLS returns the type of the value expression",
+                query = "SELECT VALUE LAST_VALUE(t.b) IGNORE NULLS OVER (ORDER BY t.a) FROM << { 'a': 1, 'b': 'x' }, { 'a': 3, 'b': 'y' } >> AS t",
+                expected = BagType(StaticType.STRING),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause"))
+            ),
+            SuccessTestCase(
+                name = "NTH_VALUE FROM LAST IGNORE NULLS returns the type of the value expression",
+                query = "SELECT VALUE NTH_VALUE(t.b, 2) FROM LAST IGNORE NULLS OVER (ORDER BY t.a) FROM << { 'a': 1, 'b': 'x' }, { 'a': 3, 'b': 'y' } >> AS t",
+                expected = BagType(StaticType.STRING),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause"))
+            ),
+            ErrorTestCase(
+                name = "NTILE with a number of tiles that is not an exact numeric with scale 0",
+                query = "SELECT VALUE NTILE(2.5) OVER (ORDER BY t.a) FROM << { 'a': 1 } >> AS t",
+                problemHandler = assertProblemExists(
+                    PErrors.functionNotFound(null, Identifier.regular("ntile"), listOf(PType.decimal(2, 1)))
+                )
+            ),
+            ErrorTestCase(
+                name = "NTH_VALUE with an nth row that is not an exact numeric with scale 0",
+                query = "SELECT VALUE NTH_VALUE(t.a, 'x') OVER (ORDER BY t.a) FROM << { 'a': 1 } >> AS t",
+                problemHandler = assertProblemExists(
+                    PErrors.functionNotFound(null, Identifier.regular("nth_value"), listOf(PType.integer(), PType.string(), PType.bool()))
+                )
+            ),
         )
     }
 }
