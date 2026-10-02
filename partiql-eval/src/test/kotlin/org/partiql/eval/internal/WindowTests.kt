@@ -51,18 +51,18 @@ class WindowTests {
     @Test
     fun orderingGroupBounds() {
         val input = listOf(
-            1 to 1, 1 to 1, 1 to 2, 1 to 3, 1 to 3, // partition 1: groups [0,1], [2,2], [3,4]
+            1 to 1, 1 to 1, 1 to 2, 1 to 3, 1 to 3, 1 to 4, 1 to 4, 1 to 4, // partition 1: groups [0,1], [2,2], [3,4], [5,7]
             2 to 5, // partition 2: single row
             3 to 7, 3 to 7, // partition 3: all rows tie
         )
         val sorted = listOf(Collation(ExprVar(0, 1), desc = false, last = false))
         assertEquals(
-            listOf(0L to 1L, 0L to 1L, 2L to 2L, 3L to 4L, 3L to 4L, 0L to 0L, 0L to 1L, 0L to 1L),
+            listOf(0L to 1L, 0L to 1L, 2L to 2L, 3L to 4L, 3L to 4L, 5L to 7L, 5L to 7L, 5L to 7L, 0L to 0L, 0L to 1L, 0L to 1L),
             orderingGroupBounds(input, sorted)
         )
         // Without ORDER BY, the whole partition is a single peer group.
         assertEquals(
-            listOf(0L to 4L, 0L to 4L, 0L to 4L, 0L to 4L, 0L to 4L, 0L to 0L, 0L to 1L, 0L to 1L),
+            listOf(0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 0L, 0L to 1L, 0L to 1L),
             orderingGroupBounds(input, emptyList())
         )
     }
