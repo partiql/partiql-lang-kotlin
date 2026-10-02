@@ -5,11 +5,20 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
 import org.partiql.eval.Mode
+import org.partiql.eval.Row
+import org.partiql.eval.WindowFunction
+import org.partiql.eval.WindowPartition
+import org.partiql.eval.internal.operator.rel.Collation
+import org.partiql.eval.internal.operator.rel.RelOpWindow
+import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import java.time.LocalDate
+import kotlin.test.assertEquals
 
 /**
  * This test file tests window functions/clause.
@@ -33,6 +42,54 @@ class WindowTests {
     fun developmentTest() {
         val failingIndex = 3
         successTestCases()[failingIndex - 1].run()
+    }
+
+    /**
+     * Asserts the (orderingGroupStart, orderingGroupEnd) passed to window functions by [RelOpWindow]. Input rows are
+     * (partitionKey, sortKey) and are assumed to already be sorted.
+     */
+    @Test
+    fun orderingGroupBounds() {
+        val input = listOf(
+            1 to 1, 1 to 1, 1 to 2, 1 to 3, 1 to 3, // partition 1: groups [0,1], [2,2], [3,4]
+            2 to 5, // partition 2: single row
+            3 to 7, 3 to 7, // partition 3: all rows tie
+        )
+        val sorted = listOf(Collation(ExprVar(0, 1), desc = false, last = false))
+        assertEquals(
+            listOf(0L to 1L, 0L to 1L, 2L to 2L, 3L to 4L, 3L to 4L, 0L to 0L, 0L to 1L, 0L to 1L),
+            orderingGroupBounds(input, sorted)
+        )
+        // Without ORDER BY, the whole partition is a single peer group.
+        assertEquals(
+            listOf(0L to 4L, 0L to 4L, 0L to 4L, 0L to 4L, 0L to 4L, 0L to 0L, 0L to 1L, 0L to 1L),
+            orderingGroupBounds(input, emptyList())
+        )
+    }
+
+    private fun orderingGroupBounds(input: List<Pair<Int, Int>>, sortBy: List<Collation>): List<Pair<Long, Long>> {
+        val recorder = object : WindowFunction {
+            override fun reset(partition: WindowPartition) = Unit
+            override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum =
+                Datum.array(listOf(Datum.bigint(orderingGroupStart), Datum.bigint(orderingGroupEnd)))
+        }
+        val rows = input.map { (p, s) -> Row.of(Datum.integer(p), Datum.integer(s)) }
+        val source = object : ExprRelation {
+            private lateinit var iterator: Iterator<Row>
+            override fun open(env: Environment) { iterator = rows.iterator() }
+            override fun hasNext(): Boolean = iterator.hasNext()
+            override fun next(): Row = iterator.next()
+            override fun close() = Unit
+        }
+        val window = RelOpWindow(source, listOf(recorder), listOf(ExprVar(0, 0)), sortBy)
+        window.open(Environment())
+        val result = mutableListOf<Pair<Long, Long>>()
+        while (window.hasNext()) {
+            val bounds = window.next().values[2].toList()
+            result.add(bounds[0].long to bounds[1].long)
+        }
+        window.close()
+        return result
     }
 
     companion object {
@@ -94,10 +151,38 @@ class WindowTests {
             Employee(9, "Mason", "Research", 30, "Samantha")
         )
 
+        /**
+         * Readings (id, grp, v) where v may be null. Group 'b' contains only nulls.
+         */
+        private val readings = listOf(
+            Triple(1, "a", 10),
+            Triple(2, "a", null),
+            Triple(3, "a", null),
+            Triple(4, "a", 40),
+            Triple(5, "a", 50),
+            Triple(6, "a", null),
+            Triple(7, "b", null),
+            Triple(8, "b", null),
+        )
+
+        private fun intOrNull(v: Int?): Datum = v?.let { Datum.integer(it) } ?: Datum.nullValue(PType.integer())
+
         private val globals = listOf(
             Global(
                 name = "employee",
                 value = Datum.bag(employees.map { it.toDatum() })
+            ),
+            Global(
+                name = "readings",
+                value = Datum.bag(
+                    readings.map { (id, grp, v) ->
+                        Datum.struct(
+                            Field.of("id", Datum.integer(id)),
+                            Field.of("grp", Datum.string(grp)),
+                            Field.of("v", intOrNull(v)),
+                        )
+                    }
+                )
             ),
             Global(
                 name = "stock_prices",
@@ -363,7 +448,92 @@ class WindowTests {
                     )
                 ),
             ),
+            SuccessTestCase(
+                name = "LAG/LEAD IGNORE NULLS with offset 1 and 2",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        r.id AS id,
+                        LAG(r.v, 1, -1) IGNORE NULLS OVER _w AS lag1,
+                        LAG(r.v, 2, -1) IGNORE NULLS OVER _w AS lag2,
+                        LEAD(r.v, 1, -1) IGNORE NULLS OVER _w AS lead1,
+                        LEAD(r.v, 2, -1) IGNORE NULLS OVER _w AS lead2
+                    FROM readings AS r
+                    WINDOW _w AS (PARTITION BY r.grp ORDER BY r.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNav(1, -1, -1, 40, 50),
+                    rowOfNav(2, 10, -1, 40, 50),
+                    rowOfNav(3, 10, -1, 40, 50),
+                    rowOfNav(4, 10, -1, 50, -1),
+                    rowOfNav(5, 40, 10, -1, -1),
+                    rowOfNav(6, 50, 40, -1, -1),
+                    rowOfNav(7, -1, -1, -1, -1),
+                    rowOfNav(8, -1, -1, -1, -1),
+                ),
+            ),
+            SuccessTestCase(
+                name = "LAG/LEAD IGNORE NULLS with offset 0 and offset beyond qualifying rows",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        r.id AS id,
+                        LAG(r.v, 0, -1) IGNORE NULLS OVER _w AS lag1,
+                        LAG(r.v, 4, -1) IGNORE NULLS OVER _w AS lag2,
+                        LEAD(r.v, 0, -1) IGNORE NULLS OVER _w AS lead1,
+                        LEAD(r.v, 3, -1) IGNORE NULLS OVER _w AS lead2
+                    FROM readings AS r
+                    WINDOW _w AS (PARTITION BY r.grp ORDER BY r.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNav(1, 10, -1, 10, -1),
+                    rowOfNav(2, null, -1, null, -1),
+                    rowOfNav(3, null, -1, null, -1),
+                    rowOfNav(4, 40, -1, 40, -1),
+                    rowOfNav(5, 50, -1, 50, -1),
+                    rowOfNav(6, null, -1, null, -1),
+                    rowOfNav(7, null, -1, null, -1),
+                    rowOfNav(8, null, -1, null, -1),
+                ),
+            ),
+            SuccessTestCase(
+                name = "LAG/LEAD RESPECT NULLS (explicit and default) do not skip nulls",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        r.id AS id,
+                        LAG(r.v, 1, -1) RESPECT NULLS OVER _w AS lag1,
+                        LAG(r.v, 1, -1) OVER _w AS lag2,
+                        LEAD(r.v, 1, -1) RESPECT NULLS OVER _w AS lead1,
+                        LEAD(r.v, 1, -1) OVER _w AS lead2
+                    FROM readings AS r
+                    WINDOW _w AS (PARTITION BY r.grp ORDER BY r.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNav(1, -1, -1, null, null),
+                    rowOfNav(2, 10, 10, null, null),
+                    rowOfNav(3, null, null, 40, 40),
+                    rowOfNav(4, null, null, 50, 50),
+                    rowOfNav(5, 40, 40, null, null),
+                    rowOfNav(6, 50, 50, -1, -1),
+                    rowOfNav(7, -1, -1, null, null),
+                    rowOfNav(8, null, null, -1, -1),
+                ),
+            ),
         )
+
+        private fun rowOfNav(id: Int, lag1: Int?, lag2: Int?, lead1: Int?, lead2: Int?): Datum {
+            return Datum.struct(
+                Field.of("id", Datum.integer(id)),
+                Field.of("lag1", intOrNull(lag1)),
+                Field.of("lag2", intOrNull(lag2)),
+                Field.of("lead1", intOrNull(lead1)),
+                Field.of("lead2", intOrNull(lead2)),
+            )
+        }
 
         /**
          * @param id The employee's id

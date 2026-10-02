@@ -17,13 +17,13 @@ internal object WindowBuiltIns {
                 val expr = arguments[0]
                 val offset = arguments[1]
                 val default = arguments[2]
-                LagFunction(expr, offset, default)
+                LagFunction(expr, offset, default, signature.isIgnoreNulls)
             }
             "lead" -> {
                 val expr = arguments[0]
                 val offset = arguments[1]
                 val default = arguments[2]
-                LeadFunction(expr, offset, default)
+                LeadFunction(expr, offset, default, signature.isIgnoreNulls)
             }
             "first_value" -> TODO()
             "last_value" -> TODO()
