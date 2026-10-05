@@ -40,6 +40,7 @@ import org.partiql.ast.SelectValue
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
+import org.partiql.ast.WindowFunctionAggregateName
 import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowFunctionType.Lag
@@ -562,6 +563,7 @@ internal object RelConverter {
                     val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
                     rex(PType.dynamic().toCType(), op)
                 } ?: emptyList()
+                window.functions.forEach { checkWindowAggregateDistinct(it, window.spec) }
                 val functionNodes = window.functions.map { convertWindowFunction(it) }
                 val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }
                 val newSchema = current.type.schema + functionBindings
@@ -658,7 +660,7 @@ internal object RelConverter {
                             "unknown"
                         }
                     }
-                    relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                    relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.dynamic()), null)
                 }
                 is WindowFunctionType.LeadOrLag -> {
                     val name = when (windowType) {
@@ -679,13 +681,58 @@ internal object RelConverter {
                     val offset = windowType.offset?.let { rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(it))) } ?: rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(1)))
                     val default = windowType.defaultValue?.toRex(env) ?: rex(extent.type, rexOpLit(Datum.nullValue(extent.type)))
                     val args = listOf(extent, offset, default)
-                    relOpWindowWindowFunction(name, args, isIgnoreNulls, null, null)
+                    relOpWindowWindowFunction(name, args, isIgnoreNulls, null, null, null)
                 }
+                is WindowFunctionType.Aggregate -> convertAggregateWindowFunction(windowType)
                 else -> {
                     val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
                     env.listener.report(PErrors.internalError(cause))
-                    relOpWindowWindowFunction("unknown", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                    relOpWindowWindowFunction("unknown", emptyList(), false, emptyList(), CompilerType(PType.dynamic()), null)
                 }
+            }
+        }
+
+        /**
+         * Converts an aggregate window function (COUNT/SUM/AVG/MIN/MAX) to a window function holding an unresolved
+         * aggregate call. The call is resolved by the typer exactly like a GROUP BY aggregate call (see
+         * [Rel.Op.Aggregate.Call.Unresolved]), so window aggregates share the aggregate catalog, typing rules, and
+         * accumulators with group aggregation. `COUNT(*)` is represented (as for group aggregation) by a call to `count`
+         * with no arguments.
+         */
+        private fun convertAggregateWindowFunction(node: WindowFunctionType.Aggregate): Rel.Op.Window.WindowFunction {
+            val name = when (node.function.code()) {
+                WindowFunctionAggregateName.COUNT -> "count"
+                WindowFunctionAggregateName.SUM -> "sum"
+                WindowFunctionAggregateName.AVG -> "avg"
+                WindowFunctionAggregateName.MIN -> "min"
+                WindowFunctionAggregateName.MAX -> "max"
+                else -> {
+                    val cause = IllegalStateException("Unexpected WindowFunctionAggregateName: ${node.function}")
+                    env.listener.report(PErrors.internalError(cause))
+                    "unknown"
+                }
+            }
+            val setq = when (node.setq?.code()) {
+                SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+                SetQuantifier.ALL, null -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                else -> error("Unexpected SetQuantifier type: ${node.setq}")
+            }
+            val args = listOfNotNull(node.argument?.toRex(env))
+            val call = relOpAggregateCallUnresolved(Identifier.regular(name), setq, args)
+            return relOpWindowWindowFunction(name, emptyList(), false, null, null, call)
+        }
+
+        /**
+         * SQL:2011 Section 6.10, Syntax Rule 13: if the window ordering clause or the window framing clause is present,
+         * then no aggregate function simply contained in the window function shall specify DISTINCT.
+         */
+        private fun checkWindowAggregateDistinct(function: ExprWindowFunction, spec: WindowSpecification) {
+            val type = function.functionType
+            if (type !is WindowFunctionType.Aggregate || type.setq?.code() != SetQuantifier.DISTINCT) {
+                return
+            }
+            if (spec.orderClause != null) {
+                env.listener.report(PErrors.featureNotSupported("DISTINCT in an aggregate window function with a window ORDER BY clause"))
             }
         }
 

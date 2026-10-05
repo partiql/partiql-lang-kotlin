@@ -434,8 +434,11 @@ public class org/partiql/plan/Version : org/partiql/spi/Enum {
 
 public final class org/partiql/plan/WindowFunctionNode {
 	public fun <init> (Lorg/partiql/plan/WindowFunctionSignature;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/plan/WindowFunctionSignature;Ljava/util/List;Lorg/partiql/spi/function/Agg;Z)V
+	public fun getAggregate ()Lorg/partiql/spi/function/Agg;
 	public fun getArguments ()Ljava/util/List;
 	public fun getSignature ()Lorg/partiql/plan/WindowFunctionSignature;
+	public fun isDistinct ()Z
 }
 
 public final class org/partiql/plan/WindowFunctionSignature {
