@@ -460,6 +460,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitWindowClause (Lorg/partiql/ast/WindowClause;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$Definition;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$Definition;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWindowFunctionTypeAggregate (Lorg/partiql/ast/WindowFunctionType$Aggregate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeAggregate (Lorg/partiql/ast/WindowFunctionType$Aggregate;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Ljava/lang/Object;)Ljava/lang/Object;
@@ -634,6 +636,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitWindowClause (Lorg/partiql/ast/WindowClause;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$Definition;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionType (Lorg/partiql/ast/WindowFunctionType;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeAggregate (Lorg/partiql/ast/WindowFunctionType$Aggregate;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLag (Lorg/partiql/ast/WindowFunctionType$Lag;Ljava/lang/Object;)Ljava/lang/Object;
@@ -1628,6 +1631,26 @@ public class org/partiql/ast/WindowClause$Definition$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/partiql/ast/WindowFunctionAggregateName : org/partiql/ast/AstEnum {
+	public static final field AVG I
+	public static final field COUNT I
+	public static final field MAX I
+	public static final field MIN I
+	public static final field SUM I
+	public static fun AVG ()Lorg/partiql/ast/WindowFunctionAggregateName;
+	public static fun COUNT ()Lorg/partiql/ast/WindowFunctionAggregateName;
+	public static fun MAX ()Lorg/partiql/ast/WindowFunctionAggregateName;
+	public static fun MIN ()Lorg/partiql/ast/WindowFunctionAggregateName;
+	public static fun SUM ()Lorg/partiql/ast/WindowFunctionAggregateName;
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun code ()I
+	public static fun codes ()[I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
+}
+
 public final class org/partiql/ast/WindowFunctionNullTreatment : org/partiql/ast/AstEnum {
 	public static final field IGNORE_NULLS I
 	public static final field RESPECT_NULLS I
@@ -1645,6 +1668,27 @@ public final class org/partiql/ast/WindowFunctionNullTreatment : org/partiql/ast
 public abstract class org/partiql/ast/WindowFunctionType : org/partiql/ast/AstNode {
 	public fun <init> ()V
 	public fun getChildren ()Ljava/util/List;
+}
+
+public final class org/partiql/ast/WindowFunctionType$Aggregate : org/partiql/ast/WindowFunctionType {
+	public fun <init> (Lorg/partiql/ast/WindowFunctionAggregateName;Lorg/partiql/ast/SetQuantifier;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$Aggregate$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getArgument ()Lorg/partiql/ast/expr/Expr;
+	public fun getChildren ()Ljava/util/List;
+	public fun getFunction ()Lorg/partiql/ast/WindowFunctionAggregateName;
+	public fun getSetq ()Lorg/partiql/ast/SetQuantifier;
+	public fun hashCode ()I
+	public fun isCountStar ()Z
+}
+
+public class org/partiql/ast/WindowFunctionType$Aggregate$Builder {
+	public fun argument (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/WindowFunctionType$Aggregate$Builder;
+	public fun build ()Lorg/partiql/ast/WindowFunctionType$Aggregate;
+	public fun function (Lorg/partiql/ast/WindowFunctionAggregateName;)Lorg/partiql/ast/WindowFunctionType$Aggregate$Builder;
+	public fun setq (Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/WindowFunctionType$Aggregate$Builder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/ast/WindowFunctionType$CumeDist : org/partiql/ast/WindowFunctionType {
@@ -3805,6 +3849,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitWindowDefinition (Lorg/partiql/ast/WindowClause$Definition;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWindowFunctionType (Lorg/partiql/ast/WindowFunctionType;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionType (Lorg/partiql/ast/WindowFunctionType;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeAggregate (Lorg/partiql/ast/WindowFunctionType$Aggregate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeAggregate (Lorg/partiql/ast/WindowFunctionType$Aggregate;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Ljava/lang/Object;)Ljava/lang/Object;

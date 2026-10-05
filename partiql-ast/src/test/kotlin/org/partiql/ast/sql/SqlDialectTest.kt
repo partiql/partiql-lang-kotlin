@@ -111,6 +111,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionAggregateName
 import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.With
@@ -4242,6 +4243,57 @@ class SqlDialectTest {
                         ),
                         from = table("stocks")
                     )
+                )
+            ),
+            // Aggregate window functions
+            expect(
+                "COUNT(*) OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(WindowFunctionAggregateName.COUNT(), null, null),
+                    spec = windowSpecification(
+                        null,
+                        listOf(windowPartition(Identifier.regular("department"))),
+                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            expect(
+                "COUNT(DISTINCT age) OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(WindowFunctionAggregateName.COUNT(), SetQuantifier.DISTINCT(), v("age")),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
+                )
+            ),
+            expect(
+                "SUM(ALL salary) OVER (ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(WindowFunctionAggregateName.SUM(), SetQuantifier.ALL(), v("salary")),
+                    spec = windowSpecification(null, emptyList(), orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST()))))
+                )
+            ),
+            expect(
+                "AVG(salary) OVER ()",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(WindowFunctionAggregateName.AVG(), null, v("salary")),
+                    spec = windowSpecification(null, null, null)
+                )
+            ),
+            expect(
+                "MIN(salary) OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(WindowFunctionAggregateName.MIN(), null, v("salary")),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
+                )
+            ),
+            expect(
+                "MAX(SUM(salary)) OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(
+                        WindowFunctionAggregateName.MAX(),
+                        null,
+                        exprCall(Identifier.regular("SUM"), listOf(v("salary")), null)
+                    ),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
                 )
             ),
             // Basic window functions with OVER clause

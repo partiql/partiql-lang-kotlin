@@ -174,6 +174,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
 import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionAggregateName
 import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowPartition
@@ -2032,6 +2033,24 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitWindowFunctionTypeRowNumber(ctx: GeneratedParser.WindowFunctionTypeRowNumberContext) = translate(ctx) {
             WindowFunctionType.RowNumber()
+        }
+
+        override fun visitAggregateWindowFunctionCountStar(ctx: GeneratedParser.AggregateWindowFunctionCountStarContext) = translate(ctx) {
+            WindowFunctionType.Aggregate(WindowFunctionAggregateName.COUNT(), null, null)
+        }
+
+        override fun visitAggregateWindowFunctionGeneral(ctx: GeneratedParser.AggregateWindowFunctionGeneralContext) = translate(ctx) {
+            val function = when (ctx.name.type) {
+                GeneratedLexer.COUNT -> WindowFunctionAggregateName.COUNT()
+                GeneratedLexer.SUM -> WindowFunctionAggregateName.SUM()
+                GeneratedLexer.AVG -> WindowFunctionAggregateName.AVG()
+                GeneratedLexer.MIN -> WindowFunctionAggregateName.MIN()
+                GeneratedLexer.MAX -> WindowFunctionAggregateName.MAX()
+                else -> throw error(ctx, "Expected one of: COUNT, SUM, AVG, MIN, MAX")
+            }
+            val setq = convertSetQuantifier(ctx.setQuantifierStrategy())
+            val argument = visitExpr(ctx.argument)
+            WindowFunctionType.Aggregate(function, setq, argument)
         }
 
         override fun visitWindowFunctionNullTreatment(ctx: GeneratedParser.WindowFunctionNullTreatmentContext) = translate(ctx) {
