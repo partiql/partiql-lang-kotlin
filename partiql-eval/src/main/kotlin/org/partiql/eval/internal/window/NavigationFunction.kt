@@ -8,18 +8,18 @@ import org.partiql.spi.value.Datum
 
 /**
  * Base class for navigation functions such as [LeadFunction] and [LagFunction].
- * @param direction -1 to navigate to preceding rows, 1 to navigate to following rows.
  */
-internal abstract class NavigationFunction(
-    private val expr: ExprValue,
-    private val offset: ExprValue,
-    private val default: ExprValue,
-    private val ignoreNulls: Boolean,
-    private val direction: Long,
-) : WindowFunction {
+internal abstract class NavigationFunction : WindowFunction {
 
     private lateinit var partition: WindowPartition
     private var currentPosition: Long = -1L
+
+    /**
+     * Evaluate the function for the current row.
+     * @param env the environment to use for evaluation
+     * @return the result of the evaluation
+     */
+    abstract fun eval(env: Environment): Datum
 
     override fun reset(partition: WindowPartition) {
         this.partition = partition
@@ -28,8 +28,7 @@ internal abstract class NavigationFunction(
 
     override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum {
         currentPosition++
-        val offsetLong = offset.eval(env).long
-        return navigate(env, direction * offsetLong)
+        return eval(env)
     }
 
     /**
@@ -37,7 +36,7 @@ internal abstract class NavigationFunction(
      * is following). With [ignoreNulls], rows whose [expr] evaluates to NULL/MISSING are skipped and not counted.
      * @return the evaluated [expr], or the evaluated [default] if no such row exists within the partition.
      */
-    private fun navigate(env: Environment, offset: Long): Datum {
+    internal fun navigate(env: Environment, expr: ExprValue, offset: Long, default: ExprValue, ignoreNulls: Boolean): Datum {
         if (!ignoreNulls || offset == 0L) {
             val index = currentPosition + offset
             if (index < 0 || index >= partition.size()) {
