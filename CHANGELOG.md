@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added (experimental) support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions, e.g. `SUM(x) OVER (PARTITION BY k ORDER BY t)`, including `COUNT(*)` and `ALL`/`DISTINCT` (SQL:2011 only allows `DISTINCT` when the window has no `ORDER BY`). As window frame clauses are not yet supported, the SQL default frame is used: a running aggregate through the current row's peers with `ORDER BY`, otherwise the whole partition. Window aggregates are typed and evaluated with the same aggregate functions as group aggregation. Adds `WindowFunctionType.Aggregate` and `WindowFunctionAggregateName` to the AST and `WindowFunctionNode.getAggregate()`/`isDistinct()` to the plan.
 
 ### Changed
 

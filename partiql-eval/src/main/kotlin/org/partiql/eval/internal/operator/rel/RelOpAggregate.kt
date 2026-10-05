@@ -7,10 +7,8 @@ import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.Aggregate
-import org.partiql.spi.function.Accumulator
 import org.partiql.spi.value.Datum
 import java.util.TreeMap
-import java.util.TreeSet
 
 internal class RelOpAggregate(
     private val input: ExprRelation,
@@ -20,18 +18,7 @@ internal class RelOpAggregate(
 
     private lateinit var records: Iterator<Row>
 
-    private val aggregationMap = TreeMap<Array<Datum>, List<AccumulatorWrapper>>(DatumArrayComparator)
-
-    /**
-     * Wraps an [Accumulator] to help with filtering distinct values.
-     *
-     * @property seen maintains which values have already been seen. If null, we accumulate all values coming through.
-     */
-    class AccumulatorWrapper(
-        val delegate: Accumulator,
-        val args: List<ExprValue>,
-        val seen: TreeSet<Array<Datum>>?
-    )
+    private val aggregationMap = TreeMap<Array<Datum>, List<Aggregate.State>>(DatumArrayComparator)
 
     override fun open(env: Environment) {
         input.open(env)
@@ -49,31 +36,12 @@ internal class RelOpAggregate(
             }
 
             val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
-                aggregates.map {
-                    AccumulatorWrapper(
-                        delegate = it.agg.accumulator,
-                        args = it.args,
-                        seen = if (it.distinct) TreeSet(DatumArrayComparator) else null
-                    )
-                }
+                aggregates.map { it.newState() }
             }
 
             // Aggregate Values in Aggregation State
-            accumulators.forEachIndexed { index, function ->
-                val arguments = Array(function.args.size) {
-                    val argument = function.args[it].eval(env.push(inputRecord))
-                    // Skip over aggregation if NULL/MISSING
-                    if (argument.isNull || argument.isMissing) {
-                        return@forEachIndexed
-                    }
-                    argument
-                }
-                // Skip over aggregation if DISTINCT and SEEN
-                if (function.seen != null && (function.seen.add(arguments).not())) {
-                    return@forEachIndexed
-                }
-                accumulators[index].delegate.next(arguments)
-            }
+            val inputEnv = env.push(inputRecord)
+            accumulators.forEach { it.accumulate(inputEnv) }
 
             // TODO env.pop() which happens automatically because the variable is dropped.
         }
@@ -91,7 +59,7 @@ internal class RelOpAggregate(
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
-                val accumulatorValues = Array(accumulators.size) { i -> accumulators[i].delegate.value() }
+                val accumulatorValues = Array(accumulators.size) { i -> accumulators[i].value() }
                 val recordValues = accumulatorValues + keysEvaluated
                 yield(Row(recordValues))
             }

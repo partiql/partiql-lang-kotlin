@@ -68,6 +68,7 @@ import org.partiql.eval.internal.plan.PCollation
 import org.partiql.eval.internal.plan.PExpr
 import org.partiql.eval.internal.plan.PJoinType
 import org.partiql.eval.internal.plan.PRel
+import org.partiql.eval.internal.window.AggregateWindowFunction
 import org.partiql.eval.internal.window.WindowBuiltIns
 import org.partiql.spi.catalog.ExecutionCatalog
 import org.partiql.spi.types.PType
@@ -259,7 +260,10 @@ internal class OperatorCompiler(
                 val input = compileRel(rel.input)
                 val functions = rel.functions.map { wf ->
                     val args = wf.args.map { compile(it).catch() }
-                    WindowBuiltIns.get(wf.signature, args)
+                    when (val agg = wf.agg) {
+                        null -> WindowBuiltIns.get(wf.signature, args)
+                        else -> AggregateWindowFunction(Aggregate(agg, args, wf.distinct))
+                    }
                 }
                 val partitionBy = rel.partitions.map { compile(it) }
                 val sortBy = rel.sorts.map { toCollation(it) }
