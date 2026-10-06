@@ -14,6 +14,7 @@ import org.partiql.eval.WindowPartition
 import org.partiql.eval.internal.operator.rel.Collation
 import org.partiql.eval.internal.operator.rel.RelOpWindow
 import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.eval.internal.window.RowNumberFunction
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -90,6 +91,61 @@ class WindowTests {
         }
         window.close()
         return result
+    }
+
+    /**
+     * Closing [RelOpWindow] before it is fully consumed leaves the read-ahead first row of the next partition behind.
+     * Re-opening must not emit that row.
+     */
+    @Test
+    fun reopenAfterPartialConsumption() {
+        val rows = listOf(1, 1, 2).map { Row.of(Datum.integer(it)) }
+        val source = object : ExprRelation {
+            private lateinit var iterator: Iterator<Row>
+            override fun open(env: Environment) { iterator = rows.iterator() }
+            override fun hasNext(): Boolean = iterator.hasNext()
+            override fun next(): Row = iterator.next()
+            override fun close() = Unit
+        }
+        val window = RelOpWindow(source, listOf(RowNumberFunction()), listOf(ExprVar(0, 0)), emptyList())
+        window.open(Environment())
+        window.next()
+        window.close()
+
+        window.open(Environment())
+        val result = mutableListOf<Pair<Int, Long>>()
+        while (window.hasNext()) {
+            val row = window.next().values
+            result.add(row[0].int to row[1].long)
+        }
+        window.close()
+        assertEquals(listOf(1 to 1L, 1 to 2L, 2 to 1L), result)
+    }
+
+    /**
+     * Closing [RelOpWindow] must release the buffered partition, including the window functions' references to it.
+     */
+    @Test
+    fun closeReleasesPartition() {
+        val rows = listOf(1, 1, 2).map { Row.of(Datum.integer(it)) }
+        val source = object : ExprRelation {
+            private lateinit var iterator: Iterator<Row>
+            override fun open(env: Environment) { iterator = rows.iterator() }
+            override fun hasNext(): Boolean = iterator.hasNext()
+            override fun next(): Row = iterator.next()
+            override fun close() = Unit
+        }
+        var lastPartition: WindowPartition? = null
+        val recorder = object : WindowFunction {
+            override fun reset(partition: WindowPartition) { lastPartition = partition }
+            override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum = Datum.bigint(0)
+        }
+        val window = RelOpWindow(source, listOf(recorder), listOf(ExprVar(0, 0)), emptyList())
+        window.open(Environment())
+        window.next()
+        assertEquals(2L, lastPartition!!.size())
+        window.close()
+        assertEquals(0L, lastPartition!!.size())
     }
 
     companion object {
@@ -471,6 +527,27 @@ class WindowTests {
                     rowOfNav(6, 50, 40, -1, -1),
                     rowOfNav(7, -1, -1, -1, -1),
                     rowOfNav(8, -1, -1, -1, -1),
+                ),
+            ),
+            SuccessTestCase(
+                name = "LAG/LEAD IGNORE NULLS skip MISSING as well as NULL",
+                mode = Mode.PERMISSIVE(),
+                input = """
+                    SELECT
+                        r.id AS id,
+                        LAG(r.v, 1, -1) IGNORE NULLS OVER _w AS lag1,
+                        LAG(r.v, 2, -1) IGNORE NULLS OVER _w AS lag2,
+                        LEAD(r.v, 1, -1) IGNORE NULLS OVER _w AS lead1,
+                        LEAD(r.v, 2, -1) IGNORE NULLS OVER _w AS lead2
+                    FROM << {'id': 1, 'v': 10}, {'id': 2, 'v': 20}, {'id': 3}, {'id': 4, 'v': NULL}, {'id': 5, 'v': 50} >> AS r
+                    WINDOW _w AS (ORDER BY r.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNav(1, -1, -1, 20, 50),
+                    rowOfNav(2, 10, -1, 50, -1),
+                    rowOfNav(3, 20, 10, 50, -1),
+                    rowOfNav(4, 20, 10, 50, -1),
+                    rowOfNav(5, 20, 10, -1, -1),
                 ),
             ),
             SuccessTestCase(

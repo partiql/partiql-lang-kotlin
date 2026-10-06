@@ -48,6 +48,7 @@ internal class RelOpWindow(
         this._env = env
         _partitionPeekingNumber = -1L
         _partition = LocalPartition()
+        leftoverRow = null
         functions.map { it.reset(_partition) }
     }
 
@@ -165,5 +166,9 @@ internal class RelOpWindow(
 
     override fun closePeeking() {
         input.close()
+        // Release the buffered partition (including the functions' references to it) while the operator is idle.
+        _partition = LocalPartition()
+        leftoverRow = null
+        functions.map { it.reset(_partition) }
     }
 }
