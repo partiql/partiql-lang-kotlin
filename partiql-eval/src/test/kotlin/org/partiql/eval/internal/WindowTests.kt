@@ -46,80 +46,82 @@ class WindowTests {
     }
 
     /**
-     * Asserts the (orderingGroupStart, orderingGroupEnd) passed to window functions by [RelOpWindow]. Input rows are
-     * (partitionKey, sortKey) and are assumed to already be sorted.
+     * Asserts the (orderingGroupStart, orderingGroupEnd) passed to window functions by [RelOpWindow], for
+     * `PARTITION BY department ORDER BY age`. Peers (same department and age) share one ordering group.
      */
     @Test
     fun orderingGroupBounds() {
-        val input = listOf(
-            1 to 1, 1 to 1, 1 to 2, 1 to 3, 1 to 3, 1 to 4, 1 to 4, 1 to 4, // partition 1: groups [0,1], [2,2], [3,4], [5,7]
-            2 to 5, // partition 2: single row
-            3 to 7, 3 to 7, // partition 3: all rows tie
+        val employees = listOf(
+            employee("Sales", "Ann", 25), employee("Sales", "Bob", 25), // peers
+            employee("Sales", "Cat", 30),
+            employee("Sales", "Dan", 35), employee("Sales", "Eve", 35), // peers
+            employee("Sales", "Fay", 40), employee("Sales", "Gus", 40), employee("Sales", "Hal", 40), // peers
+            employee("Marketing", "Ivy", 28), // single-row partition
+            employee("Research", "Jay", 33), employee("Research", "Kim", 33), // every row ties
         )
-        val sorted = listOf(Collation(ExprVar(0, 1), desc = false, last = false))
         assertEquals(
-            listOf(0L to 1L, 0L to 1L, 2L to 2L, 3L to 4L, 3L to 4L, 5L to 7L, 5L to 7L, 5L to 7L, 0L to 0L, 0L to 1L, 0L to 1L),
-            orderingGroupBounds(input, sorted)
+            listOf(
+                "Ann" to 0L..1L, "Bob" to 0L..1L,
+                "Cat" to 2L..2L,
+                "Dan" to 3L..4L, "Eve" to 3L..4L,
+                "Fay" to 5L..7L, "Gus" to 5L..7L, "Hal" to 5L..7L,
+                "Ivy" to 0L..0L,
+                "Jay" to 0L..1L, "Kim" to 0L..1L,
+            ),
+            orderingGroupBounds(employees, listOf(Collation(AGE, desc = false, last = false)))
         )
         // Without ORDER BY, the whole partition is a single peer group.
         assertEquals(
-            listOf(0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 7L, 0L to 0L, 0L to 1L, 0L to 1L),
-            orderingGroupBounds(input, emptyList())
+            listOf(
+                "Ann" to 0L..7L, "Bob" to 0L..7L, "Cat" to 0L..7L, "Dan" to 0L..7L,
+                "Eve" to 0L..7L, "Fay" to 0L..7L, "Gus" to 0L..7L, "Hal" to 0L..7L,
+                "Ivy" to 0L..0L,
+                "Jay" to 0L..1L, "Kim" to 0L..1L,
+            ),
+            orderingGroupBounds(employees, emptyList())
         )
     }
 
-    private fun orderingGroupBounds(input: List<Pair<Int, Int>>, sortBy: List<Collation>): List<Pair<Long, Long>> {
+    /**
+     * @return each employee's name paired with the ordering group bounds [RelOpWindow] passed for that row.
+     */
+    private fun orderingGroupBounds(employees: List<Row>, sortBy: List<Collation>): List<Pair<String, LongRange>> {
         val recorder = object : WindowFunction {
             override fun reset(partition: WindowPartition) = Unit
             override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum =
                 Datum.array(listOf(Datum.bigint(orderingGroupStart), Datum.bigint(orderingGroupEnd)))
         }
-        val rows = input.map { (p, s) -> Row.of(Datum.integer(p), Datum.integer(s)) }
-        val source = object : ExprRelation {
-            private lateinit var iterator: Iterator<Row>
-            override fun open(env: Environment) { iterator = rows.iterator() }
-            override fun hasNext(): Boolean = iterator.hasNext()
-            override fun next(): Row = iterator.next()
-            override fun close() = Unit
-        }
-        val window = RelOpWindow(source, listOf(recorder), listOf(ExprVar(0, 0)), sortBy)
+        val window = RelOpWindow(relationOf(employees), listOf(recorder), listOf(DEPARTMENT), sortBy)
         window.open(Environment())
-        val result = mutableListOf<Pair<Long, Long>>()
+        val result = mutableListOf<Pair<String, LongRange>>()
         while (window.hasNext()) {
-            val bounds = window.next().values[2].toList()
-            result.add(bounds[0].long to bounds[1].long)
+            val row = window.next().values
+            val bounds = row[3].toList()
+            result.add(row[1].string to bounds[0].long..bounds[1].long)
         }
         window.close()
         return result
     }
 
     /**
-     * Closing [RelOpWindow] before it is fully consumed leaves the read-ahead first row of the next partition behind.
-     * Re-opening must not emit that row.
+     * To find the end of the Marketing partition, [RelOpWindow] reads Ann (Sales) ahead. Closing it before Ann is
+     * emitted must not leak Ann into the start of the next run.
      */
     @Test
     fun reopenAfterPartialConsumption() {
-        val rows = listOf(1, 1, 2).map { Row.of(Datum.integer(it)) }
-        val source = object : ExprRelation {
-            private lateinit var iterator: Iterator<Row>
-            override fun open(env: Environment) { iterator = rows.iterator() }
-            override fun hasNext(): Boolean = iterator.hasNext()
-            override fun next(): Row = iterator.next()
-            override fun close() = Unit
-        }
-        val window = RelOpWindow(source, listOf(RowNumberFunction()), listOf(ExprVar(0, 0)), emptyList())
+        val window = RelOpWindow(relationOf(marketingAndSales), listOf(RowNumberFunction()), listOf(DEPARTMENT), emptyList())
         window.open(Environment())
-        window.next()
+        window.next() // Ivy; Ann has been read ahead
         window.close()
 
         window.open(Environment())
-        val result = mutableListOf<Pair<Int, Long>>()
+        val result = mutableListOf<Pair<String, Long>>()
         while (window.hasNext()) {
             val row = window.next().values
-            result.add(row[0].int to row[1].long)
+            result.add(row[1].string to row[3].long)
         }
         window.close()
-        assertEquals(listOf(1 to 1L, 1 to 2L, 2 to 1L), result)
+        assertEquals(listOf("Ivy" to 1L, "Max" to 2L, "Ann" to 1L), result)
     }
 
     /**
@@ -127,28 +129,46 @@ class WindowTests {
      */
     @Test
     fun closeReleasesPartition() {
-        val rows = listOf(1, 1, 2).map { Row.of(Datum.integer(it)) }
-        val source = object : ExprRelation {
-            private lateinit var iterator: Iterator<Row>
-            override fun open(env: Environment) { iterator = rows.iterator() }
-            override fun hasNext(): Boolean = iterator.hasNext()
-            override fun next(): Row = iterator.next()
-            override fun close() = Unit
-        }
         var lastPartition: WindowPartition? = null
         val recorder = object : WindowFunction {
             override fun reset(partition: WindowPartition) { lastPartition = partition }
             override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum = Datum.bigint(0)
         }
-        val window = RelOpWindow(source, listOf(recorder), listOf(ExprVar(0, 0)), emptyList())
+        val window = RelOpWindow(relationOf(marketingAndSales), listOf(recorder), listOf(DEPARTMENT), emptyList())
         window.open(Environment())
-        window.next()
-        assertEquals(2L, lastPartition!!.size())
+        window.next() // Ivy
+        assertEquals(2L, lastPartition!!.size()) // Marketing: Ivy, Max
         window.close()
         assertEquals(0L, lastPartition!!.size())
     }
 
+    /**
+     * Rows (department, name, age), already grouped by department as [RelOpWindow] expects.
+     */
+    private val marketingAndSales = listOf(
+        employee("Marketing", "Ivy", 28),
+        employee("Marketing", "Max", 32),
+        employee("Sales", "Ann", 25),
+    )
+
+    private fun employee(department: String, name: String, age: Int): Row =
+        Row.of(Datum.string(department), Datum.string(name), Datum.integer(age))
+
+    /**
+     * A re-openable relation over [rows].
+     */
+    private fun relationOf(rows: List<Row>): ExprRelation = object : ExprRelation {
+        private lateinit var iterator: Iterator<Row>
+        override fun open(env: Environment) { iterator = rows.iterator() }
+        override fun hasNext(): Boolean = iterator.hasNext()
+        override fun next(): Row = iterator.next()
+        override fun close() = Unit
+    }
+
     companion object {
+
+        private val DEPARTMENT = ExprVar(0, 0)
+        private val AGE = ExprVar(0, 2)
 
         private class Employee(
             val id: Int,
