@@ -169,6 +169,6 @@ internal class RelOpWindow(
         // Release the buffered partition (including the functions' references to it) while the operator is idle.
         _partition = LocalPartition()
         leftoverRow = null
-        functions.map { it.reset(_partition) }
+        functions.forEach { it.reset(_partition) }
     }
 }

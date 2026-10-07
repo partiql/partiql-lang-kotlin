@@ -95,8 +95,10 @@ class WindowTests {
         window.open(Environment())
         val result = mutableListOf<Pair<String, LongRange>>()
         while (window.hasNext()) {
+            // Output row is the input (department, name, age) followed by the recorder's result.
             val row = window.next().values
             val bounds = row[3].toList()
+            // row[1] is the employee's name; bounds[0] is orderingGroupStart and bounds[1] is orderingGroupEnd.
             result.add(row[1].string to bounds[0].long..bounds[1].long)
         }
         window.close()
