@@ -5,11 +5,21 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
 import org.partiql.eval.Mode
+import org.partiql.eval.Row
+import org.partiql.eval.WindowFunction
+import org.partiql.eval.WindowPartition
+import org.partiql.eval.internal.operator.rel.Collation
+import org.partiql.eval.internal.operator.rel.RelOpWindow
+import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.eval.internal.window.RowNumberFunction
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import java.time.LocalDate
+import kotlin.test.assertEquals
 
 /**
  * This test file tests window functions/clause.
@@ -35,7 +45,132 @@ class WindowTests {
         successTestCases()[failingIndex - 1].run()
     }
 
+    /**
+     * Asserts the (orderingGroupStart, orderingGroupEnd) passed to window functions by [RelOpWindow], for
+     * `PARTITION BY department ORDER BY age`. Peers (same department and age) share one ordering group.
+     */
+    @Test
+    fun orderingGroupBounds() {
+        val employees = listOf(
+            employee("Sales", "Ann", 25), employee("Sales", "Bob", 25), // peers
+            employee("Sales", "Cat", 30),
+            employee("Sales", "Dan", 35), employee("Sales", "Eve", 35), // peers
+            employee("Sales", "Fay", 40), employee("Sales", "Gus", 40), employee("Sales", "Hal", 40), // peers
+            employee("Marketing", "Ivy", 28), // single-row partition
+            employee("Research", "Jay", 33), employee("Research", "Kim", 33), // every row ties
+        )
+        assertEquals(
+            listOf(
+                "Ann" to 0L..1L, "Bob" to 0L..1L,
+                "Cat" to 2L..2L,
+                "Dan" to 3L..4L, "Eve" to 3L..4L,
+                "Fay" to 5L..7L, "Gus" to 5L..7L, "Hal" to 5L..7L,
+                "Ivy" to 0L..0L,
+                "Jay" to 0L..1L, "Kim" to 0L..1L,
+            ),
+            orderingGroupBounds(employees, listOf(Collation(AGE, desc = false, last = false)))
+        )
+        // Without ORDER BY, the whole partition is a single peer group.
+        assertEquals(
+            listOf(
+                "Ann" to 0L..7L, "Bob" to 0L..7L, "Cat" to 0L..7L, "Dan" to 0L..7L,
+                "Eve" to 0L..7L, "Fay" to 0L..7L, "Gus" to 0L..7L, "Hal" to 0L..7L,
+                "Ivy" to 0L..0L,
+                "Jay" to 0L..1L, "Kim" to 0L..1L,
+            ),
+            orderingGroupBounds(employees, emptyList())
+        )
+    }
+
+    /**
+     * @return each employee's name paired with the ordering group bounds [RelOpWindow] passed for that row.
+     */
+    private fun orderingGroupBounds(employees: List<Row>, sortBy: List<Collation>): List<Pair<String, LongRange>> {
+        val recorder = object : WindowFunction {
+            override fun reset(partition: WindowPartition) = Unit
+            override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum =
+                Datum.array(listOf(Datum.bigint(orderingGroupStart), Datum.bigint(orderingGroupEnd)))
+        }
+        val window = RelOpWindow(relationOf(employees), listOf(recorder), listOf(DEPARTMENT), sortBy)
+        window.open(Environment())
+        val result = mutableListOf<Pair<String, LongRange>>()
+        while (window.hasNext()) {
+            // Output row is the input (department, name, age) followed by the recorder's result.
+            val row = window.next().values
+            val bounds = row[3].toList()
+            // row[1] is the employee's name; bounds[0] is orderingGroupStart and bounds[1] is orderingGroupEnd.
+            result.add(row[1].string to bounds[0].long..bounds[1].long)
+        }
+        window.close()
+        return result
+    }
+
+    /**
+     * To find the end of the Marketing partition, [RelOpWindow] reads Ann (Sales) ahead. Closing it before Ann is
+     * emitted must not leak Ann into the start of the next run.
+     */
+    @Test
+    fun reopenAfterPartialConsumption() {
+        val window = RelOpWindow(relationOf(marketingAndSales), listOf(RowNumberFunction()), listOf(DEPARTMENT), emptyList())
+        window.open(Environment())
+        window.next() // Ivy; Ann has been read ahead
+        window.close()
+
+        window.open(Environment())
+        val result = mutableListOf<Pair<String, Long>>()
+        while (window.hasNext()) {
+            val row = window.next().values
+            result.add(row[1].string to row[3].long)
+        }
+        window.close()
+        assertEquals(listOf("Ivy" to 1L, "Max" to 2L, "Ann" to 1L), result)
+    }
+
+    /**
+     * Closing [RelOpWindow] must release the buffered partition, including the window functions' references to it.
+     */
+    @Test
+    fun closeReleasesPartition() {
+        var lastPartition: WindowPartition? = null
+        val recorder = object : WindowFunction {
+            override fun reset(partition: WindowPartition) { lastPartition = partition }
+            override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum = Datum.bigint(0)
+        }
+        val window = RelOpWindow(relationOf(marketingAndSales), listOf(recorder), listOf(DEPARTMENT), emptyList())
+        window.open(Environment())
+        window.next() // Ivy
+        assertEquals(2L, lastPartition!!.size()) // Marketing: Ivy, Max
+        window.close()
+        assertEquals(0L, lastPartition!!.size())
+    }
+
+    /**
+     * Rows (department, name, age), already grouped by department as [RelOpWindow] expects.
+     */
+    private val marketingAndSales = listOf(
+        employee("Marketing", "Ivy", 28),
+        employee("Marketing", "Max", 32),
+        employee("Sales", "Ann", 25),
+    )
+
+    private fun employee(department: String, name: String, age: Int): Row =
+        Row.of(Datum.string(department), Datum.string(name), Datum.integer(age))
+
+    /**
+     * A re-openable relation over [rows].
+     */
+    private fun relationOf(rows: List<Row>): ExprRelation = object : ExprRelation {
+        private lateinit var iterator: Iterator<Row>
+        override fun open(env: Environment) { iterator = rows.iterator() }
+        override fun hasNext(): Boolean = iterator.hasNext()
+        override fun next(): Row = iterator.next()
+        override fun close() = Unit
+    }
+
     companion object {
+
+        private val DEPARTMENT = ExprVar(0, 0)
+        private val AGE = ExprVar(0, 2)
 
         private class Employee(
             val id: Int,
@@ -94,10 +229,38 @@ class WindowTests {
             Employee(9, "Mason", "Research", 30, "Samantha")
         )
 
+        /**
+         * Readings (id, grp, v) where v may be null. Group 'b' contains only nulls.
+         */
+        private val readings = listOf(
+            Triple(1, "a", 10),
+            Triple(2, "a", null),
+            Triple(3, "a", null),
+            Triple(4, "a", 40),
+            Triple(5, "a", 50),
+            Triple(6, "a", null),
+            Triple(7, "b", null),
+            Triple(8, "b", null),
+        )
+
+        private fun intOrNull(v: Int?): Datum = v?.let { Datum.integer(it) } ?: Datum.nullValue(PType.integer())
+
         private val globals = listOf(
             Global(
                 name = "employee",
                 value = Datum.bag(employees.map { it.toDatum() })
+            ),
+            Global(
+                name = "readings",
+                value = Datum.bag(
+                    readings.map { (id, grp, v) ->
+                        Datum.struct(
+                            Field.of("id", Datum.integer(id)),
+                            Field.of("grp", Datum.string(grp)),
+                            Field.of("v", intOrNull(v)),
+                        )
+                    }
+                )
             ),
             Global(
                 name = "stock_prices",
@@ -363,7 +526,113 @@ class WindowTests {
                     )
                 ),
             ),
+            SuccessTestCase(
+                name = "LAG/LEAD IGNORE NULLS with offset 1 and 2",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        r.id AS id,
+                        LAG(r.v, 1, -1) IGNORE NULLS OVER _w AS lag1,
+                        LAG(r.v, 2, -1) IGNORE NULLS OVER _w AS lag2,
+                        LEAD(r.v, 1, -1) IGNORE NULLS OVER _w AS lead1,
+                        LEAD(r.v, 2, -1) IGNORE NULLS OVER _w AS lead2
+                    FROM readings AS r
+                    WINDOW _w AS (PARTITION BY r.grp ORDER BY r.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNav(1, -1, -1, 40, 50),
+                    rowOfNav(2, 10, -1, 40, 50),
+                    rowOfNav(3, 10, -1, 40, 50),
+                    rowOfNav(4, 10, -1, 50, -1),
+                    rowOfNav(5, 40, 10, -1, -1),
+                    rowOfNav(6, 50, 40, -1, -1),
+                    rowOfNav(7, -1, -1, -1, -1),
+                    rowOfNav(8, -1, -1, -1, -1),
+                ),
+            ),
+            SuccessTestCase(
+                name = "LAG/LEAD IGNORE NULLS skip MISSING as well as NULL",
+                mode = Mode.PERMISSIVE(),
+                input = """
+                    SELECT
+                        r.id AS id,
+                        LAG(r.v, 1, -1) IGNORE NULLS OVER _w AS lag1,
+                        LAG(r.v, 2, -1) IGNORE NULLS OVER _w AS lag2,
+                        LEAD(r.v, 1, -1) IGNORE NULLS OVER _w AS lead1,
+                        LEAD(r.v, 2, -1) IGNORE NULLS OVER _w AS lead2
+                    FROM << {'id': 1, 'v': 10}, {'id': 2, 'v': 20}, {'id': 3}, {'id': 4, 'v': NULL}, {'id': 5, 'v': 50} >> AS r
+                    WINDOW _w AS (ORDER BY r.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNav(1, -1, -1, 20, 50),
+                    rowOfNav(2, 10, -1, 50, -1),
+                    rowOfNav(3, 20, 10, 50, -1),
+                    rowOfNav(4, 20, 10, 50, -1),
+                    rowOfNav(5, 20, 10, -1, -1),
+                ),
+            ),
+            SuccessTestCase(
+                name = "LAG/LEAD IGNORE NULLS with offset 0 and offset beyond qualifying rows",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        r.id AS id,
+                        LAG(r.v, 0, -1) IGNORE NULLS OVER _w AS lag1,
+                        LAG(r.v, 4, -1) IGNORE NULLS OVER _w AS lag2,
+                        LEAD(r.v, 0, -1) IGNORE NULLS OVER _w AS lead1,
+                        LEAD(r.v, 3, -1) IGNORE NULLS OVER _w AS lead2
+                    FROM readings AS r
+                    WINDOW _w AS (PARTITION BY r.grp ORDER BY r.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNav(1, 10, -1, 10, -1),
+                    rowOfNav(2, null, -1, null, -1),
+                    rowOfNav(3, null, -1, null, -1),
+                    rowOfNav(4, 40, -1, 40, -1),
+                    rowOfNav(5, 50, -1, 50, -1),
+                    rowOfNav(6, null, -1, null, -1),
+                    rowOfNav(7, null, -1, null, -1),
+                    rowOfNav(8, null, -1, null, -1),
+                ),
+            ),
+            SuccessTestCase(
+                name = "LAG/LEAD RESPECT NULLS (explicit and default) do not skip nulls",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        r.id AS id,
+                        LAG(r.v, 1, -1) RESPECT NULLS OVER _w AS lag1,
+                        LAG(r.v, 1, -1) OVER _w AS lag2,
+                        LEAD(r.v, 1, -1) RESPECT NULLS OVER _w AS lead1,
+                        LEAD(r.v, 1, -1) OVER _w AS lead2
+                    FROM readings AS r
+                    WINDOW _w AS (PARTITION BY r.grp ORDER BY r.id);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfNav(1, -1, -1, null, null),
+                    rowOfNav(2, 10, 10, null, null),
+                    rowOfNav(3, null, null, 40, 40),
+                    rowOfNav(4, null, null, 50, 50),
+                    rowOfNav(5, 40, 40, null, null),
+                    rowOfNav(6, 50, 50, -1, -1),
+                    rowOfNav(7, -1, -1, null, null),
+                    rowOfNav(8, null, null, -1, -1),
+                ),
+            ),
         )
+
+        private fun rowOfNav(id: Int, lag1: Int?, lag2: Int?, lead1: Int?, lead2: Int?): Datum {
+            return Datum.struct(
+                Field.of("id", Datum.integer(id)),
+                Field.of("lag1", intOrNull(lag1)),
+                Field.of("lag2", intOrNull(lag2)),
+                Field.of("lead1", intOrNull(lead1)),
+                Field.of("lead2", intOrNull(lead2)),
+            )
+        }
 
         /**
          * @param id The employee's id

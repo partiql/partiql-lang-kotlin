@@ -32,6 +32,9 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
+- Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.
+- Fixed a re-opened window operator emitting a stale row from a previous, partially consumed run.
 
 ### Removed
 

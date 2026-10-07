@@ -334,9 +334,6 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          */
         override fun visitRelOpWindowWindowFunction(node: Rel.Op.Window.WindowFunction, ctx: Rel.Type?): Rel.Op.Window.WindowFunction {
             val args = node.args.map { it.type(ctx!!.schema, outer) }
-            if (node.isIgnoreNulls) {
-                _listener.report(PErrors.featureNotSupported("IGNORE NULLS"))
-            }
             val windowFunction = env.resolveWindowFn(node.name, args, node.isIgnoreNulls)
             if (windowFunction == null) {
                 val fnId = Identifier.regular(node.name)

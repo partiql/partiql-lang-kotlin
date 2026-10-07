@@ -48,6 +48,7 @@ internal class RelOpWindow(
         this._env = env
         _partitionPeekingNumber = -1L
         _partition = LocalPartition()
+        leftoverRow = null
         functions.map { it.reset(_partition) }
     }
 
@@ -73,7 +74,8 @@ internal class RelOpWindow(
                 false -> return null
             }
         }
-        var previousInfoIndex = newLocalPartition.add(OrderingInfo(partitionCreationIndex))
+        var previousInfo = OrderingInfo(partitionCreationIndex)
+        var previousInfoIndex = newLocalPartition.add(previousInfo)
         newLocalPartition.add(firstRow, previousInfoIndex)
         val newEnv = _env.push(firstRow)
         val firstRowPartitionKeys = Array(partitionBy.size) { partitionBy[it].eval(newEnv) }
@@ -98,14 +100,15 @@ internal class RelOpWindow(
             val nextSortKeys = Array(sortBy.size) { sortBy[it].expr.eval(nextEnv) }
             val isNewSortGroup = comparator.compare(previousRowSortKeys, nextSortKeys) != 0
             if (isNewSortGroup) {
-                val info = newLocalPartition.getInfo(previousInfoIndex)
-                info.orderingEnd = partitionCreationIndex - 1
+                previousInfo.orderingEnd = partitionCreationIndex - 1
                 previousRowSortKeys = nextSortKeys
-                val nextInfo = OrderingInfo(partitionCreationIndex)
-                previousInfoIndex = newLocalPartition.add(nextInfo)
+                previousInfo = OrderingInfo(partitionCreationIndex)
+                previousInfoIndex = newLocalPartition.add(previousInfo)
             }
             newLocalPartition.add(nextRow, previousInfoIndex)
         }
+        // Close the last sort group (the loop only closes a group when the next one begins)
+        previousInfo.orderingEnd = newLocalPartition.size() - 1
         _partition = newLocalPartition
         functions.map { it.reset(_partition) }
         return produceResult()
@@ -163,5 +166,9 @@ internal class RelOpWindow(
 
     override fun closePeeking() {
         input.close()
+        // Release the buffered partition (including the functions' references to it) while the operator is idle.
+        _partition = LocalPartition()
+        leftoverRow = null
+        functions.forEach { it.reset(_partition) }
     }
 }

@@ -4925,18 +4925,17 @@ internal class PlanTyperTestsPorted {
                     PErrors.functionTypeMismatch(null, Identifier.delimited("trim_chars"), listOf(PType.string(), PType.integer()), emptyList())
                 )
             ),
-            ErrorTestCase(
-                name = "IGNORE NULLS not supported (yet)",
+            SuccessTestCase(
+                name = "LAG with IGNORE NULLS",
                 query = """
-                    SELECT
-                        LAG(t.a, 1, 'UNKNOWN') IGNORE NULLS OVER (
+                    SELECT VALUE
+                        LAG(t.a, 1, 0) IGNORE NULLS OVER (
                             PARTITION BY t.b ORDER BY t.a
-                        ) AS _lag
+                        )
                     FROM << { 'a': 1, 'b': 2 }, { 'a': 3, 'b': 4 } >> AS t;
                 """.trimIndent(),
-                problemHandler = assertProblemExists(
-                    PErrors.featureNotSupported("IGNORE NULLS")
-                )
+                expected = BagType(StaticType.INT4),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause"))
             ),
         )
     }

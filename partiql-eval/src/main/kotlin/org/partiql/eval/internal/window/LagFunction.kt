@@ -7,21 +7,12 @@ import org.partiql.spi.value.Datum
 internal class LagFunction(
     private val expr: ExprValue,
     private val offset: ExprValue,
-    private val default: ExprValue
+    private val default: ExprValue,
+    private val ignoreNulls: Boolean = false,
 ) : NavigationFunction() {
 
     override fun eval(env: Environment): Datum {
         val offsetLong = offset.eval(env).long
-        val index = currentPosition - offsetLong
-
-        // Return if out-of-bounds
-        if (index < 0 || index >= partition.size()) {
-            return default.eval(env)
-        }
-
-        // Get lagged expression
-        val row = partition.get(index)
-        val newEnv = env.push(row)
-        return expr.eval(newEnv)
+        return navigate(env, expr, -offsetLong, default, ignoreNulls)
     }
 }
