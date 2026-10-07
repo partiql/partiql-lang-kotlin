@@ -336,4 +336,99 @@ public abstract class WindowFunctionType extends AstNode {
             return visitor.visitWindowFunctionTypeLag(this, ctx);
         }
     }
+
+    /**
+     * Represents one of the aggregate functions COUNT, SUM, AVG, MIN, or MAX used as a window function, e.g.
+     * {@code SUM(x) OVER (...)}. {@code COUNT(*)} is represented by {@link WindowFunctionAggregateName#COUNT} with a
+     * null {@link #getArgument()} (and a null {@link #getSetq()}).
+     * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    @Deprecated
+    public static final class Aggregate extends WindowFunctionType {
+        private final WindowFunctionAggregateName function;
+        private final SetQuantifier setq;
+        private final Expr argument;
+
+        /**
+         * Constructs a new aggregate window function type.
+         * @param function the aggregate function
+         * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
+         * @param argument the argument of the aggregate; null only for {@code COUNT(*)}
+         * @throws IllegalArgumentException if {@code argument} is null and the function is not COUNT, or if
+         * {@code argument} is null and {@code setq} is not null
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public Aggregate(
+                @NotNull WindowFunctionAggregateName function,
+                @Nullable SetQuantifier setq,
+                @Nullable Expr argument
+        ) {
+            super();
+            if (argument == null) {
+                if (function.code() != WindowFunctionAggregateName.COUNT) {
+                    throw new IllegalArgumentException("Only COUNT may omit its argument (COUNT(*)), found: " + function.name());
+                }
+                if (setq != null) {
+                    throw new IllegalArgumentException("COUNT(*) may not have a set quantifier");
+                }
+            }
+            this.function = function;
+            this.setq = setq;
+            this.argument = argument;
+        }
+
+        /**
+         * Returns the aggregate function.
+         * @return the aggregate function
+         */
+        @NotNull
+        public WindowFunctionAggregateName getFunction() {
+            return this.function;
+        }
+
+        /**
+         * Returns the set quantifier of the aggregate, if specified.
+         * @return the set quantifier of the aggregate, if specified
+         */
+        @Nullable
+        public SetQuantifier getSetq() {
+            return this.setq;
+        }
+
+        /**
+         * Returns the argument of the aggregate; null for {@code COUNT(*)}.
+         * @return the argument of the aggregate; null for {@code COUNT(*)}
+         */
+        @Nullable
+        public Expr getArgument() {
+            return this.argument;
+        }
+
+        /**
+         * Returns whether this is {@code COUNT(*)}.
+         * @return true if this is {@code COUNT(*)}
+         */
+        public boolean isCountStar() {
+            return this.argument == null;
+        }
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            List<AstNode> kids = new ArrayList<>();
+            if (argument != null) {
+                kids.add(argument);
+            }
+            return kids;
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeAggregate(this, ctx);
+        }
+    }
 }

@@ -452,6 +452,18 @@ public abstract class AstVisitor<R, C> {
     }
 
     /**
+     * Visits an aggregate (COUNT, SUM, AVG, MIN, MAX) window function type.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeAggregate(WindowFunctionType.Aggregate node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
      * TODO
      * @param node TODO
      * @param ctx TODO

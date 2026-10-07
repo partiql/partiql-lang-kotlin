@@ -282,7 +282,7 @@ internal class PlanToExecTransform(
     override fun visitWindow(rel: RelWindow, ctx: Unit): Any {
         val input = visitRel(rel.input)
         val functions = rel.windowFunctions.map { wf ->
-            PWindowFn(wf.signature, wf.arguments.map { visitRex(it) })
+            PWindowFn(wf.signature, wf.arguments.map { visitRex(it) }, wf.aggregate, wf.isDistinct)
         }
         val partitions = rel.partitions.map { visitRex(it) }
         val sorts = rel.collations.map { toCollation(it) }

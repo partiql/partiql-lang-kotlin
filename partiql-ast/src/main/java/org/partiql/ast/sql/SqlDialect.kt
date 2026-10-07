@@ -248,6 +248,15 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     }
 
     @Deprecated("This feature is experimental and is subject to change.")
+    override fun visitWindowFunctionTypeAggregate(node: WindowFunctionType.Aggregate, tail: SqlBlock): SqlBlock {
+        val argument = node.argument ?: return tail concat "${node.function.name()}(*)"
+        var t = tail concat "${node.function.name()}("
+        node.setq?.let { t = t concat "${it.name()} " }
+        t = visitExpr(argument, t)
+        return t concat ")"
+    }
+
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeLag(node: WindowFunctionType.Lag, tail: SqlBlock): SqlBlock {
         return visitWindowFunctionTypeLeadOrLag("LAG(", node.extent, node.offset, node.defaultValue, node.nullTreatment, tail)
     }
@@ -271,7 +280,9 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             if (!node.partitionClause.isNullOrEmpty()) {
                 t = t concat "PARTITION BY "
                 t = t concat list(start = null, end = null) { node.partitionClause!! }
-                t = t concat " "
+                if (node.orderClause != null) {
+                    t = t concat " "
+                }
             }
 
             // ORDER BY clause
