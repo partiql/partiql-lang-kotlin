@@ -1154,7 +1154,10 @@ internal object RexConverter {
                     }
                 }
                 DataType.CHARACTER_VARYING, DataType.VARCHAR -> {
-                    val length = type.length ?: 1
+                    // SQL's implicit length of 1 applies to CHAR, not VARCHAR. An omitted
+                    // VARCHAR length is unbounded, using the same max length as CLOB and
+                    // string functions whose result length cannot be computed at plan time.
+                    val length = type.length ?: Int.MAX_VALUE
                     assertGtZeroAndCreate(PType.VARCHAR, "length", length, PType::varchar).also {
                         if (type.length == null) {
                             it.setUnspecifiedLengthMeta()

@@ -127,6 +127,23 @@ class PartiQLEvaluatorTest {
                     2
                 ),
             ),
+            // VARCHAR with no length is unbounded. SQL's implicit length of 1 applies to CHAR, not VARCHAR.
+            // See https://github.com/partiql/partiql-lang-kotlin/issues/1973
+            SuccessTestCase(
+                name = "CAST string AS VARCHAR does not truncate",
+                input = "CAST('hello' AS VARCHAR);",
+                expected = Datum.varchar("hello", Int.MAX_VALUE),
+            ),
+            SuccessTestCase(
+                name = "CAST string AS VARCHAR(2) truncates to the explicit length",
+                input = "CAST('hello' AS VARCHAR(2));",
+                expected = Datum.varchar("he", 2),
+            ),
+            SuccessTestCase(
+                name = "CAST string AS CHAR keeps the implicit length of 1",
+                input = "CAST('hello' AS CHAR);",
+                expected = Datum.character("h", 1),
+            ),
         )
 
         @JvmStatic
