@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed `CAST` to `VARCHAR` (and `CHARACTER VARYING`) without a length treating it as `VARCHAR(1)` and truncating the value. See [#1973](https://github.com/partiql/partiql-lang-kotlin/issues/1973).
 
 ### Removed
 
