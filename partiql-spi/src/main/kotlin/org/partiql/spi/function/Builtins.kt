@@ -82,7 +82,7 @@ internal object Builtins {
         FnConcat,
 
         Fn_CURRENT_DATE____DATE,
-        Fn_CURRENT_USER____STRING,
+        Fn_CURRENT_USER__STRING__STRING,
         Fn_DATE_ADD_DAY__INT32_DATE__DATE,
         Fn_DATE_ADD_DAY__INT32_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_DAY__INT64_DATE__DATE,
