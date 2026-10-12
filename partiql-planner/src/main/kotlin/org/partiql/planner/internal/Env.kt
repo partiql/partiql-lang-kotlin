@@ -72,6 +72,11 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
 
     private val routines = RoutineResolver(session)
 
+    /**
+     * Caller identity exposed as SQL `CURRENT_USER`.
+     */
+    internal fun getIdentity(): String = session.getIdentity()
+
     fun resolveWindowFn(name: String, args: List<Rex>, isIgnoreNulls: Boolean = false): Rel.Op.Window.WindowFunction? {
         val sig = WindowFunctionSignatureProvider.get(name, args, isIgnoreNulls) ?: return null
         val paramTypes = sig.parameterTypes.map { it.toCType() }

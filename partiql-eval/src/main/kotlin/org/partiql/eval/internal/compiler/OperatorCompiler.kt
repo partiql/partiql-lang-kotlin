@@ -40,6 +40,7 @@ import org.partiql.eval.internal.operator.rex.ExprCaseBranch
 import org.partiql.eval.internal.operator.rex.ExprCaseSearched
 import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
+import org.partiql.eval.internal.operator.rex.ExprCurrentDate
 import org.partiql.eval.internal.operator.rex.ExprError
 import org.partiql.eval.internal.operator.rex.ExprLit
 import org.partiql.eval.internal.operator.rex.ExprMapConstruct
@@ -70,7 +71,9 @@ import org.partiql.eval.internal.plan.PJoinType
 import org.partiql.eval.internal.plan.PRel
 import org.partiql.eval.internal.window.WindowBuiltIns
 import org.partiql.spi.catalog.ExecutionCatalog
+import org.partiql.spi.function.Fn
 import org.partiql.spi.types.PType
+import java.time.LocalDate
 
 /**
  * Compiles an [ExecutionPlanImpl] into a fresh physical operator tree.
@@ -79,6 +82,7 @@ import org.partiql.spi.types.PType
 internal class OperatorCompiler(
     private val catalogs: Array<ExecutionCatalog>,
     private val mode: Mode,
+    private val queryDate: QueryDate = QueryDate { LocalDate.now() },
 ) {
     private val MODE = mode.code()
 
@@ -95,8 +99,12 @@ internal class OperatorCompiler(
             }
             is PExpr.TableDirect -> ExprTable(expr.table)
             is PExpr.Call -> {
-                val args = kotlin.Array(expr.args.size) { i -> compile(expr.args[i]).catch() }
-                ExprCall(expr.fn, args)
+                if (isCurrentDate(expr.fn)) {
+                    ExprCurrentDate(queryDate)
+                } else {
+                    val args = kotlin.Array(expr.args.size) { i -> compile(expr.args[i]).catch() }
+                    ExprCall(expr.fn, args)
+                }
             }
             is PExpr.DynamicCall -> {
                 val candidates = kotlin.Array(expr.overloads.size) { expr.overloads[it] }
@@ -273,9 +281,22 @@ internal class OperatorCompiler(
     private fun toCollation(c: PCollation): Collation =
         Collation(compile(c.expr), c.desc, c.nullsLast)
 
+    /**
+     * `CURRENT_DATE` is compiled to [ExprCurrentDate] so every reference shares the date recorded
+     * by [queryDate] at the start of this execution. The hidden name matches
+     * `org.partiql.spi.utils.FunctionUtils.hide("current_date")`.
+     */
+    private fun isCurrentDate(fn: Fn): Boolean {
+        return fn.signature.name == HIDDEN_CURRENT_DATE && fn.signature.arity == 0
+    }
+
     private fun ExprValue.catch(): ExprValue = when (MODE) {
         Mode.PERMISSIVE -> ExprPermissive(this)
         Mode.STRICT -> this
         else -> error("Unsupported mode: $MODE")
+    }
+
+    private companion object {
+        private const val HIDDEN_CURRENT_DATE: String = "\uFDEFcurrent_date"
     }
 }

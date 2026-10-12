@@ -62,6 +62,7 @@ import org.partiql.ast.expr.ExprValues
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
+import org.partiql.ast.expr.SessionAttribute
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
 import org.partiql.planner.internal.Env
@@ -1362,10 +1363,19 @@ internal object RexConverter {
         }
 
         override fun visitExprSessionAttribute(node: ExprSessionAttribute, ctx: Env): Rex {
-            val type = ANY
-            val fn = node.sessionAttribute.name().lowercase()
-            val call = call(FunctionUtils.hide(fn))
-            return rex(type, call)
+            return when (node.sessionAttribute.code()) {
+                // The evaluator has no user of its own. Pass the planning session identity through
+                // so CURRENT_USER returns Session.getIdentity() (default "unknown").
+                SessionAttribute.CURRENT_USER -> {
+                    val identity = rex(STRING, rexOpLit(Datum.string(ctx.getIdentity())))
+                    rex(ANY, call(FunctionUtils.hide("current_user"), identity))
+                }
+                // Zero-arg call. The evaluator pins one date for the whole execution.
+                SessionAttribute.CURRENT_DATE -> {
+                    rex(ANY, call(FunctionUtils.hide("current_date")))
+                }
+                else -> error("Unsupported session attribute: ${node.sessionAttribute.name()}")
+            }
         }
 
         override fun visitExprQuerySet(node: ExprQuerySet, context: Env): Rex = RelConverter.apply(node, context)
