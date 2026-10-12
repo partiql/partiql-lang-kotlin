@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Implemented runtime evaluation of `CURRENT_DATE` and `CURRENT_USER`. `CURRENT_DATE` returns the `DATE` captured when query execution starts, and every reference in that execution observes the same value. `CURRENT_USER` returns `Session.getIdentity()`. The session builder defaults that identity to `"unknown"` when it is not set; the evaluator has no separate user field.
 - Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
 - Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.
 - Fixed a re-opened window operator emitting a stale row from a previous, partially consumed run.

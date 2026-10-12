@@ -22,6 +22,9 @@ public interface Session {
 
     /**
      * Returns the caller identity as a string; accessible via CURRENT_USER.
+     *
+     * [Builder] defaults this to `"unknown"` when [Builder.identity] is not called.
+     * The evaluator reads this value from the planning session; it has no separate user field.
      */
     public fun getIdentity(): String
 
