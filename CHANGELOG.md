@@ -35,6 +35,7 @@ Thank you to all who have contributed!
 - Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
 - Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.
 - Fixed a re-opened window operator emitting a stale row from a previous, partially consumed run.
+- Fixed `SUM` failing with `InvalidOperationException` when its argument is statically typed `BIGINT` (e.g. `SUM(CAST(x AS BIGINT))` or `SUM` over `COUNT` results).
 
 ### Removed
 
