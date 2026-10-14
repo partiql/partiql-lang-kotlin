@@ -3907,6 +3907,93 @@ internal class PlanTyperTestsPorted {
         )
 
         @JvmStatic
+        fun windowAggregateParityCases(): List<Arguments> {
+            // (FROM source, argument)
+            val data = listOf(
+                "<< { 'a': 1, 'b': 2 }, { 'a': 3, 'b': 4 } >>" to "t.a",
+                "<< { 'a': CAST(1 AS BIGINT), 'b': 2 } >>" to "t.a",
+                "<< { 'a': 1.5, 'b': 2 }, { 'a': 2.25, 'b': 2 } >>" to "t.a",
+                "<< { 'a': 1e0, 'b': 2 } >>" to "t.a",
+                "<< { 'a': 'x', 'b': 2 }, { 'a': 'y', 'b': 2 } >>" to "t.a",
+                // Statically-typed table: b is INT, c is STRING, a is BOOL
+                "main.T" to "t.b",
+                "main.T" to "t.c",
+                "main.T" to "t.a",
+            )
+            val aggregates = listOf("COUNT(*)", "COUNT(%s)", "SUM(%s)", "AVG(%s)", "MIN(%s)", "MAX(%s)", "SUM(DISTINCT %s)")
+            return aggregates.flatMap { agg -> data.map { (source, arg) -> Arguments.of(agg.format(arg), source) } }
+        }
+
+        private val windowWarning = assertWarningExists(PErrors.experimental("Window Clause"))
+
+        private const val windowData = "<< { 'a': 1, 'b': 2, 's': 'x' }, { 'a': 3, 'b': 4, 's': 'y' } >>"
+
+        @JvmStatic
+        fun windowAggregateCases() = listOf(
+            SuccessTestCase(
+                name = "SUM window over INT",
+                query = "SELECT VALUE SUM(t.a) OVER (PARTITION BY t.b ORDER BY t.a) FROM $windowData AS t",
+                expected = BagType(INT8),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "COUNT(*) window",
+                query = "SELECT VALUE COUNT(*) OVER (ORDER BY t.a) FROM $windowData AS t",
+                expected = BagType(INT8),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "COUNT window over STRING",
+                query = "SELECT VALUE COUNT(t.s) OVER () FROM $windowData AS t",
+                expected = BagType(INT8),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "MIN window over INT",
+                query = "SELECT VALUE MIN(t.a) OVER (PARTITION BY t.b) FROM $windowData AS t",
+                expected = BagType(INT4),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "MAX window over STRING",
+                query = "SELECT VALUE MAX(t.c) OVER (ORDER BY t.b) FROM main.T AS t",
+                // Same as the group aggregate MAX(STRING), which resolves to the dynamic MAX.
+                expected = PType.bag(PType.dynamic()),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "COUNT DISTINCT window without ORDER BY",
+                query = "SELECT VALUE COUNT(DISTINCT t.a) OVER (PARTITION BY t.b) FROM $windowData AS t",
+                expected = BagType(INT8),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "Window aggregate over a group aggregate",
+                query = "SELECT VALUE SUM(SUM(t.a)) OVER (ORDER BY b) FROM $windowData AS t GROUP BY t.b AS b",
+                // SUM(INT) is BIGINT and SUM(BIGINT) is DECIMAL, the same as for group aggregates.
+                expected = PType.bag(PType.decimal(38, 19)),
+                warnings = windowWarning,
+            ),
+            // Note: SUM/AVG over non-numeric arguments (e.g. STRING, BOOL) are not planning errors for group aggregates
+            // either, since they resolve to the dynamic overload and fail at evaluation; see
+            // testWindowAggregateTypesMatchGroupAggregates and the evaluator's WindowTests.
+            ErrorTestCase(
+                name = "DISTINCT window aggregate with ORDER BY (SQL:2011 6.10 SR 13)",
+                query = "SELECT VALUE SUM(DISTINCT t.a) OVER (PARTITION BY t.b ORDER BY t.a) FROM $windowData AS t",
+                problemHandler = assertProblemExists(
+                    PErrors.featureNotSupported("DISTINCT in an aggregate window function with a window ORDER BY clause")
+                ),
+            ),
+            ErrorTestCase(
+                name = "DISTINCT window aggregate with ORDER BY in a named window",
+                query = "SELECT VALUE COUNT(DISTINCT t.a) OVER w FROM $windowData AS t WINDOW w AS (ORDER BY t.a)",
+                problemHandler = assertProblemExists(
+                    PErrors.featureNotSupported("DISTINCT in an aggregate window function with a window ORDER BY clause")
+                ),
+            ),
+        )
+
+        @JvmStatic
         fun mapCases() = listOf(
             ErrorTestCase(
                 name = "MAP with heterogeneous incompatible key types",
@@ -4201,6 +4288,32 @@ internal class PlanTyperTestsPorted {
     @MethodSource("mapCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testMap(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("windowAggregateCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testWindowAggregates(tc: TestCase) = runTest(tc)
+
+    /**
+     * Asserts that an aggregate used as a window function (`agg OVER ()`) has exactly the same type (or the same
+     * errors) as the aggregate used as a group aggregate, as both are resolved through the same aggregate resolution.
+     */
+    @ParameterizedTest
+    @MethodSource("windowAggregateParityCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testWindowAggregateTypesMatchGroupAggregates(aggregate: String, data: String) {
+        val session = Session.builder().catalog("pql").catalogs(*catalogs.toTypedArray()).build()
+        val groupCollector = PErrorCollector()
+        val groupPlan = infer("SELECT VALUE $aggregate FROM $data AS t", session, groupCollector)
+        val windowCollector = PErrorCollector()
+        val windowPlan = infer("SELECT VALUE $aggregate OVER () FROM $data AS t", session, windowCollector)
+        assertEquals(groupCollector.errors.map { it.code() }, windowCollector.errors.map { it.code() }, "errors of $aggregate over $data")
+        if (groupCollector.errors.isEmpty()) {
+            val groupType = (groupPlan.action as Action.Query).rex.type.pType
+            val windowType = (windowPlan.action as Action.Query).rex.type.pType
+            assertEquals(groupType, windowType, "type of $aggregate over $data")
+        }
+    }
 
     /**
      * While all existing CTE tests exist in the evaluator, this one exists in the planner, since it causes a compilation

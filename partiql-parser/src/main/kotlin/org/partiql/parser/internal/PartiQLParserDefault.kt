@@ -2034,6 +2034,23 @@ internal class PartiQLParserDefault : PartiQLParser {
             WindowFunctionType.RowNumber()
         }
 
+        override fun visitAggregateWindowFunctionCountStar(ctx: GeneratedParser.AggregateWindowFunctionCountStarContext) = translate(ctx) {
+            WindowFunctionType.Count(null, null)
+        }
+
+        override fun visitAggregateWindowFunctionGeneral(ctx: GeneratedParser.AggregateWindowFunctionGeneralContext) = translate(ctx) {
+            val setq = convertSetQuantifier(ctx.setQuantifierStrategy())
+            val argument = visitExpr(ctx.argument)
+            when (ctx.name.type) {
+                GeneratedLexer.COUNT -> WindowFunctionType.Count(setq, argument)
+                GeneratedLexer.SUM -> WindowFunctionType.Sum(setq, argument)
+                GeneratedLexer.AVG -> WindowFunctionType.Avg(setq, argument)
+                GeneratedLexer.MIN -> WindowFunctionType.Min(setq, argument)
+                GeneratedLexer.MAX -> WindowFunctionType.Max(setq, argument)
+                else -> throw error(ctx, "Expected one of: COUNT, SUM, AVG, MIN, MAX")
+            }
+        }
+
         override fun visitWindowFunctionNullTreatment(ctx: GeneratedParser.WindowFunctionNullTreatmentContext) = translate(ctx) {
             when {
                 ctx.RESPECT() != null -> WindowFunctionNullTreatment.RESPECT_NULLS()

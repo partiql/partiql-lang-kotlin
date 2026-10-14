@@ -871,6 +871,51 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
+    override fun visitWindowFunctionTypeCount(node: WindowFunctionType.Count, ctx: C): AstNode {
+        val argument = node.argument?.let { visitExpr(it, ctx) as Expr }
+        return if (argument !== node.argument) {
+            WindowFunctionType.Count(node.setq, argument)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeSum(node: WindowFunctionType.Sum, ctx: C): AstNode {
+        val argument = visitExpr(node.argument, ctx) as Expr
+        return if (argument !== node.argument) {
+            WindowFunctionType.Sum(node.setq, argument)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeAvg(node: WindowFunctionType.Avg, ctx: C): AstNode {
+        val argument = visitExpr(node.argument, ctx) as Expr
+        return if (argument !== node.argument) {
+            WindowFunctionType.Avg(node.setq, argument)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeMin(node: WindowFunctionType.Min, ctx: C): AstNode {
+        val argument = visitExpr(node.argument, ctx) as Expr
+        return if (argument !== node.argument) {
+            WindowFunctionType.Min(node.setq, argument)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeMax(node: WindowFunctionType.Max, ctx: C): AstNode {
+        val argument = visitExpr(node.argument, ctx) as Expr
+        return if (argument !== node.argument) {
+            WindowFunctionType.Max(node.setq, argument)
+        } else {
+            node
+        }
+    }
+
     override fun visitWindowFunctionTypeRank(node: WindowFunctionType.Rank, ctx: C): AstNode {
         return node
     }
