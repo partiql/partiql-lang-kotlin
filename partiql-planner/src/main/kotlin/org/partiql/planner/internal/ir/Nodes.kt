@@ -930,10 +930,12 @@ internal data class Rel(
                 @JvmField internal val isIgnoreNulls: Boolean,
                 @JvmField internal val parameterTypes: List<CompilerType>?,
                 @JvmField internal val returnType: CompilerType?,
+                @JvmField internal val aggregate: Aggregate.Call?,
             ) : PlanNode() {
                 public override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
                     kids.addAll(args)
+                    kids.add(aggregate)
                     kids.filterNotNull()
                 }
 

@@ -75,7 +75,7 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
     fun resolveWindowFn(name: String, args: List<Rex>, isIgnoreNulls: Boolean = false): Rel.Op.Window.WindowFunction? {
         val sig = WindowFunctionSignatureProvider.get(name, args, isIgnoreNulls) ?: return null
         val paramTypes = sig.parameterTypes.map { it.toCType() }
-        return relOpWindowWindowFunction(sig.name, args, sig.isIgnoreNulls, paramTypes, sig.returnType.toCType())
+        return relOpWindowWindowFunction(sig.name, args, sig.isIgnoreNulls, paramTypes, sig.returnType.toCType(), null)
     }
 
     fun classifyRoutine(identifier: Identifier, shape: RoutineCallShape): RoutineClassification =

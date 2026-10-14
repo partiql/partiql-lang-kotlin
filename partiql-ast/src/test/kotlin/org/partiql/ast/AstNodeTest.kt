@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.partiql.ast.ddl.AttributeConstraint
 import org.partiql.ast.ddl.TableConstraint
 import org.partiql.ast.expr.Expr
@@ -127,6 +128,26 @@ class AstNodeTest {
         @Suppress("DEPRECATION")
         WindowFunctionType.Lag(lit(), null, null, null),
     ) // defaultValue null
+
+    @Test
+    fun windowFunctionTypeCountStar() = assertNullSafe(
+        @Suppress("DEPRECATION")
+        WindowFunctionType.Count(null, null),
+    ) // setq and argument null
+
+    @Test
+    fun windowFunctionTypeSum() = assertNullSafe(
+        @Suppress("DEPRECATION")
+        WindowFunctionType.Sum(null, lit()),
+    ) // setq null
+
+    @Test
+    fun windowFunctionTypeCountStarRejectsSetQuantifier() {
+        assertThrows<IllegalArgumentException> {
+            @Suppress("DEPRECATION")
+            WindowFunctionType.Count(SetQuantifier.DISTINCT(), null)
+        }
+    }
 
     @Test
     fun attributeConstraintNull() = assertNullSafe(Ast.columnConstraintNullable(name = null, isNullable = false))
@@ -303,13 +324,18 @@ class AstNodeTest {
             "org.partiql.ast.WindowClause",
             "org.partiql.ast.WindowClause.Definition",
             "org.partiql.ast.WindowFunctionNullTreatment",
+            "org.partiql.ast.WindowFunctionType.Avg",
+            "org.partiql.ast.WindowFunctionType.Count",
             "org.partiql.ast.WindowFunctionType.CumeDist",
             "org.partiql.ast.WindowFunctionType.DenseRank",
             "org.partiql.ast.WindowFunctionType.Lag",
             "org.partiql.ast.WindowFunctionType.Lead",
+            "org.partiql.ast.WindowFunctionType.Max",
+            "org.partiql.ast.WindowFunctionType.Min",
             "org.partiql.ast.WindowFunctionType.PercentRank",
             "org.partiql.ast.WindowFunctionType.Rank",
             "org.partiql.ast.WindowFunctionType.RowNumber",
+            "org.partiql.ast.WindowFunctionType.Sum",
             "org.partiql.ast.WindowPartition",
             "org.partiql.ast.WindowSpecification",
             "org.partiql.ast.With",

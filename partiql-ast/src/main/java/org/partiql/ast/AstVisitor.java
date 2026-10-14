@@ -452,6 +452,66 @@ public abstract class AstVisitor<R, C> {
     }
 
     /**
+     * Visits a COUNT window function type.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeCount(WindowFunctionType.Count node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * Visits a SUM window function type.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeSum(WindowFunctionType.Sum node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * Visits a AVG window function type.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeAvg(WindowFunctionType.Avg node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * Visits a MIN window function type.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeMin(WindowFunctionType.Min node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
+     * Visits a MAX window function type.
+     * @param node the node to visit
+     * @param ctx the context
+     * @return the result of the visit
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public R visitWindowFunctionTypeMax(WindowFunctionType.Max node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    /**
      * TODO
      * @param node TODO
      * @param ctx TODO

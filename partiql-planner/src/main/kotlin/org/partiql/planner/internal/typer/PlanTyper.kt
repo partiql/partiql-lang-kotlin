@@ -44,6 +44,7 @@ import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relOpWindow
+import org.partiql.planner.internal.ir.relOpWindowWindowFunction
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCoalesce
@@ -317,7 +318,17 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         override fun visitRelOpWindow(node: Rel.Op.Window, ctx: Rel.Type?): Rel {
             env.listener.report(PErrors.experimental("Window Clause"))
             val input = visitRel(node.input, ctx)
-            val functions = node.functions.map { visitRelOpWindowWindowFunction(it, input.type) }
+            var aggregateFailed = false
+            val functions = node.functions.map { function ->
+                when (val call = function.aggregate) {
+                    null -> visitRelOpWindowWindowFunction(function, input.type)
+                    else -> typeAggregateWindowFunction(function, call, input.type) ?: function.also { aggregateFailed = true }
+                }
+            }
+            if (aggregateFailed) {
+                // Mirror group aggregation: the errors have already been reported to the listener.
+                return rel(requireNotNull(ctx), relOpErr("Aggregate window function resolution failed"))
+            }
             val partitions = node.partitions.map { it.type(input.type.schema, outer) }
             val sorts = node.sorts.map {
                 val rex = it.rex.type(input.type.schema, outer)
@@ -326,6 +337,34 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             val schema = ctx!!.copyWithSchema(input.type.schema.map { it.type } + functions.map { it.returnType!! })
             val window = relOpWindow(node.name, input, functions, partitions, sorts)
             return rel(schema, window)
+        }
+
+        /**
+         * Types an aggregate window function (e.g. `SUM(x) OVER (...)`) by resolving its aggregate call exactly as a
+         * GROUP BY aggregate call is resolved (see [visitRelOpAggregate]), so that both share typing and errors.
+         * @return null if the aggregate could not be resolved; the error has been reported to the listener.
+         */
+        private fun typeAggregateWindowFunction(
+            node: Rel.Op.Window.WindowFunction,
+            call: Rel.Op.Aggregate.Call,
+            input: Rel.Type,
+        ): Rel.Op.Window.WindowFunction? {
+            val unresolved = when (call) {
+                is Rel.Op.Aggregate.Call.Resolved -> return node
+                is Rel.Op.Aggregate.Call.Unresolved -> call
+            }
+            val typer = RexTyper(TypeEnv(env, Scope(input.schema, outer)), Strategy.LOCAL)
+            return when (val resolution = typer.resolveAgg(unresolved)) {
+                is TypedAggregateResolution.Success -> {
+                    val resolved = resolution.call
+                    val parameterTypes = resolved.args.map { it.type }
+                    relOpWindowWindowFunction(node.name, resolved.args, false, parameterTypes, resolution.type, resolved)
+                }
+                is TypedAggregateResolution.Failure -> {
+                    _listener.report(resolution.problem)
+                    null
+                }
+            }
         }
 
         /**
