@@ -127,6 +127,27 @@ class AggregateTests {
                     Datum.struct(Field.of("_1", Datum.integer(6)))
                 )
             ),
+            SuccessTestCase(
+                name = "SUM of statically typed BIGINT values",
+                input = "SELECT SUM(CAST(t.v AS BIGINT)) FROM << {'v': 1}, {'v': 2}, {'v': 3} >> AS t",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("_1", Datum.integer(6)))
+                )
+            ),
+            SuccessTestCase(
+                name = "SUM of COUNT results",
+                input = "SELECT SUM(v.c) FROM (SELECT COUNT(*) AS c FROM << {'g': 1}, {'g': 1}, {'g': 2} >> AS t GROUP BY t.g) AS v",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("_1", Datum.integer(3)))
+                )
+            ),
+            SuccessTestCase(
+                name = "SUM of statically typed DECIMAL values",
+                input = "SELECT SUM(CAST(t.v AS DECIMAL(5, 2))) FROM << {'v': 1}, {'v': 2.5}, {'v': 3} >> AS t",
+                expected = Datum.bagVararg(
+                    Datum.struct(Field.of("_1", Datum.doublePrecision(6.5)))
+                )
+            ),
         )
 
         @JvmStatic
