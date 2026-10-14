@@ -294,8 +294,14 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
 
         override fun visitRelOpWindowWindowFunction(node: Rel.Op.Window.WindowFunction, ctx: PType): WindowFunctionNode {
             val signature = WindowFunctionSignature(node.name, node.parameterTypes!!, node.returnType!!, node.isIgnoreNulls)
-            val args = node.args.map { visitRex(it, it.type) }
-            return WindowFunctionNode(signature, args)
+            return when (val call = node.aggregate) {
+                null -> WindowFunctionNode(signature, node.args.map { visitRex(it, it.type) })
+                is IRel.Op.Aggregate.Call.Resolved -> {
+                    val args = call.args.map { visitRex(it, it.type) }
+                    WindowFunctionNode(signature, args, call.agg.signature, call.setq == SetQuantifier.DISTINCT)
+                }
+                is IRel.Op.Aggregate.Call.Unresolved -> error("Unresolved aggregate window function $node")
+            }
         }
 
         override fun visitRelOpWith(node: Rel.Op.With, ctx: PType): org.partiql.plan.rel.Rel {

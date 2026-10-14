@@ -992,13 +992,30 @@ windowFunction: funcType=windowFunctionType OVER spec=windowNameOrSpecification;
  * <window function type> ::=
  *   <rank function type> <left paren> <right paren>
  *   | ROW_NUMBER <left paren> <right paren>
+ *   | <aggregate function>
  *   | <lead or lag function>
  *   | and more...
  */
 windowFunctionType
     : rankFunctionType PAREN_LEFT PAREN_RIGHT # WindowFunctionTypeRank
     | ROW_NUMBER PAREN_LEFT PAREN_RIGHT       # WindowFunctionTypeRowNumber
+    | aggregateWindowFunction                 # WindowFunctionTypeAggregate
     | leadOrLagFunction                       # WindowFunctionTypeLeadOrLag
+    ;
+
+/**
+ * The subset of SQL:2011 <aggregate function> that is supported as a window function.
+ * Only the built-in COUNT/SUM/AVG/MIN/MAX are allowed; other (e.g. user-defined) aggregates followed by OVER are a
+ * syntax error. Without OVER, these calls are parsed by [functionCall] as regular aggregates.
+ *
+ * EBNF 2023 (subset):
+ * <aggregate function> ::= COUNT <left paren> <asterisk> <right paren> | <general set function>
+ * <general set function> ::= <set function type> <left paren> [ <set quantifier> ] <value expression> <right paren>
+ * <set function type> ::= AVG | MAX | MIN | SUM | COUNT
+ */
+aggregateWindowFunction
+    : COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                                 # AggregateWindowFunctionCountStar
+    | name=(COUNT|SUM|AVG|MIN|MAX) PAREN_LEFT setQuantifierStrategy? argument=expr PAREN_RIGHT  # AggregateWindowFunctionGeneral
     ;
 
 /**
