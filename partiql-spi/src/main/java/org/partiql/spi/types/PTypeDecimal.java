@@ -11,6 +11,11 @@ class PTypeDecimal extends PType {
 
     PTypeDecimal(int code, int precision, int scale) {
         super(code);
+        if (scale < 0 || scale > precision) {
+            throw new IllegalArgumentException(
+                name() + " scale (" + scale + ") must be between 0 and precision (" + precision + "), inclusive."
+            );
+        }
         _precision = precision;
         _scale = scale;
     }
