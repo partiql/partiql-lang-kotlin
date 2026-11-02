@@ -24,7 +24,7 @@ permissions:
 jobs:
   benchmark:
     name: Run JMH Benchmarks
-    runs-on: ubuntu-latest
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
