@@ -71,4 +71,20 @@ class ErrorMessageFormatterTest {
             )
         }
     }
+
+    @Test
+    fun `formats window order required`() {
+        val error = PError(
+            PError.WINDOW_ORDER_REQUIRED,
+            Severity.ERROR(),
+            PErrorKind.SEMANTIC(),
+            null,
+            mapOf("FN_NAME" to "PERCENT_RANK"),
+        )
+
+        assertEquals(
+            "e: [semantic] Window function PERCENT_RANK requires a window ORDER BY clause.",
+            ErrorMessageFormatter.message(error),
+        )
+    }
 }

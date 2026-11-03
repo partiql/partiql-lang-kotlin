@@ -44,6 +44,7 @@ object ErrorMessageFormatter {
             ErrorCodeString.MAP_KEY_NOT_FOUND -> mapKeyNotFound(error)
             ErrorCodeString.MAP_KEY_TYPE_MISMATCH -> mapKeyTypeMismatch(error)
             ErrorCodeString.MAP_DUPLICATE_KEY -> mapDuplicateKey(error)
+            ErrorCodeString.WINDOW_ORDER_REQUIRED -> windowOrderRequired(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -164,6 +165,15 @@ object ErrorMessageFormatter {
         val message = error.getOrNull("MESSAGE", String::class.java)
         val messageStr = prepare(message, " ")
         return "Set operation schema incompatible.$messageStr"
+    }
+
+    /**
+     * @see PError.WINDOW_ORDER_REQUIRED
+     */
+    private fun windowOrderRequired(error: PError): String {
+        val fnName = error.getOrNull("FN_NAME", String::class.java)
+        val fnNameStr = prepare(fnName, " ", "")
+        return "Window function$fnNameStr requires a window ORDER BY clause."
     }
 
     /**

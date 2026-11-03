@@ -330,6 +330,20 @@ internal object PErrors {
         )
     }
 
+    /**
+     * @param fnName the name of the window function (e.g. `RANK`).
+     * @see PError.WINDOW_ORDER_REQUIRED
+     */
+    internal fun windowOrderRequired(fnName: String, location: SourceLocation? = null): PError {
+        return PError(
+            PError.WINDOW_ORDER_REQUIRED,
+            Severity.ERROR(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("FN_NAME" to fnName),
+        )
+    }
+
     internal fun notImplemented(
         feature: String,
         location: SourceLocation? = null

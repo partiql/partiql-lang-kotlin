@@ -700,4 +700,22 @@ public final class PError extends Enum {
      * Example error message: <code>[location]: Function reference [fn_id] is ambiguous: [candidates].</code>
      */
     public static final int FUNCTION_AMBIGUOUS = 28;
+
+    /**
+     * <p>
+     * This is a semantic error where a window function that requires a window ordering clause is specified
+     * over a window that has none. Per SQL:2023 Subclause 9.23, Syntax Rule 5a, the window ordering clause
+     * shall be present for the rank functions (RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST), NTILE, LEAD, and LAG.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>FN_NAME</b> ({@link String}): The name of the window function.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Window function [fn_name] requires a window ORDER BY clause.</code>
+     * </p>
+     */
+    public static final int WINDOW_ORDER_REQUIRED = 29;
 }

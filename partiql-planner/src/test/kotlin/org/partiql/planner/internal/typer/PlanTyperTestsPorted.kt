@@ -4952,9 +4952,9 @@ internal class PlanTyperTestsPorted {
                 warnings = assertWarningExists(PErrors.experimental("Window Clause")),
             ),
             SuccessTestCase(
-                name = "PERCENT_RANK and CUME_DIST without ORDER BY return DOUBLE PRECISION",
+                name = "PERCENT_RANK and CUME_DIST in an arithmetic expression return DOUBLE PRECISION",
                 query = """
-                    SELECT VALUE PERCENT_RANK() OVER () + CUME_DIST() OVER ()
+                    SELECT VALUE PERCENT_RANK() OVER (ORDER BY t.a) + CUME_DIST() OVER (ORDER BY t.a)
                     FROM << { 'a': 1 }, { 'a': 2 } >> AS t
                 """.trimIndent(),
                 expected = BagType(StaticType.FLOAT),

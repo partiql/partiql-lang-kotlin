@@ -357,6 +357,7 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field UNRECOGNIZED_TOKEN I
 	public static final field VAR_REF_AMBIGUOUS I
 	public static final field VAR_REF_NOT_FOUND I
+	public static final field WINDOW_ORDER_REQUIRED I
 	public field kind Lorg/partiql/spi/errors/PErrorKind;
 	public field location Lorg/partiql/spi/SourceLocation;
 	public field severity Lorg/partiql/spi/errors/Severity;

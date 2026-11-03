@@ -44,6 +44,7 @@ class PErrorCodeTests {
             "MAP_KEY_TYPE_MISMATCH" to 26,
             "MAP_DUPLICATE_KEY" to 27,
             "FUNCTION_AMBIGUOUS" to 28,
+            "WINDOW_ORDER_REQUIRED" to 29,
         )
 
         // Preparation

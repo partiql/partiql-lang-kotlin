@@ -15,30 +15,22 @@
 package org.partiql.eval.internal.window
 
 import org.partiql.eval.Environment
-import org.partiql.eval.WindowFunction
-import org.partiql.eval.WindowPartition
 import org.partiql.spi.value.Datum
 
 /**
- * PERCENT_RANK() as defined by SQL:2011 (ISO/IEC 9075-2) Section 6.10:
+ * PERCENT_RANK() as defined by SQL:2023 (ISO/IEC 9075-2) Subclause 9.23, Syntax Rule 5g:
  * (rank - 1) / (n - 1), where rank is the RANK() of the current row and n is the number of rows in the partition.
  * If the partition contains a single row, the result is 0.
  *
  * Since RANK() is equal to the number of rows preceding the current row's peer group plus one, rank - 1 is
  * the (zero-based) index of the first row of the current row's peer group.
  */
-internal class PercentRankFunction : WindowFunction {
-
-    private var _partitionSize: Long = 0
-
-    override fun reset(partition: WindowPartition) {
-        _partitionSize = partition.size()
-    }
+internal class PercentRankFunction : PartitionSizedFunction() {
 
     override fun eval(env: Environment, orderingGroupStart: Long, orderingGroupEnd: Long): Datum {
-        if (_partitionSize <= 1) {
+        if (partitionSize <= 1) {
             return Datum.doublePrecision(0.0)
         }
-        return Datum.doublePrecision(orderingGroupStart.toDouble() / (_partitionSize - 1).toDouble())
+        return Datum.doublePrecision(orderingGroupStart.toDouble() / (partitionSize - 1).toDouble())
     }
 }

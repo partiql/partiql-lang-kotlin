@@ -562,10 +562,13 @@ internal object RelConverter {
                     val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
                     rex(PType.dynamic().toCType(), op)
                 } ?: emptyList()
-                val functionNodes = window.functions.map { convertWindowFunction(it) }
                 val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }
                 val newSchema = current.type.schema + functionBindings
                 val type = relType(newSchema, emptySet())
+                if (!checkWindowOrderRequired(window)) {
+                    return@foldRight rel(type, relOpErr("Window function requires a window ORDER BY clause"))
+                }
+                val functionNodes = window.functions.map { convertWindowFunction(it) }
                 val op = relOpWindow(window.name, current, functionNodes, partitions, orderBy)
                 rel(type, op)
             }
@@ -639,6 +642,36 @@ internal object RelConverter {
                 }
             }
             return relOpSortSpec(rex, order)
+        }
+
+        /**
+         * SQL:2023 Subclause 9.23, Syntax Rule 5a: if a <rank function type> (RANK, DENSE_RANK, PERCENT_RANK,
+         * CUME_DIST), <ntile function>, or <lead or lag function> is specified, then the window ordering clause shall
+         * be present. ROW_NUMBER is exempt.
+         *
+         * Reports [PErrors.windowOrderRequired] for each offending function in [window].
+         * @return true if the window is valid with respect to this rule.
+         */
+        private fun checkWindowOrderRequired(window: InternalWindowDefinition): Boolean {
+            if (window.spec.orderClause != null) {
+                return true
+            }
+            val offending = window.functions.mapNotNull { windowOrderRequiredName(it.functionType) }
+            offending.forEach { env.listener.report(PErrors.windowOrderRequired(it)) }
+            return offending.isEmpty()
+        }
+
+        /**
+         * @return the name of [type] if it requires a window ordering clause; null otherwise.
+         */
+        private fun windowOrderRequiredName(type: WindowFunctionType): String? = when (type) {
+            is WindowFunctionType.Rank -> "RANK"
+            is WindowFunctionType.DenseRank -> "DENSE_RANK"
+            is WindowFunctionType.PercentRank -> "PERCENT_RANK"
+            is WindowFunctionType.CumeDist -> "CUME_DIST"
+            is Lead -> "LEAD"
+            is Lag -> "LAG"
+            else -> null
         }
 
         private fun convertWindowFunction(node: ExprWindowFunction): Rel.Op.Window.WindowFunction {

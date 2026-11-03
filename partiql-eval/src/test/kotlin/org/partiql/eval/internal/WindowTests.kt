@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.Mode
+import org.partiql.eval.PErrorCollector
 import org.partiql.eval.Row
 import org.partiql.eval.WindowFunction
 import org.partiql.eval.WindowPartition
@@ -15,6 +16,12 @@ import org.partiql.eval.internal.operator.rel.Collation
 import org.partiql.eval.internal.operator.rel.RelOpWindow
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.eval.internal.window.RowNumberFunction
+import org.partiql.parser.PartiQLParser
+import org.partiql.planner.PartiQLPlanner
+import org.partiql.spi.Context
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PError
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -35,6 +42,38 @@ class WindowTests {
     @MethodSource("failureTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun failureTests(tc: FailureTestCase) = tc.run()
+
+    /**
+     * SQL:2023 Subclause 9.23, Syntax Rule 5a: the rank functions, NTILE, LEAD, and LAG require a window ordering
+     * clause. The planner reports [PError.WINDOW_ORDER_REQUIRED] for each offending function.
+     */
+    @ParameterizedTest
+    @MethodSource("windowOrderRequiredTestCases")
+    fun windowOrderRequired(tc: Pair<String, List<String>>) {
+        val (query, expectedFns) = tc
+        val errors = planningErrors(query)
+        assertEquals(List(expectedFns.size) { PError.WINDOW_ORDER_REQUIRED }, errors.map { it.code() }, "Errors: $errors")
+        // Each in-line window is planned separately, so the report order across windows is not meaningful.
+        assertEquals(expectedFns.sorted(), errors.map { it.get("FN_NAME", String::class.java) as String }.sorted())
+    }
+
+    @ParameterizedTest
+    @MethodSource("windowOrderPresentOrNotRequiredTestCases")
+    fun windowOrderPresentOrNotRequired(query: String) {
+        val errors = planningErrors(query)
+        assertEquals(emptyList(), errors, "Errors: $errors")
+    }
+
+    private fun planningErrors(query: String): List<PError> {
+        val statement = PartiQLParser.standard().parse(query).statements.single()
+        val session = Session.builder()
+            .catalog("default")
+            .catalogs(Catalog.builder().name("default").build())
+            .build()
+        val collector = PErrorCollector()
+        PartiQLPlanner.standard().plan(statement, session, Context.of(collector))
+        return collector.errors
+    }
 
     /**
      * This is used just for debugging purposes.
@@ -632,40 +671,6 @@ class WindowTests {
                 ),
             ),
             SuccessTestCase(
-                name = "PERCENT_RANK and CUME_DIST without ORDER BY (all rows are peers)",
-                mode = Mode.STRICT(),
-                globals = globals,
-                input = """
-                    SELECT
-                        t.id AS _id,
-                        t.name AS _name,
-                        RANK() OVER (PARTITION BY t.department) AS _rank,
-                        PERCENT_RANK() OVER (PARTITION BY t.department) AS _percent_rank,
-                        CUME_DIST() OVER (PARTITION BY t.department) AS _cume_dist
-                    FROM employee AS t;
-                """.trimIndent(),
-                expected = Datum.bagVararg(
-                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
-                ),
-            ),
-            SuccessTestCase(
-                name = "PERCENT_RANK and CUME_DIST with empty OVER clause (all rows are peers)",
-                mode = Mode.STRICT(),
-                globals = globals,
-                input = """
-                    SELECT
-                        t.id AS _id,
-                        t.name AS _name,
-                        RANK() OVER () AS _rank,
-                        PERCENT_RANK() OVER () AS _percent_rank,
-                        CUME_DIST() OVER () AS _cume_dist
-                    FROM employee AS t;
-                """.trimIndent(),
-                expected = Datum.bagVararg(
-                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
-                ),
-            ),
-            SuccessTestCase(
                 name = "PERCENT_RANK and CUME_DIST with NULL sort keys (NULLS FIRST)",
                 mode = Mode.STRICT(),
                 input = """
@@ -676,10 +681,10 @@ class WindowTests {
                     FROM << { 'k': 1, 'v': NULL }, { 'k': 2, 'v': 10 }, { 'k': 3, 'v': NULL }, { 'k': 4, 'v': 20 } >> AS t;
                 """.trimIndent(),
                 expected = Datum.bagVararg(
-                    rowOfDistribution(1, 0.0, 2.0 / 4.0),
-                    rowOfDistribution(3, 0.0, 2.0 / 4.0),
-                    rowOfDistribution(2, 2.0 / 3.0, 3.0 / 4.0),
-                    rowOfDistribution(4, 1.0, 1.0),
+                    rowOfKeyedDistribution(1, 0.0, 2.0 / 4.0),
+                    rowOfKeyedDistribution(3, 0.0, 2.0 / 4.0),
+                    rowOfKeyedDistribution(2, 2.0 / 3.0, 3.0 / 4.0),
+                    rowOfKeyedDistribution(4, 1.0, 1.0),
                 ),
             ),
             SuccessTestCase(
@@ -693,10 +698,27 @@ class WindowTests {
                     FROM << { 'k': 1, 'v': NULL }, { 'k': 2, 'v': 10 }, { 'k': 3, 'v': NULL }, { 'k': 4, 'v': 20 } >> AS t;
                 """.trimIndent(),
                 expected = Datum.bagVararg(
-                    rowOfDistribution(2, 0.0, 1.0 / 4.0),
-                    rowOfDistribution(4, 1.0 / 3.0, 2.0 / 4.0),
-                    rowOfDistribution(1, 2.0 / 3.0, 1.0),
-                    rowOfDistribution(3, 2.0 / 3.0, 1.0),
+                    rowOfKeyedDistribution(2, 0.0, 1.0 / 4.0),
+                    rowOfKeyedDistribution(4, 1.0 / 3.0, 2.0 / 4.0),
+                    rowOfKeyedDistribution(1, 2.0 / 3.0, 1.0),
+                    rowOfKeyedDistribution(3, 2.0 / 3.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST treat NULL and MISSING sort keys as peers",
+                // PERMISSIVE so that the absent attribute t.v evaluates to MISSING rather than raising an error.
+                mode = Mode.PERMISSIVE(),
+                input = """
+                    SELECT
+                        t.k AS k,
+                        PERCENT_RANK() OVER (ORDER BY t.v ASC NULLS FIRST) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.v ASC NULLS FIRST) AS _cume_dist
+                    FROM << { 'k': 1, 'v': NULL }, { 'k': 2 }, { 'k': 3, 'v': 10 } >> AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfKeyedDistribution(1, 0.0, 2.0 / 3.0),
+                    rowOfKeyedDistribution(2, 0.0, 2.0 / 3.0),
+                    rowOfKeyedDistribution(3, 1.0, 1.0),
                 ),
             ),
             SuccessTestCase(
@@ -901,13 +923,14 @@ class WindowTests {
             )
         }
 
-        private fun rowOfDistribution(k: Int, percentRank: Double, cumeDist: Double): Datum {
+        private fun rowOfKeyedDistribution(k: Int, percentRank: Double, cumeDist: Double): Datum {
             return Datum.struct(
                 Field.of("k", Datum.integer(k)),
                 Field.of("_percent_rank", Datum.doublePrecision(percentRank)),
                 Field.of("_cume_dist", Datum.doublePrecision(cumeDist)),
             )
         }
+
         private fun rowOfStockPrice(month: Int, ticker: String, avg: Double, prevAvg: Double?): Datum {
             val fields = mutableListOf(
                 Field.of("current_month", Datum.integer(month)),
@@ -953,6 +976,34 @@ class WindowTests {
             fields.add(last)
             return Datum.struct(fields)
         }
+
+        private const val ORDER_DATA = "<< { 'g': 1, 'v': 10 }, { 'g': 1, 'v': 20 } >>"
+
+        @JvmStatic
+        fun windowOrderRequiredTestCases() = listOf(
+            "SELECT RANK() OVER () AS r FROM $ORDER_DATA AS t" to listOf("RANK"),
+            "SELECT DENSE_RANK() OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("DENSE_RANK"),
+            "SELECT PERCENT_RANK() OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("PERCENT_RANK"),
+            "SELECT CUME_DIST() OVER () AS r FROM $ORDER_DATA AS t" to listOf("CUME_DIST"),
+            "SELECT LEAD(t.v) OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("LEAD"),
+            "SELECT LAG(t.v, 1, 0) OVER () AS r FROM $ORDER_DATA AS t" to listOf("LAG"),
+            // Named window without an ORDER BY.
+            "SELECT RANK() OVER w AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)" to listOf("RANK"),
+            // Every offending function is reported; ROW_NUMBER is exempt.
+            "SELECT ROW_NUMBER() OVER () AS n, RANK() OVER () AS r, CUME_DIST() OVER () AS c FROM $ORDER_DATA AS t" to
+                listOf("RANK", "CUME_DIST"),
+        )
+
+        @JvmStatic
+        fun windowOrderPresentOrNotRequiredTestCases() = listOf(
+            "SELECT RANK() OVER (ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
+            "SELECT PERCENT_RANK() OVER (PARTITION BY t.g ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
+            "SELECT CUME_DIST() OVER w AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g ORDER BY t.v)",
+            "SELECT LAG(t.v) OVER (ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
+            // ROW_NUMBER does not require a window ordering clause.
+            "SELECT ROW_NUMBER() OVER () AS n FROM $ORDER_DATA AS t",
+            "SELECT ROW_NUMBER() OVER (PARTITION BY t.g) AS n FROM $ORDER_DATA AS t",
+        )
 
         @JvmStatic
         fun failureTestCases() = listOf(
