@@ -358,7 +358,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 is TypedAggregateResolution.Success -> {
                     val resolved = resolution.call
                     val parameterTypes = resolved.args.map { it.type }
-                    relOpWindowWindowFunction(node.name, resolved.args, false, parameterTypes, resolution.type, resolved)
+                    relOpWindowWindowFunction(node.name, emptyList(), false, parameterTypes, resolution.type, resolved)
                 }
                 is TypedAggregateResolution.Failure -> {
                     _listener.report(resolution.problem)

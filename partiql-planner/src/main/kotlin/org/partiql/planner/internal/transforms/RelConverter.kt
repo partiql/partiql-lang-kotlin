@@ -568,12 +568,16 @@ internal object RelConverter {
                 val newSchema = current.type.schema + functionBindings
                 val type = relType(newSchema, emptySet())
                 warnIfWindowOrderMissing(window)
+                // Mirror group aggregation: once an error has been reported, do not build an executable window.
+                val valid = window.functions.map { checkWindowAggregateDistinct(it, window.spec) }.all { it }
+                if (!valid) {
+                    return@foldRight rel(type, relOpErr("DISTINCT aggregate window function with a window ORDER BY clause"))
+                }
                 val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
                 val partitions = window.spec.partitionClause?.map {
                     val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
                     rex(PType.dynamic().toCType(), op)
                 } ?: emptyList()
-                window.functions.forEach { checkWindowAggregateDistinct(it, window.spec) }
                 val functionNodes = window.functions.map { convertWindowFunction(it) }
                 val op = relOpWindow(window.name, current, functionNodes, partitions, orderBy)
                 rel(type, op)
@@ -783,15 +787,18 @@ internal object RelConverter {
         /**
          * SQL:2011 Section 6.10, Syntax Rule 13: if the window ordering clause or the window framing clause is present,
          * then no aggregate function simply contained in the window function shall specify DISTINCT.
+         * @return false if the rule is violated; the error has been reported to the listener.
          */
-        private fun checkWindowAggregateDistinct(function: ExprWindowFunction, spec: WindowSpecification) {
+        private fun checkWindowAggregateDistinct(function: ExprWindowFunction, spec: WindowSpecification): Boolean {
             val type = function.functionType
             if (type !is WindowFunctionType.AggregateFunction || type.setq?.code() != SetQuantifier.DISTINCT) {
-                return
+                return true
             }
             if (spec.orderClause != null) {
                 env.listener.report(PErrors.featureNotSupported("DISTINCT in an aggregate window function with a window ORDER BY clause"))
+                return false
             }
+            return true
         }
 
         /**

@@ -292,31 +292,32 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowSpecification(node: WindowSpecification, tail: SqlBlock): SqlBlock {
-        var t = tail
-        if (node.existingName != null) {
-            t = visitIdentifierSimple(node.existingName!!, t)
-            if (!node.partitionClause.isNullOrEmpty() || node.orderClause != null) {
-                t = t concat " "
-            }
-        } else {
-            t = t concat "("
-            // PARTITION BY clause
-            if (!node.partitionClause.isNullOrEmpty()) {
-                t = t concat "PARTITION BY "
-                t = t concat list(start = null, end = null) { node.partitionClause!! }
-                if (node.orderClause != null) {
-                    t = t concat " "
-                }
-            }
-
-            // ORDER BY clause
-            node.orderClause?.let { orderClause ->
-                t = visitOrderBy(orderClause, t)
-            }
-            t = t concat ")"
+        val hasPartition = !node.partitionClause.isNullOrEmpty()
+        val hasOrder = node.orderClause != null
+        // A bare reference to a named window, e.g. `OVER w`
+        if (node.existingName != null && !hasPartition && !hasOrder) {
+            return visitIdentifierSimple(node.existingName!!, tail)
+        }
+        var t = tail concat "("
+        // Existing window name refined by further clauses, e.g. `OVER (w ORDER BY y)`
+        node.existingName?.let { existingName ->
+            t = visitIdentifierSimple(existingName, t) concat " "
         }
 
-        return t
+        // PARTITION BY clause
+        if (hasPartition) {
+            t = t concat "PARTITION BY "
+            t = t concat list(start = null, end = null) { node.partitionClause!! }
+            if (hasOrder) {
+                t = t concat " "
+            }
+        }
+
+        // ORDER BY clause
+        node.orderClause?.let { orderClause ->
+            t = visitOrderBy(orderClause, t)
+        }
+        return t concat ")"
     }
 
     @Deprecated("This feature is experimental and is subject to change.")

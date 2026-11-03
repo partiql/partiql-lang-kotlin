@@ -15,7 +15,6 @@
 package org.partiql.eval.internal.window
 
 import org.partiql.eval.Environment
-import org.partiql.eval.WindowFunction
 import org.partiql.eval.WindowPartition
 import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.Aggregate
@@ -32,15 +31,16 @@ import org.partiql.spi.value.Datum
  * share a frame under [WindowFrame.DEFAULT]) are only computed once.
  *
  * This relies on [org.partiql.spi.function.Accumulator.value] being side-effect free so that it may be called between
- * calls to [org.partiql.spi.function.Accumulator.next]; this holds for the built-in COUNT/SUM/AVG/MIN/MAX accumulators,
- * which are the only aggregates that can currently be used as window functions.
+ * calls to [org.partiql.spi.function.Accumulator.next], as required by its contract. The aggregate is resolved like a
+ * GROUP BY aggregate, so it may be provided by a catalog on the session path rather than being a built-in.
  */
 internal class AggregateWindowFunction(
     private val aggregate: Aggregate,
     private val frame: WindowFrame = WindowFrame.DEFAULT,
-) : WindowFunction {
+) : OuterScopedWindowFunction {
 
     private lateinit var partition: WindowPartition
+    private lateinit var outer: Environment
     private var currentRow: Long = -1L
 
     /**
@@ -52,6 +52,10 @@ internal class AggregateWindowFunction(
 
     private var cachedFrame: LongRange? = null
     private var cachedValue: Datum? = null
+
+    override fun setOuterEnvironment(env: Environment) {
+        this.outer = env
+    }
 
     override fun reset(partition: WindowPartition) {
         this.partition = partition
@@ -73,14 +77,14 @@ internal class AggregateWindowFunction(
         val value = when {
             // An empty frame aggregates no rows (e.g. COUNT -> 0, SUM -> NULL), same as an empty group.
             bounds.isEmpty() -> aggregate.newState().value()
-            else -> aggregate(env, bounds)
+            else -> aggregate(bounds)
         }
         cachedFrame = bounds
         cachedValue = value
         return value
     }
 
-    private fun aggregate(env: Environment, bounds: LongRange): Datum {
+    private fun aggregate(bounds: LongRange): Datum {
         var current = state
         if (current == null || bounds.first != accumulatedStart || bounds.last < accumulatedEnd) {
             current = aggregate.newState()
@@ -90,7 +94,9 @@ internal class AggregateWindowFunction(
         }
         for (i in (accumulatedEnd + 1)..bounds.last) {
             checkInterrupted()
-            current.accumulate(env.push(partition[i]))
+            // Push onto the outer environment, not the `env` passed to [eval] (which already holds the current row);
+            // see [OuterScopedWindowFunction].
+            current.accumulate(outer.push(partition[i]))
         }
         accumulatedEnd = bounds.last
         return current.value()

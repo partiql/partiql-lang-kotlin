@@ -299,7 +299,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
                 null -> WindowFunctionNode(signature, node.args.map { visitRex(it, it.type) })
                 is IRel.Op.Aggregate.Call.Resolved -> {
                     val args = call.args.map { visitRex(it, it.type) }
-                    WindowFunctionNode(signature, args, call.agg.signature, call.setq == SetQuantifier.DISTINCT)
+                    WindowFunctionNode(signature, args, call.agg.signature, call.setq == SetQuantifier.DISTINCT, call.routine)
                 }
                 is IRel.Op.Aggregate.Call.Unresolved -> error("Unresolved aggregate window function $node")
             }

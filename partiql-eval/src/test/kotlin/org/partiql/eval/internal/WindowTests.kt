@@ -1337,6 +1337,187 @@ class WindowTests {
                         row("g" to "b", "s" to 10L, "running" to 30L, "groups" to 2L, "max_count" to 4L),
                     ),
                 ),
+                // Groups: (a,1) s=2, (a,2) s=10, (a,3) s=8, (b,1) s=10. HAVING removes (a,1) before the window runs.
+                SuccessTestCase(
+                    name = "Window aggregates over a multi-key GROUP BY with HAVING ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            g AS g,
+                            k AS k,
+                            SUM(SUM(t.x)) OVER (PARTITION BY g ORDER BY k) AS running,
+                            MAX(COUNT(*)) OVER (PARTITION BY g) AS max_rows,
+                            COUNT(*) OVER (PARTITION BY g) AS groups_in_g
+                        FROM nums AS t
+                        GROUP BY t.g AS g, t.k AS k
+                        HAVING SUM(t.x) > 2
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "k" to 2, "running" to 10L, "max_rows" to 2L, "groups_in_g" to 2L),
+                        row("g" to "a", "k" to 3, "running" to 18L, "max_rows" to 2L, "groups_in_g" to 2L),
+                        row("g" to "b", "k" to 1, "running" to 10L, "max_rows" to 1L, "groups_in_g" to 1L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Group aggregates in the window ORDER BY ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            g AS g,
+                            COUNT(*) OVER (ORDER BY SUM(t.x) DESC) AS rank_by_sum,
+                            MAX(COUNT(*)) OVER (ORDER BY SUM(t.x) DESC) AS running_max_count
+                        FROM nums AS t
+                        GROUP BY t.g AS g
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "rank_by_sum" to 1L, "running_max_count" to 4L),
+                        row("g" to "b", "rank_by_sum" to 2L, "running_max_count" to 4L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Expressions around and inside window aggregates ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            t.x AS x,
+                            t.x * 100 / SUM(t.x) OVER (PARTITION BY t.g) AS pct,
+                            SUM(t.x * 2 + 1) OVER (PARTITION BY t.g) AS s2,
+                            SUM(CASE WHEN t.x > 4 THEN 1 ELSE 0 END) OVER (PARTITION BY t.g) AS big
+                        FROM nums AS t
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("x" to 2, "pct" to 10L, "s2" to 44L, "big" to 2L),
+                        row("x" to 4, "pct" to 20L, "s2" to 44L, "big" to 2L),
+                        row("x" to 6, "pct" to 30L, "s2" to 44L, "big" to 2L),
+                        row("x" to 8, "pct" to 40L, "s2" to 44L, "big" to 2L),
+                        row("x" to 10, "pct" to 100L, "s2" to 21L, "big" to 1L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Window and group aggregates combined in expressions ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            g AS g,
+                            SUM(t.x) - MIN(SUM(t.x)) OVER () AS above_min,
+                            MAX(SUM(t.x) * 2) OVER () AS max_double,
+                            MAX(COUNT(DISTINCT t.k)) OVER () AS max_distinct_keys,
+                            COUNT(DISTINCT g) OVER () AS distinct_groups
+                        FROM nums AS t
+                        GROUP BY t.g AS g
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "above_min" to 10L, "max_double" to 40L, "max_distinct_keys" to 3L, "distinct_groups" to 2L),
+                        row("g" to "b", "above_min" to 0L, "max_double" to 40L, "max_distinct_keys" to 3L, "distinct_groups" to 2L),
+                    ),
+                ),
+                // Running sum ordered by x: 2, 6, 12, 20, 30.
+                SuccessTestCase(
+                    name = "Filtering on a window aggregate in an outer query ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT v.x AS x, v.running AS running
+                        FROM (
+                            SELECT t.x AS x, SUM(t.x) OVER (ORDER BY t.x) AS running FROM nums AS t
+                        ) AS v
+                        WHERE v.running > 10
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("x" to 6, "running" to 12L),
+                        row("x" to 8, "running" to 20L),
+                        row("x" to 10, "running" to 30L),
+                    ),
+                ),
+                // The arguments are evaluated against other rows of the partition; outer references (o.k) must still
+                // resolve to the outer row, not to the current row of the window (t.k = 1 for partition 'b').
+                SuccessTestCase(
+                    name = "Window aggregate in a correlated subquery references the outer row ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            o.g AS g,
+                            (SELECT VALUE SUM(t.x + o.k) OVER () FROM nums AS t WHERE t.g = o.g) AS s
+                        FROM << { 'g': 'b', 'k': 100 } >> AS o
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "b", "s" to Datum.bagVararg(Datum.bigint(110))),
+                    ),
+                ),
+                // x in partition 'a' ordered: 2, 4, 6, 8.
+                SuccessTestCase(
+                    name = "LAG in a correlated subquery references the outer row ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            o.g AS g,
+                            (SELECT VALUE LAG(t.x + o.k) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS l
+                        FROM << { 'g': 'a', 'k': 100 } >> AS o
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row(
+                            "g" to "a",
+                            "l" to Datum.bagVararg(Datum.nullValue(), Datum.integer(102), Datum.integer(104), Datum.integer(106)),
+                        ),
+                    ),
+                ),
+                // The window is reopened for each outer row, so each must see its own o.k (not the first outer row's).
+                // Partition 'a' x ordered: 2, 4, 6, 8; partition 'b': 10.
+                SuccessTestCase(
+                    name = "Window functions in a correlated subquery over multiple outer rows ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            o.g AS g,
+                            (SELECT VALUE SUM(t.x + o.k) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS s,
+                            (SELECT VALUE LAG(t.x + o.k) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS l
+                        FROM << { 'g': 'a', 'k': 100 }, { 'g': 'b', 'k': 1000 } >> AS o
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row(
+                            "g" to "a",
+                            "s" to Datum.bagVararg(Datum.bigint(102), Datum.bigint(206), Datum.bigint(312), Datum.bigint(420)),
+                            "l" to Datum.bagVararg(Datum.nullValue(), Datum.integer(102), Datum.integer(104), Datum.integer(106)),
+                        ),
+                        row(
+                            "g" to "b",
+                            "s" to Datum.bagVararg(Datum.bigint(1010)),
+                            "l" to Datum.bagVararg(Datum.nullValue()),
+                        ),
+                    ),
+                ),
+                // Group 'a' v ordered by id: 10, NULL, NULL, 40, 50, NULL; NULLs are skipped when looking ahead.
+                SuccessTestCase(
+                    name = "LEAD IGNORE NULLS in a correlated subquery references the outer row ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            o.g AS g,
+                            (SELECT VALUE LEAD(r.v + o.k) IGNORE NULLS OVER (ORDER BY r.id) FROM readings AS r WHERE r.grp = o.g) AS l
+                        FROM << { 'g': 'a', 'k': 100 } >> AS o
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row(
+                            "g" to "a",
+                            "l" to Datum.bagVararg(
+                                Datum.integer(140),
+                                Datum.integer(140),
+                                Datum.integer(140),
+                                Datum.integer(150),
+                                Datum.nullValue(),
+                                Datum.nullValue(),
+                            ),
+                        ),
+                    ),
+                ),
             )
         } + listOf(
             SuccessTestCase(

@@ -269,8 +269,8 @@ rel::{
       sorts: list::['.rel.op.sort.spec'],
       _: [
         // For aggregate window functions (COUNT/SUM/AVG/MIN/MAX), [aggregate] holds the aggregate call (unresolved
-        // before typing, resolved after) and is the source of truth for the arguments and set quantifier; [args]
-        // mirrors the call's arguments once resolved.
+        // before typing, resolved after), which is the only place its arguments and set quantifier are held; [args]
+        // is always empty.
         window_function::{
           name: string,
           args: list::[rex],

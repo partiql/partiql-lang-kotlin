@@ -4696,6 +4696,125 @@ class SqlDialectTest {
                         )
                     )
                 )
+            ),
+            // Window name refined in OVER; the ORDER BY must be kept.
+            expect(
+                "SELECT RANK() OVER (w ORDER BY salary ASC NULLS LAST) FROM T WINDOW w AS (PARTITION BY dept)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w"),
+                                            emptyList(),
+                                            orderBy(listOf(sort(v("salary"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        null
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            // Window name refined in OVER by both PARTITION BY and ORDER BY; both clauses must be kept.
+            expect(
+                "SELECT RANK() OVER (w PARTITION BY dept ORDER BY age ASC NULLS LAST) FROM T WINDOW w AS (ORDER BY id ASC NULLS LAST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w"),
+                                            listOf(windowPartition(Identifier.regular("dept"))),
+                                            orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w"),
+                                    windowSpecification(
+                                        null,
+                                        emptyList(),
+                                        orderBy(listOf(sort(v("id"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            // Window name refined in a WINDOW clause definition; the definition must stay parenthesized.
+            expect(
+                "SELECT RANK() OVER w2 FROM T WINDOW w1 AS (PARTITION BY dept), w2 AS (w1 ORDER BY salary ASC NULLS LAST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w2"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w1"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        null
+                                    )
+                                ),
+                                windowClauseDefinition(
+                                    regular("w2"),
+                                    windowSpecification(
+                                        regular("w1"),
+                                        emptyList(),
+                                        orderBy(listOf(sort(v("salary"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
             )
         )
 
