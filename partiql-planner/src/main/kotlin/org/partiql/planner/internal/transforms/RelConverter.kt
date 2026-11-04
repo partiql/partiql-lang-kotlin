@@ -557,17 +557,17 @@ internal object RelConverter {
             // Convert window definitions to plan nodes. Fold to each be their own window nodes, and return.
             // Schema = (input bindings... functions...)
             val rel = windows.getAll().foldRight(input) { window, current ->
-                val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
-                val partitions = window.spec.partitionClause?.map {
-                    val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
-                    rex(PType.dynamic().toCType(), op)
-                } ?: emptyList()
                 val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }
                 val newSchema = current.type.schema + functionBindings
                 val type = relType(newSchema, emptySet())
                 if (!checkWindowOrderRequired(window)) {
                     return@foldRight rel(type, relOpErr("Window function requires a window ORDER BY clause"))
                 }
+                val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
+                val partitions = window.spec.partitionClause?.map {
+                    val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
+                    rex(PType.dynamic().toCType(), op)
+                } ?: emptyList()
                 val functionNodes = window.functions.map { convertWindowFunction(it) }
                 val op = relOpWindow(window.name, current, functionNodes, partitions, orderBy)
                 rel(type, op)
@@ -650,13 +650,19 @@ internal object RelConverter {
          * be present. ROW_NUMBER is exempt.
          *
          * Reports [PErrors.windowOrderRequired] for each offending function in [window].
+         * TODO: Check NTILE once it is supported.
          * @return true if the window is valid with respect to this rule.
          */
         private fun checkWindowOrderRequired(window: InternalWindowDefinition): Boolean {
             if (window.spec.orderClause != null) {
                 return true
             }
-            val offending = window.functions.mapNotNull { windowOrderRequiredName(it.functionType) }
+            val offending = window.functions
+                // A function that refines a named window with its own ORDER BY, e.g. `OVER (w ORDER BY x)`, has
+                // already been reported as unsupported ("Window referencing other window"); do not also report that
+                // its ORDER BY is missing.
+                .filter { it.windowSpecification.orderClause == null }
+                .mapNotNull { windowOrderRequiredName(it.functionType) }
             offending.forEach { env.listener.report(PErrors.windowOrderRequired(it)) }
             return offending.isEmpty()
         }

@@ -705,7 +705,7 @@ public final class PError extends Enum {
      * <p>
      * This is a semantic error where a window function that requires a window ordering clause is specified
      * over a window that has none. Per SQL:2023 Subclause 9.23, Syntax Rule 5a, the window ordering clause
-     * shall be present for the rank functions (RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST), NTILE, LEAD, and LAG.
+     * shall be present for RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST, LEAD, and LAG. ROW_NUMBER does not require one.
      * </p>
      * <p>
      * Potentially available properties:

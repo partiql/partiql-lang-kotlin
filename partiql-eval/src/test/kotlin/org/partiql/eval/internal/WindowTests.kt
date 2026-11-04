@@ -64,6 +64,17 @@ class WindowTests {
         assertEquals(emptyList(), errors, "Errors: $errors")
     }
 
+    /**
+     * `OVER (w ORDER BY ...)` is reported only as an unsupported window reference, not as a missing ORDER BY.
+     */
+    @Test
+    fun windowOrderRequiredNotReportedForRefinedNamedWindow() {
+        val errors = planningErrors(
+            "SELECT RANK() OVER (w ORDER BY t.v) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)"
+        )
+        assertEquals(listOf(PError.FEATURE_NOT_SUPPORTED), errors.map { it.code() }, "Errors: $errors")
+    }
+
     private fun planningErrors(query: String): List<PError> {
         val statement = PartiQLParser.standard().parse(query).statements.single()
         val session = Session.builder()
