@@ -162,7 +162,7 @@ internal class OperatorCompiler(
                 }
             }
             is PExpr.PathKey -> ExprPathKey(compile(expr.root), compile(expr.key)).catch()
-            is PExpr.PathIndex -> ExprPathIndex(compile(expr.root), compile(expr.index))
+            is PExpr.PathIndex -> ExprPathIndex(compile(expr.root), compile(expr.index)).catch()
             is PExpr.PathSymbol -> ExprPathSymbol(compile(expr.root), expr.symbol).catch()
             is PExpr.Error -> when (MODE) {
                 Mode.PERMISSIVE -> ExprMissing(PType.unknown())
@@ -270,8 +270,9 @@ internal class OperatorCompiler(
         }
     }
 
+    // Sort keys are not inside another permissive wrapper, so an error in one must become MISSING here.
     private fun toCollation(c: PCollation): Collation =
-        Collation(compile(c.expr), c.desc, c.nullsLast)
+        Collation(compile(c.expr).catch(), c.desc, c.nullsLast)
 
     private fun ExprValue.catch(): ExprValue = when (MODE) {
         Mode.PERMISSIVE -> ExprPermissive(this)
