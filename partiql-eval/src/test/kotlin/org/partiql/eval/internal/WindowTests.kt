@@ -45,14 +45,14 @@ class WindowTests {
 
     /**
      * SQL:2023 Subclause 9.23, Syntax Rule 5a: the rank functions, NTILE, LEAD, and LAG require a window ordering
-     * clause. The planner reports [PError.WINDOW_ORDER_REQUIRED] for each offending function.
+     * clause. The planner reports [PError.INVALID_WINDOW_FUNCTION] for each offending function.
      */
     @ParameterizedTest
     @MethodSource("windowOrderRequiredTestCases")
     fun windowOrderRequired(tc: Pair<String, List<String>>) {
         val (query, expectedFns) = tc
         val errors = planningErrors(query)
-        assertEquals(List(expectedFns.size) { PError.WINDOW_ORDER_REQUIRED }, errors.map { it.code() }, "Errors: $errors")
+        assertEquals(List(expectedFns.size) { PError.INVALID_WINDOW_FUNCTION }, errors.map { it.code() }, "Errors: $errors")
         // Each in-line window is planned separately, so the report order across windows is not meaningful.
         assertEquals(expectedFns.sorted(), errors.map { it.get("FN_NAME", String::class.java) as String }.sorted())
     }

@@ -332,15 +332,16 @@ internal object PErrors {
 
     /**
      * @param fnName the name of the window function (e.g. `RANK`).
-     * @see PError.WINDOW_ORDER_REQUIRED
+     * @param reason a description of the violated rule (e.g. `requires a window ORDER BY clause`).
+     * @see PError.INVALID_WINDOW_FUNCTION
      */
-    internal fun windowOrderRequired(fnName: String, location: SourceLocation? = null): PError {
+    internal fun invalidWindowFunction(fnName: String, reason: String, location: SourceLocation? = null): PError {
         return PError(
-            PError.WINDOW_ORDER_REQUIRED,
+            PError.INVALID_WINDOW_FUNCTION,
             Severity.ERROR(),
             PErrorKind.SEMANTIC(),
             location,
-            mapOf("FN_NAME" to fnName),
+            mapOf("FN_NAME" to fnName, "REASON" to reason),
         )
     }
 

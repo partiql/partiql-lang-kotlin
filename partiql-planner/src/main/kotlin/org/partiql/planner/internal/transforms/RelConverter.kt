@@ -649,7 +649,7 @@ internal object RelConverter {
          * CUME_DIST), <ntile function>, or <lead or lag function> is specified, then the window ordering clause shall
          * be present. ROW_NUMBER is exempt.
          *
-         * Reports [PErrors.windowOrderRequired] for each offending function in [window].
+         * Reports [PErrors.invalidWindowFunction] for each offending function in [window].
          * TODO: Check NTILE once it is supported.
          * @return true if the window is valid with respect to this rule.
          */
@@ -663,7 +663,7 @@ internal object RelConverter {
                 // its ORDER BY is missing.
                 .filter { it.windowSpecification.orderClause == null }
                 .mapNotNull { windowOrderRequiredName(it.functionType) }
-            offending.forEach { env.listener.report(PErrors.windowOrderRequired(it)) }
+            offending.forEach { env.listener.report(PErrors.invalidWindowFunction(it, "requires a window ORDER BY clause")) }
             return offending.isEmpty()
         }
 

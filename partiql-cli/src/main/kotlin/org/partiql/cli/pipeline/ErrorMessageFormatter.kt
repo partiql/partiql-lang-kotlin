@@ -44,7 +44,7 @@ object ErrorMessageFormatter {
             ErrorCodeString.MAP_KEY_NOT_FOUND -> mapKeyNotFound(error)
             ErrorCodeString.MAP_KEY_TYPE_MISMATCH -> mapKeyTypeMismatch(error)
             ErrorCodeString.MAP_DUPLICATE_KEY -> mapDuplicateKey(error)
-            ErrorCodeString.WINDOW_ORDER_REQUIRED -> windowOrderRequired(error)
+            ErrorCodeString.INVALID_WINDOW_FUNCTION -> invalidWindowFunction(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -168,12 +168,14 @@ object ErrorMessageFormatter {
     }
 
     /**
-     * @see PError.WINDOW_ORDER_REQUIRED
+     * @see PError.INVALID_WINDOW_FUNCTION
      */
-    private fun windowOrderRequired(error: PError): String {
+    private fun invalidWindowFunction(error: PError): String {
         val fnName = error.getOrNull("FN_NAME", String::class.java)
+        val reason = error.getOrNull("REASON", String::class.java)
         val fnNameStr = prepare(fnName, " ", "")
-        return "Window function$fnNameStr requires a window ORDER BY clause."
+        val reasonStr = prepare(reason, ": ", "")
+        return "Invalid window function$fnNameStr$reasonStr."
     }
 
     /**
