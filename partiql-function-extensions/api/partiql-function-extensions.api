@@ -18,6 +18,10 @@ public final class org/partiql/extensions/functions/custom/datetime/DateTrunc {
 	public static fun overloads ()Ljava/util/List;
 }
 
+public final class org/partiql/extensions/functions/custom/datetime/ToChar {
+	public static fun overloads ()Ljava/util/List;
+}
+
 public final class org/partiql/extensions/functions/custom/datetime/ToUnixTime {
 	public static fun overloads ()Ljava/util/List;
 }

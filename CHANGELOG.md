@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added `date_trunc` and `to_char` (PostgreSQL / Oracle / Redshift datetime templates) for `TIMESTAMP` and `DATE` to the `partiql-function-extensions` artifact.
 
 ### Changed
 
