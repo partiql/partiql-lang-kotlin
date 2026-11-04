@@ -3977,18 +3977,26 @@ internal class PlanTyperTestsPorted {
             // Note: SUM/AVG over non-numeric arguments (e.g. STRING, BOOL) are not planning errors for group aggregates
             // either, since they resolve to the dynamic overload and fail at evaluation; see
             // testWindowAggregateTypesMatchGroupAggregates and the evaluator's WindowTests.
+            // SQL:2023 9.23 SR 8d: DISTINCT with a window ORDER BY is invalid, except for COUNT (optional Feature T627).
             ErrorTestCase(
-                name = "DISTINCT window aggregate with ORDER BY (SQL:2011 6.10 SR 13)",
+                name = "SUM(DISTINCT) window aggregate with ORDER BY is invalid",
                 query = "SELECT VALUE SUM(DISTINCT t.a) OVER (PARTITION BY t.b ORDER BY t.a) FROM $windowData AS t",
                 problemHandler = assertProblemExists(
-                    PErrors.featureNotSupported("DISTINCT in an aggregate window function with a window ORDER BY clause")
+                    PErrors.invalidWindowFunction("SUM", "DISTINCT is not allowed with a window ORDER BY clause")
                 ),
             ),
             ErrorTestCase(
-                name = "DISTINCT window aggregate with ORDER BY in a named window",
+                name = "MAX(DISTINCT) window aggregate with ORDER BY in a named window is invalid",
+                query = "SELECT VALUE MAX(DISTINCT t.a) OVER w FROM $windowData AS t WINDOW w AS (ORDER BY t.a)",
+                problemHandler = assertProblemExists(
+                    PErrors.invalidWindowFunction("MAX", "DISTINCT is not allowed with a window ORDER BY clause")
+                ),
+            ),
+            ErrorTestCase(
+                name = "COUNT(DISTINCT) window aggregate with ORDER BY is not supported (Feature T627)",
                 query = "SELECT VALUE COUNT(DISTINCT t.a) OVER w FROM $windowData AS t WINDOW w AS (ORDER BY t.a)",
                 problemHandler = assertProblemExists(
-                    PErrors.featureNotSupported("DISTINCT in an aggregate window function with a window ORDER BY clause")
+                    PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
                 ),
             ),
         )

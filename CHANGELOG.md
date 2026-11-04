@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
-- Added (experimental) support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions, e.g. `SUM(x) OVER (PARTITION BY k ORDER BY t)`, including `COUNT(*)` and `ALL`/`DISTINCT` (SQL:2011 only allows `DISTINCT` when the window has no `ORDER BY`). As window frame clauses are not yet supported, the SQL default frame is used: a running aggregate through the current row's peers with `ORDER BY`, otherwise the whole partition. Window aggregates are typed and evaluated with the same aggregate functions as group aggregation. Adds `WindowFunctionType.Count`, `Sum`, `Avg`, `Min`, `Max` (sharing the `WindowFunctionType.AggregateFunction` interface) to the AST and `WindowFunctionNode.getAggregate()`/`isDistinct()` to the plan.
 
 ### Changed
 
@@ -28,9 +27,11 @@ Thank you to all who have contributed!
 
 ### Added
 - **EXPERIMENTAL**: Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
-- Added the `PError.INVALID_WINDOW_FUNCTION` error code, with the `FN_NAME` and `REASON` properties. It is currently only reported as a warning.
+- Added the `PError.INVALID_WINDOW_FUNCTION` error code, with the `FN_NAME` and `REASON` properties. It is reported as a warning for a missing window `ORDER BY` and as an error for `DISTINCT` with a window `ORDER BY`.
 - `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
+- Added (experimental) support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
+- Added `Session.getSystemCatalogName()`.
 
 ### Changed
 - The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.

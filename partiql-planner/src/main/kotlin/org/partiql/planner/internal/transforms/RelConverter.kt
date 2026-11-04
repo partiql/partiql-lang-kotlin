@@ -780,13 +780,18 @@ internal object RelConverter {
                 else -> error("Unexpected SetQuantifier type: ${node.setq}")
             }
             val args = listOfNotNull(node.argument?.toRex(env))
-            val call = relOpAggregateCallUnresolved(Identifier.regular(name), setq, args)
+            // Only the built-in aggregates may be used as window functions, so resolve against the system catalog
+            // rather than the session path; a same-named aggregate in another catalog must not shadow the built-in.
+            val identifier = Identifier.of(Identifier.Simple.delimited(env.systemCatalogName), Identifier.Simple.regular(name))
+            val call = relOpAggregateCallUnresolved(identifier, setq, args)
             return relOpWindowWindowFunction(name, emptyList(), false, null, null, call)
         }
 
         /**
-         * SQL:2011 Section 6.10, Syntax Rule 13: if the window ordering clause or the window framing clause is present,
-         * then no aggregate function simply contained in the window function shall specify DISTINCT.
+         * SQL:2023 Subclause 9.23, Syntax Rule 8d: if the window ordering clause (or the window framing clause) is
+         * present, then an aggregate window function shall not specify DISTINCT, unless it is COUNT. COUNT(DISTINCT)
+         * with a window ordering clause requires the optional Feature T627, "Window framed COUNT DISTINCT"
+         * (Subclause 6.10, Conformance Rule 11), which is not supported.
          * @return false if the rule is violated; the error has been reported to the listener.
          */
         private fun checkWindowAggregateDistinct(function: ExprWindowFunction, spec: WindowSpecification): Boolean {
@@ -794,11 +799,24 @@ internal object RelConverter {
             if (type !is WindowFunctionType.AggregateFunction || type.setq?.code() != SetQuantifier.DISTINCT) {
                 return true
             }
-            if (spec.orderClause != null) {
-                env.listener.report(PErrors.featureNotSupported("DISTINCT in an aggregate window function with a window ORDER BY clause"))
-                return false
+            if (spec.orderClause == null) {
+                return true
             }
-            return true
+            val error = when (type) {
+                is WindowFunctionType.Count -> PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
+                else -> PErrors.invalidWindowFunction(aggregateName(type), "DISTINCT is not allowed with a window ORDER BY clause")
+            }
+            env.listener.report(error)
+            return false
+        }
+
+        private fun aggregateName(type: WindowFunctionType.AggregateFunction): String = when (type) {
+            is WindowFunctionType.Count -> "COUNT"
+            is WindowFunctionType.Sum -> "SUM"
+            is WindowFunctionType.Avg -> "AVG"
+            is WindowFunctionType.Min -> "MIN"
+            is WindowFunctionType.Max -> "MAX"
+            else -> type.javaClass.simpleName.uppercase()
         }
 
         /**

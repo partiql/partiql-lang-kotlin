@@ -23,6 +23,7 @@ import org.partiql.plan.Plan
 import org.partiql.plan.RoutineRef
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelProject
+import org.partiql.plan.rel.RelWindow
 import org.partiql.plan.rex.RexCall
 import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
@@ -303,6 +304,29 @@ class RoutineResolutionIntegrationTest {
 
         assertTrue(measure.isDistinct)
         assertEquals(RoutineRef("second", Name.of("total")), measure.routineRef)
+    }
+
+    @Test
+    fun `window aggregates resolve to the built-in even when a path catalog defines the same name`() {
+        val catalog = TestRoutineCatalog.builder("demo")
+            .aggregation(Name.of("sum"), aggregate("sum", PType.integer()))
+            .build()
+        val session = Session.builder()
+            .catalog("demo")
+            .catalogs(catalog)
+            .path(Namespace.of("demo"))
+            .build()
+        assertEquals("\$system", session.getSystemCatalogName())
+
+        // A group aggregate resolves through the path, so the catalog's aggregate wins.
+        val measure = plan("SELECT sum(x) AS result FROM << 1 >> AS x", session).singleAggregate().measures.single()
+        assertEquals(RoutineRef("demo", Name.of("sum")), measure.routineRef)
+
+        // A window aggregate may only be a built-in, so it resolves against the system catalog.
+        val planned = plan("SELECT sum(x) OVER (ORDER BY x) AS result FROM << 1 >> AS x", session)
+        assertTrue(planned.errors.errors.isEmpty(), "Errors: ${planned.errors.errors}")
+        val function = planned.plan.operators().filterIsInstance<RelWindow>().single().windowFunctions.single()
+        assertEquals(RoutineRef("\$system", Name.of("sum")), function.routineRef)
     }
 
     @Test

@@ -9,6 +9,7 @@ import org.partiql.ast.expr.ExprWindowFunction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a window function type.
@@ -447,13 +448,14 @@ public abstract class WindowFunctionType extends AstNode {
          * Constructs a new SUM window function type.
          * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
          * @param argument the argument of the aggregate
+         * @throws NullPointerException if {@code argument} is null
          * @deprecated This feature is experimental and is subject to change.
          */
         @Deprecated
         public Sum(@Nullable SetQuantifier setq, @NotNull Expr argument) {
             super();
             this.setq = setq;
-            this.argument = argument;
+            this.argument = Objects.requireNonNull(argument, "argument");
         }
 
         @Nullable
@@ -498,13 +500,14 @@ public abstract class WindowFunctionType extends AstNode {
          * Constructs a new AVG window function type.
          * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
          * @param argument the argument of the aggregate
+         * @throws NullPointerException if {@code argument} is null
          * @deprecated This feature is experimental and is subject to change.
          */
         @Deprecated
         public Avg(@Nullable SetQuantifier setq, @NotNull Expr argument) {
             super();
             this.setq = setq;
-            this.argument = argument;
+            this.argument = Objects.requireNonNull(argument, "argument");
         }
 
         @Nullable
@@ -549,13 +552,14 @@ public abstract class WindowFunctionType extends AstNode {
          * Constructs a new MIN window function type.
          * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
          * @param argument the argument of the aggregate
+         * @throws NullPointerException if {@code argument} is null
          * @deprecated This feature is experimental and is subject to change.
          */
         @Deprecated
         public Min(@Nullable SetQuantifier setq, @NotNull Expr argument) {
             super();
             this.setq = setq;
-            this.argument = argument;
+            this.argument = Objects.requireNonNull(argument, "argument");
         }
 
         @Nullable
@@ -600,13 +604,14 @@ public abstract class WindowFunctionType extends AstNode {
          * Constructs a new MAX window function type.
          * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
          * @param argument the argument of the aggregate
+         * @throws NullPointerException if {@code argument} is null
          * @deprecated This feature is experimental and is subject to change.
          */
         @Deprecated
         public Max(@Nullable SetQuantifier setq, @NotNull Expr argument) {
             super();
             this.setq = setq;
-            this.argument = argument;
+            this.argument = Objects.requireNonNull(argument, "argument");
         }
 
         @Nullable

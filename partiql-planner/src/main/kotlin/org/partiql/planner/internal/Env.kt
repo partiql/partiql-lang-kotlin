@@ -72,6 +72,12 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
 
     private val routines = RoutineResolver(session)
 
+    /**
+     * The name of the session's system catalog, which provides the built-in routines.
+     */
+    internal val systemCatalogName: String
+        get() = session.getSystemCatalogName()
+
     fun resolveWindowFn(name: String, args: List<Rex>, isIgnoreNulls: Boolean = false): Rel.Op.Window.WindowFunction? {
         val sig = WindowFunctionSignatureProvider.get(name, args, isIgnoreNulls) ?: return null
         val paramTypes = sig.parameterTypes.map { it.toCType() }

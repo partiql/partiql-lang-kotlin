@@ -142,6 +142,15 @@ class AstNodeTest {
     ) // setq null
 
     @Test
+    @Suppress("DEPRECATION")
+    fun windowFunctionTypeAggregatesRejectNullArgument() {
+        assertThrows<NullPointerException> { WindowFunctionType.Sum.builder().build() }
+        assertThrows<NullPointerException> { WindowFunctionType.Avg.builder().build() }
+        assertThrows<NullPointerException> { WindowFunctionType.Min.builder().build() }
+        assertThrows<NullPointerException> { WindowFunctionType.Max.builder().build() }
+    }
+
+    @Test
     fun windowFunctionTypeCountStarRejectsSetQuantifier() {
         assertThrows<IllegalArgumentException> {
             @Suppress("DEPRECATION")
