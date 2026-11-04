@@ -20,6 +20,8 @@ import org.partiql.extensions.functions.compat.datetime.DateAdd;
 import org.partiql.extensions.functions.compat.datetime.UtcNow;
 import org.partiql.extensions.functions.custom.collection.Contains;
 import org.partiql.extensions.functions.custom.conversion.HexToBigInt;
+import org.partiql.extensions.functions.custom.datetime.DateTrunc;
+import org.partiql.extensions.functions.custom.datetime.ToChar;
 import org.partiql.extensions.functions.custom.datetime.ToUnixTime;
 import org.partiql.extensions.functions.custom.math.Pow;
 import org.partiql.spi.function.Fn;
@@ -80,6 +82,24 @@ public class FunctionExportsTest {
             Arrays.asList(PType.string(), PType.integer(), PType.timestamp()),
             PType.timestamp()
         );
+        assertEquals(2, DateTrunc.overloads().size());
+        for (PType type : Arrays.asList(PType.timestamp(), PType.date())) {
+            assertSignature(
+                FunctionTestSupport.overloadFor(DateTrunc.overloads(), PType.string(), type),
+                "date_trunc",
+                Arrays.asList(PType.string(), type),
+                PType.timestamp()
+            );
+        }
+        assertEquals(2, ToChar.overloads().size());
+        for (PType type : Arrays.asList(PType.timestamp(), PType.date())) {
+            assertSignature(
+                FunctionTestSupport.overloadFor(ToChar.overloads(), type, PType.string()),
+                "to_char",
+                Arrays.asList(type, PType.string()),
+                PType.string()
+            );
+        }
         assertSignature(
             UtcNow.overloads().get(0),
             "utcnow",
@@ -96,6 +116,8 @@ public class FunctionExportsTest {
         assertStableAndImmutable(ToUnixTime.overloads(), ToUnixTime.overloads());
         assertStableAndImmutable(DateAdd.overloads(), DateAdd.overloads());
         assertStableAndImmutable(UtcNow.overloads(), UtcNow.overloads());
+        assertStableAndImmutable(DateTrunc.overloads(), DateTrunc.overloads());
+        assertStableAndImmutable(ToChar.overloads(), ToChar.overloads());
     }
 
     private static void assertSignature(
