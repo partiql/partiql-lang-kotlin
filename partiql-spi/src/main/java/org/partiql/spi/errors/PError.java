@@ -250,6 +250,8 @@ public final class PError extends Enum {
                 return "MAP_KEY_TYPE_MISMATCH";
             case MAP_DUPLICATE_KEY:
                 return "MAP_DUPLICATE_KEY";
+            case INVALID_WINDOW_FUNCTION:
+                return "INVALID_WINDOW_FUNCTION";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -710,4 +712,26 @@ public final class PError extends Enum {
      * Example error message: <code>[location]: Function reference [fn_id] is ambiguous: [candidates].</code>
      */
     public static final int FUNCTION_AMBIGUOUS = 28;
+
+    /**
+     * <p>
+     * This is a semantic error or warning where a window function violates a syntax rule of SQL:2023
+     * (ISO/IEC 9075-2) Subclause 9.23, "Evaluation and transformation of &lt;window function&gt;". For example,
+     * RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST, LEAD, and LAG require a window ordering clause (Syntax Rule 5a);
+     * for backward compatibility, a missing window ordering clause is reported as a warning.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>FN_NAME</b> ({@link String}): The name of the window function.</li>
+     * <li><b>REASON</b> ({@link String}): A description of the violated rule.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Window function [fn_name] [reason].</code>, e.g.
+     * <code>Window function RANK requires an ORDER BY clause in its OVER specification. Without one, its result is the same for
+     * every row or depends on the order in which rows are read. Add an ORDER BY to the window.</code>
+     * </p>
+     */
+    public static final int INVALID_WINDOW_FUNCTION = 29;
 }

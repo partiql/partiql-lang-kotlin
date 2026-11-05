@@ -330,6 +330,28 @@ internal object PErrors {
         )
     }
 
+    /**
+     * @param fnName the name of the window function (e.g. `RANK`).
+     * @param reason a description of the violated rule, completing "Window function [fnName] ..." (e.g.
+     * `RelConverter.REASON_WINDOW_ORDER_REQUIRED`).
+     * @param severity the severity; a missing window ORDER BY is reported as a warning for backward compatibility.
+     * @see PError.INVALID_WINDOW_FUNCTION
+     */
+    internal fun invalidWindowFunction(
+        fnName: String,
+        reason: String,
+        severity: Severity,
+        location: SourceLocation? = null,
+    ): PError {
+        return PError(
+            PError.INVALID_WINDOW_FUNCTION,
+            severity,
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("FN_NAME" to fnName, "REASON" to reason),
+        )
+    }
+
     internal fun notImplemented(
         feature: String,
         location: SourceLocation? = null

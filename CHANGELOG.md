@@ -26,10 +26,13 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- **EXPERIMENTAL**: Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
+- Added the `PError.INVALID_WINDOW_FUNCTION` error code, with the `FN_NAME` and `REASON` properties. It is currently only reported as a warning.
 - `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 
 ### Changed
+- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
 ### Deprecated
 

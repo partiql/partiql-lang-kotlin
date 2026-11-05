@@ -4284,6 +4284,28 @@ class SqlDialectTest {
                 )
             ),
             expect(
+                "PERCENT_RANK() OVER (PARTITION BY department ORDER BY age DESC NULLS FIRST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.PercentRank(),
+                    spec = windowSpecification(
+                        null,
+                        listOf(windowPartition(Identifier.of(regular("department")))),
+                        orderBy(listOf(sort(v("age"), Order.DESC(), Nulls.FIRST())))
+                    )
+                )
+            ),
+            expect(
+                "CUME_DIST() OVER (ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.CumeDist(),
+                    spec = windowSpecification(
+                        null,
+                        emptyList(),
+                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            expect(
                 "LAG(name, 1, 'UNKNOWN') RESPECT NULLS OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
                 exprWindowFunction(
                     type = WindowFunctionType.Lag(
