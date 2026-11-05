@@ -32,7 +32,7 @@ Thank you to all who have contributed!
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 
 ### Changed
-- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run; hosts that fail on warnings other than `EXPERIMENTAL`, or CLI users with `-Werror=INVALID_WINDOW_FUNCTION`, will now see them fail.
+- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
 ### Deprecated
 
