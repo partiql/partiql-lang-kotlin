@@ -21,7 +21,8 @@ permissions:
 jobs:
   conformance-report:
     name: Create conformance report for `push` and `pull_request` events
-    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    # CodeBuild-hosted runner for this repository; forks (which do not have it) fall back to GitHub-hosted runners.
+    runs-on: ${{ github.repository == 'partiql/partiql-lang-kotlin' && format('codebuild-partiql-lang-kotlin-{0}-{1}', github.run_id, github.run_attempt) || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -62,7 +63,8 @@ jobs:
           key: ${{ github.sha }}-conformance-report
   conformance-report-comparison:
     name: Create comparison report for `pull_request` event
-    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    # CodeBuild-hosted runner for this repository; forks (which do not have it) fall back to GitHub-hosted runners.
+    runs-on: ${{ github.repository == 'partiql/partiql-lang-kotlin' && format('codebuild-partiql-lang-kotlin-{0}-{1}', github.run_id, github.run_attempt) || 'ubuntu-latest' }}
     needs: [ conformance-report ]
     if: github.event_name == 'pull_request'
     steps:

@@ -25,9 +25,13 @@ permissions:
 jobs:
   benchmark:
     name: Run JMH Benchmarks
-    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    # CodeBuild-hosted runner for this repository; forks (which do not have it) fall back to GitHub-hosted runners.
+    runs-on: ${{ github.repository == 'partiql/partiql-lang-kotlin' && format('codebuild-partiql-lang-kotlin-{0}-{1}', github.run_id, github.run_attempt) || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          # The benchmark action pushes with its own `github-token`; keep the write token out of `.git/config`.
+          persist-credentials: false
       - uses: actions/setup-java@v3
         with:
           distribution: 'corretto'
@@ -51,7 +55,8 @@ jobs:
       - name: Store Benchmark Result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: JMH Benchmark
+          # A new series for the CodeBuild runner, so alerts do not compare against results from other hardware.
+          name: JMH Benchmark (CodeBuild)
           tool: 'jmh'
           output-file-path: ${{ env.JMH_RESULTS_PATH_FROM_ROOT }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
