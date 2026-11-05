@@ -90,24 +90,29 @@ class PTypeMetaInPlan {
     fun `test varchar has no length`() {
         val varchar = getRexCast(DataType.VARCHAR()).type.pType
         varchar.assertUnspecifiedLength()
+        // Unbounded, matching CLOB and string-function results.
+        assertEquals(Int.MAX_VALUE, varchar.length)
     }
 
     @Test
     fun `test character_varying has no length`() {
         val varchar = getRexCast(DataType.CHARACTER_VARYING()).type.pType
         varchar.assertUnspecifiedLength()
+        assertEquals(Int.MAX_VALUE, varchar.length)
     }
 
     @Test
     fun `test character has no length`() {
         val char = getRexCast(DataType.CHARACTER()).type.pType
         char.assertUnspecifiedLength()
+        assertEquals(1, char.length)
     }
 
     @Test
     fun `test char has no length`() {
         val char = getRexCast(DataType.CHAR()).type.pType
         char.assertUnspecifiedLength()
+        assertEquals(1, char.length)
     }
 
     @Test
