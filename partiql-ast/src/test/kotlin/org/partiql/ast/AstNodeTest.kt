@@ -130,31 +130,29 @@ class AstNodeTest {
     ) // defaultValue null
 
     @Test
-    fun windowFunctionTypeCountStar() = assertNullSafe(
+    fun windowFunctionTypeAggregateCountStar() = assertNullSafe(
         @Suppress("DEPRECATION")
-        WindowFunctionType.Count(null, null),
-    ) // setq and argument null
+        WindowFunctionType.Aggregate(Identifier.regular("COUNT"), emptyList(), null),
+    ) // setq null, no args
 
     @Test
-    fun windowFunctionTypeSum() = assertNullSafe(
+    fun windowFunctionTypeAggregate() = assertNullSafe(
         @Suppress("DEPRECATION")
-        WindowFunctionType.Sum(null, lit()),
+        WindowFunctionType.Aggregate(Identifier.regular("SUM"), listOf(lit()), null),
     ) // setq null
 
     @Test
     @Suppress("DEPRECATION")
-    fun windowFunctionTypeAggregatesRejectNullArgument() {
-        assertThrows<NullPointerException> { WindowFunctionType.Sum.builder().build() }
-        assertThrows<NullPointerException> { WindowFunctionType.Avg.builder().build() }
-        assertThrows<NullPointerException> { WindowFunctionType.Min.builder().build() }
-        assertThrows<NullPointerException> { WindowFunctionType.Max.builder().build() }
+    fun windowFunctionTypeAggregateRejectsNullFunctionOrArgs() {
+        assertThrows<NullPointerException> { WindowFunctionType.Aggregate.builder().args(listOf(lit())).build() }
+        assertThrows<NullPointerException> { WindowFunctionType.Aggregate.builder().function(Identifier.regular("SUM")).build() }
     }
 
     @Test
-    fun windowFunctionTypeCountStarRejectsSetQuantifier() {
+    fun windowFunctionTypeAggregateWithoutArgsRejectsSetQuantifier() {
         assertThrows<IllegalArgumentException> {
             @Suppress("DEPRECATION")
-            WindowFunctionType.Count(SetQuantifier.DISTINCT(), null)
+            WindowFunctionType.Aggregate(Identifier.regular("COUNT"), emptyList(), SetQuantifier.DISTINCT())
         }
     }
 
@@ -333,18 +331,14 @@ class AstNodeTest {
             "org.partiql.ast.WindowClause",
             "org.partiql.ast.WindowClause.Definition",
             "org.partiql.ast.WindowFunctionNullTreatment",
-            "org.partiql.ast.WindowFunctionType.Avg",
-            "org.partiql.ast.WindowFunctionType.Count",
+            "org.partiql.ast.WindowFunctionType.Aggregate",
             "org.partiql.ast.WindowFunctionType.CumeDist",
             "org.partiql.ast.WindowFunctionType.DenseRank",
             "org.partiql.ast.WindowFunctionType.Lag",
             "org.partiql.ast.WindowFunctionType.Lead",
-            "org.partiql.ast.WindowFunctionType.Max",
-            "org.partiql.ast.WindowFunctionType.Min",
             "org.partiql.ast.WindowFunctionType.PercentRank",
             "org.partiql.ast.WindowFunctionType.Rank",
             "org.partiql.ast.WindowFunctionType.RowNumber",
-            "org.partiql.ast.WindowFunctionType.Sum",
             "org.partiql.ast.WindowPartition",
             "org.partiql.ast.WindowSpecification",
             "org.partiql.ast.With",

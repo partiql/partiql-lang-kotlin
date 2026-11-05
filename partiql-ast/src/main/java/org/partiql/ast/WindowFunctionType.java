@@ -339,304 +339,86 @@ public abstract class WindowFunctionType extends AstNode {
     }
 
     /**
-     * Represents one of the aggregate functions COUNT, SUM, AVG, MIN, or MAX used as a window function, e.g.
-     * {@code SUM(x) OVER (...)}.
+     * Represents an aggregate function used as a window function, e.g. {@code SUM(x) OVER (...)}. The aggregate is
+     * identified by name, as for {@link org.partiql.ast.expr.ExprCall}; the parser currently only produces COUNT, SUM,
+     * AVG, MIN, and MAX. {@code COUNT(*)} is represented by the name {@code count} with no arguments (and no set
+     * quantifier).
      * @see ExprWindowFunction#getFunctionType()
-     * @see Count
-     * @see Sum
-     * @see Avg
-     * @see Min
-     * @see Max
      * @deprecated This feature is experimental and is subject to change.
      */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     @Deprecated
-    public interface AggregateFunction {
+    public static final class Aggregate extends WindowFunctionType {
+        @NotNull
+        private final Identifier function;
+
+        @NotNull
+        private final List<Expr> args;
+
+        @Nullable
+        private final SetQuantifier setq;
+
+        /**
+         * Constructs a new aggregate window function type.
+         * @param function the name of the aggregate function
+         * @param args the arguments of the aggregate; empty for {@code COUNT(*)}
+         * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
+         * @throws NullPointerException if {@code function} or {@code args} is null
+         * @throws IllegalArgumentException if {@code args} is empty and {@code setq} is not null
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public Aggregate(@NotNull Identifier function, @NotNull List<Expr> args, @Nullable SetQuantifier setq) {
+            super();
+            this.function = Objects.requireNonNull(function, "function");
+            this.args = Objects.requireNonNull(args, "args");
+            if (args.isEmpty() && setq != null) {
+                throw new IllegalArgumentException("An aggregate without arguments (e.g. COUNT(*)) may not have a set quantifier");
+            }
+            this.setq = setq;
+        }
+
+        /**
+         * Returns the name of the aggregate function.
+         * @return the name of the aggregate function
+         */
+        @NotNull
+        public Identifier getFunction() {
+            return this.function;
+        }
+
+        /**
+         * Returns the arguments of the aggregate; empty for {@code COUNT(*)}.
+         * @return the arguments of the aggregate
+         */
+        @NotNull
+        public List<Expr> getArgs() {
+            return this.args;
+        }
+
         /**
          * Returns the set quantifier of the aggregate, if specified.
          * @return the set quantifier of the aggregate, if specified
          */
         @Nullable
-        SetQuantifier getSetq();
-
-        /**
-         * Returns the argument of the aggregate; null only for {@code COUNT(*)}.
-         * @return the argument of the aggregate; null only for {@code COUNT(*)}
-         */
-        @Nullable
-        Expr getArgument();
-    }
-
-    /**
-     * Represents the COUNT aggregate used as a window function, e.g. {@code COUNT(x) OVER (...)}. {@code COUNT(*)} is
-     * represented by a null {@link #getArgument()} (and a null {@link #getSetq()}).
-     * @see ExprWindowFunction#getFunctionType()
-     * @deprecated This feature is experimental and is subject to change.
-     */
-    @Builder(builderClassName = "Builder")
-    @EqualsAndHashCode(callSuper = false)
-    @Deprecated
-    public static final class Count extends WindowFunctionType implements AggregateFunction {
-        private final SetQuantifier setq;
-        private final Expr argument;
-
-        /**
-         * Constructs a new COUNT window function type.
-         * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
-         * @param argument the argument of the aggregate; null for {@code COUNT(*)}
-         * @throws IllegalArgumentException if {@code argument} is null and {@code setq} is not null
-         * @deprecated This feature is experimental and is subject to change.
-         */
-        @Deprecated
-        public Count(@Nullable SetQuantifier setq, @Nullable Expr argument) {
-            super();
-            if (argument == null && setq != null) {
-                throw new IllegalArgumentException("COUNT(*) may not have a set quantifier");
-            }
-            this.setq = setq;
-            this.argument = argument;
-        }
-
-        @Nullable
-        @Override
-        public SetQuantifier getSetq() {
-            return this.setq;
-        }
-
-        @Nullable
-        @Override
-        public Expr getArgument() {
-            return this.argument;
-        }
-
-        /**
-         * Returns whether this is {@code COUNT(*)}.
-         * @return true if this is {@code COUNT(*)}
-         */
-        public boolean isCountStar() {
-            return this.argument == null;
-        }
-
-        @NotNull
-        @Override
-        public List<AstNode> getChildren() {
-            List<AstNode> kids = new ArrayList<>();
-            if (argument != null) {
-                kids.add(argument);
-            }
-            return kids;
-        }
-
-        @Override
-        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitWindowFunctionTypeCount(this, ctx);
-        }
-    }
-
-    /**
-     * Represents the SUM aggregate used as a window function, e.g. {@code SUM(x) OVER (...)}.
-     * @see ExprWindowFunction#getFunctionType()
-     * @deprecated This feature is experimental and is subject to change.
-     */
-    @Builder(builderClassName = "Builder")
-    @EqualsAndHashCode(callSuper = false)
-    @Deprecated
-    public static final class Sum extends WindowFunctionType implements AggregateFunction {
-        private final SetQuantifier setq;
-        private final Expr argument;
-
-        /**
-         * Constructs a new SUM window function type.
-         * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
-         * @param argument the argument of the aggregate
-         * @throws NullPointerException if {@code argument} is null
-         * @deprecated This feature is experimental and is subject to change.
-         */
-        @Deprecated
-        public Sum(@Nullable SetQuantifier setq, @NotNull Expr argument) {
-            super();
-            this.setq = setq;
-            this.argument = Objects.requireNonNull(argument, "argument");
-        }
-
-        @Nullable
-        @Override
         public SetQuantifier getSetq() {
             return this.setq;
         }
 
         @NotNull
         @Override
-        public Expr getArgument() {
-            return this.argument;
-        }
-
-        @NotNull
-        @Override
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
-            kids.add(argument);
+            kids.add(function);
+            kids.addAll(args);
             return kids;
         }
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitWindowFunctionTypeSum(this, ctx);
+            return visitor.visitWindowFunctionTypeAggregate(this, ctx);
         }
     }
 
-    /**
-     * Represents the AVG aggregate used as a window function, e.g. {@code AVG(x) OVER (...)}.
-     * @see ExprWindowFunction#getFunctionType()
-     * @deprecated This feature is experimental and is subject to change.
-     */
-    @Builder(builderClassName = "Builder")
-    @EqualsAndHashCode(callSuper = false)
-    @Deprecated
-    public static final class Avg extends WindowFunctionType implements AggregateFunction {
-        private final SetQuantifier setq;
-        private final Expr argument;
-
-        /**
-         * Constructs a new AVG window function type.
-         * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
-         * @param argument the argument of the aggregate
-         * @throws NullPointerException if {@code argument} is null
-         * @deprecated This feature is experimental and is subject to change.
-         */
-        @Deprecated
-        public Avg(@Nullable SetQuantifier setq, @NotNull Expr argument) {
-            super();
-            this.setq = setq;
-            this.argument = Objects.requireNonNull(argument, "argument");
-        }
-
-        @Nullable
-        @Override
-        public SetQuantifier getSetq() {
-            return this.setq;
-        }
-
-        @NotNull
-        @Override
-        public Expr getArgument() {
-            return this.argument;
-        }
-
-        @NotNull
-        @Override
-        public List<AstNode> getChildren() {
-            List<AstNode> kids = new ArrayList<>();
-            kids.add(argument);
-            return kids;
-        }
-
-        @Override
-        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitWindowFunctionTypeAvg(this, ctx);
-        }
-    }
-
-    /**
-     * Represents the MIN aggregate used as a window function, e.g. {@code MIN(x) OVER (...)}.
-     * @see ExprWindowFunction#getFunctionType()
-     * @deprecated This feature is experimental and is subject to change.
-     */
-    @Builder(builderClassName = "Builder")
-    @EqualsAndHashCode(callSuper = false)
-    @Deprecated
-    public static final class Min extends WindowFunctionType implements AggregateFunction {
-        private final SetQuantifier setq;
-        private final Expr argument;
-
-        /**
-         * Constructs a new MIN window function type.
-         * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
-         * @param argument the argument of the aggregate
-         * @throws NullPointerException if {@code argument} is null
-         * @deprecated This feature is experimental and is subject to change.
-         */
-        @Deprecated
-        public Min(@Nullable SetQuantifier setq, @NotNull Expr argument) {
-            super();
-            this.setq = setq;
-            this.argument = Objects.requireNonNull(argument, "argument");
-        }
-
-        @Nullable
-        @Override
-        public SetQuantifier getSetq() {
-            return this.setq;
-        }
-
-        @NotNull
-        @Override
-        public Expr getArgument() {
-            return this.argument;
-        }
-
-        @NotNull
-        @Override
-        public List<AstNode> getChildren() {
-            List<AstNode> kids = new ArrayList<>();
-            kids.add(argument);
-            return kids;
-        }
-
-        @Override
-        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitWindowFunctionTypeMin(this, ctx);
-        }
-    }
-
-    /**
-     * Represents the MAX aggregate used as a window function, e.g. {@code MAX(x) OVER (...)}.
-     * @see ExprWindowFunction#getFunctionType()
-     * @deprecated This feature is experimental and is subject to change.
-     */
-    @Builder(builderClassName = "Builder")
-    @EqualsAndHashCode(callSuper = false)
-    @Deprecated
-    public static final class Max extends WindowFunctionType implements AggregateFunction {
-        private final SetQuantifier setq;
-        private final Expr argument;
-
-        /**
-         * Constructs a new MAX window function type.
-         * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
-         * @param argument the argument of the aggregate
-         * @throws NullPointerException if {@code argument} is null
-         * @deprecated This feature is experimental and is subject to change.
-         */
-        @Deprecated
-        public Max(@Nullable SetQuantifier setq, @NotNull Expr argument) {
-            super();
-            this.setq = setq;
-            this.argument = Objects.requireNonNull(argument, "argument");
-        }
-
-        @Nullable
-        @Override
-        public SetQuantifier getSetq() {
-            return this.setq;
-        }
-
-        @NotNull
-        @Override
-        public Expr getArgument() {
-            return this.argument;
-        }
-
-        @NotNull
-        @Override
-        public List<AstNode> getChildren() {
-            List<AstNode> kids = new ArrayList<>();
-            kids.add(argument);
-            return kids;
-        }
-
-        @Override
-        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitWindowFunctionTypeMax(this, ctx);
-        }
-    }
 }

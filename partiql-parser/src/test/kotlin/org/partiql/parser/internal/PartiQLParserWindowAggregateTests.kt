@@ -74,44 +74,44 @@ class PartiQLParserWindowAggregateTests {
     @Test
     fun countStar() = assertExpression(
         "COUNT(*) OVER (PARTITION BY g ORDER BY k)",
-        over(WindowFunctionType.Count(null, null))
+        over(WindowFunctionType.Aggregate(Identifier.regular("COUNT"), emptyList(), null))
     )
 
     @Test
     fun countExpr() = assertExpression(
         "COUNT(x) OVER (PARTITION BY g ORDER BY k)",
-        over(WindowFunctionType.Count(null, v("x")))
+        over(WindowFunctionType.Aggregate(Identifier.regular("COUNT"), listOf(v("x")), null))
     )
 
     @Test
     fun sum() = assertExpression(
         "SUM(x) OVER (PARTITION BY g ORDER BY k)",
-        over(WindowFunctionType.Sum(null, v("x")))
+        over(WindowFunctionType.Aggregate(Identifier.regular("SUM"), listOf(v("x")), null))
     )
 
     @Test
     fun avgCaseInsensitive() = assertExpression(
         "avg(x) OVER (PARTITION BY g ORDER BY k)",
-        over(WindowFunctionType.Avg(null, v("x")))
+        over(WindowFunctionType.Aggregate(Identifier.regular("avg"), listOf(v("x")), null))
     )
 
     @Test
     fun minAll() = assertExpression(
         "MIN(ALL x) OVER (PARTITION BY g ORDER BY k)",
-        over(WindowFunctionType.Min(SetQuantifier.ALL(), v("x")))
+        over(WindowFunctionType.Aggregate(Identifier.regular("MIN"), listOf(v("x")), SetQuantifier.ALL()))
     )
 
     @Test
     fun maxDistinct() = assertExpression(
         "MAX(DISTINCT x) OVER (PARTITION BY g ORDER BY k)",
-        over(WindowFunctionType.Max(SetQuantifier.DISTINCT(), v("x")))
+        over(WindowFunctionType.Aggregate(Identifier.regular("MAX"), listOf(v("x")), SetQuantifier.DISTINCT()))
     )
 
     @Test
     fun emptyWindowSpecification() = assertExpression(
         "SUM(x) OVER ()",
         exprWindowFunction(
-            type = WindowFunctionType.Sum(null, v("x")),
+            type = WindowFunctionType.Aggregate(Identifier.regular("SUM"), listOf(v("x")), null),
             spec = windowSpecification(null, null, null)
         )
     )
@@ -120,10 +120,7 @@ class PartiQLParserWindowAggregateTests {
     fun nestedGroupAggregateArgument() = assertExpression(
         "SUM(SUM(x)) OVER (PARTITION BY g ORDER BY k)",
         over(
-            WindowFunctionType.Sum(
-                null,
-                exprCall(Identifier.regular("SUM"), listOf(v("x")), null)
-            )
+            WindowFunctionType.Aggregate(Identifier.regular("SUM"), listOf(exprCall(Identifier.regular("SUM"), listOf(v("x")), null)), null)
         )
     )
 

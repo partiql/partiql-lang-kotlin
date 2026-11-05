@@ -248,36 +248,21 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     }
 
     @Deprecated("This feature is experimental and is subject to change.")
-    override fun visitWindowFunctionTypeCount(node: WindowFunctionType.Count, tail: SqlBlock): SqlBlock {
-        return visitWindowFunctionTypeAggregate("COUNT", node, tail)
-    }
-
-    @Deprecated("This feature is experimental and is subject to change.")
-    override fun visitWindowFunctionTypeSum(node: WindowFunctionType.Sum, tail: SqlBlock): SqlBlock {
-        return visitWindowFunctionTypeAggregate("SUM", node, tail)
-    }
-
-    @Deprecated("This feature is experimental and is subject to change.")
-    override fun visitWindowFunctionTypeAvg(node: WindowFunctionType.Avg, tail: SqlBlock): SqlBlock {
-        return visitWindowFunctionTypeAggregate("AVG", node, tail)
-    }
-
-    @Deprecated("This feature is experimental and is subject to change.")
-    override fun visitWindowFunctionTypeMin(node: WindowFunctionType.Min, tail: SqlBlock): SqlBlock {
-        return visitWindowFunctionTypeAggregate("MIN", node, tail)
-    }
-
-    @Deprecated("This feature is experimental and is subject to change.")
-    override fun visitWindowFunctionTypeMax(node: WindowFunctionType.Max, tail: SqlBlock): SqlBlock {
-        return visitWindowFunctionTypeAggregate("MAX", node, tail)
-    }
-
-    private fun visitWindowFunctionTypeAggregate(name: String, node: WindowFunctionType.AggregateFunction, tail: SqlBlock): SqlBlock {
-        val argument = node.argument ?: return tail concat "$name(*)"
-        var t = tail concat "$name("
-        node.setq?.let { t = t concat "${it.name()} " }
-        t = visitExpr(argument, t)
-        return t concat ")"
+    override fun visitWindowFunctionTypeAggregate(node: WindowFunctionType.Aggregate, tail: SqlBlock): SqlBlock {
+        val f = node.function
+        // The grammar only accepts the aggregate keywords (e.g. SUM), so print an unqualified name as a keyword.
+        var t = when (f.hasQualifier()) {
+            true -> visitIdentifier(f, tail)
+            false -> tail concat f.identifier.text.uppercase()
+        }
+        // COUNT(*) is represented by no arguments
+        if (node.args.isEmpty()) {
+            return t concat "(*)"
+        }
+        val setq = node.setq
+        val start = if (setq != null) "(${setq.name()} " else "("
+        t = t concat list(start) { node.args }
+        return t
     }
 
     @Deprecated("This feature is experimental and is subject to change.")

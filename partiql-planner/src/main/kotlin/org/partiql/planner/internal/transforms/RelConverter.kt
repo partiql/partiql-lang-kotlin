@@ -117,6 +117,11 @@ internal object RelConverter {
     /**
      * [PErrors.invalidWindowFunction] reason for SQL:2023 Subclause 9.23, Syntax Rule 8d.
      */
+    /**
+     * The aggregates that may be used as window functions; the parser only produces these.
+     */
+    private val WINDOW_AGGREGATES = setOf("count", "sum", "avg", "min", "max")
+
     private const val REASON_WINDOW_DISTINCT_WITH_ORDER = "does not allow DISTINCT when its OVER specification has an ORDER BY clause"
 
     // IGNORE — so we don't have to non-null assert on operator inputs
@@ -750,7 +755,7 @@ internal object RelConverter {
                     val args = listOf(extent, offset, default)
                     relOpWindowWindowFunction(name, args, isIgnoreNulls, null, null, null)
                 }
-                is WindowFunctionType.AggregateFunction -> convertAggregateWindowFunction(windowType)
+                is WindowFunctionType.Aggregate -> convertAggregateWindowFunction(windowType)
                 else -> {
                     val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
                     env.listener.report(PErrors.internalError(cause))
@@ -761,30 +766,21 @@ internal object RelConverter {
 
         /**
          * Converts an aggregate window function (COUNT/SUM/AVG/MIN/MAX) to a window function holding an unresolved
-         * aggregate call. The call is resolved by the typer exactly like a GROUP BY aggregate call (see
-         * [Rel.Op.Aggregate.Call.Unresolved]), so window aggregates share the aggregate catalog, typing rules, and
-         * accumulators with group aggregation. `COUNT(*)` is represented (as for group aggregation) by a call to `count`
-         * with no arguments.
+         * aggregate call. The call is resolved by the typer like a GROUP BY aggregate call (see
+         * [Rel.Op.Aggregate.Call.Unresolved]), so window aggregates share the typing rules and accumulators with group
+         * aggregation. `COUNT(*)` is represented (as for group aggregation) by a call to `count` with no arguments.
          */
-        private fun convertAggregateWindowFunction(node: WindowFunctionType.AggregateFunction): Rel.Op.Window.WindowFunction {
-            val name = when (node) {
-                is WindowFunctionType.Count -> "count"
-                is WindowFunctionType.Sum -> "sum"
-                is WindowFunctionType.Avg -> "avg"
-                is WindowFunctionType.Min -> "min"
-                is WindowFunctionType.Max -> "max"
-                else -> {
-                    val cause = IllegalStateException("Unexpected aggregate WindowFunctionType type: $node")
-                    env.listener.report(PErrors.internalError(cause))
-                    "unknown"
-                }
+        private fun convertAggregateWindowFunction(node: WindowFunctionType.Aggregate): Rel.Op.Window.WindowFunction {
+            val name = node.function.identifier.text.lowercase()
+            if (node.function.hasQualifier() || name !in WINDOW_AGGREGATES) {
+                env.listener.report(PErrors.featureNotSupported("Aggregate ${node.function.identifier.text} as a window function"))
             }
             val setq = when (node.setq?.code()) {
                 SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
                 SetQuantifier.ALL, null -> org.partiql.planner.internal.ir.SetQuantifier.ALL
                 else -> error("Unexpected SetQuantifier type: ${node.setq}")
             }
-            val args = listOfNotNull(node.argument?.toRex(env))
+            val args = node.args.map { it.toRex(env) }
             // Only the built-in aggregates may be used as window functions, so resolve against the system catalog
             // rather than the session path; a same-named aggregate in another catalog must not shadow the built-in
             // (window aggregation also calls Accumulator.value() between rows, which only the built-ins support). If
@@ -807,31 +803,19 @@ internal object RelConverter {
          */
         private fun checkWindowAggregateDistinct(function: ExprWindowFunction, spec: WindowSpecification): Boolean {
             val type = function.functionType
-            if (type !is WindowFunctionType.AggregateFunction || type.setq?.code() != SetQuantifier.DISTINCT) {
+            if (type !is WindowFunctionType.Aggregate || type.setq?.code() != SetQuantifier.DISTINCT) {
                 return true
             }
             if (spec.orderClause == null) {
                 return true
             }
-            val error = when (type) {
-                is WindowFunctionType.Count -> PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
-                else -> PErrors.invalidWindowFunction(aggregateName(type), REASON_WINDOW_DISTINCT_WITH_ORDER, Severity.ERROR())
+            val name = type.function.identifier.text.uppercase()
+            val error = when (name) {
+                "COUNT" -> PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
+                else -> PErrors.invalidWindowFunction(name, REASON_WINDOW_DISTINCT_WITH_ORDER, Severity.ERROR())
             }
             env.listener.report(error)
             return false
-        }
-
-        private fun aggregateName(type: WindowFunctionType.AggregateFunction): String = when (type) {
-            is WindowFunctionType.Count -> "COUNT"
-            is WindowFunctionType.Sum -> "SUM"
-            is WindowFunctionType.Avg -> "AVG"
-            is WindowFunctionType.Min -> "MIN"
-            is WindowFunctionType.Max -> "MAX"
-            else -> {
-                val cause = IllegalStateException("Unexpected aggregate WindowFunctionType type: $type")
-                env.listener.report(PErrors.internalError(cause))
-                "UNKNOWN"
-            }
         }
 
         /**

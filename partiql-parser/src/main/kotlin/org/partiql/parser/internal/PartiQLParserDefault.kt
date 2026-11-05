@@ -2035,20 +2035,14 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitAggregateWindowFunctionCountStar(ctx: GeneratedParser.AggregateWindowFunctionCountStarContext) = translate(ctx) {
-            WindowFunctionType.Count(null, null)
+            // As for `COUNT(*)` in a function call, represented by no arguments.
+            WindowFunctionType.Aggregate(regular(ctx.COUNT().text), emptyList(), null)
         }
 
         override fun visitAggregateWindowFunctionGeneral(ctx: GeneratedParser.AggregateWindowFunctionGeneralContext) = translate(ctx) {
             val setq = convertSetQuantifier(ctx.setQuantifierStrategy())
             val argument = visitExpr(ctx.argument)
-            when (ctx.name.type) {
-                GeneratedLexer.COUNT -> WindowFunctionType.Count(setq, argument)
-                GeneratedLexer.SUM -> WindowFunctionType.Sum(setq, argument)
-                GeneratedLexer.AVG -> WindowFunctionType.Avg(setq, argument)
-                GeneratedLexer.MIN -> WindowFunctionType.Min(setq, argument)
-                GeneratedLexer.MAX -> WindowFunctionType.Max(setq, argument)
-                else -> throw error(ctx, "Expected one of: COUNT, SUM, AVG, MIN, MAX")
-            }
+            WindowFunctionType.Aggregate(regular(ctx.name.text), listOf(argument), setq)
         }
 
         override fun visitWindowFunctionNullTreatment(ctx: GeneratedParser.WindowFunctionNullTreatmentContext) = translate(ctx) {

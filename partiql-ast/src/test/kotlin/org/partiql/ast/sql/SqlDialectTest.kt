@@ -4248,7 +4248,7 @@ class SqlDialectTest {
             expect(
                 "COUNT(*) OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
                 exprWindowFunction(
-                    type = WindowFunctionType.Count(null, null),
+                    type = WindowFunctionType.Aggregate(Identifier.regular("COUNT"), emptyList(), null),
                     spec = windowSpecification(
                         null,
                         listOf(windowPartition(Identifier.regular("department"))),
@@ -4259,38 +4259,35 @@ class SqlDialectTest {
             expect(
                 "COUNT(DISTINCT age) OVER (PARTITION BY department)",
                 exprWindowFunction(
-                    type = WindowFunctionType.Count(SetQuantifier.DISTINCT(), v("age")),
+                    type = WindowFunctionType.Aggregate(Identifier.regular("COUNT"), listOf(v("age")), SetQuantifier.DISTINCT()),
                     spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
                 )
             ),
             expect(
                 "SUM(ALL salary) OVER (ORDER BY age ASC NULLS LAST)",
                 exprWindowFunction(
-                    type = WindowFunctionType.Sum(SetQuantifier.ALL(), v("salary")),
+                    type = WindowFunctionType.Aggregate(Identifier.regular("SUM"), listOf(v("salary")), SetQuantifier.ALL()),
                     spec = windowSpecification(null, emptyList(), orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST()))))
                 )
             ),
             expect(
                 "AVG(salary) OVER ()",
                 exprWindowFunction(
-                    type = WindowFunctionType.Avg(null, v("salary")),
+                    type = WindowFunctionType.Aggregate(Identifier.regular("AVG"), listOf(v("salary")), null),
                     spec = windowSpecification(null, null, null)
                 )
             ),
             expect(
                 "MIN(salary) OVER (PARTITION BY department)",
                 exprWindowFunction(
-                    type = WindowFunctionType.Min(null, v("salary")),
+                    type = WindowFunctionType.Aggregate(Identifier.regular("MIN"), listOf(v("salary")), null),
                     spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
                 )
             ),
             expect(
                 "MAX(SUM(salary)) OVER (PARTITION BY department)",
                 exprWindowFunction(
-                    type = WindowFunctionType.Max(
-                        null,
-                        exprCall(Identifier.regular("SUM"), listOf(v("salary")), null)
-                    ),
+                    type = WindowFunctionType.Aggregate(Identifier.regular("MAX"), listOf(exprCall(Identifier.regular("SUM"), listOf(v("salary")), null)), null),
                     spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
                 )
             ),
