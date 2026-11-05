@@ -719,7 +719,8 @@ public final class PError extends Enum {
      * </p>
      * <p>
      * Example error message: <code>[location]: Window function [fn_name] [reason].</code>, e.g.
-     * <code>Window function RANK requires an ORDER BY clause in its OVER specification.</code>
+     * <code>Window function RANK requires an ORDER BY clause in its OVER specification. Without one, its result is the same for
+     * every row or depends on the order in which rows are read. Add an ORDER BY to the window.</code>
      * </p>
      */
     public static final int INVALID_WINDOW_FUNCTION = 29;

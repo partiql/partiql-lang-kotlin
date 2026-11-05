@@ -111,7 +111,8 @@ internal object RelConverter {
     /**
      * [PErrors.invalidWindowFunction] reason for SQL:2023 Subclause 9.23, Syntax Rule 5a.
      */
-    private const val REASON_WINDOW_ORDER_REQUIRED = "requires an ORDER BY clause in its OVER specification"
+    private const val REASON_WINDOW_ORDER_REQUIRED =
+        "requires an ORDER BY clause in its OVER specification. Without one, its result is the same for every row or depends on the order in which rows are read. Add an ORDER BY to the window"
 
     // IGNORE — so we don't have to non-null assert on operator inputs
     internal val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))

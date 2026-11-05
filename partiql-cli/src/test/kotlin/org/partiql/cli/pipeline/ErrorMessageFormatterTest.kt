@@ -79,11 +79,11 @@ class ErrorMessageFormatterTest {
             Severity.WARNING(),
             PErrorKind.SEMANTIC(),
             null,
-            mapOf("FN_NAME" to "PERCENT_RANK", "REASON" to "requires an ORDER BY clause in its OVER specification"),
+            mapOf("FN_NAME" to "PERCENT_RANK", "REASON" to "requires an ORDER BY clause in its OVER specification. Without one, its result is the same for every row or depends on the order in which rows are read. Add an ORDER BY to the window"),
         )
 
         assertEquals(
-            "w: [semantic] Window function PERCENT_RANK requires an ORDER BY clause in its OVER specification.",
+            "w: [semantic] Window function PERCENT_RANK requires an ORDER BY clause in its OVER specification. Without one, its result is the same for every row or depends on the order in which rows are read. Add an ORDER BY to the window.",
             ErrorMessageFormatter.message(error),
         )
     }
