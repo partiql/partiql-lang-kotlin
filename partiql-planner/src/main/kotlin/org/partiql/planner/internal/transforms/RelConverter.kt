@@ -809,7 +809,7 @@ internal object RelConverter {
             }
             val error = when (type) {
                 is WindowFunctionType.Count -> PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
-                else -> PErrors.invalidWindowFunction(aggregateName(type), REASON_WINDOW_DISTINCT_WITH_ORDER)
+                else -> PErrors.invalidWindowFunction(aggregateName(type), REASON_WINDOW_DISTINCT_WITH_ORDER, Severity.ERROR())
             }
             env.listener.report(error)
             return false
