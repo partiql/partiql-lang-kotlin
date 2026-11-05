@@ -87,4 +87,21 @@ class ErrorMessageFormatterTest {
             ErrorMessageFormatter.message(error),
         )
     }
+
+    @Test
+    fun `formats invalid window function without reason or name`() {
+        listOf(
+            mapOf("FN_NAME" to "RANK") to "w: [semantic] Window function RANK is invalid.",
+            emptyMap<String, Any>() to "w: [semantic] Window function is invalid.",
+        ).forEach { (properties, expected) ->
+            val error = PError(
+                PError.INVALID_WINDOW_FUNCTION,
+                Severity.WARNING(),
+                PErrorKind.SEMANTIC(),
+                null,
+                properties,
+            )
+            assertEquals(expected, ErrorMessageFormatter.message(error))
+        }
+    }
 }

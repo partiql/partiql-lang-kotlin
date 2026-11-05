@@ -27,10 +27,10 @@ Thank you to all who have contributed!
 
 ### Added
 - **EXPERIMENTAL**: Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
-- Added the `INVALID_WINDOW_FUNCTION` error code.
+- Added the `PError.INVALID_WINDOW_FUNCTION` error code, with the `FN_NAME` and `REASON` properties. It is currently only reported as a warning.
 
 ### Changed
-- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
+- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run; hosts that fail on warnings other than `EXPERIMENTAL`, or CLI users with `-Werror=INVALID_WINDOW_FUNCTION`, will now see them fail.
 
 ### Deprecated
 

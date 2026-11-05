@@ -68,13 +68,13 @@ class WindowTests {
     }
 
     /**
-     * `OVER (w ORDER BY ...)` is reported only as an unsupported window reference, not as a missing ORDER BY.
+     * A window that refines or inherits another window, `OVER (w ORDER BY ...)` or `WINDOW w2 AS (w1)`, is reported
+     * only as an unsupported window reference, not as a missing ORDER BY.
      */
-    @Test
-    fun windowOrderRequiredNotReportedForRefinedNamedWindow() {
-        val problems = planningProblems(
-            "SELECT RANK() OVER (w ORDER BY t.v) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)"
-        )
+    @ParameterizedTest
+    @MethodSource("windowReferencingOtherWindowTestCases")
+    fun windowOrderRequiredNotReportedForWindowReferencingOtherWindow(query: String) {
+        val problems = planningProblems(query)
         assertEquals(listOf(PError.FEATURE_NOT_SUPPORTED), problems.errors.map { it.code() }, "Errors: ${problems.errors}")
         assertEquals(emptyList(), problems.warnings.filter { it.code() == PError.INVALID_WINDOW_FUNCTION })
     }
@@ -1048,11 +1048,18 @@ class WindowTests {
             "SELECT CUME_DIST() OVER () AS r FROM $ORDER_DATA AS t" to listOf("CUME_DIST"),
             "SELECT LEAD(t.v) OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("LEAD"),
             "SELECT LAG(t.v, 1, 0) OVER () AS r FROM $ORDER_DATA AS t" to listOf("LAG"),
-            // Named window without an ORDER BY.
+            // Named window without an ORDER BY, referenced as `OVER w` and `OVER (w)`.
             "SELECT RANK() OVER w AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)" to listOf("RANK"),
+            "SELECT RANK() OVER (w) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)" to listOf("RANK"),
             // Every offending function is reported; ROW_NUMBER is exempt.
             "SELECT ROW_NUMBER() OVER () AS n, RANK() OVER () AS r, CUME_DIST() OVER () AS c FROM $ORDER_DATA AS t" to
                 listOf("RANK", "CUME_DIST"),
+        )
+
+        @JvmStatic
+        fun windowReferencingOtherWindowTestCases() = listOf(
+            "SELECT RANK() OVER (w ORDER BY t.v) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)",
+            "SELECT RANK() OVER w2 AS r FROM $ORDER_DATA AS t WINDOW w1 AS (ORDER BY t.v), w2 AS (w1)",
         )
 
         @JvmStatic
@@ -1060,6 +1067,7 @@ class WindowTests {
             "SELECT RANK() OVER (ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
             "SELECT PERCENT_RANK() OVER (PARTITION BY t.g ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
             "SELECT CUME_DIST() OVER w AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g ORDER BY t.v)",
+            "SELECT CUME_DIST() OVER (w) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g ORDER BY t.v)",
             "SELECT LAG(t.v) OVER (ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
             // ROW_NUMBER does not require a window ordering clause.
             "SELECT ROW_NUMBER() OVER () AS n FROM $ORDER_DATA AS t",

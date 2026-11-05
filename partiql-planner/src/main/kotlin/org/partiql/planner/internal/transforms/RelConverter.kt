@@ -665,6 +665,12 @@ internal object RelConverter {
             if (window.spec.orderClause != null) {
                 return
             }
+            // A WINDOW clause definition based on another window, e.g. `w2 AS (w1)`, inherits that window's ordering
+            // clause (SQL:2023 Subclause 7.15); it has already been reported as unsupported ("Window referencing other
+            // window"), so do not also report that its ORDER BY is missing.
+            if (window.spec.existingName != null) {
+                return
+            }
             window.functions
                 // A function that refines a named window with its own ORDER BY, e.g. `OVER (w ORDER BY x)`, has
                 // already been reported as unsupported ("Window referencing other window"); do not also report that
@@ -694,12 +700,14 @@ internal object RelConverter {
         }
 
         /**
-         * @return the (uppercase) name of [type] if it requires a window ordering clause; null otherwise. ROW_NUMBER is
-         * the only ranking or navigation function that does not.
+         * @return the (uppercase) name of [type] if it requires a window ordering clause per SQL:2023 Subclause 9.23,
+         * Syntax Rule 5a (the rank functions and LEAD/LAG; NTILE once supported); null otherwise. The functions are
+         * listed explicitly so that each new window function needs a decision.
          */
         private fun windowOrderRequiredName(type: WindowFunctionType): String? = when (type) {
-            is WindowFunctionType.RowNumber -> null
-            else -> windowFunctionName(type)?.uppercase()
+            is WindowFunctionType.Rank, is WindowFunctionType.DenseRank, is WindowFunctionType.PercentRank,
+            is WindowFunctionType.CumeDist, is Lead, is Lag -> windowFunctionName(type)?.uppercase()
+            else -> null
         }
 
         private fun convertWindowFunction(node: ExprWindowFunction): Rel.Op.Window.WindowFunction {
