@@ -88,8 +88,9 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
          * This is accomplished via the signaling mode below.
          */
         override fun visitRexOpErr(node: IRex.Op.Err, ctx: PType): Any {
-            // Listener should have already received the error/warning. The listener should have already failed compilation.
-            return operators.error(ctx)
+            // The listener has already received this error or warning. The node keeps it, so strict mode can raise the
+            // same error at runtime instead of an internal error.
+            return operators.error(ctx, node.error)
         }
 
         override fun visitRelOpErr(node: Rel.Op.Err, ctx: PType): Any {

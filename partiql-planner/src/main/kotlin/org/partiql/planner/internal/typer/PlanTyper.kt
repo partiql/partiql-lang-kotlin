@@ -201,7 +201,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          */
         fun errorRexAndReport(listener: PErrorListener, problem: PError, type: PType): Rex {
             listener.report(problem)
-            return rex(CompilerType(type, isMissingValue = true), rexOpErr())
+            return rex(CompilerType(type, isMissingValue = true), rexOpErr(problem))
         }
     }
 
@@ -773,7 +773,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             if (offset.type.isNumeric().not()) {
                 val problem = PErrors.typeUnexpected(null, offset.type, listOf(PType.numeric(38, 0)))
                 val err = errorRexAndReport(_listener, problem)
-                return rel(input.type, relOpLimit(input, err))
+                return rel(input.type, relOpOffset(input, err))
             }
             // rewrite
             val type = input.type

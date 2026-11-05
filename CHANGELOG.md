@@ -26,6 +26,8 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
+- `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 
 ### Changed
 
@@ -41,6 +43,9 @@ Thank you to all who have contributed!
 - Fixed an error in an `ORDER BY` key, including a window `ORDER BY` key, failing the query in permissive mode ([#1982](https://github.com/partiql/partiql-lang-kotlin/issues/1982)). It now evaluates to `MISSING`, as it does in a projection. Strict mode still fails. This covers every data error in a sort key, such as a failed `CAST`, a path that fails, and a `MAP` index whose key is missing or of the wrong type (`MAP_KEY_NOT_FOUND`, `MAP_KEY_TYPE_MISMATCH`). A path index is now wrapped for permissive mode in every position, like a path key or symbol.
 - Fixed a `BIGINT` path index being narrowed to 32 bits, which returned the wrong element: `[10, 20][4294967296]` returned `10`. It is now out of range: `MISSING` in permissive mode, `PATH_INDEX_NEVER_SUCCEEDS` in strict mode. An index that is not an integer at runtime now also fails with `PATH_INDEX_NEVER_SUCCEEDS` instead of `TYPE_UNEXPECTED`.
 - Fixed indexing a null array, such as `CAST(NULL AS LIST)[0]`, failing with an internal `NullPointerException` in both modes. A null array, including Ion `null.list` and `null.sexp`, now gives `NULL` (SQL:2023 section 6.25).
+- Fixed strict mode raising `INTERNAL_ERROR` for an expression the planner proved will fail ([#1988](https://github.com/partiql/partiql-lang-kotlin/issues/1988)). It now raises the planner's error code, such as `PATH_SYMBOL_NEVER_SUCCEEDS`, `PATH_KEY_NEVER_SUCCEEDS`, `PATH_INDEX_NEVER_SUCCEEDS`, `FUNCTION_TYPE_MISMATCH` or `TYPE_UNEXPECTED`, with the planner's location and properties. The error has severity `ERROR` and kind `EXECUTION`, like errors from checks that run only at runtime. Permissive mode is unchanged.
+  - Hosts that match on `INTERNAL_ERROR` for these queries now see the specific code.
+- Fixed a non-numeric `OFFSET` being planned as a second `LIMIT`.
 
 ### Removed
 
