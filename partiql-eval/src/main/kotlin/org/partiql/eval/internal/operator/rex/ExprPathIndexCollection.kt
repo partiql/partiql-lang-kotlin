@@ -27,11 +27,14 @@ internal class ExprPathIndexCollection(
             PType.ARRAY -> Unit
             else -> throw PErrors.pathIndexFailureException()
         }
+        // Evaluate the index before the null check, so an error in it is raised even when the array is null,
+        // as ExprPathKeyStruct does for its key.
+        val k = key.eval(env).lowerSafe()
         // A null array has no element to return, so the result is null (SQL:2023 section 6.25, general rule 1).
         if (collection.isNull) {
             return Datum.nullValue()
         }
-        val index = index(key.eval(env).lowerSafe())
+        val index = index(k)
         val iterator = collection.iterator()
         var i = 0L
         while (iterator.hasNext()) {

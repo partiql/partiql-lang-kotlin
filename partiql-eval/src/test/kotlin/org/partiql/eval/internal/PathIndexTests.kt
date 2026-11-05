@@ -23,6 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Mode
+import org.partiql.eval.PTestCase
 import org.partiql.eval.internal.operator.rex.ExprPermissive
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
@@ -51,6 +52,11 @@ class PathIndexTests {
     @MethodSource("strictSortKeyCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun strictSortKey(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("nullArrayIndexErrorCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun nullArrayIndexError(tc: PTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("indexSuccessCases")
@@ -157,6 +163,24 @@ class PathIndexTests {
         )
 
         /**
+         * The index is evaluated before the null check, so an error in it is not hidden by a null array.
+         */
+        @JvmStatic
+        fun nullArrayIndexErrorCases() = listOf(
+            SuccessTestCase(
+                name = "null array with a failing index",
+                input = "CAST(NULL AS LIST)[CAST('a' AS INT)]",
+                expected = Datum.missing(),
+                mode = PERMISSIVE,
+            ),
+            FailureTestCase(
+                name = "null array with a failing index",
+                input = "CAST(NULL AS LIST)[CAST('a' AS INT)]",
+                expectedCode = PError.INVALID_CHAR_VALUE_FOR_CAST,
+            ),
+        )
+
+        /**
          * These give the same result in both modes.
          */
         @JvmStatic
@@ -196,7 +220,7 @@ class PathIndexTests {
             "`[1, 2]`[`1.5`]",
             "`[1, 2]`[`\"0\"`]",
             "`[1, 2]`[`4294967296`]",
-            "`[1, 2]`[NULL]",
+            "`[1, 2]`[NULL]", // TODO(#1991): SQL:2023 section 6.25 gives NULL for a NULL index
             "`[]`[0]",
             "`null`[0]",
             "`null.struct`[0]",
@@ -208,7 +232,7 @@ class PathIndexTests {
             "[10, 20][4294967297]",
             "[10, 20][-1]",
             "[10, 20][-4294967296]",
-            "[10, 20][CAST(NULL AS INT)]",
+            "[10, 20][CAST(NULL AS INT)]", // TODO(#1991): SQL:2023 section 6.25 gives NULL for a NULL index
         )
 
         @JvmStatic

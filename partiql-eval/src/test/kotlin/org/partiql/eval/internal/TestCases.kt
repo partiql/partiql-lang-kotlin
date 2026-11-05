@@ -18,6 +18,7 @@ import org.partiql.spi.value.DatumReader
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * @property value is a serialized Ion value.
@@ -196,9 +197,7 @@ public class FailureTestCase(
 
     private fun assertCode(thrown: Throwable, path: String) {
         val code = expectedCode ?: return
-        assert(thrown is PRuntimeException && thrown.error.code() == code) {
-            "[$path] Expected PError code $code but got: $thrown"
-        }
+        assertTrue(thrown is PRuntimeException && thrown.error.code() == code, "[$path] Expected PError code $code but got: $thrown")
     }
 
     override fun toString(): String {
