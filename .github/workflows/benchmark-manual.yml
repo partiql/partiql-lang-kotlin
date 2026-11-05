@@ -24,8 +24,7 @@ permissions:
 jobs:
   benchmark:
     name: Run JMH Benchmarks
-    # CodeBuild-hosted runner for this repository; forks (which do not have it) fall back to GitHub-hosted runners.
-    runs-on: ${{ github.repository == 'partiql/partiql-lang-kotlin' && format('codebuild-partiql-lang-kotlin-{0}-{1}', github.run_id, github.run_attempt) || 'ubuntu-latest' }}
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v3
         with:
