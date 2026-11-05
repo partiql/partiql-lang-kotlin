@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed `AstVisitor` infinite recursion when visiting rank-style window function types (`RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `ROW_NUMBER`) without overrides ([#1971](https://github.com/partiql/partiql-lang-kotlin/issues/1971)).
 - Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
 - Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.
 - Fixed a re-opened window operator emitting a stale row from a previous, partially consumed run.
