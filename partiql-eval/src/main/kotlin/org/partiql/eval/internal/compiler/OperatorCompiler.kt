@@ -166,7 +166,7 @@ internal class OperatorCompiler(
             is PExpr.PathSymbol -> ExprPathSymbol(compile(expr.root), expr.symbol).catch()
             is PExpr.Error -> when (MODE) {
                 Mode.PERMISSIVE -> ExprMissing(PType.unknown())
-                Mode.STRICT -> ExprError()
+                Mode.STRICT -> ExprError(expr.error)
                 else -> error("Unsupported mode: $MODE")
             }
             is PExpr.Custom -> expr.factory()

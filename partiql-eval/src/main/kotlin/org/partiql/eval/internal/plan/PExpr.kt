@@ -2,6 +2,7 @@ package org.partiql.eval.internal.plan
 
 import org.partiql.eval.ExprValue
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.errors.PError
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
@@ -32,6 +33,6 @@ internal sealed class PExpr {
     data class PathSymbol(val root: PExpr, val symbol: String) : PExpr()
     data class Map(val keyType: PType, val valueType: PType, val entries: List<Field>) : PExpr()
     data class MapDynamic(val entries: List<Field>) : PExpr()
-    data class Error(val type: PType) : PExpr()
+    data class Error(val type: PType, val error: PError?) : PExpr()
     class Custom(val factory: () -> ExprValue) : PExpr()
 }

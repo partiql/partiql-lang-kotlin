@@ -362,6 +362,7 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public field severity Lorg/partiql/spi/errors/Severity;
 	public fun <init> (ILorg/partiql/spi/errors/Severity;Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/util/Map;)V
 	public static fun INTERNAL_ERROR (Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/lang/Throwable;)Lorg/partiql/spi/errors/PError;
+	public fun copy ()Lorg/partiql/spi/errors/PError;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun get (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public fun getList (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;

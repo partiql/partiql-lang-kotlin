@@ -155,7 +155,7 @@ internal class PlanToExecTransform(
 
     override fun visitVar(rex: RexVar, ctx: Unit): Any = PExpr.Var(rex.scope, rex.offset)
 
-    override fun visitError(rex: RexError, ctx: Unit): Any = PExpr.Error(rex.type.pType)
+    override fun visitError(rex: RexError, ctx: Unit): Any = PExpr.Error(rex.type.pType, rex.error)
 
     override fun visitArray(rex: RexArray, ctx: Unit): Any =
         PExpr.Array(rex.values.map { visitRex(it) })

@@ -47,6 +47,7 @@ import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexTableRef
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.errors.PError
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
@@ -323,6 +324,11 @@ public interface Operators {
      * Create a [RexError] instance.
      */
     public fun error(type: PType): RexError = RexError.create()
+
+    /**
+     * Create a [RexError] instance that keeps the [error] the planner reported, so strict mode can raise it at runtime.
+     */
+    public fun error(type: PType, error: PError): RexError = RexError.create(error)
 
     /**
      * Create a [RexLit] instance.

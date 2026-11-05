@@ -161,10 +161,11 @@ internal object RexConverter {
         override fun visitExprError(node: ExprError, ctx: Env): Rex {
             // Emit error for downstream
             val cause = IllegalStateException("ExprError node encountered: ${node.text}")
-            ctx.listener.report(PErrors.internalError(cause))
+            val error = PErrors.internalError(cause)
+            ctx.listener.report(error)
 
             val type = CompilerType(PType.dynamic())
-            return rex(type, rexOpErr())
+            return rex(type, rexOpErr(error))
         }
 
         override fun visitExprRowValue(node: ExprRowValue, ctx: Env): Rex {
