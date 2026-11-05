@@ -114,6 +114,11 @@ internal object RelConverter {
     private const val REASON_WINDOW_ORDER_REQUIRED =
         "requires an ORDER BY clause in its OVER specification. Without one, its result is the same for every row or depends on the order in which rows are read. Add an ORDER BY to the window"
 
+    /**
+     * [PErrors.invalidWindowFunction] reason for SQL:2023 Subclause 9.23, Syntax Rule 8d.
+     */
+    private const val REASON_WINDOW_DISTINCT_WITH_ORDER = "does not allow DISTINCT when its OVER specification has an ORDER BY clause"
+
     // IGNORE — so we don't have to non-null assert on operator inputs
     internal val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
 
@@ -571,7 +576,7 @@ internal object RelConverter {
                 // Mirror group aggregation: once an error has been reported, do not build an executable window.
                 val valid = window.functions.map { checkWindowAggregateDistinct(it, window.spec) }.all { it }
                 if (!valid) {
-                    return@foldRight rel(type, relOpErr("DISTINCT aggregate window function with a window ORDER BY clause"))
+                    return@foldRight rel(type, relOpErr("Window function $REASON_WINDOW_DISTINCT_WITH_ORDER"))
                 }
                 val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
                 val partitions = window.spec.partitionClause?.map {
@@ -804,7 +809,7 @@ internal object RelConverter {
             }
             val error = when (type) {
                 is WindowFunctionType.Count -> PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
-                else -> PErrors.invalidWindowFunction(aggregateName(type), "DISTINCT is not allowed with a window ORDER BY clause")
+                else -> PErrors.invalidWindowFunction(aggregateName(type), REASON_WINDOW_DISTINCT_WITH_ORDER)
             }
             env.listener.report(error)
             return false

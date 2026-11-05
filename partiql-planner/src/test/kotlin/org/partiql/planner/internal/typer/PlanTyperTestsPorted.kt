@@ -3982,14 +3982,14 @@ internal class PlanTyperTestsPorted {
                 name = "SUM(DISTINCT) window aggregate with ORDER BY is invalid",
                 query = "SELECT VALUE SUM(DISTINCT t.a) OVER (PARTITION BY t.b ORDER BY t.a) FROM $windowData AS t",
                 problemHandler = assertProblemExists(
-                    PErrors.invalidWindowFunction("SUM", "DISTINCT is not allowed with a window ORDER BY clause")
+                    PErrors.invalidWindowFunction("SUM", "does not allow DISTINCT when its OVER specification has an ORDER BY clause")
                 ),
             ),
             ErrorTestCase(
                 name = "MAX(DISTINCT) window aggregate with ORDER BY in a named window is invalid",
                 query = "SELECT VALUE MAX(DISTINCT t.a) OVER w FROM $windowData AS t WINDOW w AS (ORDER BY t.a)",
                 problemHandler = assertProblemExists(
-                    PErrors.invalidWindowFunction("MAX", "DISTINCT is not allowed with a window ORDER BY clause")
+                    PErrors.invalidWindowFunction("MAX", "does not allow DISTINCT when its OVER specification has an ORDER BY clause")
                 ),
             ),
             ErrorTestCase(
