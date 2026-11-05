@@ -179,6 +179,16 @@ public final class PError extends Enum {
         }
     }
 
+    /**
+     * Returns a new error with the same code, severity, kind, location and properties. The properties are copied into a
+     * new map (the values themselves are shared), so changing the copy's fields or properties does not change this error.
+     * @return a copy of this error.
+     */
+    @NotNull
+    public PError copy() {
+        return new PError(code(), severity, kind, location, new HashMap<>(properties));
+    }
+
     @NotNull
     @Override
     public String name() throws UnsupportedCodeException {

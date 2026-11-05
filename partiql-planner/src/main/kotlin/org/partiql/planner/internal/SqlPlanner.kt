@@ -92,7 +92,7 @@ internal class SqlPlanner(
     private fun catchAll(ctx: Context, t: Throwable): Result {
         val error = PError.INTERNAL_ERROR(PErrorKind.SEMANTIC(), null, t)
         ctx.errorListener.report(error)
-        val query = Action.Query { Operators.STANDARD.error(PType.dynamic()) }
+        val query = Action.Query { Operators.STANDARD.error(PType.dynamic(), error) }
         val plan = Plan { query }
         val symbols = SymbolTableBuilder().build()
         return Result(plan, symbols)

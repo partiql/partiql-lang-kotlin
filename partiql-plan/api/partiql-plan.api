@@ -315,6 +315,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun dispatch (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatch;
 	public abstract fun distinct (Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rel/RelDistinct;
 	public abstract fun error (Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexError;
+	public abstract fun error (Lorg/partiql/spi/types/PType;Lorg/partiql/spi/errors/PError;)Lorg/partiql/plan/rex/RexError;
 	public abstract fun except (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelExcept;
 	public abstract fun exclude (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelExclude;
 	public abstract fun filter (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelFilter;
@@ -364,6 +365,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun dispatch (Lorg/partiql/plan/Operators;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatch;
 	public static fun distinct (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rel/RelDistinct;
 	public static fun error (Lorg/partiql/plan/Operators;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexError;
+	public static fun error (Lorg/partiql/plan/Operators;Lorg/partiql/spi/types/PType;Lorg/partiql/spi/errors/PError;)Lorg/partiql/plan/rex/RexError;
 	public static fun except (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelExcept;
 	public static fun exclude (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelExclude;
 	public static fun filter (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelFilter;
@@ -805,6 +807,8 @@ public abstract class org/partiql/plan/rex/RexError : org/partiql/plan/rex/RexBa
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun create ()Lorg/partiql/plan/rex/RexError;
+	public static fun create (Lorg/partiql/spi/errors/PError;)Lorg/partiql/plan/rex/RexError;
+	public fun getError ()Lorg/partiql/spi/errors/PError;
 	protected fun operands ()Ljava/util/List;
 	protected fun type ()Lorg/partiql/plan/rex/RexType;
 }

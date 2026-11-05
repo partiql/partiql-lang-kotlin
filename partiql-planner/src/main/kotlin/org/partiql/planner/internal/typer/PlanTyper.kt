@@ -201,7 +201,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          */
         fun errorRexAndReport(listener: PErrorListener, problem: PError, type: PType): Rex {
             listener.report(problem)
-            return rex(CompilerType(type, isMissingValue = true), rexOpErr())
+            return rex(CompilerType(type, isMissingValue = true), rexOpErr(problem))
         }
     }
 
@@ -773,7 +773,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             if (offset.type.isNumeric().not()) {
                 val problem = PErrors.typeUnexpected(null, offset.type, listOf(PType.numeric(38, 0)))
                 val err = errorRexAndReport(_listener, problem)
-                return rel(input.type, relOpLimit(input, err))
+                return rel(input.type, relOpOffset(input, err))
             }
             // rewrite
             val type = input.type
@@ -1041,7 +1041,8 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             }
 
             // Check Key Type (INT or coercible to INT). TODO: Allow coercions to INT
-            if (key.type.code() !in setOf(PType.TINYINT, PType.SMALLINT, PType.INTEGER, PType.BIGINT, PType.NUMERIC)) {
+            // A DYNAMIC or VARIANT key may hold an integer, so it is checked at runtime.
+            if (key.type.code() !in setOf(PType.TINYINT, PType.SMALLINT, PType.INTEGER, PType.BIGINT, PType.NUMERIC, PType.DYNAMIC, PType.VARIANT)) {
                 val problem = PErrors.pathIndexNeverSucceeds(null)
                 return errorRexAndReport(_listener, problem)
             }
