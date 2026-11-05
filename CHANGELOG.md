@@ -26,11 +26,11 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
-- Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
+- **EXPERIMENTAL**: Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
 - Added the `INVALID_WINDOW_FUNCTION` error code.
 
 ### Changed
-- The planner now rejects `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a), reporting `INVALID_WINDOW_FUNCTION`.
+- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
 ### Deprecated
 

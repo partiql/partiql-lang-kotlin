@@ -99,6 +99,7 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.BinderUtils.toBinder
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Identifier.Simple
+import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -106,6 +107,11 @@ import org.partiql.spi.value.Datum
  * Lexically scoped state for use in translating an individual SELECT statement.
  */
 internal object RelConverter {
+
+    /**
+     * [PErrors.invalidWindowFunction] reason for SQL:2023 Subclause 9.23, Syntax Rule 5a.
+     */
+    private const val REASON_WINDOW_ORDER_REQUIRED = "requires an ORDER BY clause in its OVER specification"
 
     // IGNORE — so we don't have to non-null assert on operator inputs
     internal val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
@@ -560,9 +566,7 @@ internal object RelConverter {
                 val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }
                 val newSchema = current.type.schema + functionBindings
                 val type = relType(newSchema, emptySet())
-                if (!checkWindowOrderRequired(window)) {
-                    return@foldRight rel(type, relOpErr("Window function requires a window ORDER BY clause"))
-                }
+                warnIfWindowOrderMissing(window)
                 val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
                 val partitions = window.spec.partitionClause?.map {
                     val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
@@ -649,35 +653,52 @@ internal object RelConverter {
          * CUME_DIST), <ntile function>, or <lead or lag function> is specified, then the window ordering clause shall
          * be present. ROW_NUMBER is exempt.
          *
-         * Reports [PErrors.invalidWindowFunction] for each offending function in [window].
-         * TODO: Check NTILE once it is supported.
-         * @return true if the window is valid with respect to this rule.
+         * For backward compatibility, a violation is reported as a [PErrors.invalidWindowFunction] warning (one per
+         * offending function in [window]) rather than an error, and the window is still planned: without an ordering,
+         * every row of the partition is a peer, so e.g. RANK() is 1 for every row, and LEAD/LAG depend on input order.
+         *
+         * The window function examples in RFC 0035 omit the ORDER BY; see https://github.com/partiql/partiql-lang/issues/105.
+         * TODO: Check NTILE once it is supported (https://github.com/partiql/partiql-lang-kotlin/issues/1997).
          */
-        private fun checkWindowOrderRequired(window: InternalWindowDefinition): Boolean {
+        private fun warnIfWindowOrderMissing(window: InternalWindowDefinition) {
             if (window.spec.orderClause != null) {
-                return true
+                return
             }
-            val offending = window.functions
+            window.functions
                 // A function that refines a named window with its own ORDER BY, e.g. `OVER (w ORDER BY x)`, has
                 // already been reported as unsupported ("Window referencing other window"); do not also report that
                 // its ORDER BY is missing.
                 .filter { it.windowSpecification.orderClause == null }
                 .mapNotNull { windowOrderRequiredName(it.functionType) }
-            offending.forEach { env.listener.report(PErrors.invalidWindowFunction(it, "requires a window ORDER BY clause")) }
-            return offending.isEmpty()
+                .forEach {
+                    env.listener.report(
+                        PErrors.invalidWindowFunction(it, REASON_WINDOW_ORDER_REQUIRED, Severity.WARNING())
+                    )
+                }
         }
 
         /**
-         * @return the name of [type] if it requires a window ordering clause; null otherwise.
+         * @return the (lowercase) plan name of the built-in window function [type], or null if [type] is not a ranking or
+         * navigation function.
+         */
+        private fun windowFunctionName(type: WindowFunctionType): String? = when (type) {
+            is WindowFunctionType.Rank -> "rank"
+            is WindowFunctionType.DenseRank -> "dense_rank"
+            is WindowFunctionType.PercentRank -> "percent_rank"
+            is WindowFunctionType.CumeDist -> "cume_dist"
+            is WindowFunctionType.RowNumber -> "row_number"
+            is Lag -> "lag"
+            is Lead -> "lead"
+            else -> null
+        }
+
+        /**
+         * @return the (uppercase) name of [type] if it requires a window ordering clause; null otherwise. ROW_NUMBER is
+         * the only ranking or navigation function that does not.
          */
         private fun windowOrderRequiredName(type: WindowFunctionType): String? = when (type) {
-            is WindowFunctionType.Rank -> "RANK"
-            is WindowFunctionType.DenseRank -> "DENSE_RANK"
-            is WindowFunctionType.PercentRank -> "PERCENT_RANK"
-            is WindowFunctionType.CumeDist -> "CUME_DIST"
-            is Lead -> "LEAD"
-            is Lag -> "LAG"
-            else -> null
+            is WindowFunctionType.RowNumber -> null
+            else -> windowFunctionName(type)?.uppercase()
         }
 
         private fun convertWindowFunction(node: ExprWindowFunction): Rel.Op.Window.WindowFunction {
@@ -685,26 +706,16 @@ internal object RelConverter {
                 // No args
                 is WindowFunctionType.Rank, is WindowFunctionType.DenseRank, is WindowFunctionType.PercentRank,
                 is WindowFunctionType.CumeDist, is WindowFunctionType.RowNumber -> {
-                    val name = when (windowType) {
-                        is WindowFunctionType.Rank -> "rank"
-                        is WindowFunctionType.DenseRank -> "dense_rank"
-                        is WindowFunctionType.PercentRank -> "percent_rank"
-                        is WindowFunctionType.CumeDist -> "cume_dist"
-                        is WindowFunctionType.RowNumber -> "row_number"
-                        else -> {
-                            val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
-                            env.listener.report(PErrors.internalError(cause))
-                            "unknown"
-                        }
+                    val name = windowFunctionName(windowType) ?: run {
+                        val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
+                        env.listener.report(PErrors.internalError(cause))
+                        "unknown"
                     }
                     relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
                 }
                 is WindowFunctionType.LeadOrLag -> {
-                    val name = when (windowType) {
-                        is Lag -> "lag"
-                        is Lead -> "lead"
-                        else -> error("Unsupported Lead/Lag type: ${windowType.javaClass.simpleName}.")
-                    }
+                    val name = windowFunctionName(windowType)
+                        ?: error("Unsupported Lead/Lag type: ${windowType.javaClass.simpleName}.")
                     val isIgnoreNulls = when (windowType.nullTreatment?.code()) {
                         WindowFunctionNullTreatment.RESPECT_NULLS, null -> false
                         WindowFunctionNullTreatment.IGNORE_NULLS -> true

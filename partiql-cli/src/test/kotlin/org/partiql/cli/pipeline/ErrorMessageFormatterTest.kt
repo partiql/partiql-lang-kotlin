@@ -73,17 +73,17 @@ class ErrorMessageFormatterTest {
     }
 
     @Test
-    fun `formats invalid window function`() {
+    fun `formats invalid window function warning`() {
         val error = PError(
             PError.INVALID_WINDOW_FUNCTION,
-            Severity.ERROR(),
+            Severity.WARNING(),
             PErrorKind.SEMANTIC(),
             null,
-            mapOf("FN_NAME" to "PERCENT_RANK", "REASON" to "requires a window ORDER BY clause"),
+            mapOf("FN_NAME" to "PERCENT_RANK", "REASON" to "requires an ORDER BY clause in its OVER specification"),
         )
 
         assertEquals(
-            "e: [semantic] Invalid window function PERCENT_RANK: requires a window ORDER BY clause.",
+            "w: [semantic] Window function PERCENT_RANK requires an ORDER BY clause in its OVER specification.",
             ErrorMessageFormatter.message(error),
         )
     }

@@ -12,6 +12,7 @@ internal object WindowBuiltIns {
             "dense_rank" -> DenseRankFunction()
             "percent_rank" -> PercentRankFunction()
             "cume_dist" -> CumeDistFunction()
+            // TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1997
             "ntile" -> TODO()
             "lag" -> {
                 val expr = arguments[0]
@@ -25,6 +26,7 @@ internal object WindowBuiltIns {
                 val default = arguments[2]
                 LeadFunction(expr, offset, default, signature.isIgnoreNulls)
             }
+            // TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1997
             "first_value" -> TODO()
             "last_value" -> TODO()
             "nth_value" -> TODO()

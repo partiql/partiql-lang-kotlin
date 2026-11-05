@@ -45,23 +45,26 @@ class WindowTests {
 
     /**
      * SQL:2023 Subclause 9.23, Syntax Rule 5a: the rank functions, NTILE, LEAD, and LAG require a window ordering
-     * clause. The planner reports [PError.INVALID_WINDOW_FUNCTION] for each offending function.
+     * clause. For backward compatibility, the planner reports an [PError.INVALID_WINDOW_FUNCTION] warning for each
+     * offending function, and planning still succeeds.
      */
     @ParameterizedTest
     @MethodSource("windowOrderRequiredTestCases")
     fun windowOrderRequired(tc: Pair<String, List<String>>) {
         val (query, expectedFns) = tc
-        val errors = planningErrors(query)
-        assertEquals(List(expectedFns.size) { PError.INVALID_WINDOW_FUNCTION }, errors.map { it.code() }, "Errors: $errors")
+        val problems = planningProblems(query)
+        assertEquals(emptyList(), problems.errors, "Errors: ${problems.errors}")
+        val warnings = problems.warnings.filter { it.code() == PError.INVALID_WINDOW_FUNCTION }
         // Each in-line window is planned separately, so the report order across windows is not meaningful.
-        assertEquals(expectedFns.sorted(), errors.map { it.get("FN_NAME", String::class.java) as String }.sorted())
+        assertEquals(expectedFns.sorted(), warnings.map { it.get("FN_NAME", String::class.java) as String }.sorted())
     }
 
     @ParameterizedTest
     @MethodSource("windowOrderPresentOrNotRequiredTestCases")
     fun windowOrderPresentOrNotRequired(query: String) {
-        val errors = planningErrors(query)
-        assertEquals(emptyList(), errors, "Errors: $errors")
+        val problems = planningProblems(query)
+        assertEquals(emptyList(), problems.errors, "Errors: ${problems.errors}")
+        assertEquals(emptyList(), problems.warnings.filter { it.code() == PError.INVALID_WINDOW_FUNCTION })
     }
 
     /**
@@ -69,13 +72,14 @@ class WindowTests {
      */
     @Test
     fun windowOrderRequiredNotReportedForRefinedNamedWindow() {
-        val errors = planningErrors(
+        val problems = planningProblems(
             "SELECT RANK() OVER (w ORDER BY t.v) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)"
         )
-        assertEquals(listOf(PError.FEATURE_NOT_SUPPORTED), errors.map { it.code() }, "Errors: $errors")
+        assertEquals(listOf(PError.FEATURE_NOT_SUPPORTED), problems.errors.map { it.code() }, "Errors: ${problems.errors}")
+        assertEquals(emptyList(), problems.warnings.filter { it.code() == PError.INVALID_WINDOW_FUNCTION })
     }
 
-    private fun planningErrors(query: String): List<PError> {
+    private fun planningProblems(query: String): PErrorCollector {
         val statement = PartiQLParser.standard().parse(query).statements.single()
         val session = Session.builder()
             .catalog("default")
@@ -83,7 +87,7 @@ class WindowTests {
             .build()
         val collector = PErrorCollector()
         PartiQLPlanner.standard().plan(statement, session, Context.of(collector))
-        return collector.errors
+        return collector
     }
 
     /**
@@ -676,6 +680,52 @@ class WindowTests {
                         CUME_DIST() OVER _w AS _cume_dist
                     FROM employee AS t
                     WINDOW _w AS (PARTITION BY t.id ORDER BY t.age);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST over empty input",
+                mode = Mode.STRICT(),
+                input = """
+                    SELECT
+                        PERCENT_RANK() OVER (ORDER BY t.v) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.v) AS _cume_dist
+                    FROM <<>> AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(),
+            ),
+            // SQL:2023 9.23 SR 5a requires a window ORDER BY; the planner warns but still plans the query.
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST without ORDER BY (all rows are peers)",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER (PARTITION BY t.department) AS _rank,
+                        PERCENT_RANK() OVER (PARTITION BY t.department) AS _percent_rank,
+                        CUME_DIST() OVER (PARTITION BY t.department) AS _cume_dist
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with empty OVER clause (all rows are peers)",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER () AS _rank,
+                        PERCENT_RANK() OVER () AS _percent_rank,
+                        CUME_DIST() OVER () AS _cume_dist
+                    FROM employee AS t;
                 """.trimIndent(),
                 expected = Datum.bagVararg(
                     *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()

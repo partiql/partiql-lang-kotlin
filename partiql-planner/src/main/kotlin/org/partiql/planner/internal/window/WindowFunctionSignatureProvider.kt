@@ -39,6 +39,8 @@ internal object WindowFunctionSignatureProvider {
     private val RANK = WindowFunctionSignature("rank", emptyList(), PType.bigint(), false)
     private val DENSE_RANK = WindowFunctionSignature("dense_rank", emptyList(), PType.bigint(), false)
     private val ROW_NUMBER = WindowFunctionSignature("row_number", emptyList(), PType.bigint(), false)
+    // SQL:2023 Subclause 9.23, Syntax Rules 5g and 5h leave the precision of the approximate numeric result of
+    // PERCENT_RANK and CUME_DIST implementation-defined (IV082, IV083); PartiQL uses DOUBLE PRECISION for both.
     private val PERCENT_RANK = WindowFunctionSignature("percent_rank", emptyList(), PType.doublePrecision(), false)
     private val CUME_DIST = WindowFunctionSignature("cume_dist", emptyList(), PType.doublePrecision(), false)
 

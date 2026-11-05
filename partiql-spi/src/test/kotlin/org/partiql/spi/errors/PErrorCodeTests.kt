@@ -1,6 +1,7 @@
 package org.partiql.spi.errors
 
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
 class PErrorCodeTests {
     /**
@@ -71,6 +72,20 @@ class PErrorCodeTests {
                 appendLine("Reflection entries: $reflectionEntries")
                 appendLine("Manual entries: $manualEntries")
             }
+        }
+    }
+
+    /**
+     * Ensures that [PError.name] covers every error code, i.e. that a new code is also added to its `switch`.
+     */
+    @Test
+    fun testNameCoversEveryErrorCode() {
+        val codes = PError::class.java.fields.filter {
+            java.lang.reflect.Modifier.isStatic(it.modifiers) && it.type == Int::class.javaPrimitiveType
+        }.associate { it.name to it.getInt(null) }
+        codes.forEach { (name, code) ->
+            val error = PError(code, Severity.ERROR(), PErrorKind.SEMANTIC(), null, null)
+            assertEquals(name, error.name(), "PError.name() for code $code")
         }
     }
 }
