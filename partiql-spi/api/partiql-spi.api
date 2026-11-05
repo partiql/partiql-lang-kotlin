@@ -264,7 +264,6 @@ public abstract interface class org/partiql/spi/catalog/Session {
 	public abstract fun getNamespace ()Lorg/partiql/spi/catalog/Namespace;
 	public abstract fun getPath ()Lorg/partiql/spi/catalog/Path;
 	public abstract fun getProperties ()Ljava/util/Map;
-	public abstract fun getSystemCatalogName ()Ljava/lang/String;
 }
 
 public final class org/partiql/spi/catalog/Session$Builder {
@@ -290,7 +289,6 @@ public final class org/partiql/spi/catalog/Session$Companion {
 public final class org/partiql/spi/catalog/Session$DefaultImpls {
 	public static fun getPath (Lorg/partiql/spi/catalog/Session;)Lorg/partiql/spi/catalog/Path;
 	public static fun getProperties (Lorg/partiql/spi/catalog/Session;)Ljava/util/Map;
-	public static fun getSystemCatalogName (Lorg/partiql/spi/catalog/Session;)Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/spi/catalog/Table {

@@ -786,8 +786,14 @@ internal object RelConverter {
             }
             val args = listOfNotNull(node.argument?.toRex(env))
             // Only the built-in aggregates may be used as window functions, so resolve against the system catalog
-            // rather than the session path; a same-named aggregate in another catalog must not shadow the built-in.
-            val identifier = Identifier.of(Identifier.Simple.delimited(env.systemCatalogName), Identifier.Simple.regular(name))
+            // rather than the session path; a same-named aggregate in another catalog must not shadow the built-in
+            // (window aggregation also calls Accumulator.value() between rows, which only the built-ins support). If
+            // the session has replaced the default system catalog, fall back to resolving through the session path.
+            val routine = Identifier.Simple.regular(name)
+            val identifier = when (val builtins = env.builtinCatalogName) {
+                null -> Identifier.of(routine)
+                else -> Identifier.of(Identifier.Simple.delimited(builtins), routine)
+            }
             val call = relOpAggregateCallUnresolved(identifier, setq, args)
             return relOpWindowWindowFunction(name, emptyList(), false, null, null, call)
         }
@@ -821,7 +827,11 @@ internal object RelConverter {
             is WindowFunctionType.Avg -> "AVG"
             is WindowFunctionType.Min -> "MIN"
             is WindowFunctionType.Max -> "MAX"
-            else -> type.javaClass.simpleName.uppercase()
+            else -> {
+                val cause = IllegalStateException("Unexpected aggregate WindowFunctionType type: $type")
+                env.listener.report(PErrors.internalError(cause))
+                "UNKNOWN"
+            }
         }
 
         /**

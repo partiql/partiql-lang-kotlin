@@ -476,7 +476,7 @@ public abstract class AstVisitor<R, C> {
     }
 
     /**
-     * Visits a AVG window function type.
+     * Visits an AVG window function type.
      * @param node the node to visit
      * @param ctx the context
      * @return the result of the visit

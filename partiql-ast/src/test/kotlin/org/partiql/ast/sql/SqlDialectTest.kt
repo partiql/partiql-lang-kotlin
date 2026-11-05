@@ -4815,6 +4815,51 @@ class SqlDialectTest {
                         )
                     )
                 )
+            ),
+            // Window definition that only references another window; the definition must stay parenthesized.
+            expect(
+                "SELECT RANK() OVER w2 FROM T WINDOW w1 AS (PARTITION BY dept), w2 AS (w1)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w2"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w1"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        null
+                                    )
+                                ),
+                                windowClauseDefinition(
+                                    regular("w2"),
+                                    windowSpecification(
+                                        regular("w1"),
+                                        emptyList(),
+                                        null
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
             )
         )
 

@@ -24,6 +24,9 @@ import org.partiql.eval.WindowFunction
  * The environment passed to [WindowFunction.eval] already has the current row pushed onto it, so pushing another row of
  * the partition onto it would shift every outer variable reference by one scope. Such functions must instead push the
  * other row onto the window operator's outer environment, which is provided via [setOuterEnvironment].
+ *
+ * Outer references in a window function, e.g. `SUM(t.x + o.k) OVER ()` in a subquery correlated on `o`, are a PartiQL
+ * extension: SQL:2023 Subclause 9.23, Syntax Rule 3 does not allow a window function to contain an outer reference.
  */
 internal interface OuterScopedWindowFunction : WindowFunction {
 

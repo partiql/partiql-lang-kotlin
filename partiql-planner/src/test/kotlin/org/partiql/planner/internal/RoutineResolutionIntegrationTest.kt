@@ -316,7 +316,6 @@ class RoutineResolutionIntegrationTest {
             .catalogs(catalog)
             .path(Namespace.of("demo"))
             .build()
-        assertEquals("\$system", session.getSystemCatalogName())
 
         // A group aggregate resolves through the path, so the catalog's aggregate wins.
         val measure = plan("SELECT sum(x) AS result FROM << 1 >> AS x", session).singleAggregate().measures.single()
@@ -327,6 +326,22 @@ class RoutineResolutionIntegrationTest {
         assertTrue(planned.errors.errors.isEmpty(), "Errors: ${planned.errors.errors}")
         val function = planned.plan.operators().filterIsInstance<RelWindow>().single().windowFunctions.single()
         assertEquals(RoutineRef("\$system", Name.of("sum")), function.routineRef)
+    }
+
+    @Test
+    fun `window aggregates resolve through the path when the system catalog is replaced`() {
+        val system = TestRoutineCatalog.builder("builtins")
+            .aggregation(Name.of("sum"), aggregate("sum", PType.integer()))
+            .build()
+        val session = Session.builder()
+            .catalog("builtins")
+            .system(system)
+            .build()
+
+        val planned = plan("SELECT sum(x) OVER (ORDER BY x) AS result FROM << 1 >> AS x", session)
+        assertTrue(planned.errors.errors.isEmpty(), "Errors: ${planned.errors.errors}")
+        val function = planned.plan.operators().filterIsInstance<RelWindow>().single().windowFunctions.single()
+        assertEquals(RoutineRef("builtins", Name.of("sum")), function.routineRef)
     }
 
     @Test

@@ -332,7 +332,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         var t = tail
         t = visitIdentifierSimple(node.name, t)
         t = t concat " AS "
-        t = visitWindowSpecification(node.specification, t)
+        val spec = node.specification
+        // A window definition must be parenthesized, even when it only references another window, e.g. `w2 AS (w1)`.
+        if (spec.existingName != null && spec.partitionClause.isNullOrEmpty() && spec.orderClause == null) {
+            t = t concat "("
+            t = visitIdentifierSimple(spec.existingName!!, t)
+            return t concat ")"
+        }
+        t = visitWindowSpecification(spec, t)
         return t
     }
 

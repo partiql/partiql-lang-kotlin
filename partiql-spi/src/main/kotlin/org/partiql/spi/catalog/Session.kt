@@ -53,13 +53,6 @@ public interface Session {
     public fun getProperties(): Map<String, String> = emptyMap()
 
     /**
-     * Returns the name of the system catalog, which provides the built-in functions and aggregations.
-     *
-     * Default implementation returns the name of the default system catalog, `$system`.
-     */
-    public fun getSystemCatalogName(): String = System.INSTANCE.getName()
-
-    /**
      * Factory methods and builder.
      */
     public companion object {
@@ -205,8 +198,6 @@ public interface Session {
             override fun getProperties(): Map<String, String> {
                 return properties
             }
-
-            override fun getSystemCatalogName(): String = system.getName()
         }
     }
 }

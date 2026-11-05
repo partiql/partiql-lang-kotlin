@@ -1237,6 +1237,18 @@ class WindowTests {
                     ),
                 ),
                 SuccessTestCase(
+                    name = "Running AVG with a fractional result ($mode)",
+                    mode = mode,
+                    input = """
+                        SELECT t.k AS k, AVG(t.x) OVER (ORDER BY t.k) AS a
+                        FROM << { 'k': 1, 'x': 1 }, { 'k': 2, 'x': 2 } >> AS t
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("k" to 1, "a" to BigDecimal("1")),
+                        row("k" to 2, "a" to BigDecimal("1.5")),
+                    ),
+                ),
+                SuccessTestCase(
                     name = "Aggregates skip NULL arguments; all-NULL partition ($mode)",
                     mode = mode,
                     globals = globals,
