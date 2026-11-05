@@ -52,6 +52,11 @@ class StrictErrorCodeTests {
     fun strict(tc: FailureTestCase) = tc.run()
 
     @ParameterizedTest
+    @MethodSource("strictNotEvaluatedCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun strictNotEvaluated(tc: SuccessTestCase) = tc.run()
+
+    @ParameterizedTest
     @MethodSource("permissiveCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun permissive(tc: SuccessTestCase) = tc.run()
@@ -149,6 +154,27 @@ class StrictErrorCodeTests {
             "SELECT VALUE x FROM <<1, 2>> AS x LIMIT 'a'" to PError.TYPE_UNEXPECTED,
             "SELECT VALUE x FROM <<1, 2, 3>> AS x OFFSET 'a'" to PError.TYPE_UNEXPECTED,
             "SELECT VALUE x FROM <<1, 2, 3>> AS x LIMIT 2 OFFSET 'a'" to PError.TYPE_UNEXPECTED,
+            // The error node inside other clauses and operators.
+            "SELECT VALUE x FROM <<1, 2>> AS x WHERE UPPER(1) = 'A'" to PError.FUNCTION_TYPE_MISMATCH,
+            "SELECT x.a, COUNT(*) AS c FROM <<{'a': 1}>> AS x GROUP BY x.a HAVING UPPER(1) = 'A'" to PError.FUNCTION_TYPE_MISMATCH,
+            "SELECT SUM(x) AS s FROM <<1>> AS x GROUP BY UPPER(1)" to PError.FUNCTION_TYPE_MISMATCH,
+            "SELECT SUM(UPPER(1)) AS s FROM <<1>> AS x" to PError.FUNCTION_TYPE_MISMATCH,
+            "SELECT VALUE x FROM <<2, 1>> AS x ORDER BY UPPER(1), x" to PError.FUNCTION_TYPE_MISMATCH,
+            "COALESCE(UPPER(1), 'x')" to PError.FUNCTION_TYPE_MISMATCH,
+            "UPPER(1) IS MISSING" to PError.FUNCTION_TYPE_MISMATCH,
+        )
+
+        /**
+         * An error node raises only when it is evaluated.
+         */
+        @JvmStatic
+        fun strictNotEvaluatedCases() = listOf(
+            SuccessTestCase(
+                name = "error node in a CASE branch that is not taken",
+                input = "CASE WHEN false THEN UPPER(1) ELSE 'a' END",
+                expected = Datum.string("a"),
+                mode = Mode.STRICT(),
+            ),
         )
 
         @JvmStatic
