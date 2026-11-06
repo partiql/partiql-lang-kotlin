@@ -41,7 +41,8 @@ public class SuccessTestCase(
     val expected: Datum,
     val mode: Mode = Mode.PERMISSIVE(),
     val globals: List<Global> = emptyList(),
-    val jvmEquality: Boolean = false
+    val jvmEquality: Boolean = false,
+    val identity: String? = null,
 ) : PTestCase {
 
     constructor(
@@ -49,8 +50,9 @@ public class SuccessTestCase(
         expected: Datum,
         mode: Mode = Mode.PERMISSIVE(),
         globals: List<Global> = emptyList(),
-        jvmEquality: Boolean = false
-    ) : this("no_name", input, expected, mode, globals, jvmEquality)
+        jvmEquality: Boolean = false,
+        identity: String? = null,
+    ) : this("no_name", input, expected, mode, globals, jvmEquality, identity)
 
     private val compiler = PartiQLCompiler.standard()
     private val parser = PartiQLParser.standard()
@@ -75,10 +77,7 @@ public class SuccessTestCase(
                 }
             }
             .build()
-        val session = Session.builder()
-            .catalog("memory")
-            .catalogs(catalog)
-            .build()
+        val session = session(catalog)
         // Old path
         val plan = planner.plan(statement, session).plan
         val result = DatumMaterialize.materialize(compiler.prepare(plan, mode).execute())
@@ -118,6 +117,16 @@ public class SuccessTestCase(
 
     override fun toString(): String {
         return "$name ($mode): $input"
+    }
+
+    private fun session(catalog: Catalog): Session {
+        val builder = Session.builder()
+            .catalog("memory")
+            .catalogs(catalog)
+        if (identity != null) {
+            builder.identity(identity)
+        }
+        return builder.build()
     }
 }
 
