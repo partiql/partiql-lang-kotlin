@@ -4270,6 +4270,43 @@ class SqlDialectTest {
                     spec = windowSpecification(null, emptyList(), orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST()))))
                 )
             ),
+            // Aggregate names: only a regular COUNT/SUM/AVG/MIN/MAX is printed as the keyword; other names are printed
+            // as identifiers (quoted if delimited), and (*) only for COUNT.
+            expect(
+                "SUM(x) OVER ()",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("sum"), listOf(v("x")), null),
+                    spec = windowSpecification(null, null, null)
+                )
+            ),
+            expect(
+                "demo.sum(x) OVER ()",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("demo", "sum"), listOf(v("x")), null),
+                    spec = windowSpecification(null, null, null)
+                )
+            ),
+            expect(
+                "\"Sum\"(x) OVER ()",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.delimited("Sum"), listOf(v("x")), null),
+                    spec = windowSpecification(null, null, null)
+                )
+            ),
+            expect(
+                "\"sum(1) OVER ()) AS s, (SELECT 'pwned'\"(x) OVER ()",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.delimited("sum(1) OVER ()) AS s, (SELECT 'pwned'"), listOf(v("x")), null),
+                    spec = windowSpecification(null, null, null)
+                )
+            ),
+            expect(
+                "SUM() OVER ()",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("sum"), emptyList(), null),
+                    spec = windowSpecification(null, null, null)
+                )
+            ),
             expect(
                 "AVG(salary) OVER ()",
                 exprWindowFunction(

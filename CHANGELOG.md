@@ -52,6 +52,7 @@ Thank you to all who have contributed!
 - Fixed strict mode raising `INTERNAL_ERROR` for an expression the planner proved will fail ([#1988](https://github.com/partiql/partiql-lang-kotlin/issues/1988)). It now raises the planner's error code, such as `PATH_SYMBOL_NEVER_SUCCEEDS`, `PATH_KEY_NEVER_SUCCEEDS`, `PATH_INDEX_NEVER_SUCCEEDS`, `FUNCTION_TYPE_MISMATCH` or `TYPE_UNEXPECTED`, with the planner's location and properties. The error has severity `ERROR` and kind `EXECUTION`, like errors from checks that run only at runtime. Permissive mode is unchanged.
   - Hosts that match on `INTERNAL_ERROR` for these queries now see the specific code.
 - Fixed a non-numeric `OFFSET` being planned as a second `LIMIT`.
+- Fixed `SqlDialect` printing names and literal values built through the AST API so that they could change the structure of the SQL: a delimited identifier now doubles `"`, a regular identifier that is not a valid unquoted identifier is quoted, INTERVAL and typed string literals escape `'`, an invalid numeric literal or operator symbol is rejected, and a unary operator is separated from an operand that starts with an operator character (e.g. `- -1`, not `--1`). For an aggregate window function, only a regular `COUNT`/`SUM`/`AVG`/`MIN`/`MAX` is printed as a keyword, and `(*)` only for `COUNT`.
 
 ### Removed
 
