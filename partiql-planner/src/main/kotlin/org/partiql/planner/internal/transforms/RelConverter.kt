@@ -40,6 +40,7 @@ import org.partiql.ast.SelectValue
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
+import org.partiql.ast.WindowFunctionFromFirstOrLast
 import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.WindowFunctionType.Lag
@@ -674,7 +675,6 @@ internal object RelConverter {
          * every row of the partition is a peer, so e.g. RANK() is 1 for every row, and LEAD/LAG depend on input order.
          *
          * The window function examples in RFC 0035 omit the ORDER BY; see https://github.com/partiql/partiql-lang/issues/105.
-         * TODO: Check NTILE once it is supported (https://github.com/partiql/partiql-lang-kotlin/issues/1997).
          */
         private fun warnIfWindowOrderMissing(window: InternalWindowDefinition) {
             if (window.spec.orderClause != null) {
@@ -700,8 +700,8 @@ internal object RelConverter {
         }
 
         /**
-         * @return the (lowercase) plan name of the built-in window function [type], or null if [type] is not a ranking or
-         * navigation function.
+         * @return the (lowercase) plan name of the built-in window function [type], or null if [type] is not a ranking,
+         * NTILE, navigation, or value (FIRST_VALUE, LAST_VALUE, NTH_VALUE) function.
          */
         private fun windowFunctionName(type: WindowFunctionType): String? = when (type) {
             is WindowFunctionType.Rank -> "rank"
@@ -711,17 +711,22 @@ internal object RelConverter {
             is WindowFunctionType.RowNumber -> "row_number"
             is Lag -> "lag"
             is Lead -> "lead"
+            is WindowFunctionType.Ntile -> "ntile"
+            is WindowFunctionType.FirstValue -> "first_value"
+            is WindowFunctionType.LastValue -> "last_value"
+            is WindowFunctionType.NthValue -> "nth_value"
             else -> null
         }
 
         /**
          * @return the (uppercase) name of [type] if it requires a window ordering clause per SQL:2023 Subclause 9.23,
-         * Syntax Rule 5a (the rank functions and LEAD/LAG; NTILE once supported); null otherwise. The functions are
-         * listed explicitly so that each new window function needs a decision.
+         * Syntax Rule 5a (the rank functions, NTILE, and LEAD/LAG); null otherwise. FIRST_VALUE, LAST_VALUE, and NTH_VALUE
+         * do not require one. The functions are listed explicitly so that each new window function needs a decision.
          */
         private fun windowOrderRequiredName(type: WindowFunctionType): String? = when (type) {
             is WindowFunctionType.Rank, is WindowFunctionType.DenseRank, is WindowFunctionType.PercentRank,
-            is WindowFunctionType.CumeDist, is Lead, is Lag -> windowFunctionName(type)?.uppercase()
+            is WindowFunctionType.CumeDist, is WindowFunctionType.Ntile, is Lead, is Lag ->
+                windowFunctionName(type)?.uppercase()
             else -> null
         }
 
@@ -740,15 +745,7 @@ internal object RelConverter {
                 is WindowFunctionType.LeadOrLag -> {
                     val name = windowFunctionName(windowType)
                         ?: error("Unsupported Lead/Lag type: ${windowType.javaClass.simpleName}.")
-                    val isIgnoreNulls = when (windowType.nullTreatment?.code()) {
-                        WindowFunctionNullTreatment.RESPECT_NULLS, null -> false
-                        WindowFunctionNullTreatment.IGNORE_NULLS -> true
-                        else -> {
-                            val cause = IllegalStateException("Unexpected WindowFunctionNullTreatment type: ${windowType.nullTreatment}")
-                            env.listener.report(PErrors.internalError(cause))
-                            false
-                        }
-                    }
+                    val isIgnoreNulls = isIgnoreNulls(windowType.nullTreatment)
                     val extent = windowType.extent.toRex(env)
                     val offset = windowType.offset?.let { rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(it))) } ?: rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(1)))
                     val default = windowType.defaultValue?.toRex(env) ?: rex(extent.type, rexOpLit(Datum.nullValue(extent.type)))
@@ -756,6 +753,36 @@ internal object RelConverter {
                     relOpWindowWindowFunction(name, args, isIgnoreNulls, null, null, null)
                 }
                 is WindowFunctionType.Aggregate -> convertAggregateWindowFunction(windowType)
+                is WindowFunctionType.Ntile -> {
+                    val name = windowFunctionName(windowType) ?: error("Unsupported NTILE type: ${windowType.javaClass.simpleName}.")
+                    val tiles = windowType.numberOfTiles.toRex(env)
+                    relOpWindowWindowFunction(name, listOf(tiles), false, null, null, null)
+                }
+                is WindowFunctionType.FirstOrLastValue -> {
+                    val name = windowFunctionName(windowType)
+                        ?: error("Unsupported FIRST_VALUE/LAST_VALUE type: ${windowType.javaClass.simpleName}.")
+                    val value = windowType.value.toRex(env)
+                    relOpWindowWindowFunction(name, listOf(value), isIgnoreNulls(windowType.nullTreatment), null, null, null)
+                }
+                is WindowFunctionType.NthValue -> {
+                    val name = windowFunctionName(windowType) ?: error("Unsupported NTH_VALUE type: ${windowType.javaClass.simpleName}.")
+                    val value = windowType.value.toRex(env)
+                    val nthRow = windowType.nthRow.toRex(env)
+                    // FROM FIRST is implicit when <from first or last> is not specified (SQL:2011 6.10 SR 8.a.i).
+                    val isFromLast = when (windowType.fromFirstOrLast?.code()) {
+                        WindowFunctionFromFirstOrLast.FROM_FIRST, null -> false
+                        WindowFunctionFromFirstOrLast.FROM_LAST -> true
+                        else -> {
+                            val cause = IllegalStateException("Unexpected WindowFunctionFromFirstOrLast type: ${windowType.fromFirstOrLast}")
+                            env.listener.report(PErrors.internalError(cause))
+                            false
+                        }
+                    }
+                    // The FROM FIRST/FROM LAST option is passed as a trailing boolean literal argument.
+                    val fromLast = rex(CompilerType(PType.bool()), rexOpLit(Datum.bool(isFromLast)))
+                    val args = listOf(value, nthRow, fromLast)
+                    relOpWindowWindowFunction(name, args, isIgnoreNulls(windowType.nullTreatment), null, null, null)
+                }
                 else -> {
                     val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
                     env.listener.report(PErrors.internalError(cause))
@@ -816,6 +843,21 @@ internal object RelConverter {
             }
             env.listener.report(error)
             return false
+        }
+
+        /**
+         * RESPECT NULLS is implicit when the null treatment is not specified.
+         */
+        private fun isIgnoreNulls(nullTreatment: WindowFunctionNullTreatment?): Boolean {
+            return when (nullTreatment?.code()) {
+                WindowFunctionNullTreatment.RESPECT_NULLS, null -> false
+                WindowFunctionNullTreatment.IGNORE_NULLS -> true
+                else -> {
+                    val cause = IllegalStateException("Unexpected WindowFunctionNullTreatment type: $nullTreatment")
+                    env.listener.report(PErrors.internalError(cause))
+                    false
+                }
+            }
         }
 
         /**

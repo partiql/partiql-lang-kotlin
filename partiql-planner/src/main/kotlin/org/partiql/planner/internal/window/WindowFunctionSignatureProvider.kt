@@ -12,26 +12,27 @@ internal object WindowFunctionSignatureProvider {
 
     /**
      * Returns the [WindowFunctionSignature] for the given window function name and arguments.
-     * For now, we only support RANK (0 args), DENSE_RANK (0 args), ROW_NUMBER (0 args), PERCENT_RANK (0 args),
-     * CUME_DIST (0 args), LAG (3 args), and LEAD (3 args).
+     * For now, we support:
+     *  - RANK (0 args), DENSE_RANK (0 args), ROW_NUMBER (0 args), PERCENT_RANK (0 args), CUME_DIST (0 args)
+     *  - NTILE (1 arg: number of tiles)
+     *  - LAG (3 args), LEAD (3 args)
+     *  - FIRST_VALUE (1 arg), LAST_VALUE (1 arg)
+     *  - NTH_VALUE (3 args: value, nth row, and a boolean literal that is true iff FROM LAST is specified)
      * @param name the name of the window function.
      * @param args the arguments to the window function.
      * @return null if unable to create a signature.
      */
     fun get(name: String, args: List<Rex>, ignoreNulls: Boolean): WindowFunctionSignature? {
-        return when (args.size) {
-            0 -> when (name.lowercase()) {
-                "rank" -> RANK
-                "dense_rank" -> DENSE_RANK
-                "row_number" -> ROW_NUMBER
-                "percent_rank" -> PERCENT_RANK
-                "cume_dist" -> CUME_DIST
-                else -> null
-            }
-            3 -> when (val n = name.lowercase()) {
-                "lag", "lead" -> lagOrLead(n, args[0], args[1], args[2], ignoreNulls)
-                else -> null
-            }
+        return when (val n = name.lowercase()) {
+            "rank" -> if (args.isEmpty()) RANK else null
+            "dense_rank" -> if (args.isEmpty()) DENSE_RANK else null
+            "row_number" -> if (args.isEmpty()) ROW_NUMBER else null
+            "percent_rank" -> if (args.isEmpty()) PERCENT_RANK else null
+            "cume_dist" -> if (args.isEmpty()) CUME_DIST else null
+            "ntile" -> if (args.size == 1) ntile(args[0]) else null
+            "lag", "lead" -> if (args.size == 3) lagOrLead(n, args[0], args[1], args[2], ignoreNulls) else null
+            "first_value", "last_value" -> if (args.size == 1) firstOrLastValue(n, args[0], ignoreNulls) else null
+            "nth_value" -> if (args.size == 3) nthValue(args[0], args[1], args[2], ignoreNulls) else null
             else -> null
         }
     }
@@ -60,5 +61,51 @@ internal object WindowFunctionSignatureProvider {
         returnTyper.accumulate(default)
         val (returnType, _) = returnTyper.mapping()
         return WindowFunctionSignature(name, listOf(expr.type, offset.type, default.type), returnType, ignoreNulls)
+    }
+
+    /**
+     * NTILE: the declared type of <number of tiles> shall be exact numeric with scale 0; the declared type of the
+     * result is an implementation-defined exact numeric type with scale 0 (BIGINT). See SQL:2011 6.10 SR 7.i.
+     * @return null if unable to create a signature.
+     */
+    private fun ntile(tiles: Rex): WindowFunctionSignature? {
+        if (!isExactNumericScaleZero(tiles.type)) {
+            return null
+        }
+        return WindowFunctionSignature("ntile", listOf(tiles.type), PType.bigint(), false)
+    }
+
+    /**
+     * FIRST_VALUE/LAST_VALUE: the declared type of the result is the declared type of the <value expression>.
+     * See SQL:2011 6.10 SR 8.c.
+     */
+    private fun firstOrLastValue(name: String, value: Rex, ignoreNulls: Boolean): WindowFunctionSignature {
+        return WindowFunctionSignature(name, listOf(value.type), value.type, ignoreNulls)
+    }
+
+    /**
+     * NTH_VALUE: the declared type of <nth row> shall be exact numeric with scale 0; the declared type of the result is
+     * the declared type of the <value expression>. See SQL:2011 6.10 SR 8.a and 8.c.
+     * @param fromLast a boolean literal that is true iff FROM LAST is specified.
+     * @return null if unable to create a signature.
+     */
+    private fun nthValue(value: Rex, nthRow: Rex, fromLast: Rex, ignoreNulls: Boolean): WindowFunctionSignature? {
+        if (!isExactNumericScaleZero(nthRow.type) || fromLast.type.code() != PType.BOOL) {
+            return null
+        }
+        return WindowFunctionSignature("nth_value", listOf(value.type, nthRow.type, fromLast.type), value.type, ignoreNulls)
+    }
+
+    /**
+     * @return true if the [type] is an exact numeric type with scale 0, OR if the type is only known at runtime, OR if
+     * the type is that of the null value. Runtime checks are left to the evaluator.
+     */
+    private fun isExactNumericScaleZero(type: PType): Boolean {
+        return when (type.code()) {
+            PType.TINYINT, PType.SMALLINT, PType.INTEGER, PType.BIGINT -> true
+            PType.NUMERIC, PType.DECIMAL -> type.scale == 0
+            PType.DYNAMIC, PType.VARIANT, PType.UNKNOWN -> true
+            else -> false
+        }
     }
 }

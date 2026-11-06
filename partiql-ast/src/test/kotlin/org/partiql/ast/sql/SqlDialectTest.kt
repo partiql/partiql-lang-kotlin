@@ -111,6 +111,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.WindowClause
+import org.partiql.ast.WindowFunctionFromFirstOrLast
 import org.partiql.ast.WindowFunctionNullTreatment
 import org.partiql.ast.WindowFunctionType
 import org.partiql.ast.With
@@ -4403,6 +4404,78 @@ class SqlDialectTest {
                             )
                         )
                     )
+                )
+            ),
+            expect(
+                "NTILE(4) OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Ntile(exprLit(intNum(4))),
+                    spec = windowSpecification(
+                        null,
+                        listOf(windowPartition(Identifier.regular("department"))),
+                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            expect(
+                "FIRST_VALUE(name) OVER (ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.FirstValue(v("name"), null),
+                    spec = windowSpecification(null, emptyList(), orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST()))))
+                )
+            ),
+            expect(
+                "FIRST_VALUE(name) IGNORE NULLS OVER (ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.FirstValue(v("name"), WindowFunctionNullTreatment.IGNORE_NULLS()),
+                    spec = windowSpecification(null, emptyList(), orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST()))))
+                )
+            ),
+            expect(
+                "LAST_VALUE(name) RESPECT NULLS OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.LastValue(v("name"), WindowFunctionNullTreatment.RESPECT_NULLS()),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
+                )
+            ),
+            expect(
+                "NTH_VALUE(name, 2) OVER (ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.NthValue(v("name"), exprLit(intNum(2)), null, null),
+                    spec = windowSpecification(null, emptyList(), orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST()))))
+                )
+            ),
+            expect(
+                "NTH_VALUE(name, 2) FROM FIRST OVER (ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.NthValue(v("name"), exprLit(intNum(2)), WindowFunctionFromFirstOrLast.FROM_FIRST(), null),
+                    spec = windowSpecification(null, emptyList(), orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST()))))
+                )
+            ),
+            expect(
+                "NTH_VALUE(name, 3) FROM LAST IGNORE NULLS OVER w",
+                exprWindowFunction(
+                    type = WindowFunctionType.NthValue(
+                        v("name"),
+                        exprLit(intNum(3)),
+                        WindowFunctionFromFirstOrLast.FROM_LAST(),
+                        WindowFunctionNullTreatment.IGNORE_NULLS()
+                    ),
+                    spec = windowSpecification(regular("w"), emptyList(), null)
+                )
+            ),
+            expect(
+                "NTH_VALUE(name, 1) RESPECT NULLS OVER w",
+                exprWindowFunction(
+                    type = WindowFunctionType.NthValue(v("name"), exprLit(intNum(1)), null, WindowFunctionNullTreatment.RESPECT_NULLS()),
+                    spec = windowSpecification(regular("w"), emptyList(), null)
+                )
+            ),
+            expect(
+                "RANK() OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Rank(),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
                 )
             ),
             // Window functions with named window reference

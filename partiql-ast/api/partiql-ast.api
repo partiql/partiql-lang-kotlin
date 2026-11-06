@@ -466,10 +466,18 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWindowFunctionTypeFirstValue (Lorg/partiql/ast/WindowFunctionType$FirstValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeFirstValue (Lorg/partiql/ast/WindowFunctionType$FirstValue;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypeLag (Lorg/partiql/ast/WindowFunctionType$Lag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLag (Lorg/partiql/ast/WindowFunctionType$Lag;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWindowFunctionTypeLastValue (Lorg/partiql/ast/WindowFunctionType$LastValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeLastValue (Lorg/partiql/ast/WindowFunctionType$LastValue;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypeLead (Lorg/partiql/ast/WindowFunctionType$Lead;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLead (Lorg/partiql/ast/WindowFunctionType$Lead;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWindowFunctionTypeNthValue (Lorg/partiql/ast/WindowFunctionType$NthValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeNthValue (Lorg/partiql/ast/WindowFunctionType$NthValue;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitWindowFunctionTypeNtile (Lorg/partiql/ast/WindowFunctionType$Ntile;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeNtile (Lorg/partiql/ast/WindowFunctionType$Ntile;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypePercentRank (Lorg/partiql/ast/WindowFunctionType$PercentRank;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypePercentRank (Lorg/partiql/ast/WindowFunctionType$PercentRank;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitWindowFunctionTypeRank (Lorg/partiql/ast/WindowFunctionType$Rank;Ljava/lang/Object;)Ljava/lang/Object;
@@ -639,8 +647,12 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitWindowFunctionTypeAggregate (Lorg/partiql/ast/WindowFunctionType$Aggregate;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeFirstValue (Lorg/partiql/ast/WindowFunctionType$FirstValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLag (Lorg/partiql/ast/WindowFunctionType$Lag;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeLastValue (Lorg/partiql/ast/WindowFunctionType$LastValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLead (Lorg/partiql/ast/WindowFunctionType$Lead;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeNthValue (Lorg/partiql/ast/WindowFunctionType$NthValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeNtile (Lorg/partiql/ast/WindowFunctionType$Ntile;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypePercentRank (Lorg/partiql/ast/WindowFunctionType$PercentRank;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeRank (Lorg/partiql/ast/WindowFunctionType$Rank;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeRowNumber (Lorg/partiql/ast/WindowFunctionType$RowNumber;Ljava/lang/Object;)Ljava/lang/Object;
@@ -1631,6 +1643,20 @@ public class org/partiql/ast/WindowClause$Definition$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/partiql/ast/WindowFunctionFromFirstOrLast : org/partiql/ast/AstEnum {
+	public static final field FROM_FIRST I
+	public static final field FROM_LAST I
+	public static fun FROM_FIRST ()Lorg/partiql/ast/WindowFunctionFromFirstOrLast;
+	public static fun FROM_LAST ()Lorg/partiql/ast/WindowFunctionFromFirstOrLast;
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun code ()I
+	public static fun codes ()[I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
+}
+
 public final class org/partiql/ast/WindowFunctionNullTreatment : org/partiql/ast/AstEnum {
 	public static final field IGNORE_NULLS I
 	public static final field RESPECT_NULLS I
@@ -1697,6 +1723,29 @@ public class org/partiql/ast/WindowFunctionType$DenseRank$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class org/partiql/ast/WindowFunctionType$FirstOrLastValue {
+	public abstract fun getNullTreatment ()Lorg/partiql/ast/WindowFunctionNullTreatment;
+	public abstract fun getValue ()Lorg/partiql/ast/expr/Expr;
+}
+
+public final class org/partiql/ast/WindowFunctionType$FirstValue : org/partiql/ast/WindowFunctionType, org/partiql/ast/WindowFunctionType$FirstOrLastValue {
+	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/WindowFunctionNullTreatment;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$FirstValue$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getNullTreatment ()Lorg/partiql/ast/WindowFunctionNullTreatment;
+	public fun getValue ()Lorg/partiql/ast/expr/Expr;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/WindowFunctionType$FirstValue$Builder {
+	public fun build ()Lorg/partiql/ast/WindowFunctionType$FirstValue;
+	public fun nullTreatment (Lorg/partiql/ast/WindowFunctionNullTreatment;)Lorg/partiql/ast/WindowFunctionType$FirstValue$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/WindowFunctionType$FirstValue$Builder;
+}
+
 public final class org/partiql/ast/WindowFunctionType$Lag : org/partiql/ast/WindowFunctionType, org/partiql/ast/WindowFunctionType$LeadOrLag {
 	public fun <init> (Lorg/partiql/ast/expr/Expr;Ljava/lang/Long;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/WindowFunctionNullTreatment;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
@@ -1717,6 +1766,24 @@ public class org/partiql/ast/WindowFunctionType$Lag$Builder {
 	public fun nullTreatment (Lorg/partiql/ast/WindowFunctionNullTreatment;)Lorg/partiql/ast/WindowFunctionType$Lag$Builder;
 	public fun offset (Ljava/lang/Long;)Lorg/partiql/ast/WindowFunctionType$Lag$Builder;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/WindowFunctionType$LastValue : org/partiql/ast/WindowFunctionType, org/partiql/ast/WindowFunctionType$FirstOrLastValue {
+	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/WindowFunctionNullTreatment;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$LastValue$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getNullTreatment ()Lorg/partiql/ast/WindowFunctionNullTreatment;
+	public fun getValue ()Lorg/partiql/ast/expr/Expr;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/WindowFunctionType$LastValue$Builder {
+	public fun build ()Lorg/partiql/ast/WindowFunctionType$LastValue;
+	public fun nullTreatment (Lorg/partiql/ast/WindowFunctionNullTreatment;)Lorg/partiql/ast/WindowFunctionType$LastValue$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/WindowFunctionType$LastValue$Builder;
 }
 
 public final class org/partiql/ast/WindowFunctionType$Lead : org/partiql/ast/WindowFunctionType, org/partiql/ast/WindowFunctionType$LeadOrLag {
@@ -1746,6 +1813,44 @@ public abstract interface class org/partiql/ast/WindowFunctionType$LeadOrLag {
 	public abstract fun getExtent ()Lorg/partiql/ast/expr/Expr;
 	public abstract fun getNullTreatment ()Lorg/partiql/ast/WindowFunctionNullTreatment;
 	public abstract fun getOffset ()Ljava/lang/Long;
+}
+
+public final class org/partiql/ast/WindowFunctionType$NthValue : org/partiql/ast/WindowFunctionType {
+	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/WindowFunctionFromFirstOrLast;Lorg/partiql/ast/WindowFunctionNullTreatment;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$NthValue$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getFromFirstOrLast ()Lorg/partiql/ast/WindowFunctionFromFirstOrLast;
+	public fun getNthRow ()Lorg/partiql/ast/expr/Expr;
+	public fun getNullTreatment ()Lorg/partiql/ast/WindowFunctionNullTreatment;
+	public fun getValue ()Lorg/partiql/ast/expr/Expr;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/WindowFunctionType$NthValue$Builder {
+	public fun build ()Lorg/partiql/ast/WindowFunctionType$NthValue;
+	public fun fromFirstOrLast (Lorg/partiql/ast/WindowFunctionFromFirstOrLast;)Lorg/partiql/ast/WindowFunctionType$NthValue$Builder;
+	public fun nthRow (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/WindowFunctionType$NthValue$Builder;
+	public fun nullTreatment (Lorg/partiql/ast/WindowFunctionNullTreatment;)Lorg/partiql/ast/WindowFunctionType$NthValue$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/WindowFunctionType$NthValue$Builder;
+}
+
+public final class org/partiql/ast/WindowFunctionType$Ntile : org/partiql/ast/WindowFunctionType {
+	public fun <init> (Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/WindowFunctionType$Ntile$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun getNumberOfTiles ()Lorg/partiql/ast/expr/Expr;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/WindowFunctionType$Ntile$Builder {
+	public fun build ()Lorg/partiql/ast/WindowFunctionType$Ntile;
+	public fun numberOfTiles (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/WindowFunctionType$Ntile$Builder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/ast/WindowFunctionType$PercentRank : org/partiql/ast/WindowFunctionType {
@@ -3834,10 +3939,18 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitWindowFunctionTypeCumeDist (Lorg/partiql/ast/WindowFunctionType$CumeDist;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeDenseRank (Lorg/partiql/ast/WindowFunctionType$DenseRank;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeFirstValue (Lorg/partiql/ast/WindowFunctionType$FirstValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeFirstValue (Lorg/partiql/ast/WindowFunctionType$FirstValue;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWindowFunctionTypeLag (Lorg/partiql/ast/WindowFunctionType$Lag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLag (Lorg/partiql/ast/WindowFunctionType$Lag;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeLastValue (Lorg/partiql/ast/WindowFunctionType$LastValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeLastValue (Lorg/partiql/ast/WindowFunctionType$LastValue;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWindowFunctionTypeLead (Lorg/partiql/ast/WindowFunctionType$Lead;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypeLead (Lorg/partiql/ast/WindowFunctionType$Lead;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeNthValue (Lorg/partiql/ast/WindowFunctionType$NthValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeNthValue (Lorg/partiql/ast/WindowFunctionType$NthValue;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitWindowFunctionTypeNtile (Lorg/partiql/ast/WindowFunctionType$Ntile;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindowFunctionTypeNtile (Lorg/partiql/ast/WindowFunctionType$Ntile;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWindowFunctionTypePercentRank (Lorg/partiql/ast/WindowFunctionType$PercentRank;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindowFunctionTypePercentRank (Lorg/partiql/ast/WindowFunctionType$PercentRank;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitWindowFunctionTypeRank (Lorg/partiql/ast/WindowFunctionType$Rank;Ljava/lang/Object;)Ljava/lang/Object;

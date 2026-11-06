@@ -881,6 +881,43 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
+    override fun visitWindowFunctionTypeNtile(node: WindowFunctionType.Ntile, ctx: C): AstNode {
+        val numberOfTiles = visitExpr(node.numberOfTiles, ctx) as Expr
+        return if (numberOfTiles !== node.numberOfTiles) {
+            WindowFunctionType.Ntile(numberOfTiles)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeFirstValue(node: WindowFunctionType.FirstValue, ctx: C): AstNode {
+        val value = visitExpr(node.value, ctx) as Expr
+        return if (value !== node.value) {
+            WindowFunctionType.FirstValue(value, node.nullTreatment)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeLastValue(node: WindowFunctionType.LastValue, ctx: C): AstNode {
+        val value = visitExpr(node.value, ctx) as Expr
+        return if (value !== node.value) {
+            WindowFunctionType.LastValue(value, node.nullTreatment)
+        } else {
+            node
+        }
+    }
+
+    override fun visitWindowFunctionTypeNthValue(node: WindowFunctionType.NthValue, ctx: C): AstNode {
+        val value = visitExpr(node.value, ctx) as Expr
+        val nthRow = visitExpr(node.nthRow, ctx) as Expr
+        return if (value !== node.value || nthRow !== node.nthRow) {
+            WindowFunctionType.NthValue(value, nthRow, node.fromFirstOrLast, node.nullTreatment)
+        } else {
+            node
+        }
+    }
+
     override fun visitWindowFunctionTypeRank(node: WindowFunctionType.Rank, ctx: C): AstNode {
         return node
     }

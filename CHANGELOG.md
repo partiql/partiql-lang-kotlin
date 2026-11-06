@@ -31,9 +31,10 @@ Thank you to all who have contributed!
 - `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions. Window frame clauses are not supported yet ([#1837](https://github.com/partiql/partiql-lang-kotlin/issues/1837)), so the default frame is used. With a window `ORDER BY`, `SUM`/`AVG`/`MIN`/`MAX(DISTINCT)` report `INVALID_WINDOW_FUNCTION` and `COUNT(DISTINCT)` reports `FEATURE_NOT_SUPPORTED`.
+- Added experimental support for the `NTILE`, `FIRST_VALUE`, `LAST_VALUE`, and `NTH_VALUE` window functions.
 
 ### Changed
-- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
+- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `NTILE`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
 ### Deprecated
 
@@ -52,6 +53,7 @@ Thank you to all who have contributed!
 - Fixed strict mode raising `INTERNAL_ERROR` for an expression the planner proved will fail ([#1988](https://github.com/partiql/partiql-lang-kotlin/issues/1988)). It now raises the planner's error code, such as `PATH_SYMBOL_NEVER_SUCCEEDS`, `PATH_KEY_NEVER_SUCCEEDS`, `PATH_INDEX_NEVER_SUCCEEDS`, `FUNCTION_TYPE_MISMATCH` or `TYPE_UNEXPECTED`, with the planner's location and properties. The error has severity `ERROR` and kind `EXECUTION`, like errors from checks that run only at runtime. Permissive mode is unchanged.
   - Hosts that match on `INTERNAL_ERROR` for these queries now see the specific code.
 - Fixed a non-numeric `OFFSET` being planned as a second `LIMIT`.
+- Fixed the SQL printing of a window specification with a `PARTITION BY` clause but no `ORDER BY` clause.
 
 ### Removed
 
