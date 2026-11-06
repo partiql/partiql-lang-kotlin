@@ -250,13 +250,16 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeAggregate(node: WindowFunctionType.Aggregate, tail: SqlBlock): SqlBlock {
         val f = node.function
-        // The grammar only accepts the aggregate keywords (e.g. SUM), so print an unqualified name as a keyword.
-        var t = when (f.hasQualifier()) {
-            true -> visitIdentifier(f, tail)
-            false -> tail concat f.identifier.text.uppercase()
+        val name = f.identifier.text.lowercase()
+        // The grammar only accepts the aggregate keywords for a window aggregate, so print a regular, unqualified
+        // COUNT/SUM/AVG/MIN/MAX as the keyword; print any other name as an identifier (quoted if delimited).
+        val isKeyword = !f.hasQualifier() && f.identifier.isRegular && name in WINDOW_AGGREGATE_KEYWORDS
+        var t = when (isKeyword) {
+            true -> tail concat name.uppercase()
+            false -> visitIdentifier(f, tail)
         }
-        // COUNT(*) is represented by no arguments
-        if (node.args.isEmpty()) {
+        // COUNT(*) is represented by `count` with no arguments
+        if (isKeyword && name == "count" && node.args.isEmpty()) {
             return t concat "(*)"
         }
         val setq = node.setq
@@ -393,18 +396,18 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             Literal.NULL -> t = t concat "NULL"
             Literal.MISSING -> t = t concat "MISSING"
             Literal.BOOL -> t = t concat lit.booleanValue().toString()
-            Literal.APPROX_NUM, Literal.EXACT_NUM, Literal.INT_NUM -> t = t concat lit.numberValue()
-            Literal.STRING -> t = t concat "'${lit.stringValue().replace("'", "''")}'"
+            Literal.APPROX_NUM, Literal.EXACT_NUM, Literal.INT_NUM -> t = t concat numericText(lit)
+            Literal.STRING -> t = t concat quoteString(lit.stringValue())
             Literal.TYPED_STRING -> {
                 val dataType = lit.dataType()
                 when (dataType.code()) {
                     DataType.INTERVAL -> {
-                        t = t concat "INTERVAL '${lit.stringValue()}' "
+                        t = t concat "INTERVAL ${quoteString(lit.stringValue())} "
                         t = visit(dataType.intervalQualifier, t)
                     }
                     else -> {
                         t = visitDataType(lit.dataType(), t)
-                        t = t concat String.format(" '%s'", lit.stringValue())
+                        t = t concat " ${quoteString(lit.stringValue())}"
                     }
                 }
             }
@@ -452,13 +455,18 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         return if (lhs != null) {
             var t = tail
             t = visitExprWrapped(lhs, t, operator = true)
-            t = t concat " ${node.symbol} "
+            t = t concat " ${operatorSymbol(node.symbol)} "
             t = visitExprWrapped(node.rhs, t, operator = true)
             t
         } else {
-            var t = tail
-            t = t concat node.symbol
-            t = visitExprWrapped(node.rhs, t, operator = true)
+            val symbol = tail concat operatorSymbol(node.symbol)
+            val t = visitExprWrapped(node.rhs, symbol, operator = true)
+            // Separate a unary operator from an operand that starts with an operator character, so that e.g. `-` and
+            // `-1` do not print as `--1` (a comment) and two operators do not lex as one.
+            val first = symbol.next?.firstText()?.firstOrNull()
+            if (first != null && OPERATOR_SYMBOL.matches(first.toString())) {
+                (symbol as SqlBlock.Text).text += " "
+            }
             return t
         }
     }
@@ -1158,8 +1166,74 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         )
     }
 
-    private fun Simple.sql() = when (isRegular) {
-        true -> text // verbatim ..
-        false -> "\"$text\""
+    /**
+     * Prints an identifier part so that it re-parses as the same name and cannot change the structure of the SQL. A
+     * regular identifier is printed verbatim only if it is a valid unquoted identifier; otherwise (and for a delimited
+     * identifier) it is printed double-quoted, with each `"` doubled, as the lexer expects.
+     */
+    private fun Simple.sql() = when (isRegular && REGULAR_IDENTIFIER.matches(text)) {
+        true -> text
+        false -> quoteIdentifier(text)
     }
+}
+
+/**
+ * The aggregate keywords the grammar accepts for an aggregate window function.
+ */
+private val WINDOW_AGGREGATE_KEYWORDS = setOf("count", "sum", "avg", "min", "max")
+
+/**
+ * An identifier the lexer accepts unquoted (`IDENTIFIER` in PartiQLTokens.g4, which is case-insensitive).
+ */
+private val REGULAR_IDENTIFIER = Regex("[A-Za-z\$_][A-Za-z0-9\$_]*")
+
+/**
+ * Numeric literal text the lexer accepts (`LITERAL_INTEGER`, `LITERAL_DECIMAL`, and `LITERAL_FLOAT` in
+ * PartiQLTokens.g4, which are case-insensitive), with an optional sign (the parser folds a sign into the literal).
+ */
+private val NUMERIC_LITERALS = mapOf(
+    Literal.INT_NUM to Regex("[+-]?[0-9]+"),
+    Literal.EXACT_NUM to Regex("[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)"),
+    Literal.APPROX_NUM to Regex("[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)[Ee][+-]?[0-9]+"),
+)
+
+/**
+ * Operator symbols contain only operator characters, so they cannot open a comment, a string, an identifier, or a
+ * parenthesized expression.
+ */
+private val OPERATOR_SYMBOL = Regex("[+\\-*/%^<>=!~@#?|&]+")
+
+private fun quoteIdentifier(text: String): String = "\"" + text.replace("\"", "\"\"") + "\""
+
+private fun quoteString(text: String): String = "'" + text.replace("'", "''") + "'"
+
+private fun numericText(lit: Literal): String {
+    val text = lit.numberValue()
+    require(NUMERIC_LITERALS.getValue(lit.code()).matches(text)) { "Invalid numeric literal: $text" }
+    return text
+}
+
+private fun operatorSymbol(symbol: String): String {
+    require(OPERATOR_SYMBOL.matches(symbol) && "--" !in symbol && "/*" !in symbol) { "Invalid operator symbol: $symbol" }
+    return symbol
+}
+
+/**
+ * Returns the first non-empty text of this token list (including a nest's prefix), or null if there is none.
+ */
+private fun SqlBlock.firstText(): String? {
+    var block: SqlBlock? = this
+    while (block != null) {
+        when (block) {
+            is SqlBlock.Text -> if (block.text.isNotEmpty()) return block.text
+            is SqlBlock.Nest -> {
+                val prefix = block.prefix
+                if (!prefix.isNullOrEmpty()) return prefix
+                block.child.firstText()?.let { return it }
+            }
+            is SqlBlock.None, is SqlBlock.Line -> {}
+        }
+        block = block.next
+    }
+    return null
 }
