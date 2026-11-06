@@ -74,14 +74,16 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
     private val routines = RoutineResolver(session)
 
     /**
-     * The name of the default system catalog (`org.partiql.spi.catalog.System`, which is package-private), which
-     * provides the built-in routines.
+     * The name of the default system catalog, which provides the built-in routines. Keep in sync with `System.NAME` in
+     * partiql-spi (`org.partiql.spi.catalog.System`, which is package-private).
      */
     private val defaultSystemCatalogName = "\$system"
 
     /**
      * The name of the catalog that provides the built-in routines, or null if the session does not include the default
-     * system catalog (e.g. a host replaced it via `Session.Builder.system` with a differently named catalog).
+     * system catalog (e.g. a host replaced it via `Session.Builder.system` with a differently named catalog). Aggregate
+     * window functions resolve to the built-ins in this catalog when it is present, and through the session path
+     * otherwise.
      */
     internal val builtinCatalogName: String? by lazy(LazyThreadSafetyMode.NONE) {
         defaultSystemCatalogName.takeIf { catalogs.getCatalog(it) is RoutineCatalog }
