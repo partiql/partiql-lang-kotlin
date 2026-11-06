@@ -57,6 +57,9 @@ public final class ExprQuerySet extends Expr {
     @NotNull
     public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
+        if (with != null) {
+            kids.add(with);
+        }
         kids.add(body);
         if (orderBy != null) {
             kids.add(orderBy);
