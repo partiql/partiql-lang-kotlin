@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ToCharTest {
     private static final Fn TIMESTAMP_FUNCTION = FunctionTestSupport.function(
@@ -112,6 +113,98 @@ public class ToCharTest {
     }
 
     @Test
+    public void formatsIsoWeekDatesAcrossYearBoundaries() {
+        // Friday, 2021-01-01 is in ISO week 53 of 2020.
+        assertFormat(LocalDateTime.of(2021, 1, 1, 0, 0), "YYYY|IYYY|IW|WW|W|D|ID|IDDD", "2021|2020|53|01|1|6|5|369");
+        // Monday, 2019-12-30 is the first day of ISO week 1 of 2020.
+        assertFormat(LocalDateTime.of(2019, 12, 30, 0, 0), "YYYY|IYYY|IY|I|IW|IDDD|DDD", "2019|2020|20|0|01|001|364");
+    }
+
+    @Test
+    public void numbersDaysOfTheWeekFromSundayAndFromMonday() {
+        assertFormat(LocalDateTime.of(2020, 8, 16, 0, 0), "D|ID|Dy", "1|7|Sun");
+        assertFormat(LocalDateTime.of(2020, 8, 15, 0, 0), "D|ID|Dy", "7|6|Sat");
+        assertFormat(LocalDateTime.of(2020, 8, 17, 0, 0), "D|ID|Dy", "2|1|Mon");
+    }
+
+    @Test
+    public void formatsTheTwelveHourClockAroundNoonAndMidnight() {
+        assertFormat(LocalDateTime.of(2020, 8, 13, 0, 0), "HH12 AM|HH24|HH", "12 AM|00|12");
+        assertFormat(LocalDateTime.of(2020, 8, 13, 11, 59), "HH12 PM|HH24", "11 AM|11");
+        assertFormat(LocalDateTime.of(2020, 8, 13, 12, 0), "HH12 AM|HH24", "12 PM|12");
+        assertFormat(LocalDateTime.of(2020, 8, 13, 23, 59), "HH12 am|HH24", "11 pm|23");
+        assertFormat(BASE, "pm|PM|a.m.|P.M.", "pm|PM|p.m.|P.M.");
+    }
+
+    @Test
+    public void bareFractionUsesTheTimestampPrecision() {
+        assertEquals("123", format(BASE, 3, "FF"));
+        assertEquals("123456", format(BASE, 6, "FF"));
+        assertEquals("|000", format(BASE.withNano(0), 0, "FF|FF3"));
+    }
+
+    @Test
+    public void formatsSmallAndLargeYears() {
+        assertFormat(LocalDateTime.of(44, 3, 15, 0, 0), "Y,YYY|YYYY|FMYYYY|YY|CC|AD", "0,044|0044|44|44|01|AD");
+        assertFormat(LocalDateTime.of(12345, 1, 1, 0, 0), "Y,YYY|YYYY|YYY|CC", "12,345|12345|345|124");
+        assertFormat(LocalDateTime.of(2000, 1, 1, 0, 0), "CC", "20");
+        assertFormat(LocalDateTime.of(2001, 1, 1, 0, 0), "CC", "21");
+    }
+
+    @Test
+    public void formatsJulianDays() {
+        assertFormat(LocalDateTime.of(1970, 1, 1, 23, 59), "J", "2440588");
+    }
+
+    @Test
+    public void padsNamesAndRomanMonthsUnlessFillMode() {
+        assertFormat(LocalDateTime.of(2020, 9, 2, 0, 0), "MONTH|Month|Day|", "SEPTEMBER|September|Wednesday|");
+        assertFormat(LocalDateTime.of(2020, 5, 3, 0, 0), "Month|FMMonth|Day|FMDay|", "May      |May|Sunday   |Sunday|");
+        assertFormat(LocalDateTime.of(2020, 12, 1, 0, 0), "RM|FMRM|rm|", "XII |XII|xii |");
+    }
+
+    @Test
+    public void appendsOrdinalSuffixesToThreeDigitNumbers() {
+        // Days 101, 111, 112, and 113 of the 2020 leap year.
+        assertFormat(LocalDateTime.of(2020, 4, 10, 0, 0), "DDDth", "101st");
+        assertFormat(LocalDateTime.of(2020, 4, 20, 0, 0), "DDDth", "111th");
+        assertFormat(LocalDateTime.of(2020, 4, 21, 0, 0), "DDDth", "112th");
+        assertFormat(LocalDateTime.of(2020, 4, 22, 0, 0), "DDDTH", "113TH");
+        assertFormat(LocalDateTime.of(2020, 8, 2, 0, 0), "DDth|DDth", "02nd|02nd");
+        assertFormat(LocalDateTime.of(2020, 8, 12, 0, 0), "DDth", "12th");
+    }
+
+    @Test
+    public void doesNotInterpretQuotedOrUnknownText() {
+        assertFormat(BASE, "\"YYYY-MM\" YYYY", "YYYY-MM 2020");
+        assertFormat(BASE, "\"unterminated YYYY", "unterminated YYYY");
+        assertFormat(BASE, "a\\b", "a\\b");
+        assertFormat(BASE, "X T", "X T");
+        assertFormat(BASE, "FM-", "-");
+    }
+
+    @Test
+    public void returnsNullForAnEmptyTemplate() {
+        Datum result = TIMESTAMP_FUNCTION.invoke(new Datum[] {
+            Datum.timestamp(BASE, 6),
+            Datum.string("")
+        });
+
+        assertTrue(result.isNull());
+        assertEquals(PType.string(), result.getType());
+    }
+
+    @Test
+    public void formatsTimePatternsOfADate() {
+        Datum result = DATE_FUNCTION.invoke(new Datum[] {
+            Datum.date(LocalDate.of(2020, 8, 13)),
+            Datum.string("HH12 AM|MS|US|FF3|SSSS|Day")
+        });
+
+        assertEquals("12 AM|000|000000|000|0|Thursday ", result.getString());
+    }
+
+    @Test
     public void rejectsTimeZonePatterns() {
         IllegalArgumentException error = assertThrows(
             IllegalArgumentException.class,
@@ -119,6 +212,9 @@ public class ToCharTest {
         );
 
         assertEquals("Time zone pattern is not supported for to_char without a time zone: TZ", error.getMessage());
+        for (String template : new String[] {"tz", "TZH", "TZM", "OF"}) {
+            assertThrows(IllegalArgumentException.class, () -> format(BASE, template), template);
+        }
     }
 
     private static void assertFormat(LocalDateTime value, String template, String expected) {
@@ -126,8 +222,12 @@ public class ToCharTest {
     }
 
     private static String format(LocalDateTime value, String template) {
+        return format(value, 6, template);
+    }
+
+    private static String format(LocalDateTime value, int precision, String template) {
         return TIMESTAMP_FUNCTION.invoke(new Datum[] {
-            Datum.timestamp(value, 6),
+            Datum.timestamp(value, precision),
             Datum.string(template)
         }).getString();
     }

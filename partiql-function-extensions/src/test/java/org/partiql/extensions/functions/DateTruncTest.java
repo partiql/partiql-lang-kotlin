@@ -23,6 +23,7 @@ import org.partiql.spi.value.Datum;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -79,6 +80,67 @@ public class DateTruncTest {
     }
 
     @Test
+    public void quarterStartsInJanuaryAprilJulyAndOctober() {
+        for (int month = 1; month <= 12; month++) {
+            LocalDateTime lastMoment = LocalDateTime.of(2021, month, 1, 23, 59, 59, 999_000_000)
+                .withDayOfMonth(YearMonth.of(2021, month).lengthOfMonth());
+            int firstMonth = ((month - 1) / 3) * 3 + 1;
+
+            assertEquals(LocalDateTime.of(2021, firstMonth, 1, 0, 0), truncate("quarter", lastMoment), "month " + month);
+        }
+    }
+
+    @Test
+    public void valuesAlreadyOnABoundaryAreUnchanged() {
+        LocalDateTime monday = LocalDateTime.of(2020, 8, 10, 0, 0);
+        LocalDateTime newYear = LocalDateTime.of(2020, 1, 1, 0, 0);
+
+        assertEquals(monday, truncate("week", monday));
+        assertEquals(monday, truncate("second", monday));
+        assertEquals(newYear, truncate("year", newYear));
+        assertEquals(newYear, truncate("quarter", newYear));
+    }
+
+    @Test
+    public void handlesLeapDay() {
+        LocalDateTime leapDay = LocalDateTime.of(2020, 2, 29, 23, 59, 59, 999_999_000);
+
+        assertEquals(LocalDateTime.of(2020, 2, 29, 0, 0), truncate("day", leapDay));
+        assertEquals(LocalDateTime.of(2020, 2, 1, 0, 0), truncate("month", leapDay));
+        assertEquals(LocalDateTime.of(2020, 2, 24, 0, 0), truncate("week", leapDay));
+    }
+
+    @Test
+    public void preservesTimestampPrecision() {
+        for (int precision : new int[] {0, 3, 6}) {
+            Datum result = TIMESTAMP_FUNCTION.invoke(new Datum[] {
+                Datum.string("hour"),
+                Datum.timestamp(BASE, precision)
+            });
+
+            assertEquals(PType.timestamp(precision), result.getType());
+        }
+    }
+
+    @Test
+    public void truncatesDateToEveryPart() {
+        LocalDate thursday = LocalDate.of(2020, 8, 13);
+        LocalDateTime midnight = thursday.atStartOfDay();
+        for (String part : new String[] {"millisecond", "second", "minute", "hour", "day"}) {
+            assertEquals(midnight, truncateDate(part, thursday), part);
+        }
+        assertEquals(LocalDateTime.of(2020, 8, 10, 0, 0), truncateDate("week", thursday));
+        assertEquals(LocalDateTime.of(2020, 8, 1, 0, 0), truncateDate("month", thursday));
+        assertEquals(LocalDateTime.of(2020, 7, 1, 0, 0), truncateDate("quarter", thursday));
+        assertEquals(LocalDateTime.of(2020, 1, 1, 0, 0), truncateDate("year", thursday));
+    }
+
+    @Test
+    public void rejectsUnsupportedPartsForDates() {
+        assertThrows(IllegalArgumentException.class, () -> truncateDate("century", LocalDate.of(2020, 8, 13)));
+    }
+
+    @Test
     public void rejectsUnsupportedPart() {
         IllegalArgumentException error = assertThrows(
             IllegalArgumentException.class,
@@ -89,6 +151,24 @@ public class DateTruncTest {
         );
 
         assertEquals("Invalid datetime part for date_trunc: century", error.getMessage());
+
+        for (String part : new String[] {"microsecond", "decade", "millennium", "weeks", " day", ""}) {
+            assertThrows(IllegalArgumentException.class, () -> truncate(part, BASE), "'" + part + "'");
+        }
+    }
+
+    private static LocalDateTime truncate(String part, LocalDateTime value) {
+        return TIMESTAMP_FUNCTION.invoke(new Datum[] {
+            Datum.string(part),
+            Datum.timestamp(value, 6)
+        }).getLocalDateTime();
+    }
+
+    private static LocalDateTime truncateDate(String part, LocalDate value) {
+        return DATE_FUNCTION.invoke(new Datum[] {
+            Datum.string(part),
+            Datum.date(value)
+        }).getLocalDateTime();
     }
 
     private static void assertTimestamp(String part, LocalDateTime expected) {

@@ -52,7 +52,7 @@ import java.util.Locale;
  * Where PostgreSQL and Oracle differ, PostgreSQL behavior is used ({@code D} is 1 for Sunday; {@code SSSS} is not
  * padded). {@code FF} without digits uses the precision of the timestamp. Time zone patterns ({@code TZ},
  * {@code TZH}, {@code TZM}, {@code OF}) are rejected because the inputs have no time zone.
- * A date argument is treated as midnight of that day.
+ * A date argument is treated as midnight of that day. Like PostgreSQL and Oracle, an empty template returns null.
  */
 public final class ToChar {
     private static final List<FnOverload> OVERLOADS = Collections.unmodifiableList(Arrays.asList(
@@ -60,7 +60,7 @@ public final class ToChar {
             .addParameters(PType.timestamp(), PType.string())
             .returns(PType.string())
             .isNullCall(true)
-            .body(args -> Datum.string(format(
+            .body(args -> result(format(
                 args[0].getLocalDateTime(),
                 args[0].getType().getPrecision(),
                 args[1].getString()
@@ -70,7 +70,7 @@ public final class ToChar {
             .addParameters(PType.date(), PType.string())
             .returns(PType.string())
             .isNullCall(true)
-            .body(args -> Datum.string(format(
+            .body(args -> result(format(
                 args[0].getLocalDate().atStartOfDay(),
                 0,
                 args[1].getString()
@@ -110,7 +110,17 @@ public final class ToChar {
         return OVERLOADS;
     }
 
+    private static Datum result(String formatted) {
+        return formatted == null ? Datum.nullValue(PType.string()) : Datum.string(formatted);
+    }
+
+    /**
+     * Returns the formatted [value], or null if [template] is empty.
+     */
     private static String format(LocalDateTime value, int precision, String template) {
+        if (template.isEmpty()) {
+            return null;
+        }
         StringBuilder out = new StringBuilder();
         int i = 0;
         int n = template.length();
