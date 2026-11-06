@@ -248,6 +248,24 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     }
 
     @Deprecated("This feature is experimental and is subject to change.")
+    override fun visitWindowFunctionTypeAggregate(node: WindowFunctionType.Aggregate, tail: SqlBlock): SqlBlock {
+        val f = node.function
+        // The grammar only accepts the aggregate keywords (e.g. SUM), so print an unqualified name as a keyword.
+        var t = when (f.hasQualifier()) {
+            true -> visitIdentifier(f, tail)
+            false -> tail concat f.identifier.text.uppercase()
+        }
+        // COUNT(*) is represented by no arguments
+        if (node.args.isEmpty()) {
+            return t concat "(*)"
+        }
+        val setq = node.setq
+        val start = if (setq != null) "(${setq.name()} " else "("
+        t = t concat list(start) { node.args }
+        return t
+    }
+
+    @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeLag(node: WindowFunctionType.Lag, tail: SqlBlock): SqlBlock {
         return visitWindowFunctionTypeLeadOrLag("LAG(", node.extent, node.offset, node.defaultValue, node.nullTreatment, tail)
     }
@@ -259,29 +277,32 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowSpecification(node: WindowSpecification, tail: SqlBlock): SqlBlock {
-        var t = tail
-        if (node.existingName != null) {
-            t = visitIdentifierSimple(node.existingName!!, t)
-            if (!node.partitionClause.isNullOrEmpty() || node.orderClause != null) {
-                t = t concat " "
-            }
-        } else {
-            t = t concat "("
-            // PARTITION BY clause
-            if (!node.partitionClause.isNullOrEmpty()) {
-                t = t concat "PARTITION BY "
-                t = t concat list(start = null, end = null) { node.partitionClause!! }
-                t = t concat " "
-            }
-
-            // ORDER BY clause
-            node.orderClause?.let { orderClause ->
-                t = visitOrderBy(orderClause, t)
-            }
-            t = t concat ")"
+        val hasPartition = !node.partitionClause.isNullOrEmpty()
+        val hasOrder = node.orderClause != null
+        // A bare reference to a named window, e.g. `OVER w`
+        if (node.existingName != null && !hasPartition && !hasOrder) {
+            return visitIdentifierSimple(node.existingName!!, tail)
+        }
+        var t = tail concat "("
+        // Existing window name refined by further clauses, e.g. `OVER (w ORDER BY y)`
+        node.existingName?.let { existingName ->
+            t = visitIdentifierSimple(existingName, t) concat " "
         }
 
-        return t
+        // PARTITION BY clause
+        if (hasPartition) {
+            t = t concat "PARTITION BY "
+            t = t concat list(start = null, end = null) { node.partitionClause!! }
+            if (hasOrder) {
+                t = t concat " "
+            }
+        }
+
+        // ORDER BY clause
+        node.orderClause?.let { orderClause ->
+            t = visitOrderBy(orderClause, t)
+        }
+        return t concat ")"
     }
 
     @Deprecated("This feature is experimental and is subject to change.")
@@ -296,7 +317,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         var t = tail
         t = visitIdentifierSimple(node.name, t)
         t = t concat " AS "
-        t = visitWindowSpecification(node.specification, t)
+        val spec = node.specification
+        // A window definition must be parenthesized, even when it only references another window, e.g. `w2 AS (w1)`.
+        if (spec.existingName != null && spec.partitionClause.isNullOrEmpty() && spec.orderClause == null) {
+            t = t concat "("
+            t = visitIdentifierSimple(spec.existingName!!, t)
+            return t concat ")"
+        }
+        t = visitWindowSpecification(spec, t)
         return t
     }
 

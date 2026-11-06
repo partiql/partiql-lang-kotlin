@@ -2,16 +2,16 @@ package org.partiql.eval.internal.window
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
-import org.partiql.eval.WindowFunction
 import org.partiql.eval.WindowPartition
 import org.partiql.spi.value.Datum
 
 /**
  * Base class for navigation functions such as [LeadFunction] and [LagFunction].
  */
-internal abstract class NavigationFunction : WindowFunction {
+internal abstract class NavigationFunction : OuterScopedWindowFunction {
 
     private lateinit var partition: WindowPartition
+    private lateinit var outer: Environment
     private var currentPosition: Long = -1L
 
     /**
@@ -20,6 +20,10 @@ internal abstract class NavigationFunction : WindowFunction {
      * @return the result of the evaluation
      */
     abstract fun eval(env: Environment): Datum
+
+    override fun setOuterEnvironment(env: Environment) {
+        this.outer = env
+    }
 
     override fun reset(partition: WindowPartition) {
         this.partition = partition
@@ -42,7 +46,7 @@ internal abstract class NavigationFunction : WindowFunction {
             if (index < 0 || index >= partition.size()) {
                 return default.eval(env)
             }
-            return expr.eval(env.push(partition.get(index)))
+            return expr.eval(outer.push(partition.get(index)))
         }
         val step = if (offset > 0) 1L else -1L
         var remaining = if (offset > 0) offset else -offset
@@ -52,7 +56,7 @@ internal abstract class NavigationFunction : WindowFunction {
             if (index < 0 || index >= partition.size()) {
                 return default.eval(env)
             }
-            val value = expr.eval(env.push(partition.get(index)))
+            val value = expr.eval(outer.push(partition.get(index)))
             if (value.isNull || value.isMissing) {
                 continue
             }

@@ -4244,6 +4244,53 @@ class SqlDialectTest {
                     )
                 )
             ),
+            // Aggregate window functions
+            expect(
+                "COUNT(*) OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("COUNT"), emptyList(), null),
+                    spec = windowSpecification(
+                        null,
+                        listOf(windowPartition(Identifier.regular("department"))),
+                        orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                    )
+                )
+            ),
+            expect(
+                "COUNT(DISTINCT age) OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("COUNT"), listOf(v("age")), SetQuantifier.DISTINCT()),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
+                )
+            ),
+            expect(
+                "SUM(ALL salary) OVER (ORDER BY age ASC NULLS LAST)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("SUM"), listOf(v("salary")), SetQuantifier.ALL()),
+                    spec = windowSpecification(null, emptyList(), orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST()))))
+                )
+            ),
+            expect(
+                "AVG(salary) OVER ()",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("AVG"), listOf(v("salary")), null),
+                    spec = windowSpecification(null, null, null)
+                )
+            ),
+            expect(
+                "MIN(salary) OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("MIN"), listOf(v("salary")), null),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
+                )
+            ),
+            expect(
+                "MAX(SUM(salary)) OVER (PARTITION BY department)",
+                exprWindowFunction(
+                    type = WindowFunctionType.Aggregate(Identifier.regular("MAX"), listOf(exprCall(Identifier.regular("SUM"), listOf(v("salary")), null)), null),
+                    spec = windowSpecification(null, listOf(windowPartition(Identifier.regular("department"))), null)
+                )
+            ),
             // Basic window functions with OVER clause
             expect(
                 "RANK() OVER (PARTITION BY department ORDER BY age ASC NULLS LAST)",
@@ -4640,6 +4687,170 @@ class SqlDialectTest {
                                         null,
                                         emptyList(),
                                         orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            // Window name refined in OVER; the ORDER BY must be kept.
+            expect(
+                "SELECT RANK() OVER (w ORDER BY salary ASC NULLS LAST) FROM T WINDOW w AS (PARTITION BY dept)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w"),
+                                            emptyList(),
+                                            orderBy(listOf(sort(v("salary"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        null
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            // Window name refined in OVER by both PARTITION BY and ORDER BY; both clauses must be kept.
+            expect(
+                "SELECT RANK() OVER (w PARTITION BY dept ORDER BY age ASC NULLS LAST) FROM T WINDOW w AS (ORDER BY id ASC NULLS LAST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w"),
+                                            listOf(windowPartition(Identifier.regular("dept"))),
+                                            orderBy(listOf(sort(v("age"), Order.ASC(), Nulls.LAST())))
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w"),
+                                    windowSpecification(
+                                        null,
+                                        emptyList(),
+                                        orderBy(listOf(sort(v("id"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            // Window name refined in a WINDOW clause definition; the definition must stay parenthesized.
+            expect(
+                "SELECT RANK() OVER w2 FROM T WINDOW w1 AS (PARTITION BY dept), w2 AS (w1 ORDER BY salary ASC NULLS LAST)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w2"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w1"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        null
+                                    )
+                                ),
+                                windowClauseDefinition(
+                                    regular("w2"),
+                                    windowSpecification(
+                                        regular("w1"),
+                                        emptyList(),
+                                        orderBy(listOf(sort(v("salary"), Order.ASC(), Nulls.LAST())))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            // Window definition that only references another window; the definition must stay parenthesized.
+            expect(
+                "SELECT RANK() OVER w2 FROM T WINDOW w1 AS (PARTITION BY dept), w2 AS (w1)",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprWindowFunction(
+                                        type = WindowFunctionType.Rank(),
+                                        spec = windowSpecification(
+                                            regular("w2"),
+                                            emptyList(),
+                                            null
+                                        )
+                                    ),
+                                    asAlias = null
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = table("T"),
+                        window = windowClause(
+                            listOf(
+                                windowClauseDefinition(
+                                    regular("w1"),
+                                    windowSpecification(
+                                        null,
+                                        listOf(windowPartition(Identifier.regular("dept"))),
+                                        null
+                                    )
+                                ),
+                                windowClauseDefinition(
+                                    regular("w2"),
+                                    windowSpecification(
+                                        regular("w1"),
+                                        emptyList(),
+                                        null
                                     )
                                 )
                             )

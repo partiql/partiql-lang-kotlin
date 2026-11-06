@@ -268,12 +268,16 @@ rel::{
       partitions: list::[rex],
       sorts: list::['.rel.op.sort.spec'],
       _: [
+        // For aggregate window functions (COUNT/SUM/AVG/MIN/MAX), [aggregate] holds the aggregate call (unresolved
+        // before typing, resolved after), which is the only place its arguments and set quantifier are held; [args]
+        // is always empty.
         window_function::{
           name: string,
           args: list::[rex],
           is_ignore_nulls: bool,
           parameter_types: optional::list::[static_type],
-          return_type: optional::static_type
+          return_type: optional::static_type,
+          aggregate: optional::'.rel.op.aggregate.call',
         }
       ]
     },
