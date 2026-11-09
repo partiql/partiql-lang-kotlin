@@ -250,13 +250,16 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     @Deprecated("This feature is experimental and is subject to change.")
     override fun visitWindowFunctionTypeAggregate(node: WindowFunctionType.Aggregate, tail: SqlBlock): SqlBlock {
         val f = node.function
-        // The grammar only accepts the aggregate keywords (e.g. SUM), so print an unqualified name as a keyword.
-        var t = when (f.hasQualifier()) {
-            true -> visitIdentifier(f, tail)
-            false -> tail concat f.identifier.text.uppercase()
+        val name = f.identifier.text.lowercase()
+        // The grammar only accepts the aggregate keywords for a window aggregate, so print a regular, unqualified
+        // COUNT/SUM/AVG/MIN/MAX as the keyword; print any other name as an identifier (quoted if delimited).
+        val isKeyword = !f.hasQualifier() && f.identifier.isRegular && name in setOf("count", "sum", "avg", "min", "max")
+        var t = when (isKeyword) {
+            true -> tail concat name.uppercase()
+            false -> visitIdentifier(f, tail)
         }
-        // COUNT(*) is represented by no arguments
-        if (node.args.isEmpty()) {
+        // COUNT(*) is represented by `count` with no arguments
+        if (isKeyword && name == "count" && node.args.isEmpty()) {
             return t concat "(*)"
         }
         val setq = node.setq

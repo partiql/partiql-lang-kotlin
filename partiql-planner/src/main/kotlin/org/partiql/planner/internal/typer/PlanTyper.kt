@@ -106,6 +106,18 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         return statementQuery(root)
     }
     internal companion object {
+
+        /**
+         * The aggregates that may be used as window functions; the parser only produces these.
+         */
+        private val WINDOW_AGGREGATES = setOf("count", "sum", "avg", "min", "max")
+
+        /**
+         * [PErrors.invalidWindowFunction] reason for SQL:2023 Subclause 9.23, Syntax Rule 8d.
+         */
+        private const val REASON_WINDOW_DISTINCT_WITH_ORDER =
+            "does not allow DISTINCT when its OVER specification has an ORDER BY clause. Remove DISTINCT or the window ORDER BY"
+
         fun PType.static(): CompilerType = CompilerType(this)
 
         fun anyOf(types: Collection<PType>): PType? {
@@ -319,15 +331,21 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             env.listener.report(PErrors.experimental("Window Clause"))
             val input = visitRel(node.input, ctx)
             var aggregateFailed = false
+            val hasOrder = node.sorts.isNotEmpty()
             val functions = node.functions.map { function ->
                 when (val call = function.aggregate) {
                     null -> visitRelOpWindowWindowFunction(function, input.type)
-                    else -> typeAggregateWindowFunction(function, call, input.type) ?: function.also { aggregateFailed = true }
+                    else -> typeAggregateWindowFunction(function, call, input.type, hasOrder) ?: function.also { aggregateFailed = true }
                 }
             }
             if (aggregateFailed) {
-                // Mirror group aggregation: the errors have already been reported to the listener.
-                return rel(requireNotNull(ctx), relOpErr("Aggregate window function resolution failed"))
+                // Mirror group aggregation: the errors have already been reported to the listener, so do not build an
+                // executable window. Keep the typed input's bindings so that the rest of the query is typed against them
+                // rather than the untyped schema (which would report spurious warnings, e.g. on `t.k`).
+                val schema = requireNotNull(ctx).copyWithSchema(
+                    input.type.schema.map { it.type } + node.functions.map { CompilerType(PType.dynamic()) }
+                )
+                return rel(schema, relOpErr("Aggregate window function resolution failed"))
             }
             val partitions = node.partitions.map { it.type(input.type.schema, outer) }
             val sorts = node.sorts.map {
@@ -348,13 +366,15 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             node: Rel.Op.Window.WindowFunction,
             call: Rel.Op.Aggregate.Call,
             input: Rel.Type,
+            hasOrder: Boolean,
         ): Rel.Op.Window.WindowFunction? {
             val unresolved = when (call) {
                 is Rel.Op.Aggregate.Call.Resolved -> return node
                 is Rel.Op.Aggregate.Call.Unresolved -> call
             }
+            val builtin = validateAggregateWindowCall(unresolved, hasOrder) ?: return null
             val typer = RexTyper(TypeEnv(env, Scope(input.schema, outer)), Strategy.LOCAL)
-            return when (val resolution = typer.resolveAgg(unresolved)) {
+            return when (val resolution = typer.resolveAgg(builtin)) {
                 is TypedAggregateResolution.Success -> {
                     val resolved = resolution.call
                     val parameterTypes = resolved.args.map { it.type }
@@ -365,6 +385,45 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                     null
                 }
             }
+        }
+
+        /**
+         * Validates an aggregate window function call, and qualifies it so that it resolves to the built-in aggregate.
+         *
+         * - Only the built-in COUNT, SUM, AVG, MIN, and MAX may be used as window functions (the parser only produces
+         *   these). As for a function call, a regular name matches case-insensitively and a delimited name exactly.
+         * - SQL:2023 Subclause 9.23, Syntax Rule 8d: with a window ordering (or framing) clause, an aggregate window
+         *   function shall not specify DISTINCT, unless it is COUNT. COUNT(DISTINCT) with a window ordering clause
+         *   requires the optional Feature T627, "Window framed COUNT DISTINCT" (Subclause 6.10, Conformance Rule 11),
+         *   which is not supported.
+         * - The call resolves to the built-in aggregate, even if a catalog on the session path defines an aggregate with
+         *   the same name (unlike GROUP BY), because a running aggregate calls `Accumulator.value()` between rows, which
+         *   only the built-ins are known to support. If the session does not include the default system catalog (a host
+         *   replaced it), the call resolves through the session path instead.
+         *
+         * @return the qualified call, or null if the call is invalid; the error has been reported to the listener.
+         */
+        private fun validateAggregateWindowCall(
+            call: Rel.Op.Aggregate.Call.Unresolved,
+            hasOrder: Boolean,
+        ): Rel.Op.Aggregate.Call.Unresolved? {
+            val identifier = call.identifier
+            val part = identifier.getIdentifier()
+            val name = if (part.isRegular()) part.getText().lowercase() else part.getText()
+            if (identifier.hasQualifier() || name !in WINDOW_AGGREGATES) {
+                _listener.report(PErrors.featureNotSupported("Aggregate $identifier as a window function"))
+                return null
+            }
+            if (hasOrder && call.setq == org.partiql.planner.internal.ir.SetQuantifier.DISTINCT) {
+                val error = when (name) {
+                    "count" -> PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
+                    else -> PErrors.invalidWindowFunction(name.uppercase(), REASON_WINDOW_DISTINCT_WITH_ORDER, Severity.ERROR())
+                }
+                _listener.report(error)
+                return null
+            }
+            val builtins = env.builtinCatalogName ?: return call
+            return call.copy(identifier = Identifier.of(Identifier.Simple.delimited(builtins), part))
         }
 
         /**

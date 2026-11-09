@@ -31,8 +31,9 @@ import org.partiql.spi.value.Datum
  * share a frame under [WindowFrame.DEFAULT]) are only computed once.
  *
  * This relies on [org.partiql.spi.function.Accumulator.value] being side-effect free so that it may be called between
- * calls to [org.partiql.spi.function.Accumulator.next], as required by its contract. The aggregate is resolved like a
- * GROUP BY aggregate, so it may be provided by a catalog on the session path rather than being a built-in.
+ * calls to [org.partiql.spi.function.Accumulator.next], as required by its contract. The planner resolves the aggregate
+ * to the built-in aggregate when the session includes the default system catalog, and through the session path
+ * otherwise (so it may then be provided by a catalog).
  */
 internal class AggregateWindowFunction(
     private val aggregate: Aggregate,
