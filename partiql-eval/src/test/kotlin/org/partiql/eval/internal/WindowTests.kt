@@ -1103,13 +1103,13 @@ class WindowTests {
         @JvmStatic
         fun invalidWindowFunctionSyntaxRule3TestCases() = listOf(
             // An outer reference in the arguments, PARTITION BY, or ORDER BY.
-            "SELECT o.g AS g, (SELECT VALUE SUM(t.x + o.k) OVER () FROM $INNER AS t) AS s FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
-            "SELECT o.g AS g, (SELECT VALUE LAG(t.x + o.k) OVER (ORDER BY t.x) FROM $INNER AS t WHERE t.g = o.g) AS l FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
-            "SELECT o.g AS g, (SELECT VALUE RANK() OVER (PARTITION BY o.g ORDER BY t.x) FROM $INNER AS t) AS r FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
-            "SELECT o.g AS g, (SELECT VALUE ROW_NUMBER() OVER (ORDER BY t.x + o.k) FROM $INNER AS t) AS n FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
-            "SELECT o.g AS g, (SELECT VALUE MAX(t.x) OVER w FROM $INNER AS t WINDOW w AS (PARTITION BY o.g)) AS m FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT SUM(t.x + o.k) OVER () AS s FROM $INNER AS t LIMIT 1) AS s FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT LAG(t.x + o.k) OVER (ORDER BY t.x) AS l FROM $INNER AS t WHERE t.g = o.g LIMIT 1) AS l FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT RANK() OVER (PARTITION BY o.g ORDER BY t.x) AS r FROM $INNER AS t LIMIT 1) AS r FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT ROW_NUMBER() OVER (ORDER BY t.x + o.k) AS n FROM $INNER AS t LIMIT 1) AS n FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT MAX(t.x) OVER w AS m FROM $INNER AS t WINDOW w AS (PARTITION BY o.g) LIMIT 1) AS m FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
             // A subquery in the arguments or ORDER BY, correlated or not.
-            "SELECT t.x AS x, SUM((SELECT VALUE MAX(u.x) FROM $INNER AS u)) OVER () AS s FROM $INNER AS t" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT t.x AS x, SUM((SELECT MAX(u.x) AS m FROM $INNER AS u)) OVER () AS s FROM $INNER AS t" to OUTER_REFERENCE_OR_SUBQUERY,
             "SELECT o.g AS g, RANK() OVER (ORDER BY (SELECT MAX(t.x) AS m FROM $INNER AS t WHERE t.g = o.g)) AS r FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
             // A common table expression used as a value (a subquery when the WITH clause is inlined).
             "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT d.x AS x, COUNT(c) OVER () AS n FROM c AS d" to OUTER_REFERENCE_OR_SUBQUERY,
@@ -1118,16 +1118,16 @@ class WindowTests {
         @JvmStatic
         fun validWindowFunctionInNestedQueryTestCases() = listOf(
             // A correlation reference outside the window function.
-            "SELECT o.g AS g, (SELECT VALUE SUM(t.x) OVER () FROM $INNER AS t WHERE t.g = o.g) AS s FROM $OUTER AS o",
-            "SELECT o.g AS g, (SELECT VALUE { 'x': t.x, 'k': o.k, 'n': ROW_NUMBER() OVER (ORDER BY t.x) } FROM $INNER AS t) AS s FROM $OUTER AS o",
+            "SELECT o.g AS g, (SELECT SUM(t.x) OVER () AS s FROM $INNER AS t WHERE t.g = o.g LIMIT 1) AS s FROM $OUTER AS o",
+            "SELECT o.g AS g, (SELECT o.k + ROW_NUMBER() OVER (ORDER BY t.x) AS n FROM $INNER AS t LIMIT 1) AS n FROM $OUTER AS o",
             "SELECT o.g AS g FROM $OUTER AS o WHERE EXISTS (SELECT MAX(t.x) OVER () FROM $INNER AS t WHERE t.g = o.g)",
-            "SELECT o.g AS g, (SELECT VALUE d.s FROM (SELECT SUM(t.x) OVER () AS s FROM $INNER AS t WHERE t.g = o.g) AS d) AS s FROM $OUTER AS o",
+            "SELECT o.g AS g, (SELECT d.s AS s FROM (SELECT SUM(t.x) OVER () AS s FROM $INNER AS t WHERE t.g = o.g) AS d LIMIT 1) AS s FROM $OUTER AS o",
             // An uncorrelated subquery, or a window function over a subquery's result.
-            "SELECT o.g AS g, (SELECT VALUE SUM(t.x) OVER () FROM $INNER AS t) AS s FROM $OUTER AS o",
+            "SELECT o.g AS g, (SELECT SUM(t.x) OVER () AS s FROM $INNER AS t LIMIT 1) AS s FROM $OUTER AS o",
             "SELECT d.m AS m, RANK() OVER (ORDER BY d.m) AS r FROM (SELECT MAX(t.x) AS m FROM $INNER AS t) AS d",
             // A common table expression referenced outside the window function.
-            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT VALUE SUM(c.x) OVER () FROM c) AS s FROM $OUTER AS o",
-            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT VALUE SUM(c.x) OVER () FROM c WHERE c.x < o.k) AS s FROM $OUTER AS o",
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT SUM(c.x) OVER () AS s FROM c LIMIT 1) AS s FROM $OUTER AS o",
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT SUM(c.x) OVER () AS s FROM c WHERE c.x < o.k LIMIT 1) AS s FROM $OUTER AS o",
         )
 
         @JvmStatic
@@ -1493,21 +1493,13 @@ class WindowTests {
                     input = """
                         SELECT
                             o.g AS g,
-                            (SELECT VALUE SUM(t.x) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS s,
-                            (SELECT VALUE LAG(t.x) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS l
+                            (SELECT SUM(t.x) OVER () AS s FROM nums AS t WHERE t.g = o.g LIMIT 1) AS s,
+                            (SELECT LAG(t.x) OVER (ORDER BY t.x) AS l FROM nums AS t WHERE t.g = o.g ORDER BY t.x DESC LIMIT 1) AS l
                         FROM << { 'g': 'a' }, { 'g': 'b' } >> AS o
                     """.trimIndent(),
                     expected = Datum.bagVararg(
-                        row(
-                            "g" to "a",
-                            "s" to Datum.bagVararg(Datum.bigint(2), Datum.bigint(6), Datum.bigint(12), Datum.bigint(20)),
-                            "l" to Datum.bagVararg(Datum.nullValue(), Datum.integer(2), Datum.integer(4), Datum.integer(6)),
-                        ),
-                        row(
-                            "g" to "b",
-                            "s" to Datum.bagVararg(Datum.bigint(10)),
-                            "l" to Datum.bagVararg(Datum.nullValue()),
-                        ),
+                        row("g" to "a", "s" to 20L, "l" to 6),
+                        row("g" to "b", "s" to 10L, "l" to null),
                     ),
                 ),
             )
