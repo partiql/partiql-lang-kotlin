@@ -16,14 +16,11 @@ import org.partiql.spi.value.Datum
  * Represents local variable scopes.
  *
  * @property outer refers to the outer variable scopes that we have access to.
- * @property isCte true if this scope's bindings are the WITH clause's common table expressions rather than the row of
- * an enclosing query; a reference to a CTE is not a correlation reference.
  */
 internal data class Scope(
     val schema: List<Rel.Binding>,
     val outer: List<Scope>,
-    val withElements: List<Rel.Op.With.WithListElement> = emptyList(),
-    val isCte: Boolean = false,
+    val withElements: List<Rel.Op.With.WithListElement> = emptyList()
 ) {
 
     internal fun getScope(depth: Int): Scope {

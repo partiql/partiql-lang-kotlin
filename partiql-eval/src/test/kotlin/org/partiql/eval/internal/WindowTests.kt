@@ -1097,23 +1097,22 @@ class WindowTests {
 
         private const val OUTER = "<< { 'g': 'a', 'k': 100 } >>"
         private const val INNER = "<< { 'g': 'a', 'x': 1 }, { 'g': 'a', 'x': 2 }, { 'g': 'b', 'x': 3 } >>"
-        private const val OUTER_REFERENCE =
-            "must not contain an outer reference (a reference to a column of an enclosing query) in its arguments or OVER specification"
-        private const val SUBQUERY = "must not contain a subquery in its arguments or OVER specification"
+        private const val OUTER_REFERENCE_OR_SUBQUERY =
+            "must not contain an outer reference or a subquery in its arguments or OVER specification"
 
         @JvmStatic
         fun invalidWindowFunctionSyntaxRule3TestCases() = listOf(
             // An outer reference in the arguments, PARTITION BY, or ORDER BY.
-            "SELECT o.g AS g, (SELECT VALUE SUM(t.x + o.k) OVER () FROM $INNER AS t) AS s FROM $OUTER AS o" to OUTER_REFERENCE,
-            "SELECT o.g AS g, (SELECT VALUE LAG(t.x + o.k) OVER (ORDER BY t.x) FROM $INNER AS t WHERE t.g = o.g) AS l FROM $OUTER AS o" to OUTER_REFERENCE,
-            "SELECT o.g AS g, (SELECT VALUE RANK() OVER (PARTITION BY o.g ORDER BY t.x) FROM $INNER AS t) AS r FROM $OUTER AS o" to OUTER_REFERENCE,
-            "SELECT o.g AS g, (SELECT VALUE ROW_NUMBER() OVER (ORDER BY t.x + o.k) FROM $INNER AS t) AS n FROM $OUTER AS o" to OUTER_REFERENCE,
-            "SELECT o.g AS g, (SELECT VALUE MAX(t.x) OVER w FROM $INNER AS t WINDOW w AS (PARTITION BY o.g)) AS m FROM $OUTER AS o" to OUTER_REFERENCE,
+            "SELECT o.g AS g, (SELECT VALUE SUM(t.x + o.k) OVER () FROM $INNER AS t) AS s FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT VALUE LAG(t.x + o.k) OVER (ORDER BY t.x) FROM $INNER AS t WHERE t.g = o.g) AS l FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT VALUE RANK() OVER (PARTITION BY o.g ORDER BY t.x) FROM $INNER AS t) AS r FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT VALUE ROW_NUMBER() OVER (ORDER BY t.x + o.k) FROM $INNER AS t) AS n FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, (SELECT VALUE MAX(t.x) OVER w FROM $INNER AS t WINDOW w AS (PARTITION BY o.g)) AS m FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
             // A subquery in the arguments or ORDER BY, correlated or not.
-            "SELECT t.x AS x, SUM((SELECT VALUE MAX(u.x) FROM $INNER AS u)) OVER () AS s FROM $INNER AS t" to SUBQUERY,
-            "SELECT o.g AS g, RANK() OVER (ORDER BY (SELECT MAX(t.x) AS m FROM $INNER AS t WHERE t.g = o.g)) AS r FROM $OUTER AS o" to SUBQUERY,
-            // A common table expression used as a value is a query expression (it is one when the WITH clause is inlined).
-            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT d.x AS x, COUNT(c) OVER () AS n FROM c AS d" to SUBQUERY,
+            "SELECT t.x AS x, SUM((SELECT VALUE MAX(u.x) FROM $INNER AS u)) OVER () AS s FROM $INNER AS t" to OUTER_REFERENCE_OR_SUBQUERY,
+            "SELECT o.g AS g, RANK() OVER (ORDER BY (SELECT MAX(t.x) AS m FROM $INNER AS t WHERE t.g = o.g)) AS r FROM $OUTER AS o" to OUTER_REFERENCE_OR_SUBQUERY,
+            // A common table expression used as a value (a subquery when the WITH clause is inlined).
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT d.x AS x, COUNT(c) OVER () AS n FROM c AS d" to OUTER_REFERENCE_OR_SUBQUERY,
         )
 
         @JvmStatic
@@ -1126,7 +1125,7 @@ class WindowTests {
             // An uncorrelated subquery, or a window function over a subquery's result.
             "SELECT o.g AS g, (SELECT VALUE SUM(t.x) OVER () FROM $INNER AS t) AS s FROM $OUTER AS o",
             "SELECT d.m AS m, RANK() OVER (ORDER BY d.m) AS r FROM (SELECT MAX(t.x) AS m FROM $INNER AS t) AS d",
-            // A reference to a common table expression is not an outer reference.
+            // A common table expression referenced outside the window function.
             "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT VALUE SUM(c.x) OVER () FROM c) AS s FROM $OUTER AS o",
             "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT VALUE SUM(c.x) OVER () FROM c WHERE c.x < o.k) AS s FROM $OUTER AS o",
         )

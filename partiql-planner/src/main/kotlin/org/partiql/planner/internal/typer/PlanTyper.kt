@@ -119,12 +119,10 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             "does not allow DISTINCT when its OVER specification has an ORDER BY clause. Remove DISTINCT or the window ORDER BY"
 
         /**
-         * [PErrors.invalidWindowFunction] reasons for SQL:2023 Subclause 9.23, Syntax Rule 3.
+         * [PErrors.invalidWindowFunction] reason for SQL:2023 Subclause 9.23, Syntax Rule 3.
          */
-        private const val REASON_WINDOW_OUTER_REFERENCE =
-            "must not contain an outer reference (a reference to a column of an enclosing query) in its arguments or OVER specification"
-        private const val REASON_WINDOW_QUERY_EXPRESSION =
-            "must not contain a subquery in its arguments or OVER specification"
+        private const val REASON_WINDOW_OUTER_REFERENCE_OR_SUBQUERY =
+            "must not contain an outer reference or a subquery in its arguments or OVER specification"
 
         fun PType.static(): CompilerType = CompilerType(this)
 
@@ -362,13 +360,13 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             }
             // SQL:2023 Subclause 9.23, Syntax Rule 3: a window function shall not contain an outer reference or a query
             // expression. The window specification (PARTITION BY and ORDER BY) is part of the window function.
-            val specViolation = windowFunctionViolation(partitions + sorts.map { it.rex })
-            val violations = functions.mapNotNull { function ->
-                (windowFunctionViolation(listOf(function)) ?: specViolation)?.let { function.name to it }
-            }
-            if (violations.isNotEmpty()) {
-                violations.forEach { (name, reason) ->
-                    _listener.report(PErrors.invalidWindowFunction(name.uppercase(), reason, Severity.ERROR()))
+            val isInvalidSpec = isInvalidWindowFunction(partitions + sorts.map { it.rex })
+            val invalid = functions.filter { isInvalidSpec || isInvalidWindowFunction(listOf(it)) }
+            if (invalid.isNotEmpty()) {
+                invalid.forEach {
+                    _listener.report(
+                        PErrors.invalidWindowFunction(it.name.uppercase(), REASON_WINDOW_OUTER_REFERENCE_OR_SUBQUERY, Severity.ERROR())
+                    )
                 }
                 val errorSchema = requireNotNull(ctx).copyWithSchema(
                     input.type.schema.map { it.type } + node.functions.map { CompilerType(PType.dynamic()) }
@@ -383,35 +381,18 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         /**
          * Checks typed window function expressions (arguments, partitions, or orderings) against SQL:2023 Subclause 9.23,
          * Syntax Rule 3: a window function shall not contain an outer reference or a query expression. The expressions
-         * are typed against the window's input row (depth 0); a variable with a greater depth refers to an enclosing
-         * query (an outer reference) or to the WITH clause's common table expressions (a query expression).
-         * @return the violated rule's reason, or null if [nodes] conform.
+         * are typed against the window's input row (depth 0), so a variable with a greater depth refers to an enclosing
+         * scope: an outer reference, or (without WITH inlining) a common table expression used as a value, which is a
+         * query expression when the WITH clause is inlined.
+         * @return true if [nodes] contain an outer reference or a query expression.
          */
-        private fun windowFunctionViolation(nodes: List<PlanNode>): String? {
-            var hasQuery = false
-            var hasOuterReference = false
-            fun visit(node: PlanNode) {
-                when (node) {
-                    is Rex.Op.Select, is Rex.Op.Subquery, is Rex.Op.Pivot -> {
-                        hasQuery = true
-                        return
-                    }
-                    is Rex.Op.Var.Local -> if (node.depth >= 1) {
-                        // A reference to a common table expression is a query expression (it is one when the WITH
-                        // clause is inlined); any other variable of an enclosing scope is an outer reference.
-                        val target = outer.getOrNull(outer.size - node.depth)
-                        if (target?.isCte == true) hasQuery = true else hasOuterReference = true
-                    }
-                    else -> {}
-                }
-                node.children.forEach { visit(it) }
+        private fun isInvalidWindowFunction(nodes: List<PlanNode>): Boolean {
+            fun visit(node: PlanNode): Boolean = when (node) {
+                is Rex.Op.Select, is Rex.Op.Subquery, is Rex.Op.Pivot -> true
+                is Rex.Op.Var.Local -> node.depth >= 1
+                else -> node.children.any { visit(it) }
             }
-            nodes.forEach { visit(it) }
-            return when {
-                hasQuery -> REASON_WINDOW_QUERY_EXPRESSION
-                hasOuterReference -> REASON_WINDOW_OUTER_REFERENCE
-                else -> null
-            }
+            return nodes.any { visit(it) }
         }
 
         /**
@@ -576,13 +557,12 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             val elements = mutableListOf<Rel.Op.With.WithListElement>()
             node.elements.forEach { element ->
                 val scope = if (rewriteWith) {
-                    Scope(schema = emptyList(), outer = outer, withElements = elements.toList(), isCte = true)
+                    Scope(schema = emptyList(), outer = outer, withElements = elements.toList())
                 } else {
                     Scope(
                         schema = elements.map { Rel.Binding(it.name, it.representation.type) },
                         outer = outer,
                         withElements = emptyList(),
-                        isCte = true,
                     )
                 }
                 val representation = element.representation.type(TypeEnv(env, scope))
@@ -602,8 +582,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                     Rel.Binding(element.name, element.representation.type)
                 },
                 outer,
-                withElements,
-                isCte = true,
+                withElements
             )
             val input = RelTyper(newStack, Strategy.LOCAL).visitRel(node.input, node.input.type)
             val type = input.type
