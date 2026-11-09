@@ -33,6 +33,7 @@ Thank you to all who have contributed!
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
 
 ### Changed
+- The planner now reports an `INVALID_WINDOW_FUNCTION` error for a window function that contains an outer reference or a subquery, e.g. `LAG(t.x + o.k) OVER (ORDER BY t.x)` in a subquery correlated on `o` (SQL:2023 Subclause 9.23, Syntax Rule 3). Such queries previously planned.
 - Aggregate window functions resolve to the built-in aggregate when the session has the default system catalog, even if a catalog on the session path defines an aggregate with the same name.
 - The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 

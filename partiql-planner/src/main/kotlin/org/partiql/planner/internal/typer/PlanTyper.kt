@@ -118,6 +118,14 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         private const val REASON_WINDOW_DISTINCT_WITH_ORDER =
             "does not allow DISTINCT when its OVER specification has an ORDER BY clause. Remove DISTINCT or the window ORDER BY"
 
+        /**
+         * [PErrors.invalidWindowFunction] reasons for SQL:2023 Subclause 9.23, Syntax Rule 3.
+         */
+        private const val REASON_WINDOW_OUTER_REFERENCE =
+            "must not contain an outer reference (a reference to a column of an enclosing query) in its arguments or OVER specification"
+        private const val REASON_WINDOW_QUERY_EXPRESSION =
+            "must not contain a subquery in its arguments or OVER specification"
+
         fun PType.static(): CompilerType = CompilerType(this)
 
         fun anyOf(types: Collection<PType>): PType? {
@@ -352,9 +360,58 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 val rex = it.rex.type(input.type.schema, outer)
                 it.copy(rex = rex)
             }
+            // SQL:2023 Subclause 9.23, Syntax Rule 3: a window function shall not contain an outer reference or a query
+            // expression. The window specification (PARTITION BY and ORDER BY) is part of the window function.
+            val specViolation = windowFunctionViolation(partitions + sorts.map { it.rex })
+            val violations = functions.mapNotNull { function ->
+                (windowFunctionViolation(listOf(function)) ?: specViolation)?.let { function.name to it }
+            }
+            if (violations.isNotEmpty()) {
+                violations.forEach { (name, reason) ->
+                    _listener.report(PErrors.invalidWindowFunction(name.uppercase(), reason, Severity.ERROR()))
+                }
+                val errorSchema = requireNotNull(ctx).copyWithSchema(
+                    input.type.schema.map { it.type } + node.functions.map { CompilerType(PType.dynamic()) }
+                )
+                return rel(errorSchema, relOpErr("Invalid window function"))
+            }
             val schema = ctx!!.copyWithSchema(input.type.schema.map { it.type } + functions.map { it.returnType!! })
             val window = relOpWindow(node.name, input, functions, partitions, sorts)
             return rel(schema, window)
+        }
+
+        /**
+         * Checks typed window function expressions (arguments, partitions, or orderings) against SQL:2023 Subclause 9.23,
+         * Syntax Rule 3: a window function shall not contain an outer reference or a query expression. The expressions
+         * are typed against the window's input row (depth 0); a variable with a greater depth refers to an enclosing
+         * query (an outer reference) or to the WITH clause's common table expressions (a query expression).
+         * @return the violated rule's reason, or null if [nodes] conform.
+         */
+        private fun windowFunctionViolation(nodes: List<PlanNode>): String? {
+            var hasQuery = false
+            var hasOuterReference = false
+            fun visit(node: PlanNode) {
+                when (node) {
+                    is Rex.Op.Select, is Rex.Op.Subquery, is Rex.Op.Pivot -> {
+                        hasQuery = true
+                        return
+                    }
+                    is Rex.Op.Var.Local -> if (node.depth >= 1) {
+                        // A reference to a common table expression is a query expression (it is one when the WITH
+                        // clause is inlined); any other variable of an enclosing scope is an outer reference.
+                        val target = outer.getOrNull(outer.size - node.depth)
+                        if (target?.isCte == true) hasQuery = true else hasOuterReference = true
+                    }
+                    else -> {}
+                }
+                node.children.forEach { visit(it) }
+            }
+            nodes.forEach { visit(it) }
+            return when {
+                hasQuery -> REASON_WINDOW_QUERY_EXPRESSION
+                hasOuterReference -> REASON_WINDOW_OUTER_REFERENCE
+                else -> null
+            }
         }
 
         /**
@@ -519,12 +576,13 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             val elements = mutableListOf<Rel.Op.With.WithListElement>()
             node.elements.forEach { element ->
                 val scope = if (rewriteWith) {
-                    Scope(schema = emptyList(), outer = outer, withElements = elements.toList())
+                    Scope(schema = emptyList(), outer = outer, withElements = elements.toList(), isCte = true)
                 } else {
                     Scope(
                         schema = elements.map { Rel.Binding(it.name, it.representation.type) },
                         outer = outer,
                         withElements = emptyList(),
+                        isCte = true,
                     )
                 }
                 val representation = element.representation.type(TypeEnv(env, scope))
@@ -544,7 +602,8 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                     Rel.Binding(element.name, element.representation.type)
                 },
                 outer,
-                withElements
+                withElements,
+                isCte = true,
             )
             val input = RelTyper(newStack, Strategy.LOCAL).visitRel(node.input, node.input.type)
             val type = input.type

@@ -85,14 +85,40 @@ class WindowTests {
         assertEquals(emptyList(), problems.warnings.filter { it.code() == PError.INVALID_WINDOW_FUNCTION })
     }
 
-    private fun planningProblems(query: String): PErrorCollector {
+    /**
+     * SQL:2023 Subclause 9.23, Syntax Rule 3: a window function (including its OVER specification) shall not contain an
+     * outer reference or a query expression.
+     */
+    @ParameterizedTest
+    @MethodSource("invalidWindowFunctionSyntaxRule3TestCases")
+    fun windowFunctionWithOuterReferenceOrSubqueryIsInvalid(tc: Pair<String, String>) {
+        val (query, reason) = tc
+        // With and without inlining the WITH clause, which otherwise keeps CTE references as variables.
+        listOf(true, false).forEach { inlineWith ->
+            val errors = planningProblems(query, inlineWith).errors
+            assertEquals(listOf(PError.INVALID_WINDOW_FUNCTION), errors.map { it.code() }.distinct(), "Errors (inlineWith=$inlineWith): $errors")
+            errors.forEach { assertEquals(reason, it.get("REASON", String::class.java)) }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("validWindowFunctionInNestedQueryTestCases")
+    fun windowFunctionInNestedQueryIsValid(query: String) {
+        listOf(true, false).forEach { inlineWith ->
+            val problems = planningProblems(query, inlineWith)
+            assertEquals(emptyList(), problems.errors, "Errors (inlineWith=$inlineWith): ${problems.errors}")
+        }
+    }
+
+    private fun planningProblems(query: String, inlineWith: Boolean = true): PErrorCollector {
         val statement = PartiQLParser.standard().parse(query).statements.single()
         val session = Session.builder()
             .catalog("default")
             .catalogs(Catalog.builder().name("default").build())
             .build()
         val collector = PErrorCollector()
-        PartiQLPlanner.standard().plan(statement, session, Context.of(collector))
+        val planner = PartiQLPlanner.builder().forceInlineWithClause(replaceWith = inlineWith).build()
+        planner.plan(statement, session, Context.of(collector))
         return collector
     }
 
@@ -569,28 +595,6 @@ class WindowTests {
                     rowOfStockPrice(10, "AMZN", 121.09, 113.00),
                     rowOfStockPrice(9, "GOOG", 96.15, null),
                     rowOfStockPrice(10, "GOOG", 100.17, 96.15),
-                ),
-            ),
-            SuccessTestCase(
-                name = "With subquery",
-                mode = Mode.PERMISSIVE(),
-                globals = globals,
-                input = """
-                    SELECT
-                        LAG(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp._date) AS previous_price,
-                        (
-                            SELECT
-                                LAG(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp._date) AS inner_lag
-                            FROM <<1>>
-                       ) AS nested
-                    FROM stock_prices AS sp
-                """.trimIndent(),
-                expected = Datum.bagVararg(
-                    rowOfStockPrice(null),
-                    rowOfStockPrice(113.0),
-                    rowOfStockPrice(null),
-                    rowOfStockPrice(96.15),
-                    rowOfStockPrice(99.30),
                 ),
             ),
             SuccessTestCase(
@@ -1091,6 +1095,42 @@ class WindowTests {
                 listOf("RANK", "CUME_DIST"),
         )
 
+        private const val OUTER = "<< { 'g': 'a', 'k': 100 } >>"
+        private const val INNER = "<< { 'g': 'a', 'x': 1 }, { 'g': 'a', 'x': 2 }, { 'g': 'b', 'x': 3 } >>"
+        private const val OUTER_REFERENCE =
+            "must not contain an outer reference (a reference to a column of an enclosing query) in its arguments or OVER specification"
+        private const val SUBQUERY = "must not contain a subquery in its arguments or OVER specification"
+
+        @JvmStatic
+        fun invalidWindowFunctionSyntaxRule3TestCases() = listOf(
+            // An outer reference in the arguments, PARTITION BY, or ORDER BY.
+            "SELECT o.g AS g, (SELECT VALUE SUM(t.x + o.k) OVER () FROM $INNER AS t) AS s FROM $OUTER AS o" to OUTER_REFERENCE,
+            "SELECT o.g AS g, (SELECT VALUE LAG(t.x + o.k) OVER (ORDER BY t.x) FROM $INNER AS t WHERE t.g = o.g) AS l FROM $OUTER AS o" to OUTER_REFERENCE,
+            "SELECT o.g AS g, (SELECT VALUE RANK() OVER (PARTITION BY o.g ORDER BY t.x) FROM $INNER AS t) AS r FROM $OUTER AS o" to OUTER_REFERENCE,
+            "SELECT o.g AS g, (SELECT VALUE ROW_NUMBER() OVER (ORDER BY t.x + o.k) FROM $INNER AS t) AS n FROM $OUTER AS o" to OUTER_REFERENCE,
+            "SELECT o.g AS g, (SELECT VALUE MAX(t.x) OVER w FROM $INNER AS t WINDOW w AS (PARTITION BY o.g)) AS m FROM $OUTER AS o" to OUTER_REFERENCE,
+            // A subquery in the arguments or ORDER BY, correlated or not.
+            "SELECT t.x AS x, SUM((SELECT VALUE MAX(u.x) FROM $INNER AS u)) OVER () AS s FROM $INNER AS t" to SUBQUERY,
+            "SELECT o.g AS g, RANK() OVER (ORDER BY (SELECT MAX(t.x) AS m FROM $INNER AS t WHERE t.g = o.g)) AS r FROM $OUTER AS o" to SUBQUERY,
+            // A common table expression used as a value is a query expression (it is one when the WITH clause is inlined).
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT d.x AS x, COUNT(c) OVER () AS n FROM c AS d" to SUBQUERY,
+        )
+
+        @JvmStatic
+        fun validWindowFunctionInNestedQueryTestCases() = listOf(
+            // A correlation reference outside the window function.
+            "SELECT o.g AS g, (SELECT VALUE SUM(t.x) OVER () FROM $INNER AS t WHERE t.g = o.g) AS s FROM $OUTER AS o",
+            "SELECT o.g AS g, (SELECT VALUE { 'x': t.x, 'k': o.k, 'n': ROW_NUMBER() OVER (ORDER BY t.x) } FROM $INNER AS t) AS s FROM $OUTER AS o",
+            "SELECT o.g AS g FROM $OUTER AS o WHERE EXISTS (SELECT MAX(t.x) OVER () FROM $INNER AS t WHERE t.g = o.g)",
+            "SELECT o.g AS g, (SELECT VALUE d.s FROM (SELECT SUM(t.x) OVER () AS s FROM $INNER AS t WHERE t.g = o.g) AS d) AS s FROM $OUTER AS o",
+            // An uncorrelated subquery, or a window function over a subquery's result.
+            "SELECT o.g AS g, (SELECT VALUE SUM(t.x) OVER () FROM $INNER AS t) AS s FROM $OUTER AS o",
+            "SELECT d.m AS m, RANK() OVER (ORDER BY d.m) AS r FROM (SELECT MAX(t.x) AS m FROM $INNER AS t) AS d",
+            // A reference to a common table expression is not an outer reference.
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT VALUE SUM(c.x) OVER () FROM c) AS s FROM $OUTER AS o",
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT VALUE SUM(c.x) OVER () FROM c WHERE c.x < o.k) AS s FROM $OUTER AS o",
+        )
+
         @JvmStatic
         fun windowReferencingOtherWindowTestCases() = listOf(
             "SELECT RANK() OVER (w ORDER BY t.v) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)",
@@ -1445,88 +1485,29 @@ class WindowTests {
                         row("x" to 10, "running" to 30L),
                     ),
                 ),
-                // The arguments are evaluated against other rows of the partition; outer references (o.k) must still
-                // resolve to the outer row, not to the current row of the window (t.k = 1 for partition 'b').
+                // A correlation reference outside the window function (allowed by SQL:2023 9.23 SR 3). The window is
+                // reopened for each outer row: partition 'a' x ordered is 2, 4, 6, 8; partition 'b' is 10.
                 SuccessTestCase(
-                    name = "Window aggregate in a correlated subquery references the outer row ($mode)",
+                    name = "Window functions in a subquery correlated in WHERE, over multiple outer rows ($mode)",
                     mode = mode,
                     globals = globals,
                     input = """
                         SELECT
                             o.g AS g,
-                            (SELECT VALUE SUM(t.x + o.k) OVER () FROM nums AS t WHERE t.g = o.g) AS s
-                        FROM << { 'g': 'b', 'k': 100 } >> AS o
-                    """.trimIndent(),
-                    expected = Datum.bagVararg(
-                        row("g" to "b", "s" to Datum.bagVararg(Datum.bigint(110))),
-                    ),
-                ),
-                // x in partition 'a' ordered: 2, 4, 6, 8.
-                SuccessTestCase(
-                    name = "LAG in a correlated subquery references the outer row ($mode)",
-                    mode = mode,
-                    globals = globals,
-                    input = """
-                        SELECT
-                            o.g AS g,
-                            (SELECT VALUE LAG(t.x + o.k) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS l
-                        FROM << { 'g': 'a', 'k': 100 } >> AS o
+                            (SELECT VALUE SUM(t.x) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS s,
+                            (SELECT VALUE LAG(t.x) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS l
+                        FROM << { 'g': 'a' }, { 'g': 'b' } >> AS o
                     """.trimIndent(),
                     expected = Datum.bagVararg(
                         row(
                             "g" to "a",
-                            "l" to Datum.bagVararg(Datum.nullValue(), Datum.integer(102), Datum.integer(104), Datum.integer(106)),
-                        ),
-                    ),
-                ),
-                // The window is reopened for each outer row, so each must see its own o.k (not the first outer row's).
-                // Partition 'a' x ordered: 2, 4, 6, 8; partition 'b': 10.
-                SuccessTestCase(
-                    name = "Window functions in a correlated subquery over multiple outer rows ($mode)",
-                    mode = mode,
-                    globals = globals,
-                    input = """
-                        SELECT
-                            o.g AS g,
-                            (SELECT VALUE SUM(t.x + o.k) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS s,
-                            (SELECT VALUE LAG(t.x + o.k) OVER (ORDER BY t.x) FROM nums AS t WHERE t.g = o.g) AS l
-                        FROM << { 'g': 'a', 'k': 100 }, { 'g': 'b', 'k': 1000 } >> AS o
-                    """.trimIndent(),
-                    expected = Datum.bagVararg(
-                        row(
-                            "g" to "a",
-                            "s" to Datum.bagVararg(Datum.bigint(102), Datum.bigint(206), Datum.bigint(312), Datum.bigint(420)),
-                            "l" to Datum.bagVararg(Datum.nullValue(), Datum.integer(102), Datum.integer(104), Datum.integer(106)),
+                            "s" to Datum.bagVararg(Datum.bigint(2), Datum.bigint(6), Datum.bigint(12), Datum.bigint(20)),
+                            "l" to Datum.bagVararg(Datum.nullValue(), Datum.integer(2), Datum.integer(4), Datum.integer(6)),
                         ),
                         row(
                             "g" to "b",
-                            "s" to Datum.bagVararg(Datum.bigint(1010)),
+                            "s" to Datum.bagVararg(Datum.bigint(10)),
                             "l" to Datum.bagVararg(Datum.nullValue()),
-                        ),
-                    ),
-                ),
-                // Group 'a' v ordered by id: 10, NULL, NULL, 40, 50, NULL; NULLs are skipped when looking ahead.
-                SuccessTestCase(
-                    name = "LEAD IGNORE NULLS in a correlated subquery references the outer row ($mode)",
-                    mode = mode,
-                    globals = globals,
-                    input = """
-                        SELECT
-                            o.g AS g,
-                            (SELECT VALUE LEAD(r.v + o.k) IGNORE NULLS OVER (ORDER BY r.id) FROM readings AS r WHERE r.grp = o.g) AS l
-                        FROM << { 'g': 'a', 'k': 100 } >> AS o
-                    """.trimIndent(),
-                    expected = Datum.bagVararg(
-                        row(
-                            "g" to "a",
-                            "l" to Datum.bagVararg(
-                                Datum.integer(140),
-                                Datum.integer(140),
-                                Datum.integer(140),
-                                Datum.integer(150),
-                                Datum.nullValue(),
-                                Datum.nullValue(),
-                            ),
                         ),
                     ),
                 ),
