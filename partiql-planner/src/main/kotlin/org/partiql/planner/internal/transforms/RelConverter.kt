@@ -99,6 +99,7 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.BinderUtils.toBinder
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Identifier.Simple
+import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -106,6 +107,12 @@ import org.partiql.spi.value.Datum
  * Lexically scoped state for use in translating an individual SELECT statement.
  */
 internal object RelConverter {
+
+    /**
+     * [PErrors.invalidWindowFunction] reason for SQL:2023 Subclause 9.23, Syntax Rule 5a.
+     */
+    private const val REASON_WINDOW_ORDER_REQUIRED =
+        "requires an ORDER BY clause in its OVER specification. Without one, its result is the same for every row or depends on the order in which rows are read. Add an ORDER BY to the window"
 
     // IGNORE — so we don't have to non-null assert on operator inputs
     internal val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
@@ -519,14 +526,14 @@ internal object RelConverter {
         }
 
         /**
-         * Append [Rel.Op.Window] only if SELECT & ORDER BY contains window functions and/or if the WINDOW clause exists
+         * Append [Rel.Op.Window] only if SELECT & ORDER BY contains window functions and/or if the WINDOW clause exists.
+         * A WINDOW clause definition that no window function uses has no output, but is still planned, so that the typer
+         * checks it (SQL:2023 Subclause 7.15, Syntax Rule 4); the typer then drops it.
          */
         private fun convertWindow(input: Rel, select: QueryBody.SFW): Pair<QueryBody.SFW, Rel> {
             // Rewrite and extract all window functions in the SELECT clause
             val (sel, windowFunctions) = WindowTransform.apply(select)
-            if (windowFunctions.isEmpty()) {
-                // Regardless of whether there is a window clause, there are no outputs or technical ordering
-                // of the output window relation, therefore, we can just return the input.
+            if (windowFunctions.isEmpty() && select.window == null) {
                 return Pair(select, input)
             }
 
@@ -557,15 +564,16 @@ internal object RelConverter {
             // Convert window definitions to plan nodes. Fold to each be their own window nodes, and return.
             // Schema = (input bindings... functions...)
             val rel = windows.getAll().foldRight(input) { window, current ->
+                val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }
+                val newSchema = current.type.schema + functionBindings
+                val type = relType(newSchema, emptySet())
+                warnIfWindowOrderMissing(window)
                 val orderBy = window.spec.orderClause?.sorts?.map { convertSort(it) } ?: emptyList()
                 val partitions = window.spec.partitionClause?.map {
                     val op = rexOpVarUnresolved(AstToPlan.convert(it.columnReference), Rex.Op.Var.Scope.LOCAL)
                     rex(PType.dynamic().toCType(), op)
                 } ?: emptyList()
                 val functionNodes = window.functions.map { convertWindowFunction(it) }
-                val functionBindings = window.functionBindings.map { relBinding(it, PType.dynamic().toCType(), null) }
-                val newSchema = current.type.schema + functionBindings
-                val type = relType(newSchema, emptySet())
                 val op = relOpWindow(window.name, current, functionNodes, partitions, orderBy)
                 rel(type, op)
             }
@@ -641,31 +649,82 @@ internal object RelConverter {
             return relOpSortSpec(rex, order)
         }
 
+        /**
+         * SQL:2023 Subclause 9.23, Syntax Rule 5a: if a <rank function type> (RANK, DENSE_RANK, PERCENT_RANK,
+         * CUME_DIST), <ntile function>, or <lead or lag function> is specified, then the window ordering clause shall
+         * be present. ROW_NUMBER is exempt.
+         *
+         * For backward compatibility, a violation is reported as a [PErrors.invalidWindowFunction] warning (one per
+         * offending function in [window]) rather than an error, and the window is still planned: without an ordering,
+         * every row of the partition is a peer, so e.g. RANK() is 1 for every row, and LEAD/LAG depend on input order.
+         *
+         * The window function examples in RFC 0035 omit the ORDER BY; see https://github.com/partiql/partiql-lang/issues/105.
+         * TODO: Check NTILE once it is supported (https://github.com/partiql/partiql-lang-kotlin/issues/1997).
+         */
+        private fun warnIfWindowOrderMissing(window: InternalWindowDefinition) {
+            if (window.spec.orderClause != null) {
+                return
+            }
+            // A WINDOW clause definition based on another window, e.g. `w2 AS (w1)`, inherits that window's ordering
+            // clause (SQL:2023 Subclause 7.15); it has already been reported as unsupported ("Window referencing other
+            // window"), so do not also report that its ORDER BY is missing.
+            if (window.spec.existingName != null) {
+                return
+            }
+            window.functions
+                // A function that refines a named window with its own ORDER BY, e.g. `OVER (w ORDER BY x)`, has
+                // already been reported as unsupported ("Window referencing other window"); do not also report that
+                // its ORDER BY is missing.
+                .filter { it.windowSpecification.orderClause == null }
+                .mapNotNull { windowOrderRequiredName(it.functionType) }
+                .forEach {
+                    env.listener.report(
+                        PErrors.invalidWindowFunction(it, REASON_WINDOW_ORDER_REQUIRED, Severity.WARNING())
+                    )
+                }
+        }
+
+        /**
+         * @return the (lowercase) plan name of the built-in window function [type], or null if [type] is not a ranking or
+         * navigation function.
+         */
+        private fun windowFunctionName(type: WindowFunctionType): String? = when (type) {
+            is WindowFunctionType.Rank -> "rank"
+            is WindowFunctionType.DenseRank -> "dense_rank"
+            is WindowFunctionType.PercentRank -> "percent_rank"
+            is WindowFunctionType.CumeDist -> "cume_dist"
+            is WindowFunctionType.RowNumber -> "row_number"
+            is Lag -> "lag"
+            is Lead -> "lead"
+            else -> null
+        }
+
+        /**
+         * @return the (uppercase) name of [type] if it requires a window ordering clause per SQL:2023 Subclause 9.23,
+         * Syntax Rule 5a (the rank functions and LEAD/LAG; NTILE once supported); null otherwise. The functions are
+         * listed explicitly so that each new window function needs a decision.
+         */
+        private fun windowOrderRequiredName(type: WindowFunctionType): String? = when (type) {
+            is WindowFunctionType.Rank, is WindowFunctionType.DenseRank, is WindowFunctionType.PercentRank,
+            is WindowFunctionType.CumeDist, is Lead, is Lag -> windowFunctionName(type)?.uppercase()
+            else -> null
+        }
+
         private fun convertWindowFunction(node: ExprWindowFunction): Rel.Op.Window.WindowFunction {
             return when (val windowType = node.functionType) {
                 // No args
                 is WindowFunctionType.Rank, is WindowFunctionType.DenseRank, is WindowFunctionType.PercentRank,
                 is WindowFunctionType.CumeDist, is WindowFunctionType.RowNumber -> {
-                    val name = when (windowType) {
-                        is WindowFunctionType.Rank -> "rank"
-                        is WindowFunctionType.DenseRank -> "dense_rank"
-                        is WindowFunctionType.PercentRank -> "percent_rank"
-                        is WindowFunctionType.CumeDist -> "cume_dist"
-                        is WindowFunctionType.RowNumber -> "row_number"
-                        else -> {
-                            val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
-                            env.listener.report(PErrors.internalError(cause))
-                            "unknown"
-                        }
+                    val name = windowFunctionName(windowType) ?: run {
+                        val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
+                        env.listener.report(PErrors.internalError(cause))
+                        "unknown"
                     }
-                    relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                    relOpWindowWindowFunction(name, emptyList(), false, emptyList(), CompilerType(PType.dynamic()), null)
                 }
                 is WindowFunctionType.LeadOrLag -> {
-                    val name = when (windowType) {
-                        is Lag -> "lag"
-                        is Lead -> "lead"
-                        else -> error("Unsupported Lead/Lag type: ${windowType.javaClass.simpleName}.")
-                    }
+                    val name = windowFunctionName(windowType)
+                        ?: error("Unsupported Lead/Lag type: ${windowType.javaClass.simpleName}.")
                     val isIgnoreNulls = when (windowType.nullTreatment?.code()) {
                         WindowFunctionNullTreatment.RESPECT_NULLS, null -> false
                         WindowFunctionNullTreatment.IGNORE_NULLS -> true
@@ -679,14 +738,34 @@ internal object RelConverter {
                     val offset = windowType.offset?.let { rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(it))) } ?: rex(CompilerType(PType.bigint()), rexOpLit(Datum.bigint(1)))
                     val default = windowType.defaultValue?.toRex(env) ?: rex(extent.type, rexOpLit(Datum.nullValue(extent.type)))
                     val args = listOf(extent, offset, default)
-                    relOpWindowWindowFunction(name, args, isIgnoreNulls, null, null)
+                    relOpWindowWindowFunction(name, args, isIgnoreNulls, null, null, null)
                 }
+                is WindowFunctionType.Aggregate -> convertAggregateWindowFunction(windowType)
                 else -> {
                     val cause = IllegalStateException("Unexpected WindowFunctionType type: $windowType")
                     env.listener.report(PErrors.internalError(cause))
-                    relOpWindowWindowFunction("unknown", emptyList(), false, emptyList(), CompilerType(PType.dynamic()))
+                    relOpWindowWindowFunction("unknown", emptyList(), false, emptyList(), CompilerType(PType.dynamic()), null)
                 }
             }
+        }
+
+        /**
+         * Converts an aggregate window function (e.g. `SUM(x) OVER (...)`) to a window function holding an unresolved
+         * aggregate call with the aggregate name as written. The typer validates the call (only the built-in COUNT,
+         * SUM, AVG, MIN, and MAX; SQL:2023 Subclause 9.23, Syntax Rule 8d for DISTINCT) and resolves it like a GROUP BY
+         * aggregate call (see [Rel.Op.Aggregate.Call.Unresolved]), so window aggregates share the typing rules and
+         * accumulators with group aggregation. `COUNT(*)` is represented (as for group aggregation) by a call to
+         * `count` with no arguments.
+         */
+        private fun convertAggregateWindowFunction(node: WindowFunctionType.Aggregate): Rel.Op.Window.WindowFunction {
+            val setq = when (node.setq?.code()) {
+                SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+                SetQuantifier.ALL, null -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                else -> error("Unexpected SetQuantifier type: ${node.setq}")
+            }
+            val args = node.args.map { it.toRex(env) }
+            val call = relOpAggregateCallUnresolved(AstToPlan.convert(node.function), setq, args)
+            return relOpWindowWindowFunction(node.function.identifier.text.lowercase(), emptyList(), false, null, null, call)
         }
 
         /**

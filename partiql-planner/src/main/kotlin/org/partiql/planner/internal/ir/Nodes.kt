@@ -73,6 +73,7 @@ import org.partiql.plan.RoutineRef
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.errors.PError
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.value.Datum
@@ -752,11 +753,10 @@ internal data class Rex(
             }
         }
 
-        internal class Err : Op() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.filterNotNull()
-            }
+        internal data class Err(
+            @JvmField internal val error: PError,
+        ) : Op() {
+            public override val children: List<PlanNode> = emptyList()
 
             override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpErr(this, ctx)
 
@@ -930,10 +930,12 @@ internal data class Rel(
                 @JvmField internal val isIgnoreNulls: Boolean,
                 @JvmField internal val parameterTypes: List<CompilerType>?,
                 @JvmField internal val returnType: CompilerType?,
+                @JvmField internal val aggregate: Aggregate.Call?,
             ) : PlanNode() {
                 public override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
                     kids.addAll(args)
+                    kids.add(aggregate)
                     kids.filterNotNull()
                 }
 

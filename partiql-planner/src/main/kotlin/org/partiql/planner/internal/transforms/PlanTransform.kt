@@ -88,8 +88,9 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
          * This is accomplished via the signaling mode below.
          */
         override fun visitRexOpErr(node: IRex.Op.Err, ctx: PType): Any {
-            // Listener should have already received the error/warning. The listener should have already failed compilation.
-            return operators.error(ctx)
+            // The listener has already received this error or warning. The node keeps it, so strict mode can raise the
+            // same error at runtime instead of an internal error.
+            return operators.error(ctx, node.error)
         }
 
         override fun visitRelOpErr(node: Rel.Op.Err, ctx: PType): Any {
@@ -294,8 +295,14 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
 
         override fun visitRelOpWindowWindowFunction(node: Rel.Op.Window.WindowFunction, ctx: PType): WindowFunctionNode {
             val signature = WindowFunctionSignature(node.name, node.parameterTypes!!, node.returnType!!, node.isIgnoreNulls)
-            val args = node.args.map { visitRex(it, it.type) }
-            return WindowFunctionNode(signature, args)
+            return when (val call = node.aggregate) {
+                null -> WindowFunctionNode(signature, node.args.map { visitRex(it, it.type) })
+                is IRel.Op.Aggregate.Call.Resolved -> {
+                    val args = call.args.map { visitRex(it, it.type) }
+                    WindowFunctionNode(signature, args, call.agg.signature, call.setq == SetQuantifier.DISTINCT, call.routine)
+                }
+                is IRel.Op.Aggregate.Call.Unresolved -> error("Unresolved aggregate window function $node")
+            }
         }
 
         override fun visitRelOpWith(node: Rel.Op.With, ctx: PType): org.partiql.plan.rel.Rel {

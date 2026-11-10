@@ -155,7 +155,7 @@ internal class PlanToExecTransform(
 
     override fun visitVar(rex: RexVar, ctx: Unit): Any = PExpr.Var(rex.scope, rex.offset)
 
-    override fun visitError(rex: RexError, ctx: Unit): Any = PExpr.Error(rex.type.pType)
+    override fun visitError(rex: RexError, ctx: Unit): Any = PExpr.Error(rex.type.pType, rex.error)
 
     override fun visitArray(rex: RexArray, ctx: Unit): Any =
         PExpr.Array(rex.values.map { visitRex(it) })
@@ -282,7 +282,7 @@ internal class PlanToExecTransform(
     override fun visitWindow(rel: RelWindow, ctx: Unit): Any {
         val input = visitRel(rel.input)
         val functions = rel.windowFunctions.map { wf ->
-            PWindowFn(wf.signature, wf.arguments.map { visitRex(it) })
+            PWindowFn(wf.signature, wf.arguments.map { visitRex(it) }, wf.aggregate, wf.isDistinct)
         }
         val partitions = rel.partitions.map { visitRex(it) }
         val sorts = rel.collations.map { toCollation(it) }
