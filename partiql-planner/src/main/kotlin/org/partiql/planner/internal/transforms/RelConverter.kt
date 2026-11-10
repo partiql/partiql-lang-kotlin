@@ -526,14 +526,14 @@ internal object RelConverter {
         }
 
         /**
-         * Append [Rel.Op.Window] only if SELECT & ORDER BY contains window functions and/or if the WINDOW clause exists
+         * Append [Rel.Op.Window] only if SELECT & ORDER BY contains window functions and/or if the WINDOW clause exists.
+         * A WINDOW clause definition that no window function uses has no output, but is still planned, so that the typer
+         * checks it (SQL:2023 Subclause 7.15, Syntax Rule 4); the typer then drops it.
          */
         private fun convertWindow(input: Rel, select: QueryBody.SFW): Pair<QueryBody.SFW, Rel> {
             // Rewrite and extract all window functions in the SELECT clause
             val (sel, windowFunctions) = WindowTransform.apply(select)
-            if (windowFunctions.isEmpty()) {
-                // Regardless of whether there is a window clause, there are no outputs or technical ordering
-                // of the output window relation, therefore, we can just return the input.
+            if (windowFunctions.isEmpty() && select.window == null) {
                 return Pair(select, input)
             }
 

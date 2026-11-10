@@ -15,6 +15,7 @@
 package org.partiql.eval.internal.window
 
 import org.partiql.eval.Environment
+import org.partiql.eval.WindowFunction
 import org.partiql.eval.WindowPartition
 import org.partiql.eval.internal.helpers.checkInterrupted
 import org.partiql.eval.internal.operator.Aggregate
@@ -38,10 +39,9 @@ import org.partiql.spi.value.Datum
 internal class AggregateWindowFunction(
     private val aggregate: Aggregate,
     private val frame: WindowFrame = WindowFrame.DEFAULT,
-) : OuterScopedWindowFunction {
+) : WindowFunction {
 
     private lateinit var partition: WindowPartition
-    private lateinit var outer: Environment
     private var currentRow: Long = -1L
 
     /**
@@ -53,10 +53,6 @@ internal class AggregateWindowFunction(
 
     private var cachedFrame: LongRange? = null
     private var cachedValue: Datum? = null
-
-    override fun setOuterEnvironment(env: Environment) {
-        this.outer = env
-    }
 
     override fun reset(partition: WindowPartition) {
         this.partition = partition
@@ -78,14 +74,14 @@ internal class AggregateWindowFunction(
         val value = when {
             // An empty frame aggregates no rows (e.g. COUNT -> 0, SUM -> NULL), same as an empty group.
             bounds.isEmpty() -> aggregate.newState().value()
-            else -> aggregate(bounds)
+            else -> aggregate(env, bounds)
         }
         cachedFrame = bounds
         cachedValue = value
         return value
     }
 
-    private fun aggregate(bounds: LongRange): Datum {
+    private fun aggregate(env: Environment, bounds: LongRange): Datum {
         var current = state
         if (current == null || bounds.first != accumulatedStart || bounds.last < accumulatedEnd) {
             current = aggregate.newState()
@@ -95,9 +91,9 @@ internal class AggregateWindowFunction(
         }
         for (i in (accumulatedEnd + 1)..bounds.last) {
             checkInterrupted()
-            // Push onto the outer environment, not the `env` passed to [eval] (which already holds the current row);
-            // see [OuterScopedWindowFunction].
-            current.accumulate(outer.push(partition[i]))
+            // Arguments only reference the window's input row (SQL:2023 Subclause 9.23, Syntax Rule 3), so pushing another
+            // row of the partition onto `env` shadows the current row.
+            current.accumulate(env.push(partition[i]))
         }
         accumulatedEnd = bounds.last
         return current.value()

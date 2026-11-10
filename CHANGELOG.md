@@ -27,20 +27,18 @@ Thank you to all who have contributed!
 
 ### Added
 - **EXPERIMENTAL**: Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
-- Added the `PError.INVALID_WINDOW_FUNCTION` error code, with the `FN_NAME` and `REASON` properties. It is reported as a warning for a missing window `ORDER BY` and as an error for `DISTINCT` with a window `ORDER BY`.
+- Added the `PError.INVALID_WINDOW_FUNCTION` error code, with the `FN_NAME`, `WINDOW_NAME`, and `REASON` properties. It is reported as a warning for a missing window `ORDER BY`, and as an error for `DISTINCT` with a window `ORDER BY` or for an outer reference or a subquery in a window function or `WINDOW` clause definition (SQL:2023 Subclause 9.23, Syntax Rule 3).
 - `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
 
 ### Changed
-- The planner now reports an `INVALID_WINDOW_FUNCTION` error for a window function that contains an outer reference or a subquery (SQL:2023 Subclause 9.23, Syntax Rule 3). Such queries previously planned.
 - Aggregate window functions resolve to the built-in aggregate when the session has the default system catalog, even if a catalog on the session path defines an aggregate with the same name.
 - The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
 ### Deprecated
 
 ### Fixed
-- Fixed `LAG` and `LEAD` resolving outer references to the wrong row in a correlated subquery.
 - Fixed `SqlDialect` dropping the `PARTITION BY`/`ORDER BY` of a window that refines a named window, e.g. `OVER (w ORDER BY y)` printed as `OVER w`, and printing `WINDOW w2 AS (w1)` without parentheses.
 - Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
 - Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.
@@ -56,6 +54,7 @@ Thank you to all who have contributed!
 - Fixed a non-numeric `OFFSET` being planned as a second `LIMIT`.
 
 ### Removed
+- **BREAKING**: For the _experimental_ window functions, removed support for an outer reference or a subquery in a window function, including its `OVER` specification and `WINDOW` clause definition (SQL:2023 Subclause 9.23, Syntax Rule 3). Such queries now fail to plan with `INVALID_WINDOW_FUNCTION`.
 
 ### Security
 
