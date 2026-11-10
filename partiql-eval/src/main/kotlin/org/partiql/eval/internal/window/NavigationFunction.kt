@@ -2,16 +2,16 @@ package org.partiql.eval.internal.window
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
+import org.partiql.eval.WindowFunction
 import org.partiql.eval.WindowPartition
 import org.partiql.spi.value.Datum
 
 /**
  * Base class for navigation functions such as [LeadFunction] and [LagFunction].
  */
-internal abstract class NavigationFunction : OuterScopedWindowFunction {
+internal abstract class NavigationFunction : WindowFunction {
 
     private lateinit var partition: WindowPartition
-    private lateinit var outer: Environment
     private var currentPosition: Long = -1L
 
     /**
@@ -20,10 +20,6 @@ internal abstract class NavigationFunction : OuterScopedWindowFunction {
      * @return the result of the evaluation
      */
     abstract fun eval(env: Environment): Datum
-
-    override fun setOuterEnvironment(env: Environment) {
-        this.outer = env
-    }
 
     override fun reset(partition: WindowPartition) {
         this.partition = partition
@@ -38,6 +34,8 @@ internal abstract class NavigationFunction : OuterScopedWindowFunction {
     /**
      * Evaluates [expr] against the row that is [offset] rows away from the current row (negative is preceding, positive
      * is following). With [ignoreNulls], rows whose [expr] evaluates to NULL/MISSING are skipped and not counted.
+     * The planner rejects an outer reference or a subquery in a window function (SQL:2023 Subclause 9.23, Syntax Rule 3), so
+     * [expr] only references the window's input row (depth 0) and may be evaluated against another row pushed onto [env].
      * @return the evaluated [expr], or the evaluated [default] if no such row exists within the partition.
      */
     internal fun navigate(env: Environment, expr: ExprValue, offset: Long, default: ExprValue, ignoreNulls: Boolean): Datum {
@@ -46,7 +44,7 @@ internal abstract class NavigationFunction : OuterScopedWindowFunction {
             if (index < 0 || index >= partition.size()) {
                 return default.eval(env)
             }
-            return expr.eval(outer.push(partition.get(index)))
+            return expr.eval(env.push(partition.get(index)))
         }
         val step = if (offset > 0) 1L else -1L
         var remaining = if (offset > 0) offset else -offset
@@ -56,7 +54,7 @@ internal abstract class NavigationFunction : OuterScopedWindowFunction {
             if (index < 0 || index >= partition.size()) {
                 return default.eval(env)
             }
-            val value = expr.eval(outer.push(partition.get(index)))
+            val value = expr.eval(env.push(partition.get(index)))
             if (value.isNull || value.isMissing) {
                 continue
             }

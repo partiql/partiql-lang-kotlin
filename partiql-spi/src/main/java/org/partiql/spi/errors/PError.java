@@ -718,17 +718,21 @@ public final class PError extends Enum {
      * This is a semantic error or warning where a window function violates a syntax rule of SQL:2023
      * (ISO/IEC 9075-2) Subclause 9.23, "Evaluation and transformation of &lt;window function&gt;". For example,
      * RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST, LEAD, and LAG require a window ordering clause (Syntax Rule 5a);
-     * for backward compatibility, a missing window ordering clause is reported as a warning.
+     * for backward compatibility, a missing window ordering clause is reported as a warning. It is also reported for a
+     * WINDOW clause definition that no window function uses and that violates a syntax rule of Subclause 7.15,
+     * "&lt;window clause&gt;"; such an error has the WINDOW_NAME property instead of FN_NAME.
      * </p>
      * <p>
      * Potentially available properties:
      * <ul>
      * <li><b>FN_NAME</b> ({@link String}): The name of the window function.</li>
+     * <li><b>WINDOW_NAME</b> ({@link String}): The name of the window, for a WINDOW clause definition.</li>
      * <li><b>REASON</b> ({@link String}): A description of the violated rule.</li>
      * </ul>
      * </p>
      * <p>
-     * Example error message: <code>[location]: Window function [fn_name] [reason].</code>, e.g.
+     * Example error message: <code>[location]: Window function [fn_name] [reason].</code>, or
+     * <code>[location]: Window [window_name] [reason].</code> for a WINDOW clause definition, e.g.
      * <code>Window function RANK requires an ORDER BY clause in its OVER specification. Without one, its result is the same for
      * every row or depends on the order in which rows are read. Add an ORDER BY to the window.</code>
      * </p>

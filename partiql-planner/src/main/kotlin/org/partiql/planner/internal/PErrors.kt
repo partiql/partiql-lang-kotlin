@@ -352,6 +352,29 @@ internal object PErrors {
         )
     }
 
+    /**
+     * Reports a WINDOW clause definition that no window function uses, and that violates a syntax rule of SQL:2023
+     * Subclause 7.15, "<window clause>". A violation by a window definition that a window function uses is reported for
+     * that function with [invalidWindowFunction].
+     * @param windowName the name of the window (e.g. `w`).
+     * @param reason a description of the violated rule, completing "Window [windowName] ...".
+     * @see PError.INVALID_WINDOW_FUNCTION
+     */
+    internal fun invalidWindowDefinition(
+        windowName: String,
+        reason: String,
+        severity: Severity,
+        location: SourceLocation? = null,
+    ): PError {
+        return PError(
+            PError.INVALID_WINDOW_FUNCTION,
+            severity,
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("WINDOW_NAME" to windowName, "REASON" to reason),
+        )
+    }
+
     internal fun notImplemented(
         feature: String,
         location: SourceLocation? = null

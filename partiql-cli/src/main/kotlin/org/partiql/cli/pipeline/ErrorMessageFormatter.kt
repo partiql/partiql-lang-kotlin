@@ -172,7 +172,11 @@ object ErrorMessageFormatter {
      */
     private fun invalidWindowFunction(error: PError): String {
         val fnName = error.getOrNull("FN_NAME", String::class.java)
+        val windowName = error.getOrNull("WINDOW_NAME", String::class.java)
         val reason = error.getOrNull("REASON", String::class.java) ?: "is invalid"
+        if (fnName == null && windowName != null) {
+            return "Window $windowName $reason."
+        }
         val fnNameStr = prepare(fnName, " ", "")
         return "Window function$fnNameStr $reason."
     }

@@ -59,6 +59,7 @@ import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
+import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.planner.internal.typer.DynamicTyper.Companion.getCommonSuperType
@@ -74,6 +75,7 @@ import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 import org.partiql.spi.value.Datum
+import java.util.IdentityHashMap
 import kotlin.math.max
 
 /**
@@ -84,6 +86,20 @@ import kotlin.math.max
 internal class PlanTyper(private val env: Env, config: Context, private val flags: Set<PlannerFlag>) {
 
     private val _listener = config.errorListener
+
+    /**
+     * For each typed group aggregation, whether each of its calls contains an outer reference or a query expression. A
+     * window over the aggregation checks the calls it references (SQL:2023 Subclause 9.23, Syntax Rule 3).
+     */
+    private val invalidGroupAggregates = IdentityHashMap<Rel.Op.Aggregate, List<Boolean>>()
+
+    /**
+     * Records whether typing found an outer reference, i.e. a variable of an enclosing scope other than a common table
+     * expression. Typing records it before a call that fails to type becomes an error, which keeps only the problem.
+     */
+    private class OuterReferenceTracker {
+        var found: Boolean = false
+    }
 
     private sealed interface TypedAggregateResolution {
         data class Success(
@@ -117,6 +133,21 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          */
         private const val REASON_WINDOW_DISTINCT_WITH_ORDER =
             "does not allow DISTINCT when its OVER specification has an ORDER BY clause. Remove DISTINCT or the window ORDER BY"
+
+        /**
+         * [PErrors.invalidWindowFunction] reason for SQL:2023 Subclause 9.23, Syntax Rule 3.
+         */
+        private const val REASON_WINDOW_OUTER_REFERENCE_OR_SUBQUERY =
+            "must not contain an outer reference or a subquery in its arguments or OVER specification. " +
+                "Move it out of the window function, e.g. into the select list or the WHERE clause"
+
+        /**
+         * [PErrors.invalidWindowDefinition] reason for SQL:2023 Subclause 7.15, Syntax Rule 4, for a WINDOW clause
+         * definition that no window function uses.
+         */
+        private const val REASON_WINDOW_DEFINITION_OUTER_REFERENCE_OR_SUBQUERY =
+            "must not contain an outer reference or a subquery in its PARTITION BY or ORDER BY clause. " +
+                "Move it out of the window, e.g. into the select list or the WHERE clause"
 
         fun PType.static(): CompilerType = CompilerType(this)
 
@@ -330,27 +361,56 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         override fun visitRelOpWindow(node: Rel.Op.Window, ctx: Rel.Type?): Rel {
             env.listener.report(PErrors.experimental("Window Clause"))
             val input = visitRel(node.input, ctx)
-            var aggregateFailed = false
             val hasOrder = node.sorts.isNotEmpty()
-            val functions = node.functions.map { function ->
-                when (val call = function.aggregate) {
-                    null -> visitRelOpWindowWindowFunction(function, input.type)
-                    else -> typeAggregateWindowFunction(function, call, input.type, hasOrder) ?: function.also { aggregateFailed = true }
-                }
-            }
-            if (aggregateFailed) {
-                // Mirror group aggregation: the errors have already been reported to the listener, so do not build an
-                // executable window. Keep the typed input's bindings so that the rest of the query is typed against them
-                // rather than the untyped schema (which would report spurious warnings, e.g. on `t.k`).
-                val schema = requireNotNull(ctx).copyWithSchema(
-                    input.type.schema.map { it.type } + node.functions.map { CompilerType(PType.dynamic()) }
-                )
-                return rel(schema, relOpErr("Aggregate window function resolution failed"))
-            }
-            val partitions = node.partitions.map { it.type(input.type.schema, outer) }
+            // SQL:2023 Subclause 9.23, Syntax Rule 3: a window function, including its window specification, shall not
+            // contain an outer reference or a query expression. For a WINDOW clause definition, Subclause 7.15, Syntax
+            // Rule 4 requires each column reference in its PARTITION BY and ORDER BY to reference a column of the query's
+            // own table, which excludes an outer reference (and a query expression that references its own columns).
+            val groupAggregates = groupAggregatesWithOuterReferenceOrSubquery(input)
+            val specOuterReferences = OuterReferenceTracker()
+            val partitions = node.partitions.map { it.type(input.type.schema, outer, outerReferences = specOuterReferences) }
             val sorts = node.sorts.map {
-                val rex = it.rex.type(input.type.schema, outer)
+                val rex = it.rex.type(input.type.schema, outer, outerReferences = specOuterReferences)
                 it.copy(rex = rex)
+            }
+            val specExpressions = partitions + sorts.map { it.rex }
+            val isInvalidSpec = specOuterReferences.found ||
+                containsSubquery(node.partitions + node.sorts.map { it.rex }) ||
+                referencesAny(specExpressions, groupAggregates)
+            if (node.functions.isEmpty()) {
+                // A WINDOW clause definition that no window function uses. It has no effect, so it is not planned.
+                if (isInvalidSpec) {
+                    _listener.report(
+                        PErrors.invalidWindowDefinition(node.name ?: "", REASON_WINDOW_DEFINITION_OUTER_REFERENCE_OR_SUBQUERY, Severity.ERROR())
+                    )
+                }
+                return input
+            }
+            // The first error reported for each window function, if any.
+            val errors = arrayOfNulls<PError>(node.functions.size)
+            val functions = node.functions.mapIndexed { i, function ->
+                val outerReferences = OuterReferenceTracker()
+                val report: (PError) -> Unit = { error ->
+                    _listener.report(error)
+                    if (errors[i] == null) errors[i] = error
+                }
+                val typed = when (val call = function.aggregate) {
+                    null -> typeWindowFunction(function, input.type, outerReferences, report)
+                    else -> typeAggregateWindowFunction(function, call, input.type, hasOrder, outerReferences, report)
+                }
+                val untypedArgs = function.args + ((function.aggregate as? Rel.Op.Aggregate.Call.Unresolved)?.args ?: emptyList())
+                val isInvalid = isInvalidSpec ||
+                    outerReferences.found ||
+                    containsSubquery(untypedArgs) ||
+                    (typed != null && referencesAny(typed.expressions(), groupAggregates))
+                if (isInvalid) {
+                    report(PErrors.invalidWindowFunction(function.name.uppercase(), REASON_WINDOW_OUTER_REFERENCE_OR_SUBQUERY, Severity.ERROR()))
+                }
+                typed ?: function
+            }
+            val firstError = errors.firstOrNull { it != null }
+            if (firstError != null) {
+                return windowErrorRel(input, requireNotNull(ctx), errors.map { it ?: firstError })
             }
             val schema = ctx!!.copyWithSchema(input.type.schema.map { it.type } + functions.map { it.returnType!! })
             val window = relOpWindow(node.name, input, functions, partitions, sorts)
@@ -358,22 +418,95 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         /**
+         * Builds the relation for a window whose functions are invalid; the [errors] have already been reported to the
+         * listener. As group aggregation does, it does not build an executable window. Instead, it keeps the typed input
+         * bindings, so the rest of the query is typed against them (rather than the untyped schema, which would report
+         * spurious warnings), and each window function is an error that keeps the problem reported for it. Strict mode then
+         * raises that problem, and permissive mode returns MISSING, as for any expression the planner proved will fail.
+         * @param errors the problem for each window function, in order.
+         */
+        private fun windowErrorRel(input: Rel, ctx: Rel.Type, errors: List<PError>): Rel {
+            val bindings = input.type.schema.mapIndexed { i, binding -> rex(binding.type, rexOpVarLocal(0, i)) }
+            val functions = errors.map { rex(CompilerType(PType.dynamic()), rexOpErr(it)) }
+            val schema = ctx.copyWithSchema(input.type.schema.map { it.type } + functions.map { it.type })
+            return rel(schema, relOpProject(input, bindings + functions))
+        }
+
+        /**
+         * @return the indexes of the [input] bindings that are group aggregates whose arguments contain an outer reference
+         * or a query expression. A window over a grouped query refers to its aggregates, e.g. `MAX(t.x + o.k)` in
+         * `SUM(MAX(t.x + o.k)) OVER ()`, by these bindings; the aggregates are still contained in the window function.
+         */
+        private fun groupAggregatesWithOuterReferenceOrSubquery(input: Rel): Set<Int> {
+            var rel = input
+            while (true) {
+                rel = when (val op = rel.op) {
+                    // HAVING
+                    is Rel.Op.Filter -> op.input
+                    is Rel.Op.Aggregate -> break
+                    else -> return emptySet()
+                }
+            }
+            val invalid = invalidGroupAggregates[rel.op] ?: return emptySet()
+            return invalid.indices.filter { invalid[it] }.toSet()
+        }
+
+        /**
+         * @return true if [nodes] (before typing) contain a query expression. A common table expression used as a value
+         * is not a query expression, but a query name; it is still a variable before typing, even with WITH inlining.
+         */
+        private fun containsSubquery(nodes: List<PlanNode>): Boolean {
+            fun visit(node: PlanNode): Boolean = when (node) {
+                is Rex.Op.Select, is Rex.Op.Subquery, is Rex.Op.Pivot -> true
+                else -> node.children.any { visit(it) }
+            }
+            return nodes.any { visit(it) }
+        }
+
+        /**
+         * @return true if the typed [nodes] reference one of the input [bindings] (depth 0).
+         */
+        private fun referencesAny(nodes: List<PlanNode>, bindings: Set<Int>): Boolean {
+            if (bindings.isEmpty()) {
+                return false
+            }
+            fun visit(node: PlanNode): Boolean = when (node) {
+                is Rex.Op.Var.Local -> node.depth == 0 && node.ref in bindings
+                // A query expression has its own scope (and is invalid in a window function anyway).
+                is Rex.Op.Select, is Rex.Op.Subquery, is Rex.Op.Pivot -> false
+                else -> node.children.any { visit(it) }
+            }
+            return nodes.any { visit(it) }
+        }
+
+        /**
+         * @return the typed expressions of this window function: its arguments, or the arguments of its aggregate.
+         */
+        private fun Rel.Op.Window.WindowFunction.expressions(): List<Rex> = when (val call = aggregate) {
+            is Rel.Op.Aggregate.Call.Resolved -> args + call.args
+            is Rel.Op.Aggregate.Call.Unresolved -> args + call.args
+            null -> args
+        }
+
+        /**
          * Types an aggregate window function (e.g. `SUM(x) OVER (...)`) by resolving its aggregate call exactly as a
          * GROUP BY aggregate call is resolved (see [visitRelOpAggregate]), so that both share typing and errors.
-         * @return null if the aggregate could not be resolved; the error has been reported to the listener.
+         * @return null if the aggregate could not be resolved; the error has been passed to [report].
          */
         private fun typeAggregateWindowFunction(
             node: Rel.Op.Window.WindowFunction,
             call: Rel.Op.Aggregate.Call,
             input: Rel.Type,
             hasOrder: Boolean,
+            outerReferences: OuterReferenceTracker,
+            report: (PError) -> Unit,
         ): Rel.Op.Window.WindowFunction? {
             val unresolved = when (call) {
                 is Rel.Op.Aggregate.Call.Resolved -> return node
                 is Rel.Op.Aggregate.Call.Unresolved -> call
             }
-            val builtin = validateAggregateWindowCall(unresolved, hasOrder) ?: return null
-            val typer = RexTyper(TypeEnv(env, Scope(input.schema, outer)), Strategy.LOCAL)
+            val builtin = validateAggregateWindowCall(unresolved, hasOrder, report) ?: return null
+            val typer = RexTyper(TypeEnv(env, Scope(input.schema, outer)), Strategy.LOCAL, outerReferences)
             return when (val resolution = typer.resolveAgg(builtin)) {
                 is TypedAggregateResolution.Success -> {
                     val resolved = resolution.call
@@ -381,7 +514,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                     relOpWindowWindowFunction(node.name, emptyList(), false, parameterTypes, resolution.type, resolved)
                 }
                 is TypedAggregateResolution.Failure -> {
-                    _listener.report(resolution.problem)
+                    report(resolution.problem)
                     null
                 }
             }
@@ -401,17 +534,18 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          *   only the built-ins are known to support. If the session does not include the default system catalog (a host
          *   replaced it), the call resolves through the session path instead.
          *
-         * @return the qualified call, or null if the call is invalid; the error has been reported to the listener.
+         * @return the qualified call, or null if the call is invalid; the error has been passed to [report].
          */
         private fun validateAggregateWindowCall(
             call: Rel.Op.Aggregate.Call.Unresolved,
             hasOrder: Boolean,
+            report: (PError) -> Unit,
         ): Rel.Op.Aggregate.Call.Unresolved? {
             val identifier = call.identifier
             val part = identifier.getIdentifier()
             val name = if (part.isRegular()) part.getText().lowercase() else part.getText()
             if (identifier.hasQualifier() || name !in WINDOW_AGGREGATES) {
-                _listener.report(PErrors.featureNotSupported("Aggregate $identifier as a window function"))
+                report(PErrors.featureNotSupported("Aggregate $identifier as a window function"))
                 return null
             }
             if (hasOrder && call.setq == org.partiql.planner.internal.ir.SetQuantifier.DISTINCT) {
@@ -419,7 +553,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                     "count" -> PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
                     else -> PErrors.invalidWindowFunction(name.uppercase(), REASON_WINDOW_DISTINCT_WITH_ORDER, Severity.ERROR())
                 }
-                _listener.report(error)
+                report(error)
                 return null
             }
             val builtins = env.builtinCatalogName ?: return call
@@ -430,14 +564,25 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
          * TODO: _Maybe_ we want to eventually create a dedicated PError for WINDOW_FUNCTION_NOT_FOUND, however, until this
          *  is a request, we will reuse the [PError.FUNCTION_NOT_FOUND] error code.
          */
-        override fun visitRelOpWindowWindowFunction(node: Rel.Op.Window.WindowFunction, ctx: Rel.Type?): Rel.Op.Window.WindowFunction {
-            val args = node.args.map { it.type(ctx!!.schema, outer) }
+        override fun visitRelOpWindowWindowFunction(node: Rel.Op.Window.WindowFunction, ctx: Rel.Type?): Rel.Op.Window.WindowFunction =
+            typeWindowFunction(node, ctx!!, null) { _listener.report(it) } ?: node
+
+        /**
+         * @return null if the window function could not be resolved; the error has been passed to [report].
+         */
+        private fun typeWindowFunction(
+            node: Rel.Op.Window.WindowFunction,
+            input: Rel.Type,
+            outerReferences: OuterReferenceTracker?,
+            report: (PError) -> Unit,
+        ): Rel.Op.Window.WindowFunction? {
+            val args = node.args.map { it.type(input.schema, outer, outerReferences = outerReferences) }
             val windowFunction = env.resolveWindowFn(node.name, args, node.isIgnoreNulls)
             if (windowFunction == null) {
                 val fnId = Identifier.regular(node.name)
                 val argTypes = args.map { it.type }
-                _listener.report(PErrors.functionNotFound(null, fnId, argTypes))
-                return node.copy(args = args)
+                report(PErrors.functionNotFound(null, fnId, argTypes))
+                return null
             }
             return windowFunction
         }
@@ -525,6 +670,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                         schema = elements.map { Rel.Binding(it.name, it.representation.type) },
                         outer = outer,
                         withElements = emptyList(),
+                        isWith = true,
                     )
                 }
                 val representation = element.representation.type(TypeEnv(env, scope))
@@ -544,7 +690,8 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                     Rel.Binding(element.name, element.representation.type)
                 },
                 outer,
-                withElements
+                withElements,
+                isWith = true,
             )
             val input = RelTyper(newStack, Strategy.LOCAL).visitRel(node.input, node.input.type)
             val type = input.type
@@ -1027,11 +1174,18 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
 
             // typing of aggregate calls is slightly more complicated because they are not expressions.
             val type = requireNotNull(ctx)
+            val invalidCalls = BooleanArray(node.calls.size)
             val resolutions = node.calls.mapIndexed { i, call ->
                 when (call) {
                     is Rel.Op.Aggregate.Call.Resolved ->
                         TypedAggregateResolution.Success(call, type.schema[i].type)
-                    is Rel.Op.Aggregate.Call.Unresolved -> typer.resolveAgg(call)
+                    is Rel.Op.Aggregate.Call.Unresolved -> {
+                        // Record whether the call would make a window function that contains it invalid.
+                        val outerReferences = OuterReferenceTracker()
+                        val resolution = RexTyper(typeEnv, Strategy.LOCAL, outerReferences).resolveAgg(call)
+                        invalidCalls[i] = outerReferences.found || containsSubquery(call.args)
+                        resolution
+                    }
                 }
             }
             val failures = resolutions.filterIsInstance<TypedAggregateResolution.Failure>()
@@ -1055,6 +1209,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 calls = calls.map { it.call },
                 groups = groups,
             )
+            invalidGroupAggregates[op] = invalidCalls.toList()
             return rel(resolvedType, op)
         }
     }
@@ -1070,6 +1225,7 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
     private inner class RexTyper(
         private val typeEnv: TypeEnv,
         private val strategy: Strategy,
+        private val outerReferences: OuterReferenceTracker? = null,
     ) : PlanRewriter<CompilerType?>() {
 
         override fun visitRex(node: Rex, ctx: CompilerType?): Rex {
@@ -1089,6 +1245,10 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                 "Invalid resolved variable (var ${node.ref}, stack frame ${node.depth}) in env: $typeEnv"
             }
             val type = scope.schema.getOrNull(node.ref)?.type ?: error("Can't find locals value.")
+            // A variable of an enclosing scope is an outer reference, unless it is a common table expression.
+            if (outerReferences != null && node.depth >= 1 && !scope.isWith) {
+                outerReferences.found = true
+            }
             return rex(type, node)
         }
 
@@ -1841,8 +2001,12 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
     /**
      * This types the [Rex] given the input record ([input]) and [stack] of [Scope] (representing the outer scopes).
      */
-    private fun Rex.type(input: List<Rel.Binding>, stack: List<Scope>, strategy: Strategy = Strategy.LOCAL) =
-        RexTyper(TypeEnv(env, Scope(input, stack)), strategy).visitRex(this, this.type)
+    private fun Rex.type(
+        input: List<Rel.Binding>,
+        stack: List<Scope>,
+        strategy: Strategy = Strategy.LOCAL,
+        outerReferences: OuterReferenceTracker? = null,
+    ) = RexTyper(TypeEnv(env, Scope(input, stack)), strategy, outerReferences).visitRex(this, this.type)
 
     /**
      * This types the [Rex] given a [Scope]. We use the [Scope.schema] as the input schema and the [Scope.outer]

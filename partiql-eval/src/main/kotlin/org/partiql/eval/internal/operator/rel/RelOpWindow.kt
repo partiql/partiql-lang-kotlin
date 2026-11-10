@@ -8,7 +8,6 @@ import org.partiql.eval.WindowFunction
 import org.partiql.eval.WindowPartition
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.checkInterrupted
-import org.partiql.eval.internal.window.OuterScopedWindowFunction
 
 /**
  * Assume input has been sorted.
@@ -50,10 +49,7 @@ internal class RelOpWindow(
         _partitionPeekingNumber = -1L
         _partition = LocalPartition()
         leftoverRow = null
-        functions.forEach {
-            (it as? OuterScopedWindowFunction)?.setOuterEnvironment(env)
-            it.reset(_partition)
-        }
+        functions.forEach { it.reset(_partition) }
     }
 
     override fun peek(): Row? {
