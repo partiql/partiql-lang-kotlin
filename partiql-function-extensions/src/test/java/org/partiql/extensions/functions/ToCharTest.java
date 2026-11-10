@@ -217,6 +217,39 @@ public class ToCharTest {
         }
     }
 
+    @Test
+    public void matchesPatternsOnlyInUpperLowerOrCapitalizedCase() {
+        // Like PostgreSQL, MONth is MON followed by the th suffix, Yyyy is Y followed by yyy, and dY is d followed by Y.
+        assertFormat(BASE, "MONth|Monthth|Yyyy", "AUG|August   |0020");
+        assertFormat(BASE, "Dy|dY", "Thu|50");
+    }
+
+    @Test
+    public void consumesOrdinalSuffixesAfterTextPatterns() {
+        assertFormat(BASE, "MonthTH|DYth|AMth|RMTH|ADth", "August   |THU|PM|VIII|AD");
+        assertFormat(BASE, "FMMonthth DDth", "August 13th");
+    }
+
+    @Test
+    public void appliesAtMostOnePrefixAndCopiesTextAfterAPrefix() {
+        assertFormat(BASE, "FM\"x\"DD|FX\"x\"DD|FXTMYYYY", "x13|x13|2020");
+        assertFormat(BASE, "FMFMDD", "FM13");
+        assertFormat(BASE, "YYYYFM", "2020");
+    }
+
+    @Test
+    public void translationModeDropsThePaddingOfNames() {
+        assertFormat(BASE, "TMMonth|TMDAY|TMDD", "August|THURSDAY|13");
+    }
+
+    @Test
+    public void formatsYearsBeforeYearOne() {
+        // 44 BC
+        LocalDateTime value = LocalDateTime.of(-43, 3, 15, 13, 0);
+        assertFormat(value, "CC|FMCC|CCth|FMCCth", "-01|-1|-01st|-1st");
+        assertFormat(value, "IYYY|IYY|IY|I|IYYY-\"W\"IW-ID", "0044|044|44|4|0044-W11-5");
+    }
+
     private static void assertFormat(LocalDateTime value, String template, String expected) {
         assertEquals(expected, format(value, template), template);
     }

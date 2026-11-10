@@ -32,9 +32,11 @@ import java.util.Locale;
 /**
  * {@code to_char} overloads that format a timestamp or date with a PostgreSQL / Oracle / Redshift style template.
  *
- * <p>Template patterns are matched case-insensitively, longest first. The letter case of name patterns
- * ({@code MONTH}, {@code Month}, {@code month}, and likewise {@code MON}, {@code DAY}, {@code DY}, {@code RM},
- * {@code AM}, {@code A.M.}, {@code AD}, {@code B.C.}, ...) selects the letter case of the output.
+ * <p>Like PostgreSQL, patterns are matched longest first, in upper case or lower case ({@code YYYY}, {@code yyyy}),
+ * and name patterns also capitalized ({@code Month}, {@code Mon}, {@code Day}, {@code Dy}). Any other mix of case is
+ * text, e.g. {@code MONth} is {@code MON} followed by {@code th}. The letter case of name patterns ({@code MONTH},
+ * {@code Month}, {@code month}, and likewise {@code MON}, {@code DAY}, {@code DY}, {@code RM}, {@code AM},
+ * {@code A.M.}, {@code AD}, {@code B.C.}, ...) selects the letter case of the output.
  *
  * <ul>
  *     <li>Year: {@code Y,YYY YYYY YYY YY Y RRRR RR CC IYYY IYY IY I AD BC A.D. B.C.}</li>
@@ -42,15 +44,19 @@ import java.util.Locale;
  *     <li>Week: {@code WW W IW}</li>
  *     <li>Day: {@code DDD DD D IDDD ID DAY DY J}</li>
  *     <li>Time: {@code HH HH12 HH24 MI SS SSSS SSSSS MS US FF FF1-FF9 AM PM A.M. P.M.}</li>
- *     <li>Prefixes: {@code FM} (no padding for the next pattern), {@code FX} and {@code TM} (accepted, no effect)</li>
- *     <li>Suffix: {@code TH} / {@code th} (ordinal suffix for the preceding numeric pattern)</li>
+ *     <li>Prefixes, at most one per pattern: {@code FM} (no padding for the next pattern) and {@code TM} (names
+ *     without blank padding; names are always English)</li>
+ *     <li>{@code FX}: accepted and prints nothing (it only affects parsing)</li>
+ *     <li>Suffix: {@code TH} / {@code th} (ordinal suffix for the preceding numeric pattern; ignored after a text
+ *     pattern)</li>
  * </ul>
  *
  * <p>Double-quoted text is copied literally ({@code \"} inside quotes is a quote); {@code \"} outside quotes
  * produces a quote; any other character is copied. Names are English. Without {@code FM}, {@code MONTH} and
  * {@code DAY} are blank-padded to 9 characters, {@code RM} to 4, and numbers are zero-padded to their width.
  * Where PostgreSQL and Oracle differ, PostgreSQL behavior is used ({@code D} is 1 for Sunday; {@code SSSS} is not
- * padded). {@code FF} without digits uses the precision of the timestamp. Time zone patterns ({@code TZ},
+ * padded). Years before year 1 are shown as positive years with {@code BC}, and {@code CC} is negative for them
+ * ({@code -01} for 44 BC). {@code FF} without digits uses the precision of the timestamp. Time zone patterns ({@code TZ},
  * {@code TZH}, {@code TZM}, {@code OF}) are rejected because the inputs have no time zone.
  * A date argument is treated as midnight of that day. Like PostgreSQL and Oracle, an empty template returns null.
  */
@@ -87,7 +93,7 @@ public final class ToChar {
     static {
         List<String> patterns = Arrays.asList(
             "A.D.", "A.M.", "AD", "AM", "B.C.", "BC", "CC", "DAY", "DDD", "DD", "DY", "D",
-            "FF1", "FF2", "FF3", "FF4", "FF5", "FF6", "FF7", "FF8", "FF9", "FF",
+            "FF1", "FF2", "FF3", "FF4", "FF5", "FF6", "FF7", "FF8", "FF9", "FF", "FX",
             "HH24", "HH12", "HH", "IDDD", "ID", "IW", "IYYY", "IYY", "IY", "I", "J",
             "MI", "MM", "MONTH", "MON", "MS", "OF", "P.M.", "PM", "Q", "RM", "RRRR", "RR",
             "SSSSS", "SSSS", "SS", "TZH", "TZM", "TZ", "US", "WW", "W",
@@ -97,6 +103,12 @@ public final class ToChar {
         Arrays.sort(sorted, Comparator.comparingInt(String::length).reversed());
         PATTERNS = Collections.unmodifiableList(Arrays.asList(sorted));
     }
+
+    private static final List<String> PREFIXES = Collections.unmodifiableList(Arrays.asList("FM", "TM"));
+
+    private static final List<String> NAME_PATTERNS = Collections.unmodifiableList(Arrays.asList(
+        "MONTH", "MON", "DAY", "DY"
+    ));
 
     private ToChar() {
     }
@@ -125,58 +137,64 @@ public final class ToChar {
         int i = 0;
         int n = template.length();
         while (i < n) {
-            char c = template.charAt(i);
-            if (c == '"') {
-                i = copyQuoted(template, i + 1, out);
-                continue;
-            }
-            if (c == '\\' && i + 1 < n && template.charAt(i + 1) == '"') {
-                out.append('"');
-                i += 2;
-                continue;
-            }
-
-            boolean fillMode = false;
-            while (true) {
-                if (startsWith(template, i, "FM")) {
-                    fillMode = true;
-                    i += 2;
-                } else if (startsWith(template, i, "FX") || startsWith(template, i, "TM")) {
-                    i += 2;
-                } else {
-                    break;
-                }
-            }
-
-            String pattern = match(template, i);
+            // Like PostgreSQL, at most one prefix. It is consumed even when no pattern follows; the text after it is
+            // then copied (or quoted) as usual, and a second prefix is copied as text.
+            String prefix = matchPrefix(template, i);
+            int start = prefix == null ? i : i + 2;
+            String pattern = match(template, start);
             if (pattern == null) {
-                if (i < n) {
-                    out.append(template.charAt(i));
-                    i++;
-                }
+                i = copyText(template, start, out);
                 continue;
             }
-            String text = template.substring(i, i + pattern.length());
-            i += pattern.length();
+            boolean fillMode = "FM".equals(prefix);
+            boolean translationMode = "TM".equals(prefix);
+            String text = template.substring(start, start + pattern.length());
+            i = start + pattern.length();
             if (pattern.equals("FF") && precision > 0) {
                 // Oracle: FF without digits uses the precision of the timestamp.
                 pattern = "FF" + Math.min(precision, 9);
             }
 
+            // Like PostgreSQL, a TH / th suffix is consumed after any pattern, but only numbers get an ordinal.
+            boolean ordinalSuffix = template.startsWith("TH", i) || template.startsWith("th", i);
+            boolean upperOrdinal = ordinalSuffix && template.charAt(i) == 'T';
+            if (ordinalSuffix) {
+                i += 2;
+            }
             Long number = number(pattern, value, precision);
             if (number != null) {
                 String digits = pad(pattern, number, fillMode);
                 out.append(digits);
-                if (i + 1 < n && (template.startsWith("TH", i) || template.startsWith("th", i))) {
+                if (ordinalSuffix) {
                     String suffix = ordinal(digits);
-                    out.append(template.charAt(i) == 'T' ? suffix.toUpperCase(Locale.ROOT) : suffix);
-                    i += 2;
+                    out.append(upperOrdinal ? suffix.toUpperCase(Locale.ROOT) : suffix);
                 }
             } else {
-                out.append(text(pattern, text, value, fillMode));
+                // Like PostgreSQL, TM (translated names) also drops the blank padding of names.
+                out.append(text(pattern, text, value, fillMode || translationMode));
             }
         }
         return out.toString();
+    }
+
+    /**
+     * Copies the text at [start] that is not a pattern: a double-quoted string, an escaped quote, or one character.
+     * Returns the offset after it.
+     */
+    private static int copyText(String template, int start, StringBuilder out) {
+        if (start >= template.length()) {
+            return start;
+        }
+        char c = template.charAt(start);
+        if (c == '"') {
+            return copyQuoted(template, start + 1, out);
+        }
+        if (c == '\\' && start + 1 < template.length() && template.charAt(start + 1) == '"') {
+            out.append('"');
+            return start + 2;
+        }
+        out.append(c);
+        return start + 1;
     }
 
     private static int copyQuoted(String template, int start, StringBuilder out) {
@@ -197,21 +215,53 @@ public final class ToChar {
         return i;
     }
 
-    private static boolean startsWith(String template, int offset, String prefix) {
-        return template.regionMatches(true, offset, prefix, 0, prefix.length());
+    /**
+     * Returns the upper-case prefix ({@code FM} or {@code TM}) at [offset], or null.
+     */
+    private static String matchPrefix(String template, int offset) {
+        for (String prefix : PREFIXES) {
+            if (matchesCase(template, offset, prefix, false)) {
+                return prefix;
+            }
+        }
+        return null;
     }
 
     private static String match(String template, int offset) {
         for (String pattern : PATTERNS) {
-            if (startsWith(template, offset, pattern)) {
+            if (matchesCase(template, offset, pattern, NAME_PATTERNS.contains(pattern))) {
                 return pattern;
             }
         }
         return null;
     }
 
+    /**
+     * Like PostgreSQL, a pattern matches only in upper case or lower case, and a name pattern also when capitalized,
+     * e.g. {@code MONTH}, {@code month}, {@code Month}, but not {@code MONth}.
+     */
+    private static boolean matchesCase(String template, int offset, String pattern, boolean allowCapitalized) {
+        if (!template.regionMatches(true, offset, pattern, 0, pattern.length())) {
+            return false;
+        }
+        String text = template.substring(offset, offset + pattern.length());
+        if (text.equals(pattern) || text.equals(pattern.toLowerCase(Locale.ROOT))) {
+            return true;
+        }
+        return allowCapitalized
+            && text.equals(pattern.charAt(0) + pattern.substring(1).toLowerCase(Locale.ROOT));
+    }
+
     private static int displayYear(LocalDateTime value) {
         int year = value.getYear();
+        return year > 0 ? year : 1 - year;
+    }
+
+    /**
+     * Returns the ISO 8601 week-based year as a positive display year, like [displayYear].
+     */
+    private static int isoYear(LocalDateTime value) {
+        int year = value.get(IsoFields.WEEK_BASED_YEAR);
         return year > 0 ? year : 1 - year;
     }
 
@@ -233,15 +283,16 @@ public final class ToChar {
             case "Y":
                 return (long) (year % 10);
             case "CC":
-                return (long) ((year + 99) / 100);
+                // Like PostgreSQL, centuries before year 1 are negative: 44 BC is century -1.
+                return value.getYear() > 0 ? (long) ((value.getYear() - 1) / 100 + 1) : (long) (value.getYear() / 100 - 1);
             case "IYYY":
-                return (long) value.get(IsoFields.WEEK_BASED_YEAR);
+                return (long) isoYear(value);
             case "IYY":
-                return (long) (value.get(IsoFields.WEEK_BASED_YEAR) % 1000);
+                return (long) (isoYear(value) % 1000);
             case "IY":
-                return (long) (value.get(IsoFields.WEEK_BASED_YEAR) % 100);
+                return (long) (isoYear(value) % 100);
             case "I":
-                return (long) (value.get(IsoFields.WEEK_BASED_YEAR) % 10);
+                return (long) (isoYear(value) % 10);
             case "MM":
                 return (long) value.getMonthValue();
             case "Q":
@@ -349,7 +400,12 @@ public final class ToChar {
         }
         // Fractional seconds are digits after a decimal point, so fill mode does not remove their leading zeros.
         boolean fractional = pattern.equals("MS") || pattern.equals("US") || pattern.startsWith("FF");
-        return zeroPad(Long.toString(number), fillMode && !fractional ? 0 : width(pattern));
+        int width = fillMode && !fractional ? 0 : width(pattern);
+        if (number < 0) {
+            // Like PostgreSQL, a negative century is "-01": the sign comes before the zero padding.
+            return "-" + zeroPad(Long.toString(-number), width);
+        }
+        return zeroPad(Long.toString(number), width);
     }
 
     private static String zeroPad(String digits, int width) {
@@ -361,7 +417,9 @@ public final class ToChar {
     }
 
     private static String ordinal(String digits) {
-        int value = Integer.parseInt(digits.length() > 2 ? digits.substring(digits.length() - 2) : digits);
+        // Only the last two digits matter; a sign or separator (-01, 2,024) is not part of them.
+        String unsigned = digits.replaceAll("[^0-9]", "");
+        int value = Integer.parseInt(unsigned.length() > 2 ? unsigned.substring(unsigned.length() - 2) : unsigned);
         if (value % 100 >= 11 && value % 100 <= 13) {
             return "th";
         }
@@ -411,6 +469,9 @@ public final class ToChar {
                 );
             case "FF":
                 // A date or TIMESTAMP(0) has no fractional seconds.
+                return "";
+            case "FX":
+                // Like PostgreSQL, FX (fixed format) is a pattern that only affects parsing, so it prints nothing.
                 return "";
             default:
                 throw new IllegalStateException("Unhandled to_char pattern: " + pattern);
