@@ -33,7 +33,8 @@ import java.util.Locale;
  *
  * <p>Supported parts (case-insensitive) are {@code millisecond}, {@code second}, {@code minute}, {@code hour},
  * {@code day}, {@code week}, {@code month}, {@code quarter}, and {@code year}. Weeks start on Monday (ISO 8601).
- * Like PostgreSQL, a date argument is treated as midnight of that day and the result is always a timestamp.
+ * The behavior follows PostgreSQL's {@code date_trunc}: a date argument is treated as midnight of that day, and the
+ * result is always a timestamp.
  */
 public final class DateTrunc {
     private static final List<FnOverload> OVERLOADS = Collections.unmodifiableList(Arrays.asList(

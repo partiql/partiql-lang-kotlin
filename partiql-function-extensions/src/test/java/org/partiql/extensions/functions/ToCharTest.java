@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ToCharTest {
@@ -52,7 +51,7 @@ public class ToCharTest {
     @Test
     public void formatsYearPatterns() {
         assertFormat(BASE, "Y,YYY|YYYY|YYY|YY|Y", "2,020|2020|020|20|0");
-        assertFormat(BASE, "RRRR|RR|CC|IYYY|IYY|IY|I", "2020|20|21|2020|020|20|0");
+        assertFormat(BASE, "CC|IYYY|IYY|IY|I", "21|2020|020|20|0");
         assertFormat(BASE, "AD|bc|A.D.|b.c.", "AD|ad|A.D.|a.d.");
         assertFormat(LocalDateTime.of(-43, 3, 15, 0, 0), "YYYY BC", "0044 BC");
     }
@@ -74,7 +73,7 @@ public class ToCharTest {
     @Test
     public void formatsTimePatterns() {
         assertFormat(BASE, "HH|HH12|HH24|MI|SS|SSSS|SSSSS", "02|02|14|05|09|50709|50709");
-        assertFormat(BASE, "MS|US|FF1|FF3|FF6|FF9|FF", "123|123456|1|123|123456|123456000|123456");
+        assertFormat(BASE, "MS|US|FF1|FF3|FF6", "123|123456|1|123|123456");
         assertFormat(LocalDateTime.of(2020, 8, 13, 0, 30, 0, 5_000_000), "HH12 AM FMMS", "12 AM 005");
     }
 
@@ -105,11 +104,11 @@ public class ToCharTest {
     public void formatsDateAsMidnight() {
         Datum result = DATE_FUNCTION.invoke(new Datum[] {
             Datum.date(LocalDate.of(2020, 8, 13)),
-            Datum.string("YYYY-MM-DD HH24:MI:SS|FF|")
+            Datum.string("YYYY-MM-DD HH24:MI:SS.FF3")
         });
 
         assertEquals(PType.string(), result.getType());
-        assertEquals("2020-08-13 00:00:00||", result.getString());
+        assertEquals("2020-08-13 00:00:00.000", result.getString());
     }
 
     @Test
@@ -137,10 +136,15 @@ public class ToCharTest {
     }
 
     @Test
-    public void bareFractionUsesTheTimestampPrecision() {
-        assertEquals("123", format(BASE, 3, "FF"));
-        assertEquals("123456", format(BASE, 6, "FF"));
-        assertEquals("|000", format(BASE.withNano(0), 0, "FF|FF3"));
+    public void copiesPatternsThatPostgresqlDoesNotHaveAsText() {
+        // RR, RRRR, FF, FF7-FF9, SCC, and X are not PostgreSQL patterns.
+        assertFormat(BASE, "RRRR|RR|FF|FF7|FF9|SCC|X", "RRRR|RR|FF|FF7|FF9|S21|X");
+    }
+
+    @Test
+    public void consumesTheSpellModeSuffix() {
+        // SP (spell mode) is not implemented: it is consumed and has no effect. Only one suffix follows a pattern.
+        assertFormat(BASE, "DDSP|MonthSP|DDsp|DDSPTH|DDTHSP", "13|August   |13sp|13TH|13THSP");
     }
 
     @Test
@@ -205,21 +209,14 @@ public class ToCharTest {
     }
 
     @Test
-    public void rejectsTimeZonePatterns() {
-        IllegalArgumentException error = assertThrows(
-            IllegalArgumentException.class,
-            () -> format(BASE, "YYYY TZ")
-        );
-
-        assertEquals("Time zone pattern is not supported for to_char without a time zone: TZ", error.getMessage());
-        for (String template : new String[] {"tz", "TZH", "TZM", "OF"}) {
-            assertThrows(IllegalArgumentException.class, () -> format(BASE, template), template);
-        }
+    public void formatsTimeZonePatternsWithoutATimeZone() {
+        // The inputs have no time zone: no abbreviation and offset zero.
+        assertFormat(BASE, "[TZ]|[tz]|TZH|TZM|OF|FMOF|HH24:MI TZH:TZM", "[]|[]|+00|00|+00|+0|14:05 +00:00");
     }
 
     @Test
     public void matchesPatternsOnlyInUpperLowerOrCapitalizedCase() {
-        // Like PostgreSQL, MONth is MON followed by the th suffix, Yyyy is Y followed by yyy, and dY is d followed by Y.
+        // MONth is MON followed by the th suffix, Yyyy is Y followed by yyy, and dY is d followed by Y.
         assertFormat(BASE, "MONth|Monthth|Yyyy", "AUG|August   |0020");
         assertFormat(BASE, "Dy|dY", "Thu|50");
     }

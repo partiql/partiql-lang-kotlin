@@ -30,35 +30,23 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * {@code to_char} overloads that format a timestamp or date with a PostgreSQL / Oracle / Redshift style template.
- *
- * <p>Like PostgreSQL, patterns are matched longest first, in upper case or lower case ({@code YYYY}, {@code yyyy}),
- * and name patterns also capitalized ({@code Month}, {@code Mon}, {@code Day}, {@code Dy}). Any other mix of case is
- * text, e.g. {@code MONth} is {@code MON} followed by {@code th}. The letter case of name patterns ({@code MONTH},
- * {@code Month}, {@code month}, and likewise {@code MON}, {@code DAY}, {@code DY}, {@code RM}, {@code AM},
- * {@code A.M.}, {@code AD}, {@code B.C.}, ...) selects the letter case of the output.
+ * {@code to_char} overloads that format a timestamp or date with a PostgreSQL datetime template. The behavior follows
+ * PostgreSQL's {@code to_char}.
  *
  * <ul>
- *     <li>Year: {@code Y,YYY YYYY YYY YY Y RRRR RR CC IYYY IYY IY I AD BC A.D. B.C.}</li>
+ *     <li>Year: {@code Y,YYY YYYY YYY YY Y CC IYYY IYY IY I AD BC A.D. B.C.}</li>
  *     <li>Month and quarter: {@code MM MONTH MON RM Q}</li>
  *     <li>Week: {@code WW W IW}</li>
  *     <li>Day: {@code DDD DD D IDDD ID DAY DY J}</li>
- *     <li>Time: {@code HH HH12 HH24 MI SS SSSS SSSSS MS US FF FF1-FF9 AM PM A.M. P.M.}</li>
- *     <li>Prefixes, at most one per pattern: {@code FM} (no padding for the next pattern) and {@code TM} (names
- *     without blank padding; names are always English)</li>
- *     <li>{@code FX}: accepted and prints nothing (it only affects parsing)</li>
- *     <li>Suffix: {@code TH} / {@code th} (ordinal suffix for the preceding numeric pattern; ignored after a text
- *     pattern)</li>
+ *     <li>Time: {@code HH HH12 HH24 MI SS SSSS SSSSS MS US FF1-FF6 AM PM A.M. P.M.}</li>
+ *     <li>Time zone: {@code TZ TZH TZM OF}</li>
+ *     <li>Prefixes: {@code FM} and {@code TM}; {@code FX}</li>
+ *     <li>Suffixes: {@code TH}, {@code th}, and {@code SP}</li>
  * </ul>
  *
- * <p>Double-quoted text is copied literally ({@code \"} inside quotes is a quote); {@code \"} outside quotes
- * produces a quote; any other character is copied. Names are English. Without {@code FM}, {@code MONTH} and
- * {@code DAY} are blank-padded to 9 characters, {@code RM} to 4, and numbers are zero-padded to their width.
- * Where PostgreSQL and Oracle differ, PostgreSQL behavior is used ({@code D} is 1 for Sunday; {@code SSSS} is not
- * padded). Years before year 1 are shown as positive years with {@code BC}, and {@code CC} is negative for them
- * ({@code -01} for 44 BC). {@code FF} without digits uses the precision of the timestamp. Time zone patterns ({@code TZ},
- * {@code TZH}, {@code TZM}, {@code OF}) are rejected because the inputs have no time zone.
- * A date argument is treated as midnight of that day. Like PostgreSQL and Oracle, an empty template returns null.
+ * <p>The inputs have no time zone, so time zone patterns print as for a PostgreSQL {@code timestamp}: {@code TZ} is
+ * empty, {@code TZH} and {@code OF} are {@code +00}, and {@code TZM} is {@code 00}. Names are English. A date argument
+ * is formatted as midnight of that day. An empty template returns null.
  */
 public final class ToChar {
     private static final List<FnOverload> OVERLOADS = Collections.unmodifiableList(Arrays.asList(
@@ -66,21 +54,13 @@ public final class ToChar {
             .addParameters(PType.timestamp(), PType.string())
             .returns(PType.string())
             .isNullCall(true)
-            .body(args -> result(format(
-                args[0].getLocalDateTime(),
-                args[0].getType().getPrecision(),
-                args[1].getString()
-            )))
+            .body(args -> result(format(args[0].getLocalDateTime(), args[1].getString())))
             .build(),
         new FnOverload.Builder("to_char")
             .addParameters(PType.date(), PType.string())
             .returns(PType.string())
             .isNullCall(true)
-            .body(args -> result(format(
-                args[0].getLocalDate().atStartOfDay(),
-                0,
-                args[1].getString()
-            )))
+            .body(args -> result(format(args[0].getLocalDate().atStartOfDay(), args[1].getString())))
             .build()
     ));
 
@@ -93,9 +73,9 @@ public final class ToChar {
     static {
         List<String> patterns = Arrays.asList(
             "A.D.", "A.M.", "AD", "AM", "B.C.", "BC", "CC", "DAY", "DDD", "DD", "DY", "D",
-            "FF1", "FF2", "FF3", "FF4", "FF5", "FF6", "FF7", "FF8", "FF9", "FF", "FX",
+            "FF1", "FF2", "FF3", "FF4", "FF5", "FF6", "FX",
             "HH24", "HH12", "HH", "IDDD", "ID", "IW", "IYYY", "IYY", "IY", "I", "J",
-            "MI", "MM", "MONTH", "MON", "MS", "OF", "P.M.", "PM", "Q", "RM", "RRRR", "RR",
+            "MI", "MM", "MONTH", "MON", "MS", "OF", "P.M.", "PM", "Q", "RM",
             "SSSSS", "SSSS", "SS", "TZH", "TZM", "TZ", "US", "WW", "W",
             "Y,YYY", "YYYY", "YYY", "YY", "Y"
         );
@@ -129,7 +109,7 @@ public final class ToChar {
     /**
      * Returns the formatted [value], or null if [template] is empty.
      */
-    private static String format(LocalDateTime value, int precision, String template) {
+    private static String format(LocalDateTime value, String template) {
         if (template.isEmpty()) {
             return null;
         }
@@ -137,7 +117,7 @@ public final class ToChar {
         int i = 0;
         int n = template.length();
         while (i < n) {
-            // Like PostgreSQL, at most one prefix. It is consumed even when no pattern follows; the text after it is
+            // At most one prefix. It is consumed even when no pattern follows; the text after it is
             // then copied (or quoted) as usual, and a second prefix is copied as text.
             String prefix = matchPrefix(template, i);
             int start = prefix == null ? i : i + 2;
@@ -150,18 +130,14 @@ public final class ToChar {
             boolean translationMode = "TM".equals(prefix);
             String text = template.substring(start, start + pattern.length());
             i = start + pattern.length();
-            if (pattern.equals("FF") && precision > 0) {
-                // Oracle: FF without digits uses the precision of the timestamp.
-                pattern = "FF" + Math.min(precision, 9);
-            }
-
-            // Like PostgreSQL, a TH / th suffix is consumed after any pattern, but only numbers get an ordinal.
+            // At most one suffix (TH, th, or SP) is consumed after any pattern. Only numbers get an ordinal, and SP
+            // (spell mode) is not implemented, so it has no effect.
             boolean ordinalSuffix = template.startsWith("TH", i) || template.startsWith("th", i);
             boolean upperOrdinal = ordinalSuffix && template.charAt(i) == 'T';
-            if (ordinalSuffix) {
+            if (ordinalSuffix || template.startsWith("SP", i)) {
                 i += 2;
             }
-            Long number = number(pattern, value, precision);
+            Long number = number(pattern, value);
             if (number != null) {
                 String digits = pad(pattern, number, fillMode);
                 out.append(digits);
@@ -170,7 +146,7 @@ public final class ToChar {
                     out.append(upperOrdinal ? suffix.toUpperCase(Locale.ROOT) : suffix);
                 }
             } else {
-                // Like PostgreSQL, TM (translated names) also drops the blank padding of names.
+                // TM (translated names) also drops the blank padding of names.
                 out.append(text(pattern, text, value, fillMode || translationMode));
             }
         }
@@ -237,7 +213,7 @@ public final class ToChar {
     }
 
     /**
-     * Like PostgreSQL, a pattern matches only in upper case or lower case, and a name pattern also when capitalized,
+     * A pattern matches only in upper case or lower case, and a name pattern also when capitalized,
      * e.g. {@code MONTH}, {@code month}, {@code Month}, but not {@code MONth}.
      */
     private static boolean matchesCase(String template, int offset, String pattern, boolean allowCapitalized) {
@@ -268,22 +244,20 @@ public final class ToChar {
     /**
      * Returns the numeric value of [pattern], or null if the pattern produces text.
      */
-    private static Long number(String pattern, LocalDateTime value, int precision) {
+    private static Long number(String pattern, LocalDateTime value) {
         int year = displayYear(value);
         switch (pattern) {
             case "Y,YYY":
             case "YYYY":
-            case "RRRR":
                 return (long) year;
             case "YYY":
                 return (long) (year % 1000);
             case "YY":
-            case "RR":
                 return (long) (year % 100);
             case "Y":
                 return (long) (year % 10);
             case "CC":
-                // Like PostgreSQL, centuries before year 1 are negative: 44 BC is century -1.
+                // Centuries before year 1 are negative: 44 BC is century -1.
                 return value.getYear() > 0 ? (long) ((value.getYear() - 1) / 100 + 1) : (long) (value.getYear() / 100 - 1);
             case "IYYY":
                 return (long) isoYear(value);
@@ -339,9 +313,6 @@ public final class ToChar {
             case "FF4":
             case "FF5":
             case "FF6":
-            case "FF7":
-            case "FF8":
-            case "FF9":
                 return fraction(value, pattern.charAt(2) - '0');
             default:
                 return null;
@@ -360,7 +331,6 @@ public final class ToChar {
         switch (pattern) {
             case "Y,YYY":
             case "YYYY":
-            case "RRRR":
             case "IYYY":
                 return 4;
             case "YYY":
@@ -370,7 +340,6 @@ public final class ToChar {
             case "MS":
                 return 3;
             case "YY":
-            case "RR":
             case "IY":
             case "CC":
             case "MM":
@@ -395,14 +364,14 @@ public final class ToChar {
 
     private static String pad(String pattern, long number, boolean fillMode) {
         if (pattern.equals("Y,YYY")) {
-            // Like PostgreSQL, always "<thousands>,<three digits>", regardless of fill mode.
+            // Always "<thousands>,<three digits>", regardless of fill mode.
             return (number / 1000) + "," + zeroPad(Long.toString(number % 1000), 3);
         }
         // Fractional seconds are digits after a decimal point, so fill mode does not remove their leading zeros.
         boolean fractional = pattern.equals("MS") || pattern.equals("US") || pattern.startsWith("FF");
         int width = fillMode && !fractional ? 0 : width(pattern);
         if (number < 0) {
-            // Like PostgreSQL, a negative century is "-01": the sign comes before the zero padding.
+            // A negative century is "-01": the sign comes before the zero padding.
             return "-" + zeroPad(Long.toString(-number), width);
         }
         return zeroPad(Long.toString(number), width);
@@ -460,18 +429,17 @@ public final class ToChar {
             case "A.D.":
             case "B.C.":
                 return marker(value.getYear() > 0 ? "A.D." : "B.C.", text);
+            // The inputs have no time zone: offset zero and no abbreviation.
             case "TZ":
-            case "TZH":
-            case "TZM":
-            case "OF":
-                throw new IllegalArgumentException(
-                    "Time zone pattern is not supported for to_char without a time zone: " + text
-                );
-            case "FF":
-                // A date or TIMESTAMP(0) has no fractional seconds.
                 return "";
+            case "TZH":
+                return "+00";
+            case "TZM":
+                return "00";
+            case "OF":
+                return fillMode ? "+0" : "+00";
             case "FX":
-                // Like PostgreSQL, FX (fixed format) is a pattern that only affects parsing, so it prints nothing.
+                // FX (fixed format) only affects parsing, so it prints nothing.
                 return "";
             default:
                 throw new IllegalStateException("Unhandled to_char pattern: " + pattern);
