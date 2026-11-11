@@ -505,7 +505,7 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
     @Deprecated
     @NotNull
     public Rex visitWindowPartition(@NotNull Rex rex, C ctx) {
-        return visit(rex, ctx, Rex.class);
+        return visitRex(rex, ctx);
     }
 
     @Override
@@ -692,10 +692,10 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
     public RexMap.Entry visitMapEntry(@NotNull RexMap.Entry entry, C ctx) {
         // rewrite key
         Rex key = entry.getKey();
-        Rex key_new = visit(key, ctx, Rex.class);
+        Rex key_new = visitRex(key, ctx);
         // rewrite value
         Rex value = entry.getValue();
-        Rex value_new = visit(value, ctx, Rex.class);
+        Rex value_new = visitRex(value, ctx);
         // rewrite entry
         if (key != key_new || value != value_new) {
             return RexMap.entry(key_new, value_new);

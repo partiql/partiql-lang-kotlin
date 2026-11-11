@@ -261,7 +261,7 @@ public interface Operators {
      * @deprecated This feature is experimental and is subject to change.
      * @param name the window name, or null for an in-line window specification
      * @param input the input
-     * @param bindings the output binding name of each window function, in order
+     * @param windowFunctionBindings the output binding name of each window function, in order
      * @param windowFunctions the window functions
      * @param collations the window ordering
      * @param partitions the window partitioning
@@ -270,11 +270,11 @@ public interface Operators {
     public fun window(
         name: String?,
         input: Rel,
-        bindings: List<String>,
+        windowFunctionBindings: List<String>,
         windowFunctions: List<WindowFunctionNode>,
         collations: List<Collation>,
         partitions: List<Rex>,
-    ): RelWindow = RelWindow.create(name, input, bindings, windowFunctions, collations, partitions)
+    ): RelWindow = RelWindow.create(name, input, windowFunctionBindings, windowFunctions, collations, partitions)
 
     // --- REX OPERATORS -----------------------------------------------------------------------------------------------
 

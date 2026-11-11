@@ -104,13 +104,13 @@ class OperatorRewriterChildrenTest {
             override fun window(
                 name: String?,
                 input: Rel,
-                bindings: List<String>,
+                windowFunctionBindings: List<String>,
                 windowFunctions: List<WindowFunctionNode>,
                 collations: List<Collation>,
                 partitions: List<Rex>,
             ): RelWindow {
                 created++
-                return super.window(name, input, bindings, windowFunctions, collations, partitions)
+                return super.window(name, input, windowFunctionBindings, windowFunctions, collations, partitions)
             }
         }
         val rewriter = object : OperatorRewriter<Unit>(operators) {

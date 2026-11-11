@@ -34,6 +34,7 @@ Thank you to all who have contributed!
 - **EXPERIMENTAL**: Added `OperatorRewriter.visitWindowFunction`, `visitWindowPartition`, and `visitMapEntry`, and `Operators.window`.
 
 ### Changed
+- Java classes that implement `Operators` directly must implement the new `error(PType, PError)` and `window(...)` methods; Kotlin implementations inherit the defaults.
 - Aggregate window functions resolve to the built-in aggregate when the session has the default system catalog, even if a catalog on the session path defines an aggregate with the same name.
 - The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
