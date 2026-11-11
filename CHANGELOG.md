@@ -26,18 +26,36 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- **EXPERIMENTAL**: Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
+- Added the `PError.INVALID_WINDOW_FUNCTION` error code, with the `FN_NAME`, `WINDOW_NAME`, and `REASON` properties. It is reported as a warning for a missing window `ORDER BY`, and as an error for `DISTINCT` with a window `ORDER BY` or for an outer reference or a subquery in a window function or `WINDOW` clause definition (SQL:2023 Subclause 9.23, Syntax Rule 3).
+- `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
+- `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
+- **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
 
 ### Changed
+- Aggregate window functions resolve to the built-in aggregate when the session has the default system catalog, even if a catalog on the session path defines an aggregate with the same name.
+- The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
 ### Deprecated
 
 ### Fixed
+- Fixed `SqlDialect` dropping the `PARTITION BY`/`ORDER BY` of a window that refines a named window, e.g. `OVER (w ORDER BY y)` printed as `OVER w`, and printing `WINDOW w2 AS (w1)` without parentheses.
 - Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
 - Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.
 - Fixed a re-opened window operator emitting a stale row from a previous, partially consumed run.
 - Fixed `SUM` failing on statically typed `BIGINT` arguments.
+- Fixed path index on `VARIANT` always failing ([#1983](https://github.com/partiql/partiql-lang-kotlin/issues/1983)). An Ion list or S-expression is now indexed like an array: ``` `[1, 2]`[0] ``` returns `1` instead of `MISSING` in permissive mode or an error in strict mode. A `VARIANT` index also works, as in ``` [10, 20][`1`] ```.
+  - Results change for queries that index Ion data and relied on `MISSING`.
+  - A null element is returned as an Ion null, the same as ``` `{a: null}`.a ```, so ``` `[null]`[0] IS NULL ``` is now false. [#1994](https://github.com/partiql/partiql-lang-kotlin/issues/1994) tracks `IS NULL` on Ion nulls.
+- Fixed an error in an `ORDER BY` key, including a window `ORDER BY` key, failing the query in permissive mode ([#1982](https://github.com/partiql/partiql-lang-kotlin/issues/1982)). It now evaluates to `MISSING`, as it does in a projection. Strict mode still fails. This covers every data error in a sort key, such as a failed `CAST`, a path that fails, and a `MAP` index whose key is missing or of the wrong type (`MAP_KEY_NOT_FOUND`, `MAP_KEY_TYPE_MISMATCH`). A path index is now wrapped for permissive mode in every position, like a path key or symbol.
+- Fixed a `BIGINT` path index being narrowed to 32 bits, which returned the wrong element: `[10, 20][4294967296]` returned `10`. It is now out of range: `MISSING` in permissive mode, `PATH_INDEX_NEVER_SUCCEEDS` in strict mode. An index that is not an integer at runtime now also fails with `PATH_INDEX_NEVER_SUCCEEDS` instead of `TYPE_UNEXPECTED`.
+- Fixed indexing a null array, such as `CAST(NULL AS LIST)[0]`, failing with an internal `NullPointerException` in both modes. A null array, including Ion `null.list` and `null.sexp`, now gives `NULL` (SQL:2023 section 6.25).
+- Fixed strict mode raising `INTERNAL_ERROR` for an expression the planner proved will fail ([#1988](https://github.com/partiql/partiql-lang-kotlin/issues/1988)). It now raises the planner's error code, such as `PATH_SYMBOL_NEVER_SUCCEEDS`, `PATH_KEY_NEVER_SUCCEEDS`, `PATH_INDEX_NEVER_SUCCEEDS`, `FUNCTION_TYPE_MISMATCH` or `TYPE_UNEXPECTED`, with the planner's location and properties. The error has severity `ERROR` and kind `EXECUTION`, like errors from checks that run only at runtime. Permissive mode is unchanged.
+  - Hosts that match on `INTERNAL_ERROR` for these queries now see the specific code.
+- Fixed a non-numeric `OFFSET` being planned as a second `LIMIT`.
 
 ### Removed
+- **BREAKING**: For the _experimental_ window functions, removed support for an outer reference or a subquery in a window function, including its `OVER` specification and `WINDOW` clause definition (SQL:2023 Subclause 9.23, Syntax Rule 3). Such queries now fail to plan with `INVALID_WINDOW_FUNCTION`.
 
 ### Security
 

@@ -33,6 +33,7 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 import org.partiql.spi.types.PTypeField
 import org.partiql.types.BagType
@@ -3907,6 +3908,101 @@ internal class PlanTyperTestsPorted {
         )
 
         @JvmStatic
+        fun windowAggregateParityCases(): List<Arguments> {
+            // (FROM source, argument)
+            val data = listOf(
+                "<< { 'a': 1, 'b': 2 }, { 'a': 3, 'b': 4 } >>" to "t.a",
+                "<< { 'a': CAST(1 AS BIGINT), 'b': 2 } >>" to "t.a",
+                "<< { 'a': 1.5, 'b': 2 }, { 'a': 2.25, 'b': 2 } >>" to "t.a",
+                "<< { 'a': 1e0, 'b': 2 } >>" to "t.a",
+                "<< { 'a': 'x', 'b': 2 }, { 'a': 'y', 'b': 2 } >>" to "t.a",
+                // Statically-typed table: b is INT, c is STRING, a is BOOL
+                "main.T" to "t.b",
+                "main.T" to "t.c",
+                "main.T" to "t.a",
+            )
+            val aggregates = listOf("COUNT(*)", "COUNT(%s)", "SUM(%s)", "AVG(%s)", "MIN(%s)", "MAX(%s)", "SUM(DISTINCT %s)")
+            return aggregates.flatMap { agg -> data.map { (source, arg) -> Arguments.of(agg.format(arg), source) } }
+        }
+
+        private val windowWarning = assertWarningExists(PErrors.experimental("Window Clause"))
+
+        private const val windowData = "<< { 'a': 1, 'b': 2, 's': 'x' }, { 'a': 3, 'b': 4, 's': 'y' } >>"
+
+        @JvmStatic
+        fun windowAggregateCases() = listOf(
+            SuccessTestCase(
+                name = "SUM window over INT",
+                query = "SELECT VALUE SUM(t.a) OVER (PARTITION BY t.b ORDER BY t.a) FROM $windowData AS t",
+                expected = BagType(INT8),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "COUNT(*) window",
+                query = "SELECT VALUE COUNT(*) OVER (ORDER BY t.a) FROM $windowData AS t",
+                expected = BagType(INT8),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "COUNT window over STRING",
+                query = "SELECT VALUE COUNT(t.s) OVER () FROM $windowData AS t",
+                expected = BagType(INT8),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "MIN window over INT",
+                query = "SELECT VALUE MIN(t.a) OVER (PARTITION BY t.b) FROM $windowData AS t",
+                expected = BagType(INT4),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "MAX window over STRING",
+                query = "SELECT VALUE MAX(t.c) OVER (ORDER BY t.b) FROM main.T AS t",
+                // Same as the group aggregate MAX(STRING), which resolves to the dynamic MAX.
+                expected = PType.bag(PType.dynamic()),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "COUNT DISTINCT window without ORDER BY",
+                query = "SELECT VALUE COUNT(DISTINCT t.a) OVER (PARTITION BY t.b) FROM $windowData AS t",
+                expected = BagType(INT8),
+                warnings = windowWarning,
+            ),
+            SuccessTestCase(
+                name = "Window aggregate over a group aggregate",
+                query = "SELECT VALUE SUM(SUM(t.a)) OVER (ORDER BY b) FROM $windowData AS t GROUP BY t.b AS b",
+                // SUM(INT) is BIGINT and SUM(BIGINT) is DECIMAL, the same as for group aggregates.
+                expected = PType.bag(PType.decimal(38, 19)),
+                warnings = windowWarning,
+            ),
+            // Note: SUM/AVG over non-numeric arguments (e.g. STRING, BOOL) are not planning errors for group aggregates
+            // either, since they resolve to the dynamic overload and fail at evaluation; see
+            // testWindowAggregateTypesMatchGroupAggregates and the evaluator's WindowTests.
+            // SQL:2023 9.23 SR 8d: DISTINCT with a window ORDER BY is invalid, except for COUNT (optional Feature T627).
+            ErrorTestCase(
+                name = "SUM(DISTINCT) window aggregate with ORDER BY is invalid",
+                query = "SELECT VALUE SUM(DISTINCT t.a) OVER (PARTITION BY t.b ORDER BY t.a) FROM $windowData AS t",
+                problemHandler = assertProblemExists(
+                    PErrors.invalidWindowFunction("SUM", "does not allow DISTINCT when its OVER specification has an ORDER BY clause. Remove DISTINCT or the window ORDER BY", Severity.ERROR())
+                ),
+            ),
+            ErrorTestCase(
+                name = "MAX(DISTINCT) window aggregate with ORDER BY in a named window is invalid",
+                query = "SELECT VALUE MAX(DISTINCT t.a) OVER w FROM $windowData AS t WINDOW w AS (ORDER BY t.a)",
+                problemHandler = assertProblemExists(
+                    PErrors.invalidWindowFunction("MAX", "does not allow DISTINCT when its OVER specification has an ORDER BY clause. Remove DISTINCT or the window ORDER BY", Severity.ERROR())
+                ),
+            ),
+            ErrorTestCase(
+                name = "COUNT(DISTINCT) window aggregate with ORDER BY is not supported (Feature T627)",
+                query = "SELECT VALUE COUNT(DISTINCT t.a) OVER w FROM $windowData AS t WINDOW w AS (ORDER BY t.a)",
+                problemHandler = assertProblemExists(
+                    PErrors.featureNotSupported("COUNT(DISTINCT) with a window ORDER BY clause")
+                ),
+            ),
+        )
+
+        @JvmStatic
         fun mapCases() = listOf(
             ErrorTestCase(
                 name = "MAP with heterogeneous incompatible key types",
@@ -4201,6 +4297,32 @@ internal class PlanTyperTestsPorted {
     @MethodSource("mapCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testMap(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("windowAggregateCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testWindowAggregates(tc: TestCase) = runTest(tc)
+
+    /**
+     * Asserts that an aggregate used as a window function (`agg OVER ()`) has exactly the same type (or the same
+     * errors) as the aggregate used as a group aggregate, as both are resolved through the same aggregate resolution.
+     */
+    @ParameterizedTest
+    @MethodSource("windowAggregateParityCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testWindowAggregateTypesMatchGroupAggregates(aggregate: String, data: String) {
+        val session = Session.builder().catalog("pql").catalogs(*catalogs.toTypedArray()).build()
+        val groupCollector = PErrorCollector()
+        val groupPlan = infer("SELECT VALUE $aggregate FROM $data AS t", session, groupCollector)
+        val windowCollector = PErrorCollector()
+        val windowPlan = infer("SELECT VALUE $aggregate OVER () FROM $data AS t", session, windowCollector)
+        assertEquals(groupCollector.errors.map { it.code() }, windowCollector.errors.map { it.code() }, "errors of $aggregate over $data")
+        if (groupCollector.errors.isEmpty()) {
+            val groupType = (groupPlan.action as Action.Query).rex.type.pType
+            val windowType = (windowPlan.action as Action.Query).rex.type.pType
+            assertEquals(groupType, windowType, "type of $aggregate over $data")
+        }
+    }
 
     /**
      * While all existing CTE tests exist in the evaluator, this one exists in the planner, since it causes a compilation
@@ -4924,6 +5046,41 @@ internal class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists(
                     PErrors.functionTypeMismatch(null, Identifier.delimited("trim_chars"), listOf(PType.string(), PType.integer()), emptyList())
                 )
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST return DOUBLE PRECISION",
+                catalog = CATALOG_AWS,
+                catalogPath = listOf("ddb"),
+                query = """
+                    SELECT
+                        PERCENT_RANK() OVER (PARTITION BY p.breed ORDER BY p.id) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY p.id DESC) AS _cume_dist
+                    FROM pets AS p
+                """.trimIndent(),
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "_percent_rank" to StaticType.FLOAT,
+                            "_cume_dist" to StaticType.FLOAT,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause")),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST in an arithmetic expression return DOUBLE PRECISION",
+                query = """
+                    SELECT VALUE PERCENT_RANK() OVER (ORDER BY t.a) + CUME_DIST() OVER (ORDER BY t.a)
+                    FROM << { 'a': 1 }, { 'a': 2 } >> AS t
+                """.trimIndent(),
+                expected = BagType(StaticType.FLOAT),
+                warnings = assertWarningExists(PErrors.experimental("Window Clause")),
             ),
             SuccessTestCase(
                 name = "LAG with IGNORE NULLS",
