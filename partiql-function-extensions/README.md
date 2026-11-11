@@ -25,8 +25,8 @@ The `compat` package preserves selected pre-1.0 PLK behavior. The `custom` packa
 | `compat.datetime` | `utcnow` | `() -> timestamp` |
 | `custom.collection` | `contains` | `(array, string) -> bool` |
 | `custom.conversion` | `hex_to_bigint` | `(string) -> bigint` |
-| `custom.datetime` | `date_trunc` | `(string, timestamp) -> timestamp`, `(string, date) -> timestamp` |
-| `custom.datetime` | `to_char` | `(timestamp, string) -> string`, `(date, string) -> string`; follows PostgreSQL `to_char` |
+| `custom.datetime` | `date_trunc` | `(string, timestamp) -> timestamp`, `(string, timestamp with time zone) -> timestamp with time zone`, `(string, date) -> timestamp` |
+| `custom.datetime` | `to_char` | `(timestamp, string) -> string`, `(timestamp with time zone, string) -> string`, `(date, string) -> string`; follows PostgreSQL `to_char` |
 | `custom.datetime` | `to_unixtime` | `(timestamp) -> bigint` |
 | `custom.math` | `pow` | `(T, T) -> double precision`, where `T` is a numeric primitive type |
 

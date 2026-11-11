@@ -21,6 +21,7 @@ import org.partiql.spi.value.Datum;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
@@ -34,7 +35,8 @@ import java.util.Locale;
  * <p>Supported parts (case-insensitive) are {@code millisecond}, {@code second}, {@code minute}, {@code hour},
  * {@code day}, {@code week}, {@code month}, {@code quarter}, and {@code year}. Weeks start on Monday (ISO 8601).
  * The behavior follows PostgreSQL's {@code date_trunc}: a date argument is treated as midnight of that day, and the
- * result is always a timestamp.
+ * result is a timestamp. A {@code TIMESTAMP WITH TIME ZONE} is truncated in its own offset and keeps it, as in
+ * PostgreSQL with that offset as the session time zone.
  */
 public final class DateTrunc {
     private static final List<FnOverload> OVERLOADS = Collections.unmodifiableList(Arrays.asList(
@@ -46,6 +48,19 @@ public final class DateTrunc {
                 truncate(args[0].getString(), args[1].getLocalDateTime()),
                 args[1].getType().getPrecision()
             ))
+            .build(),
+        new FnOverload.Builder("date_trunc")
+            .addParameters(PType.string(), PType.timestampz())
+            .returns(PType.timestampz())
+            .isNullCall(true)
+            .body(args -> {
+                // Truncates the value's own date and time, and keeps its offset.
+                OffsetDateTime value = args[1].getOffsetDateTime();
+                return Datum.timestampz(
+                    truncate(args[0].getString(), value.toLocalDateTime()).atOffset(value.getOffset()),
+                    args[1].getType().getPrecision()
+                );
+            })
             .build(),
         new FnOverload.Builder("date_trunc")
             .addParameters(PType.string(), PType.date())

@@ -23,6 +23,8 @@ import org.partiql.spi.value.Datum;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.YearMonth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,6 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class DateTruncTest {
     private static final Fn TIMESTAMP_FUNCTION = FunctionTestSupport.function(
         FunctionTestSupport.overloadFor(DateTrunc.overloads(), PType.string(), PType.timestamp())
+    );
+    private static final Fn TIMESTAMPZ_FUNCTION = FunctionTestSupport.function(
+        FunctionTestSupport.overloadFor(DateTrunc.overloads(), PType.string(), PType.timestampz())
     );
     private static final Fn DATE_FUNCTION = FunctionTestSupport.function(
         FunctionTestSupport.overloadFor(DateTrunc.overloads(), PType.string(), PType.date())
@@ -66,6 +71,26 @@ public class DateTruncTest {
         });
 
         assertEquals(LocalDateTime.of(2020, 12, 28, 0, 0), result.getLocalDateTime());
+    }
+
+    @Test
+    public void truncatesTimestampWithTimeZoneInItsOwnOffset() {
+        // Like PostgreSQL with the offset as the session time zone: 2020-08-13 23:20:30-05 -> 2020-08-13 00:00:00-05.
+        ZoneOffset offset = ZoneOffset.ofHours(-5);
+        for (int precision : new int[] {0, 6}) {
+            Datum result = TIMESTAMPZ_FUNCTION.invoke(new Datum[] {
+                Datum.string("day"),
+                Datum.timestampz(OffsetDateTime.of(2020, 8, 13, 23, 20, 30, 0, offset), precision)
+            });
+
+            assertEquals(PType.timestampz(precision), result.getType());
+            assertEquals(OffsetDateTime.of(2020, 8, 13, 0, 0, 0, 0, offset), result.getOffsetDateTime());
+        }
+        Datum week = TIMESTAMPZ_FUNCTION.invoke(new Datum[] {
+            Datum.string("week"),
+            Datum.timestampz(OffsetDateTime.of(2021, 1, 3, 23, 59, 0, 0, ZoneOffset.ofHoursMinutes(5, 30)), 6)
+        });
+        assertEquals(OffsetDateTime.of(2020, 12, 28, 0, 0, 0, 0, ZoneOffset.ofHoursMinutes(5, 30)), week.getOffsetDateTime());
     }
 
     @Test

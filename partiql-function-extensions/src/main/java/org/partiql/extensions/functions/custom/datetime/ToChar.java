@@ -20,6 +20,8 @@ import org.partiql.spi.types.PType;
 import org.partiql.spi.value.Datum;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.TextStyle;
 import java.time.temporal.IsoFields;
 import java.time.temporal.JulianFields;
@@ -30,8 +32,8 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * {@code to_char} overloads that format a timestamp or date with a PostgreSQL datetime template. The behavior follows
- * PostgreSQL's {@code to_char}.
+ * {@code to_char} overloads that format a timestamp, timestamp with time zone, or date with a PostgreSQL datetime
+ * template. The behavior follows PostgreSQL's {@code to_char}.
  *
  * <ul>
  *     <li>Year: {@code Y,YYY YYYY YYY YY Y CC IYYY IYY IY I AD BC A.D. B.C.}</li>
@@ -44,9 +46,11 @@ import java.util.Locale;
  *     <li>Suffixes: {@code TH}, {@code th}, and {@code SP}</li>
  * </ul>
  *
- * <p>The inputs have no time zone, so time zone patterns print as for a PostgreSQL {@code timestamp}: {@code TZ} is
- * empty, {@code TZH} and {@code OF} are {@code +00}, and {@code TZM} is {@code 00}. Names are English. A date argument
- * is formatted as midnight of that day. An empty template returns null.
+ * <p>A {@code TIMESTAMP WITH TIME ZONE} is formatted in its own offset, as in PostgreSQL with that offset as the
+ * session time zone: {@code TZH}, {@code TZM}, and {@code OF} come from the offset, and {@code TZ} is the offset
+ * ({@code -05}, {@code +05:30}). A timestamp or date has no time zone, so it formats as in PostgreSQL for a
+ * {@code timestamp}: {@code TZ} is empty, {@code TZH} and {@code OF} are {@code +00}, and {@code TZM} is {@code 00}.
+ * Names are English. A date argument is formatted as midnight of that day. An empty template returns null.
  */
 public final class ToChar {
     private static final List<FnOverload> OVERLOADS = Collections.unmodifiableList(Arrays.asList(
@@ -54,13 +58,22 @@ public final class ToChar {
             .addParameters(PType.timestamp(), PType.string())
             .returns(PType.string())
             .isNullCall(true)
-            .body(args -> result(format(args[0].getLocalDateTime(), args[1].getString())))
+            .body(args -> result(format(args[0].getLocalDateTime(), null, args[1].getString())))
+            .build(),
+        new FnOverload.Builder("to_char")
+            .addParameters(PType.timestampz(), PType.string())
+            .returns(PType.string())
+            .isNullCall(true)
+            .body(args -> {
+                OffsetDateTime value = args[0].getOffsetDateTime();
+                return result(format(value.toLocalDateTime(), value.getOffset(), args[1].getString()));
+            })
             .build(),
         new FnOverload.Builder("to_char")
             .addParameters(PType.date(), PType.string())
             .returns(PType.string())
             .isNullCall(true)
-            .body(args -> result(format(args[0].getLocalDate().atStartOfDay(), args[1].getString())))
+            .body(args -> result(format(args[0].getLocalDate().atStartOfDay(), null, args[1].getString())))
             .build()
     ));
 
@@ -107,9 +120,10 @@ public final class ToChar {
     }
 
     /**
-     * Returns the formatted [value], or null if [template] is empty.
+     * Returns the formatted {@code value}, or null if {@code template} is empty. {@code offset} is the time zone offset
+     * of a {@code TIMESTAMP WITH TIME ZONE}, or null for a value without a time zone.
      */
-    private static String format(LocalDateTime value, String template) {
+    private static String format(LocalDateTime value, ZoneOffset offset, String template) {
         if (template.isEmpty()) {
             return null;
         }
@@ -146,8 +160,7 @@ public final class ToChar {
                     out.append(upperOrdinal ? suffix.toUpperCase(Locale.ROOT) : suffix);
                 }
             } else {
-                // TM (translated names) also drops the blank padding of names.
-                out.append(text(pattern, text, value, fillMode || translationMode));
+                out.append(text(pattern, text, value, offset, fillMode, translationMode));
             }
         }
         return out.toString();
@@ -404,19 +417,28 @@ public final class ToChar {
         }
     }
 
-    private static String text(String pattern, String text, LocalDateTime value, boolean fillMode) {
+    private static String text(
+        String pattern,
+        String text,
+        LocalDateTime value,
+        ZoneOffset offset,
+        boolean fillMode,
+        boolean translationMode
+    ) {
+        // TM (translated names) also drops the blank padding of names.
+        boolean noPadding = fillMode || translationMode;
         switch (pattern) {
             case "MONTH":
-                return padRight(withCase(value.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH), text), 9, fillMode);
+                return padRight(withCase(value.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH), text), 9, noPadding);
             case "MON":
                 return withCase(value.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH), text);
             case "DAY":
-                return padRight(withCase(value.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH), text), 9, fillMode);
+                return padRight(withCase(value.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH), text), 9, noPadding);
             case "DY":
                 return withCase(value.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH), text);
             case "RM":
                 String roman = ROMAN_MONTHS[value.getMonthValue() - 1];
-                return padRight(Character.isLowerCase(text.charAt(0)) ? roman.toLowerCase(Locale.ROOT) : roman, 4, fillMode);
+                return padRight(Character.isLowerCase(text.charAt(0)) ? roman.toLowerCase(Locale.ROOT) : roman, 4, noPadding);
             case "AM":
             case "PM":
                 return marker(value.getHour() < 12 ? "AM" : "PM", text);
@@ -429,21 +451,43 @@ public final class ToChar {
             case "A.D.":
             case "B.C.":
                 return marker(value.getYear() > 0 ? "A.D." : "B.C.", text);
-            // The inputs have no time zone: offset zero and no abbreviation.
+            // A value without a time zone formats as offset zero with no abbreviation. A TIMESTAMP WITH TIME ZONE has
+            // only an offset, so its abbreviation is the offset, as for a PostgreSQL fixed-offset time zone.
             case "TZ":
-                return "";
+                return offset == null ? "" : offset(offset, false);
             case "TZH":
-                return "+00";
+                return sign(offset) + zeroPad(Integer.toString(Math.abs(offsetSeconds(offset)) / 3600), 2);
             case "TZM":
-                return "00";
+                return zeroPad(Integer.toString(Math.abs(offsetSeconds(offset)) / 60 % 60), 2);
             case "OF":
-                return fillMode ? "+0" : "+00";
+                return offset(offset, fillMode);
             case "FX":
                 // FX (fixed format) only affects parsing, so it prints nothing.
                 return "";
             default:
                 throw new IllegalStateException("Unhandled to_char pattern: " + pattern);
         }
+    }
+
+    private static int offsetSeconds(ZoneOffset offset) {
+        return offset == null ? 0 : offset.getTotalSeconds();
+    }
+
+    private static String sign(ZoneOffset offset) {
+        return offsetSeconds(offset) < 0 ? "-" : "+";
+    }
+
+    /**
+     * Returns {@code offset} as {@code +HH}, or {@code +HH:MM} when it has minutes; without zero padding of the hours in
+     * fill mode.
+     */
+    private static String offset(ZoneOffset offset, boolean fillMode) {
+        int seconds = Math.abs(offsetSeconds(offset));
+        String hours = Integer.toString(seconds / 3600);
+        int minutes = seconds / 60 % 60;
+        return sign(offset)
+            + (fillMode ? hours : zeroPad(hours, 2))
+            + (minutes == 0 ? "" : ":" + zeroPad(Integer.toString(minutes), 2));
     }
 
     /**

@@ -23,6 +23,7 @@ import org.partiql.spi.value.Datum;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,6 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ToCharTest {
     private static final Fn TIMESTAMP_FUNCTION = FunctionTestSupport.function(
         FunctionTestSupport.overloadFor(ToChar.overloads(), PType.timestamp(), PType.string())
+    );
+    private static final Fn TIMESTAMPZ_FUNCTION = FunctionTestSupport.function(
+        FunctionTestSupport.overloadFor(ToChar.overloads(), PType.timestampz(), PType.string())
     );
     private static final Fn DATE_FUNCTION = FunctionTestSupport.function(
         FunctionTestSupport.overloadFor(ToChar.overloads(), PType.date(), PType.string())
@@ -247,8 +251,28 @@ public class ToCharTest {
         assertFormat(value, "IYYY|IYY|IY|I|IYYY-\"W\"IW-ID", "0044|044|44|4|0044-W11-5");
     }
 
+    @Test
+    public void formatsTimestampWithTimeZoneInItsOwnOffset() {
+        // Expected values are PostgreSQL's with the offset as the session time zone.
+        String template = "YYYY-MM-DD HH24:MI:SS|TZ|tz|TZH|TZM|OF|FMOF|FMTZH|TZHth|OFTH";
+        assertFormatZoned(ZoneOffset.ofHours(-5), template, "2020-08-13 14:05:09|-05|-05|-05|00|-05|-5|-05|-05|-05");
+        assertFormatZoned(ZoneOffset.ofHoursMinutes(5, 30), template,
+            "2020-08-13 14:05:09|+05:30|+05:30|+05|30|+05:30|+5:30|+05|+05|+05:30");
+        assertFormatZoned(ZoneOffset.ofHoursMinutes(-3, -45), template,
+            "2020-08-13 14:05:09|-03:45|-03:45|-03|45|-03:45|-3:45|-03|-03|-03:45");
+        assertFormatZoned(ZoneOffset.UTC, template, "2020-08-13 14:05:09|+00|+00|+00|00|+00|+0|+00|+00|+00");
+    }
+
     private static void assertFormat(LocalDateTime value, String template, String expected) {
         assertEquals(expected, format(value, template), template);
+    }
+
+    private static void assertFormatZoned(ZoneOffset offset, String template, String expected) {
+        String actual = TIMESTAMPZ_FUNCTION.invoke(new Datum[] {
+            Datum.timestampz(BASE.atOffset(offset), 6),
+            Datum.string(template)
+        }).getString();
+        assertEquals(expected, actual, template + " " + offset);
     }
 
     private static String format(LocalDateTime value, String template) {

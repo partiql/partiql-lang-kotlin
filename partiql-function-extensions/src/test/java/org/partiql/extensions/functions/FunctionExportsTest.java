@@ -82,7 +82,7 @@ public class FunctionExportsTest {
             Arrays.asList(PType.string(), PType.integer(), PType.timestamp()),
             PType.timestamp()
         );
-        assertEquals(2, DateTrunc.overloads().size());
+        assertEquals(3, DateTrunc.overloads().size());
         for (PType type : Arrays.asList(PType.timestamp(), PType.date())) {
             assertSignature(
                 FunctionTestSupport.overloadFor(DateTrunc.overloads(), PType.string(), type),
@@ -91,8 +91,14 @@ public class FunctionExportsTest {
                 PType.timestamp()
             );
         }
-        assertEquals(2, ToChar.overloads().size());
-        for (PType type : Arrays.asList(PType.timestamp(), PType.date())) {
+        assertSignature(
+            FunctionTestSupport.overloadFor(DateTrunc.overloads(), PType.string(), PType.timestampz()),
+            "date_trunc",
+            Arrays.asList(PType.string(), PType.timestampz()),
+            PType.timestampz()
+        );
+        assertEquals(3, ToChar.overloads().size());
+        for (PType type : Arrays.asList(PType.timestamp(), PType.timestampz(), PType.date())) {
             assertSignature(
                 FunctionTestSupport.overloadFor(ToChar.overloads(), type, PType.string()),
                 "to_char",
