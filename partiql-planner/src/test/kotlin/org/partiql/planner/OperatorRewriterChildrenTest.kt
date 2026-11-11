@@ -4,9 +4,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Action
+import org.partiql.plan.Collation
 import org.partiql.plan.Operator
 import org.partiql.plan.OperatorRewriter
 import org.partiql.plan.Operators
+import org.partiql.plan.WindowFunctionNode
+import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelFilter
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelType
@@ -92,6 +95,31 @@ class OperatorRewriterChildrenTest {
             assertEquals(original.windowFunctions.map { it.isDistinct }, new.windowFunctions.map { it.isDistinct })
             assertEquals(original.windowFunctions.map { it.routineRef }, new.windowFunctions.map { it.routineRef })
         }
+    }
+
+    @Test
+    fun rebuildsWindowWithRewriterOperators() {
+        var created = 0
+        val operators = object : Operators {
+            override fun window(
+                name: String?,
+                input: Rel,
+                bindings: List<String>,
+                windowFunctions: List<WindowFunctionNode>,
+                collations: List<Collation>,
+                partitions: List<Rex>,
+            ): RelWindow {
+                created++
+                return super.window(name, input, bindings, windowFunctions, collations, partitions)
+            }
+        }
+        val rewriter = object : OperatorRewriter<Unit>(operators) {
+            override fun visitLit(rex: RexLit, ctx: Unit): Operator = IncrementIntegers().visitLit(rex, ctx)
+        }
+        val root = plan("SELECT SUM(t.b + 0) OVER () AS s FROM << { 'a': 1, 'b': 2 } >> AS t")
+        val window = windows(rewriter.visitRex(root, Unit)).single()
+        assertEquals(1, created)
+        assertEquals(listOf(1), window.windowFunctions.single().arguments.flatMap { integers(it) })
     }
 
     @Test

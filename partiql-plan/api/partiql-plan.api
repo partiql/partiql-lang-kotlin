@@ -356,6 +356,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun union (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public abstract fun unpivot (Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public abstract fun variable (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
+	public abstract fun window (Ljava/lang/String;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
 	public abstract fun with (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelWith;
 }
 
@@ -406,6 +407,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun union (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public static fun unpivot (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public static fun variable (Lorg/partiql/plan/Operators;IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
+	public static fun window (Lorg/partiql/plan/Operators;Ljava/lang/String;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
 	public static fun with (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelWith;
 }
 

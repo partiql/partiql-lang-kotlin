@@ -31,7 +31,7 @@ Thank you to all who have contributed!
 - `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
-- **EXPERIMENTAL**: Added `OperatorRewriter.visitWindowFunction`, `visitWindowPartition`, and `visitMapEntry`.
+- **EXPERIMENTAL**: Added `OperatorRewriter.visitWindowFunction`, `visitWindowPartition`, and `visitMapEntry`, and `Operators.window`.
 
 ### Changed
 - Aggregate window functions resolve to the built-in aggregate when the session has the default system catalog, even if a catalog on the session path defines an aggregate with the same name.

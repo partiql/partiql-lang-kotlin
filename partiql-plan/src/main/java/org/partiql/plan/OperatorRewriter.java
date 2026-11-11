@@ -468,8 +468,7 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
             for (int i = start; i < fields.length; i++) {
                 bindings.add(fields[i].getName());
             }
-            // Operators has no window factory yet, so this uses RelWindow.create rather than the rewriter's operators.
-            RelWindow newOp = RelWindow.create(rel.getName(), input_new, bindings, functions_new, collations_new, partitions_new);
+            RelWindow newOp = operators.window(rel.getName(), input_new, bindings, functions_new, collations_new, partitions_new);
             newOp.setType(rel.getType());
             return newOp;
         }
