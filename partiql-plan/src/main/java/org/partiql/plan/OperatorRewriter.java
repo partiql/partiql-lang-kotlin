@@ -431,6 +431,12 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         return rel;
     }
 
+    /**
+     * Rewrites the input, the window functions, the partitions, and the collations of {@code rel}.
+     *
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     @Override
     @SuppressWarnings("deprecation")
     public Operator visitWindow(@NotNull RelWindow rel, C ctx) {
@@ -448,12 +454,21 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         List<Collation> collations_new = visitAll(collations, ctx, this::visitCollation);
         // rewrite window
         if (input != input_new || functions != functions_new || partitions != partitions_new || collations != collations_new) {
-            // The window function bindings are the last fields of the window's type.
+            // The window function bindings are the last fields of the window's type: its input fields, then one field
+            // per window function.
             PTypeField[] fields = rel.getType().getFields();
+            int start = fields.length - functions_new.size();
+            if (start < 0) {
+                throw new IllegalStateException(
+                        "Cannot rewrite window: its type has " + fields.length + " fields, fewer than its "
+                                + functions_new.size() + " window functions"
+                );
+            }
             List<String> bindings = new ArrayList<>(functions_new.size());
-            for (int i = fields.length - functions_new.size(); i < fields.length; i++) {
+            for (int i = start; i < fields.length; i++) {
                 bindings.add(fields[i].getName());
             }
+            // Operators has no window factory yet, so this uses RelWindow.create rather than the rewriter's operators.
             RelWindow newOp = RelWindow.create(rel.getName(), input_new, bindings, functions_new, collations_new, partitions_new);
             newOp.setType(rel.getType());
             return newOp;
@@ -464,12 +479,15 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
     /**
      * Rewrites the arguments of a window function; for an aggregate window function, these are the aggregate's
      * arguments.
+     *
+     * @deprecated This feature is experimental and is subject to change.
      */
+    @Deprecated
     @NotNull
     @SuppressWarnings("deprecation")
     public WindowFunctionNode visitWindowFunction(@NotNull WindowFunctionNode function, C ctx) {
         List<Rex> arguments = function.getArguments();
-        List<Rex> arguments_new = visitAll(arguments, ctx, (rex, c) -> visit(rex, c, Rex.class));
+        List<Rex> arguments_new = visitAll(arguments, ctx, this::visitRex);
         if (arguments != arguments_new) {
             return new WindowFunctionNode(
                     function.getSignature(),
@@ -482,6 +500,10 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         return function;
     }
 
+    /**
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     @NotNull
     public Rex visitWindowPartition(@NotNull Rex rex, C ctx) {
         return visit(rex, ctx, Rex.class);
@@ -624,7 +646,12 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         return rex;
     }
 
+    /**
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     @Override
+    @SuppressWarnings("deprecation")
     public Operator visitMap(@NotNull RexMap rex, C ctx) {
         // rewrite entries
         List<RexMap.Entry> entries = rex.getEntries();
@@ -638,6 +665,10 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         return rex;
     }
 
+    /**
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     @Override
     @SuppressWarnings("deprecation")
     public Operator visitMapDynamic(@NotNull RexMapDynamic rex, C ctx) {
@@ -653,7 +684,12 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         return rex;
     }
 
+    /**
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
     @NotNull
+    @SuppressWarnings("deprecation")
     public RexMap.Entry visitMapEntry(@NotNull RexMap.Entry entry, C ctx) {
         // rewrite key
         Rex key = entry.getKey();
