@@ -39,6 +39,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed `OperatorRewriter` not rewriting a `RelWindow` (its input, window function arguments, partitions, and collations), a `RexMap`, a `RexMapDynamic`, or a sort key ([#2007](https://github.com/partiql/partiql-lang-kotlin/issues/2007)).
 - Fixed `SqlDialect` dropping the `PARTITION BY`/`ORDER BY` of a window that refines a named window, e.g. `OVER (w ORDER BY y)` printed as `OVER w`, and printing `WINDOW w2 AS (w1)` without parentheses.
 - Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
 - Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.

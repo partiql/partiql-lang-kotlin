@@ -198,6 +198,11 @@ public abstract class org/partiql/plan/OperatorRewriter : org/partiql/plan/Opera
 	public fun visitLimit (Lorg/partiql/plan/rel/RelLimit;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public synthetic fun visitLit (Lorg/partiql/plan/rex/RexLit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLit (Lorg/partiql/plan/rex/RexLit;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public synthetic fun visitMap (Lorg/partiql/plan/rex/RexMap;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitMap (Lorg/partiql/plan/rex/RexMap;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public synthetic fun visitMapDynamic (Lorg/partiql/plan/rex/RexMapDynamic;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitMapDynamic (Lorg/partiql/plan/rex/RexMapDynamic;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public fun visitMapEntry (Lorg/partiql/plan/rex/RexMap$Entry;Ljava/lang/Object;)Lorg/partiql/plan/rex/RexMap$Entry;
 	public synthetic fun visitNullIf (Lorg/partiql/plan/rex/RexNullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitNullIf (Lorg/partiql/plan/rex/RexNullIf;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public synthetic fun visitOffset (Lorg/partiql/plan/rel/RelOffset;Ljava/lang/Object;)Ljava/lang/Object;
@@ -242,6 +247,10 @@ public abstract class org/partiql/plan/OperatorRewriter : org/partiql/plan/Opera
 	public fun visitUnpivot (Lorg/partiql/plan/rel/RelUnpivot;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public synthetic fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public synthetic fun visitWindow (Lorg/partiql/plan/rel/RelWindow;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindow (Lorg/partiql/plan/rel/RelWindow;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public fun visitWindowFunction (Lorg/partiql/plan/WindowFunctionNode;Ljava/lang/Object;)Lorg/partiql/plan/WindowFunctionNode;
+	public fun visitWindowPartition (Lorg/partiql/plan/rex/Rex;Ljava/lang/Object;)Lorg/partiql/plan/rex/Rex;
 	public synthetic fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public fun visitWithListElement (Lorg/partiql/plan/WithListElement;Ljava/lang/Object;)Lorg/partiql/plan/WithListElement;

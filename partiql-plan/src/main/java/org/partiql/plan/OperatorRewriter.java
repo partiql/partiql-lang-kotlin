@@ -22,6 +22,7 @@ import org.partiql.plan.rel.RelWith;
 import org.partiql.plan.rex.*;
 import org.partiql.plan.rex.RexCase.Branch;
 import org.partiql.plan.rex.RexStruct.Field;
+import org.partiql.spi.types.PTypeField;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -335,8 +336,44 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
 
     @NotNull
     public Collation visitCollation(@NotNull Collation collation, C ctx) {
+        // rewrite column
+        Rex column = collation.getColumn();
+        Rex column_new = visit(column, ctx, Rex.class);
         // rewrite collation
+        if (column != column_new) {
+            return new RewrittenCollation(column_new, collation.getOrder(), collation.getNulls());
+        }
         return collation;
+    }
+
+    /**
+     * A collation whose column was rewritten.
+     */
+    private static final class RewrittenCollation implements Collation {
+        private final Rex column;
+        private final Order order;
+        private final Nulls nulls;
+
+        private RewrittenCollation(Rex column, Order order, Nulls nulls) {
+            this.column = column;
+            this.order = order;
+            this.nulls = nulls;
+        }
+
+        @Override
+        public Rex getColumn() {
+            return column;
+        }
+
+        @Override
+        public Order getOrder() {
+            return order;
+        }
+
+        @Override
+        public Nulls getNulls() {
+            return nulls;
+        }
     }
 
     @Override
@@ -392,6 +429,62 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
             return newOp;
         }
         return rel;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public Operator visitWindow(@NotNull RelWindow rel, C ctx) {
+        // rewrite input
+        Rel input = rel.getInput();
+        Rel input_new = visit(input, ctx, Rel.class);
+        // rewrite window functions
+        List<WindowFunctionNode> functions = rel.getWindowFunctions();
+        List<WindowFunctionNode> functions_new = visitAll(functions, ctx, this::visitWindowFunction);
+        // rewrite partitions
+        List<Rex> partitions = rel.getPartitions();
+        List<Rex> partitions_new = visitAll(partitions, ctx, this::visitWindowPartition);
+        // rewrite collations
+        List<Collation> collations = rel.getCollations();
+        List<Collation> collations_new = visitAll(collations, ctx, this::visitCollation);
+        // rewrite window
+        if (input != input_new || functions != functions_new || partitions != partitions_new || collations != collations_new) {
+            // The window function bindings are the last fields of the window's type.
+            PTypeField[] fields = rel.getType().getFields();
+            List<String> bindings = new ArrayList<>(functions_new.size());
+            for (int i = fields.length - functions_new.size(); i < fields.length; i++) {
+                bindings.add(fields[i].getName());
+            }
+            RelWindow newOp = RelWindow.create(rel.getName(), input_new, bindings, functions_new, collations_new, partitions_new);
+            newOp.setType(rel.getType());
+            return newOp;
+        }
+        return rel;
+    }
+
+    /**
+     * Rewrites the arguments of a window function; for an aggregate window function, these are the aggregate's
+     * arguments.
+     */
+    @NotNull
+    @SuppressWarnings("deprecation")
+    public WindowFunctionNode visitWindowFunction(@NotNull WindowFunctionNode function, C ctx) {
+        List<Rex> arguments = function.getArguments();
+        List<Rex> arguments_new = visitAll(arguments, ctx, (rex, c) -> visit(rex, c, Rex.class));
+        if (arguments != arguments_new) {
+            return new WindowFunctionNode(
+                    function.getSignature(),
+                    arguments_new,
+                    function.getAggregate(),
+                    function.isDistinct(),
+                    function.getRoutineRef()
+            );
+        }
+        return function;
+    }
+
+    @NotNull
+    public Rex visitWindowPartition(@NotNull Rex rex, C ctx) {
+        return visit(rex, ctx, Rex.class);
     }
 
     @Override
@@ -529,6 +622,50 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
     @Override
     public Operator visitLit(@NotNull RexLit rex, C ctx) {
         return rex;
+    }
+
+    @Override
+    public Operator visitMap(@NotNull RexMap rex, C ctx) {
+        // rewrite entries
+        List<RexMap.Entry> entries = rex.getEntries();
+        List<RexMap.Entry> entries_new = visitAll(entries, ctx, this::visitMapEntry);
+        // rewrite map
+        if (entries != entries_new) {
+            RexMap newOp = operators.map(rex.getKeyType(), rex.getValueType(), entries_new);
+            newOp.setType(rex.getType());
+            return newOp;
+        }
+        return rex;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public Operator visitMapDynamic(@NotNull RexMapDynamic rex, C ctx) {
+        // rewrite entries
+        List<RexMap.Entry> entries = rex.getEntries();
+        List<RexMap.Entry> entries_new = visitAll(entries, ctx, this::visitMapEntry);
+        // rewrite map
+        if (entries != entries_new) {
+            RexMapDynamic newOp = operators.mapDynamic(entries_new);
+            newOp.setType(rex.getType());
+            return newOp;
+        }
+        return rex;
+    }
+
+    @NotNull
+    public RexMap.Entry visitMapEntry(@NotNull RexMap.Entry entry, C ctx) {
+        // rewrite key
+        Rex key = entry.getKey();
+        Rex key_new = visit(key, ctx, Rex.class);
+        // rewrite value
+        Rex value = entry.getValue();
+        Rex value_new = visit(value, ctx, Rex.class);
+        // rewrite entry
+        if (key != key_new || value != value_new) {
+            return RexMap.entry(key_new, value_new);
+        }
+        return entry;
     }
 
     @Override
