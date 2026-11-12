@@ -157,6 +157,28 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         else -> visitExpr(node, tail)
     }
 
+    /**
+     * The character that wraps a delimited identifier. Defaults to the SQL double quote.
+     */
+    protected open val identifierDelimiter: Char = '"'
+
+    /**
+     * Returns the SQL text of [node]. Every identifier printed by this dialect goes through this function.
+     *
+     * A regular identifier is printed verbatim. A delimited identifier is wrapped in [identifierDelimiter], and
+     * each [identifierDelimiter] in its text is doubled, e.g. `a"b` prints as `"a""b"`. This is how SQL escapes the
+     * delimiter inside a delimited identifier, so the text cannot end the identifier early.
+     *
+     * Override to change how all identifiers are printed, e.g. to delimit every identifier.
+     */
+    protected open fun formatIdentifier(node: Simple): String = when (node.isRegular) {
+        true -> node.text // verbatim ..
+        false -> {
+            val q = identifierDelimiter.toString()
+            q + node.text.replace(q, q + q) + q
+        }
+    }
+
     override fun visitIdentifierSimple(node: Simple, tail: SqlBlock): SqlBlock = tail concat node.sql()
 
     override fun visitIdentifier(node: Identifier, tail: SqlBlock): SqlBlock {
@@ -1161,8 +1183,5 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         )
     }
 
-    private fun Simple.sql() = when (isRegular) {
-        true -> text // verbatim ..
-        false -> "\"$text\""
-    }
+    private fun Simple.sql() = formatIdentifier(this)
 }
