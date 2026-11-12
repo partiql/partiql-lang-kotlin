@@ -160,21 +160,21 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     /**
      * The character that wraps a delimited identifier. Defaults to the SQL double quote.
      */
-    protected open val identifierQuote: Char = '"'
+    protected open val identifierDelimiter: Char = '"'
 
     /**
      * Returns the SQL text of [node]. Every identifier printed by this dialect goes through this function.
      *
-     * A regular identifier is printed verbatim. A delimited identifier is wrapped in [identifierQuote], and each
-     * [identifierQuote] in its text is doubled, e.g. `a"b` prints as `"a""b"`. This is how SQL escapes a quote inside
-     * a delimited identifier, so the text cannot end the identifier early.
+     * A regular identifier is printed verbatim. A delimited identifier is wrapped in [identifierDelimiter], and
+     * each [identifierDelimiter] in its text is doubled, e.g. `a"b` prints as `"a""b"`. This is how SQL escapes the
+     * delimiter inside a delimited identifier, so the text cannot end the identifier early.
      *
      * Override to change how all identifiers are printed, e.g. to delimit every identifier.
      */
-    protected open fun identifierSql(node: Simple): String = when (node.isRegular) {
+    protected open fun formatIdentifier(node: Simple): String = when (node.isRegular) {
         true -> node.text // verbatim ..
         false -> {
-            val q = identifierQuote.toString()
+            val q = identifierDelimiter.toString()
             q + node.text.replace(q, q + q) + q
         }
     }
@@ -1183,5 +1183,5 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         )
     }
 
-    private fun Simple.sql() = identifierSql(this)
+    private fun Simple.sql() = formatIdentifier(this)
 }

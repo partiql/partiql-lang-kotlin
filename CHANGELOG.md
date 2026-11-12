@@ -33,7 +33,7 @@ Thank you to all who have contributed!
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
 - **EXPERIMENTAL**: Added `OperatorRewriter.visitWindowFunction`, `visitWindowPartition`, and `visitMapEntry`, and `Operators.window`.
 - Added `date_trunc` and `to_char` to the `partiql-function-extensions` artifact.
-- Added `SqlDialect.identifierSql(Identifier.Simple)` and `SqlDialect.identifierQuote`, protected hooks that control how every identifier is printed. A dialect can override `identifierQuote` (e.g. to a backtick) or `identifierSql` (e.g. to delimit every identifier) instead of overriding each visitor that prints an identifier.
+- Added `SqlDialect.formatIdentifier(Identifier.Simple)` and `SqlDialect.identifierDelimiter`, protected hooks that control how every identifier is printed. A dialect can override `identifierDelimiter` (e.g. to a backtick) or `formatIdentifier` (e.g. to delimit every identifier) instead of overriding each visitor that prints an identifier.
 
 ### Changed
 - Java classes that implement `Operators` directly must implement the new `error(PType, PError)` and `window(...)` methods; Kotlin implementations inherit the defaults.

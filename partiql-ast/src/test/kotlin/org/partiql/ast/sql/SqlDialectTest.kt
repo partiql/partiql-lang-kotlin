@@ -136,19 +136,19 @@ class SqlDialectTest {
     fun testIdentifiers(case: Case) = case.assert()
 
     @Test
-    fun testIdentifierQuoteOverride() {
+    fun testIdentifierDelimiterOverride() {
         val backtick = object : SqlDialect() {
-            override val identifierQuote: Char = '`'
+            override val identifierDelimiter: Char = '`'
         }
         val node = Identifier.of(regular("x"), delimited("a`b"), delimited("c\"d"))
         Assertions.assertEquals("x.`a``b`.`c\"d`", node.sql(SqlLayout.ONELINE, backtick))
     }
 
     @Test
-    fun testIdentifierSqlOverride() {
+    fun testFormatIdentifierOverride() {
         // delimit every identifier, regular or not
         val delimitAll = object : SqlDialect() {
-            override fun identifierSql(node: Identifier.Simple): String = super.identifierSql(delimited(node.text))
+            override fun formatIdentifier(node: Identifier.Simple): String = super.formatIdentifier(delimited(node.text))
         }
         val node = Identifier.of(regular("x"), delimited("a\"b"))
         Assertions.assertEquals("\"x\".\"a\"\"b\"", node.sql(SqlLayout.ONELINE, delimitAll))
