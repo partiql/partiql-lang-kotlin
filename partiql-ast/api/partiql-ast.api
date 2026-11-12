@@ -3660,7 +3660,9 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun <init> ()V
 	public synthetic fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun defaultReturn (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	protected fun getIdentifierQuote ()C
 	public static final fun getSTANDARD ()Lorg/partiql/ast/sql/SqlDialect;
+	protected fun identifierSql (Lorg/partiql/ast/Identifier$Simple;)Ljava/lang/String;
 	public final fun transform (Lorg/partiql/ast/AstNode;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;

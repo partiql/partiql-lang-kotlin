@@ -10,6 +10,7 @@ import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
@@ -133,6 +134,25 @@ class SqlDialectTest {
     @MethodSource("identifiers")
     @Execution(ExecutionMode.CONCURRENT)
     fun testIdentifiers(case: Case) = case.assert()
+
+    @Test
+    fun testIdentifierQuoteOverride() {
+        val backtick = object : SqlDialect() {
+            override val identifierQuote: Char = '`'
+        }
+        val node = Identifier.of(regular("x"), delimited("a`b"), delimited("c\"d"))
+        Assertions.assertEquals("x.`a``b`.`c\"d`", node.sql(SqlLayout.ONELINE, backtick))
+    }
+
+    @Test
+    fun testIdentifierSqlOverride() {
+        // delimit every identifier, regular or not
+        val delimitAll = object : SqlDialect() {
+            override fun identifierSql(node: Identifier.Simple): String = super.identifierSql(delimited(node.text))
+        }
+        val node = Identifier.of(regular("x"), delimited("a\"b"))
+        Assertions.assertEquals("\"x\".\"a\"\"b\"", node.sql(SqlLayout.ONELINE, delimitAll))
+    }
 
     // Types
 
@@ -434,6 +454,64 @@ class SqlDialectTest {
                     delimited("x"),
                     delimited("y"),
                     delimited("z")
+                )
+            ),
+            // embedded double quotes are doubled
+            expect(
+                "\"a\"\"b\"", delimited("a\"b")
+            ),
+            expect(
+                "\"\"\"\"\"\"", delimited("\"\"")
+            ),
+            expect(
+                "x.\"a\"\"b\".\"c\"\"\"",
+                Identifier.of(
+                    regular("x"),
+                    delimited("a\"b"),
+                    delimited("c\"")
+                )
+            ),
+            // only the double quote is escaped
+            expect(
+                "\"a`b'c\"", delimited("a`b'c")
+            ),
+            // every identifier position escapes embedded double quotes
+            expect(
+                "SELECT \"t\"\"\".\"a\"\"b\" AS \"c\"\"d\" " +
+                    "FROM T AS \"t\"\"\" AT \"i\"\"\" " +
+                    "LET x AS \"l\"\"\" " +
+                    "GROUP BY y AS \"k\"\"\" GROUP AS \"g\"\"\"",
+                qSet(
+                    body = sfw(
+                        select = selectList(
+                            items = listOf(
+                                selectItemExpr(
+                                    exprPath(
+                                        exprVarRef(Identifier.of(delimited("t\"")), isQualified = false),
+                                        listOf(exprPathStepField(delimited("a\"b")))
+                                    ),
+                                    asAlias = delimited("c\"d")
+                                )
+                            ),
+                            setq = null
+                        ),
+                        from = from(
+                            tableRefs = listOf(
+                                fromExpr(
+                                    expr = v("T"),
+                                    fromType = FromType.SCAN(),
+                                    asAlias = delimited("t\""),
+                                    atAlias = delimited("i\"")
+                                )
+                            )
+                        ),
+                        let = Ast.let(bindings = listOf(letBinding(v("x"), delimited("l\"")))),
+                        groupBy = groupBy(
+                            strategy = GroupByStrategy.FULL(),
+                            keys = listOf(groupByKey(v("y"), delimited("k\""))),
+                            asAlias = delimited("g\"")
+                        )
+                    )
                 )
             ),
         )
