@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
 - **EXPERIMENTAL**: Added `OperatorRewriter.visitWindowFunction`, `visitWindowPartition`, and `visitMapEntry`, and `Operators.window`.
+- Added `date_trunc` and `to_char` to the `partiql-function-extensions` artifact.
 
 ### Changed
 - Java classes that implement `Operators` directly must implement the new `error(PType, PError)` and `window(...)` methods; Kotlin implementations inherit the defaults.
@@ -47,6 +48,7 @@ Thank you to all who have contributed!
 - Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
 - Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.
 - Fixed a re-opened window operator emitting a stale row from a previous, partially consumed run.
+- Fixed `SUM` failing on statically typed `BIGINT` arguments.
 - Fixed path index on `VARIANT` always failing ([#1983](https://github.com/partiql/partiql-lang-kotlin/issues/1983)). An Ion list or S-expression is now indexed like an array: ``` `[1, 2]`[0] ``` returns `1` instead of `MISSING` in permissive mode or an error in strict mode. A `VARIANT` index also works, as in ``` [10, 20][`1`] ```.
   - Results change for queries that index Ion data and relied on `MISSING`.
   - A null element is returned as an Ion null, the same as ``` `{a: null}`.a ```, so ``` `[null]`[0] IS NULL ``` is now false. [#1994](https://github.com/partiql/partiql-lang-kotlin/issues/1994) tracks `IS NULL` on Ion nulls.
