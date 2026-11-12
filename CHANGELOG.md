@@ -31,15 +31,19 @@ Thank you to all who have contributed!
 - `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
 - `PError.copy()` in `partiql-spi`, which returns a new error with the same code, severity, kind, location and properties.
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
+- **EXPERIMENTAL**: Added `OperatorRewriter.visitWindowFunction`, `visitWindowPartition`, and `visitMapEntry`, and `Operators.window`.
 - Added `date_trunc` and `to_char` to the `partiql-function-extensions` artifact.
 
 ### Changed
+- Java classes that implement `Operators` directly must implement the new `error(PType, PError)` and `window(...)` methods; Kotlin implementations inherit the defaults.
 - Aggregate window functions resolve to the built-in aggregate when the session has the default system catalog, even if a catalog on the session path defines an aggregate with the same name.
 - The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
 
 ### Deprecated
 
 ### Fixed
+- Fixed `OperatorRewriter` not rewriting a `RelWindow` (its input, window function arguments, partitions, and collations), a `RexMap`, a `RexMapDynamic`, or a sort key ([#2007](https://github.com/partiql/partiql-lang-kotlin/issues/2007)).
+  - Rewriters built on `OperatorRewriter` now also visit `RelWindow` subtrees, `RexMap`/`RexMapDynamic` entries, and every `Collation` column, including `ORDER BY` keys. A rewriter that relied on these being skipped can override the visit to return the node unchanged.
 - Fixed `SqlDialect` dropping the `PARTITION BY`/`ORDER BY` of a window that refines a named window, e.g. `OVER (w ORDER BY y)` printed as `OVER w`, and printing `WINDOW w2 AS (w1)` without parentheses.
 - Fixed incorrect window ordering-group (peer group) bounds passed to window functions.
 - Supported `IGNORE NULLS` for `LAG` and `LEAD` window functions; previously it was rejected by the planner and ignored by the evaluator.

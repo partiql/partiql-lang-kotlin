@@ -18,6 +18,7 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnpivot
+import org.partiql.plan.rel.RelWindow
 import org.partiql.plan.rel.RelWith
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
@@ -253,6 +254,27 @@ public interface Operators {
      * @return
      */
     public fun with(input: Rel, elements: List<WithListElement>): RelWith = RelWith.create(input, elements)
+
+    /**
+     * Create a [RelWindow] instance.
+     *
+     * @deprecated This feature is experimental and is subject to change.
+     * @param name the window name, or null for an in-line window specification
+     * @param input the input
+     * @param windowFunctionBindings the output binding name of each window function, in order
+     * @param windowFunctions the window functions
+     * @param collations the window ordering
+     * @param partitions the window partitioning
+     * @return
+     */
+    public fun window(
+        name: String?,
+        input: Rel,
+        windowFunctionBindings: List<String>,
+        windowFunctions: List<WindowFunctionNode>,
+        collations: List<Collation>,
+        partitions: List<Rex>,
+    ): RelWindow = RelWindow.create(name, input, windowFunctionBindings, windowFunctions, collations, partitions)
 
     // --- REX OPERATORS -----------------------------------------------------------------------------------------------
 
