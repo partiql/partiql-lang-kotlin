@@ -26,12 +26,16 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- Added support for recursive common table expressions (`WITH RECURSIVE`) of the form `<non-recursive query> UNION [ALL] <recursive query>`. Each element of a `WITH RECURSIVE` clause requires a column list, and any element may reference any other (non-mutually recursive) element of the list. Queries violating the SQL:2023 restrictions on recursive queries (e.g. non-linear recursion, or a recursive reference within a subquery, an aggregation, or the null-producing side of an outer join) are reported as `INVALID_RECURSIVE_QUERY`. Valid forms that are not yet supported (e.g. mutual recursion, `SEARCH` and `CYCLE` clauses, `ORDER BY`/`OFFSET`, or a recursive reference within a derived table) are reported as `FEATURE_NOT_SUPPORTED`.
+- Added the experimental `RelRecursiveUnion` and `RexWorkingTable` plan operators, and the `PError.INVALID_RECURSIVE_QUERY` error code.
 
 ### Changed
 
 ### Deprecated
 
 ### Fixed
+- An inlined `WITH` list element (the default, see `PartiQLPlannerBuilder.forceInlineWithClause`) that references a variable of an enclosing query, or that contains a lateral (correlated) join, is now reported as `FEATURE_NOT_SUPPORTED`. Previously, such an element failed with an internal error, or was typed against the wrong scope.
+- Fixed the default `AstVisitor` methods for the `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, and `ROW_NUMBER` window function types recursing infinitely.
 
 ### Removed
 

@@ -13,8 +13,8 @@ import java.util.List;
  * <b>NOTE:</b> This is experimental and subject to change without prior notice!
  * </p>
  * <p>
- * WITH relation expression. This is currently experimental and is currently missing some
- * features like recursive CTEs.
+ * WITH relation expression. This is currently experimental. The representation of a recursive WITH list element
+ * (recursive CTE) is a {@link RelRecursiveUnion}.
  */
 public abstract class RelWith extends RelBase {
 

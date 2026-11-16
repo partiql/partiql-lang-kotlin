@@ -228,6 +228,13 @@ rex::{
       args: list::[rex],
     },
 
+    // Reference to the working table of the enclosing [rel.op.recursive_union] with the same id.
+    // This is the recursive self-reference of a recursive WITH list element.
+    working_table::{
+      id: int,
+      name: string,
+    },
+
     // Internal error node. This corresponds with [org.partiql.plan.rex.RexError]. See that documentation.
     // [error] is the problem reported to the listener; strict mode raises it at runtime.
     err::{
@@ -343,9 +350,19 @@ rel::{
         with_list_element::{
           name: string,
           representation: rex,
-          // TODO: columns list
+          columns: optional::list::[string],
         }
       ]
+    },
+
+    // The body of a recursive WITH list element: `seed UNION [ALL] recursive`. The `recursive` operand
+    // references the working table (see [rex.op.working_table]) having the same id.
+    recursive_union::{
+      id: int,
+      name: string,
+      setq: set_quantifier,
+      seed: rel,
+      recursive: rel,
     },
 
     offset::{

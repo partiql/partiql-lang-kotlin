@@ -14,6 +14,7 @@ import org.partiql.plan.rel.RelJoin
 import org.partiql.plan.rel.RelLimit
 import org.partiql.plan.rel.RelOffset
 import org.partiql.plan.rel.RelProject
+import org.partiql.plan.rel.RelRecursiveUnion
 import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
@@ -47,6 +48,7 @@ import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexTableRef
 import org.partiql.plan.rex.RexVar
+import org.partiql.plan.rex.RexWorkingTable
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PError
 import org.partiql.spi.function.Fn
@@ -275,6 +277,22 @@ public interface Operators {
         collations: List<Collation>,
         partitions: List<Rex>,
     ): RelWindow = RelWindow.create(name, input, windowFunctionBindings, windowFunctions, collations, partitions)
+
+    /**
+     * <p>
+     * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+     * </p>
+     * Create a [RelRecursiveUnion] instance for the body of a recursive WITH list element.
+     *
+     * @param id
+     * @param name
+     * @param seed
+     * @param recursive
+     * @param all
+     * @return
+     */
+    public fun recursiveUnion(id: Int, name: String, seed: Rel, recursive: Rel, all: Boolean): RelRecursiveUnion =
+        RelRecursiveUnion.create(id, name, seed, recursive, all)
 
     // --- REX OPERATORS -----------------------------------------------------------------------------------------------
 
@@ -509,6 +527,19 @@ public interface Operators {
      * @return
      */
     public fun variable(depth: Int, offset: Int, type: PType): RexVar = RexVar.create(depth, offset, type)
+
+    /**
+     * <p>
+     * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+     * </p>
+     * Create a [RexWorkingTable] instance for the recursive self-reference of a recursive WITH list element.
+     *
+     * @param id
+     * @param name
+     * @param type
+     * @return
+     */
+    public fun workingTable(id: Int, name: String, type: PType): RexWorkingTable = RexWorkingTable.create(id, name, type)
 
     // --- REF OPERATORS (for thread-safe cacheable plans) ----------------------------------------------------------------
 

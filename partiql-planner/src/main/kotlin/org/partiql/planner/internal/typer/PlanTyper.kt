@@ -45,21 +45,25 @@ import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relOpWindow
 import org.partiql.planner.internal.ir.relOpWindowWindowFunction
+import org.partiql.planner.internal.ir.relOpWithWithListElement
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
+import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpMap
 import org.partiql.planner.internal.ir.rexOpMapEntry
 import org.partiql.planner.internal.ir.rexOpNullif
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPivot
+import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.planner.internal.ir.rexOpWorkingTable
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.planner.internal.typer.DynamicTyper.Companion.getCommonSuperType
@@ -148,6 +152,11 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         private const val REASON_WINDOW_DEFINITION_OUTER_REFERENCE_OR_SUBQUERY =
             "must not contain an outer reference or a subquery in its PARTITION BY or ORDER BY clause. " +
                 "Move it out of the window, e.g. into the select list or the WHERE clause"
+
+        /**
+         * The maximum number of passes when typing a recursive WITH list element, see [RelTyper.typeWithListElement].
+         */
+        private const val MAX_RECURSIVE_TYPING_PASSES = 3
 
         fun PType.static(): CompilerType = CompilerType(this)
 
@@ -663,8 +672,9 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             // otherwise expose them as named bindings, preserving the CTE name for consumers that keep the WITH clause).
             val elements = mutableListOf<Rel.Op.With.WithListElement>()
             node.elements.forEach { element ->
+                val boundary = Scope.Boundary()
                 val scope = if (rewriteWith) {
-                    Scope(schema = emptyList(), outer = outer, withElements = elements.toList())
+                    Scope(schema = emptyList(), outer = outer, withElements = elements.toList(), boundary = boundary)
                 } else {
                     Scope(
                         schema = elements.map { Rel.Binding(it.name, it.representation.type) },
@@ -673,7 +683,13 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
                         isWith = true,
                     )
                 }
-                val representation = element.representation.type(TypeEnv(env, scope))
+                val typed = typeWithListElement(element, scope)
+                // An inlined element is re-typed where it is referenced; see [inliningProblem].
+                val problem = if (rewriteWith) inliningProblem(typed, boundary) else null
+                val representation = when (problem) {
+                    null -> typed
+                    else -> errorRexAndReport(_listener, problem)
+                }
                 elements.add(element.copy(representation = representation))
             }
             val withElements = if (rewriteWith) {
@@ -696,6 +712,188 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
             val input = RelTyper(newStack, Strategy.LOCAL).visitRel(node.input, node.input.type)
             val type = input.type
             return Rel(type, node.copy(elements = elements, input = input))
+        }
+
+        /**
+         * Returns the problem, if any, of inlining the typed [representation] of a WITH list element: the representation
+         * is re-typed where the element is referenced, where a resolved variable of an enclosing scope (an outer
+         * reference), or a lateral (correlated) join, of the representation does not refer to the same scope.
+         */
+        private fun inliningProblem(representation: Rex, boundary: Scope.Boundary): PError? = when {
+            representation.op is Rex.Op.Err -> null
+            boundary.outerReference -> PErrors.featureNotSupported("WITH list element referencing a variable of an enclosing query")
+            representation.containsCorrelate() -> PErrors.featureNotSupported("WITH list element containing a lateral (correlated) join")
+            else -> null
+        }
+
+        private fun PlanNode.containsCorrelate(): Boolean =
+            (this is Rel && op is Rel.Op.Correlate) || children.any { it.containsCorrelate() }
+
+        /**
+         * Types the representation of a WITH list element in [scope], then renames its columns per the column list.
+         */
+        private fun typeWithListElement(element: Rel.Op.With.WithListElement, scope: Scope): Rex {
+            val recursion = (element.representation.op as? Rex.Op.Select)?.rel?.op as? Rel.Op.RecursiveUnion
+            if (recursion == null) {
+                val representation = element.representation.type(TypeEnv(env, scope))
+                return when (element.representation.op) {
+                    // The element is invalid, and the problem has been reported.
+                    is Rex.Op.Err -> representation
+                    else -> renameColumns(representation, element)
+                }
+            }
+            // The seed (non-recursive operand) is typed first; it determines the initial working table type.
+            val stack = scope.outer + listOf(scope)
+            val typedSeed = recursion.seed.type(stack)
+            val seed = renameColumns(typedSeed, element)
+            // If the columns cannot be renamed, the problem has been reported, and is not reported again.
+            val rename = element.columns != null && seed !== typedSeed
+            var rowType: PType = seed.type.schema.single().type
+            var recursive: Rel
+            var unrenamed: Rel
+            var pass = 1
+            while (true) {
+                // Within the recursive operand, the element name refers to the working table.
+                val workingTable = rex(CompilerType(PType.bag(rowType)), rexOpWorkingTable(recursion.id, recursion.name))
+                val self = relOpWithWithListElement(element.name, workingTable, null)
+                val recursiveScope = scope.copy(withElements = scope.withElements + self)
+                val typed = recursion.recursive.type(scope.outer + listOf(recursiveScope))
+                unrenamed = typed
+                recursive = if (rename) renameColumns(typed, element) else typed
+                if (rename && recursive === typed) {
+                    // The columns could not be renamed, and the problem has been reported.
+                    break
+                }
+                // Widen the working table type until it covers the rows produced by the recursive operand. If this
+                // does not reach a fixpoint (e.g. a string that grows each iteration), fall back to the dynamic type.
+                val superType = DynamicTyper.getCommonSuperType(rowType, recursive.type.schema.single().type) ?: PType.dynamic()
+                if (superType == rowType) {
+                    break
+                }
+                rowType = if (pass++ < MAX_RECURSIVE_TYPING_PASSES) superType else PType.dynamic()
+            }
+            validateWorkingTableReferences(element, unrenamed)
+            val rowCType = rowType.toCType()
+            val type = Rel.Type(listOf(Rel.Binding("_0", rowCType)), props = emptySet())
+            val rel = rel(type, recursion.copy(seed = seed, recursive = recursive))
+            val constructor = rex(rowCType, rexOpVarLocal(0, 0))
+            return rex(CompilerType(PType.bag(rowCType)), rexOpSelect(constructor, rel))
+        }
+
+        /**
+         * Validates the resolved references to the working table in each recursive operand of [recursive] (the typed
+         * UNION ALL of the recursive operands). This complements the syntactic checks of [RecursiveWith], which only
+         * consider FROM sources, as an element name may also be referenced elsewhere, e.g. `EXISTS(x)`.
+         *
+         * Each recursive operand must reference the working table exactly once (linear recursion), as a FROM source
+         * (SQL:2023 Part 2, Subclause 7.17, Syntax Rules 3.j.ix.2, 3.j.ix.5.A, 3.j.ix.5.B, and 3.j.x).
+         */
+        private fun validateWorkingTableReferences(element: Rel.Op.With.WithListElement, recursive: Rel) {
+            for (operand in recursiveOperands(recursive)) {
+                val references = countWorkingTables(operand)
+                val problem = when {
+                    references > 1 -> "the recursive reference must appear at most once in a recursive operand (linear recursion)"
+                    references == 1 && countFromWorkingTables(operand) == 0 -> "the recursive reference must appear directly in the FROM clause of a recursive operand"
+                    else -> null
+                }
+                if (problem != null) {
+                    _listener.report(PErrors.invalidRecursiveQuery(element.name, problem))
+                    return
+                }
+            }
+        }
+
+        // The recursive operands are combined by UNION ALL, see RelConverter; an operand itself is never a UNION.
+        private fun recursiveOperands(rel: Rel): List<Rel> = when (val op = rel.op) {
+            is Rel.Op.Union -> recursiveOperands(op.lhs) + recursiveOperands(op.rhs)
+            else -> listOf(rel)
+        }
+
+        private fun countWorkingTables(node: PlanNode): Int = when {
+            node is Rex && node.op is Rex.Op.WorkingTable -> 1
+            else -> node.children.sumOf { countWorkingTables(it) }
+        }
+
+        /**
+         * Counts the FROM sources of [rel] (excluding nested query expressions) that are the working table or a path
+         * rooted at the working table, e.g. `FROM x.children`.
+         */
+        private fun countFromWorkingTables(rel: Rel): Int {
+            val source = when (val op = rel.op) {
+                is Rel.Op.Scan -> op.rex
+                is Rel.Op.ScanIndexed -> op.rex
+                is Rel.Op.Unpivot -> op.rex
+                else -> null
+            }
+            val self = if (source != null && source.isWorkingTablePath()) 1 else 0
+            return self + rel.op.children.filterIsInstance<Rel>().sumOf { countFromWorkingTables(it) }
+        }
+
+        private fun Rex.isWorkingTablePath(): Boolean = when (val op = op) {
+            is Rex.Op.WorkingTable -> true
+            is Rex.Op.Path.Key -> op.root.isWorkingTablePath()
+            is Rex.Op.Path.Symbol -> op.root.isWorkingTablePath()
+            is Rex.Op.Path.Index -> op.root.isWorkingTablePath()
+            else -> false
+        }
+
+        /**
+         * Renames the columns of a typed WITH list element representation (a collection of rows) per its column list.
+         */
+        private fun renameColumns(rex: Rex, element: Rel.Op.With.WithListElement): Rex {
+            if (element.columns == null) {
+                return rex
+            }
+            val input = rel(Rel.Type(listOf(Rel.Binding("_0", getElementTypeForFromSource(rex.type))), props = emptySet()), relOpScan(rex))
+            val renamed = renameColumns(input, element)
+            val rowType = renamed.type.schema.single().type
+            val constructor = rex(rowType, rexOpVarLocal(0, 0))
+            return rex(CompilerType(PType.bag(rowType)), rexOpSelect(constructor, renamed))
+        }
+
+        /**
+         * Renames the columns of the rows produced by [input] (a relation with a single binding) per the column list of
+         * [element], i.e. the i-th column of each row is renamed to the i-th column name.
+         *
+         * This requires the columns to be statically known, i.e. the rows must be of type ROW.
+         */
+        private fun renameColumns(input: Rel, element: Rel.Op.With.WithListElement): Rel {
+            val columns = element.columns ?: return input
+            val rowType = input.type.schema.single().type
+            // SQL:2023 Part 2, Subclause 7.17, Syntax Rule 3.d.ii; renaming requires statically known, distinct columns.
+            val problem = when {
+                columns.toSet().size != columns.size ->
+                    PErrors.invalidRecursiveQuery(element.name, "the column list must not contain duplicate names")
+                rowType.code() != PType.ROW ->
+                    PErrors.featureNotSupported("WITH column list for a query whose columns are not statically known ($rowType)")
+                rowType.fields.size != columns.size ->
+                    PErrors.invalidRecursiveQuery(element.name, "the column list has ${columns.size} column(s), but the query produces ${rowType.fields.size}")
+                rowType.fields.map { it.name }.toSet().size != columns.size ->
+                    PErrors.featureNotSupported("WITH column list for a query producing duplicate column names")
+                else -> null
+            }
+            if (problem != null) {
+                _listener.report(problem)
+                return input
+            }
+            val row = rex(rowType, rexOpVarLocal(0, 0))
+            val fields = rowType.fields.zip(columns).map { (field, column) ->
+                val key = rex(CompilerType(PType.string()), rexOpLit(Datum.string(column)))
+                val path = rex(field.type, rexOpPathKey(row, rex(CompilerType(PType.string()), rexOpLit(Datum.string(field.name)))))
+                rexOpStructField(key, path)
+            }
+            val newRowType = CompilerType(PType.row(rowType.fields.zip(columns).map { (field, column) -> CompilerType.PTypeField(column, field.type) }))
+            val projection = rex(newRowType, rexOpStruct(fields))
+            val type = Rel.Type(listOf(Rel.Binding("_0", newRowType)), props = emptySet())
+            return rel(type, relOpProject(input, listOf(projection)))
+        }
+
+        override fun visitRelOpRecursiveUnion(node: Rel.Op.RecursiveUnion, ctx: Rel.Type?): Rel {
+            // The (re-)typing of an already typed recursive union, e.g. when a WITH list element is inlined.
+            // The working table type has been determined when typing the WITH clause, see [typeWithListElement].
+            val seed = visitRel(node.seed, node.seed.type)
+            val recursive = visitRel(node.recursive, node.recursive.type)
+            return rel(ctx!!, node.copy(seed = seed, recursive = recursive))
         }
 
         override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Rel.Type?): Rel {
@@ -1272,6 +1470,9 @@ internal class PlanTyper(private val env: Env, config: Context, private val flag
         }
 
         override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: CompilerType?): Rex = rex(node.ref.type, node)
+
+        // The working table type is assigned when typing the WITH clause, see [RelTyper.typeWithListElement].
+        override fun visitRexOpWorkingTable(node: Rex.Op.WorkingTable, ctx: CompilerType?): Rex = rex(ctx!!, node)
 
         /**
          * TODO: Create a function signature for the Rex.Op.Path.Index to get automatic coercions.

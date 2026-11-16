@@ -4486,10 +4486,10 @@ internal class PlanTyperTestsPorted {
 
         private val parameters = listOf(
             ErrorTestCase(
-                name = "WITH RECURSIVE not supported yet",
+                name = "WITH RECURSIVE requires a column list",
                 query = "WITH RECURSIVE x AS (SELECT * FROM <<1, 2, 3>>) SELECT * FROM x",
                 problemHandler = assertProblemExists(
-                    PErrors.featureNotSupported("WITH RECURSIVE")
+                    PErrors.invalidRecursiveQuery("x", "a column list is required for each element of a WITH RECURSIVE clause")
                 )
             ),
             ErrorTestCase(

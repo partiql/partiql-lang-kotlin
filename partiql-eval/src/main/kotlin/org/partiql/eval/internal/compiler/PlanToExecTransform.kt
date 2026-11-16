@@ -32,6 +32,7 @@ import org.partiql.plan.rel.RelJoin
 import org.partiql.plan.rel.RelLimit
 import org.partiql.plan.rel.RelOffset
 import org.partiql.plan.rel.RelProject
+import org.partiql.plan.rel.RelRecursiveUnion
 import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
@@ -62,6 +63,7 @@ import org.partiql.plan.rex.RexSubquery
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexTableRef
 import org.partiql.plan.rex.RexVar
+import org.partiql.plan.rex.RexWorkingTable
 
 /**
  * Transforms a public [Plan] into an internal [ExecutionPlanImpl].
@@ -154,6 +156,8 @@ internal class PlanToExecTransform(
     override fun visitLit(rex: RexLit, ctx: Unit): Any = PExpr.Lit(rex.datum)
 
     override fun visitVar(rex: RexVar, ctx: Unit): Any = PExpr.Var(rex.scope, rex.offset)
+
+    override fun visitWorkingTable(rex: RexWorkingTable, ctx: Unit): Any = PExpr.WorkingTable(rex.id)
 
     override fun visitError(rex: RexError, ctx: Unit): Any = PExpr.Error(rex.type.pType, rex.error)
 
@@ -269,6 +273,12 @@ internal class PlanToExecTransform(
     override fun visitUnion(rel: RelUnion, ctx: Unit): Any =
         PRel.Union(visitRel(rel.left), visitRel(rel.right), rel.isAll, rel.type)
 
+    override fun visitRecursiveUnion(rel: RelRecursiveUnion, ctx: Unit): Any {
+        // Incremental evaluation is not equivalent if the recursive operand of a UNION ALL eliminates duplicates.
+        val incremental = !rel.isAll || !rel.recursive.containsDistinct()
+        return PRel.RecursiveUnion(rel.id, visitRel(rel.seed), visitRel(rel.recursive), rel.isAll, incremental, rel.type)
+    }
+
     override fun visitIntersect(rel: RelIntersect, ctx: Unit): Any =
         PRel.Intersect(visitRel(rel.left), visitRel(rel.right), rel.isAll, rel.type)
 
@@ -292,6 +302,12 @@ internal class PlanToExecTransform(
     override fun visitWith(rel: RelWith, ctx: Unit): Any = visitRel(rel.input)
 
     // --- Helpers ---
+
+    /**
+     * Returns true if this relation, excluding any nested query expressions, contains a [RelDistinct].
+     */
+    private fun Rel.containsDistinct(): Boolean =
+        this is RelDistinct || operands.flatMap { it.toList() }.filterIsInstance<Rel>().any { it.containsDistinct() }
 
     private fun toCollation(c: Collation): PCollation {
         val expr = visitRex(c.column)

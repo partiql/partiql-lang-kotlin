@@ -11,6 +11,7 @@ import org.partiql.spi.value.Datum
 internal sealed class PExpr {
     data class Lit(val value: Datum) : PExpr()
     data class Var(val depth: Int, val offset: Int) : PExpr()
+    data class WorkingTable(val id: Int) : PExpr()
     data class TableRef(val catalogId: Int, val tableId: Int) : PExpr()
     data class TableDirect(val table: Table) : PExpr()
     data class Call(val fn: Fn, val args: List<PExpr>) : PExpr()

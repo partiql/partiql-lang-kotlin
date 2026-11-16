@@ -218,6 +218,8 @@ public abstract class org/partiql/plan/OperatorRewriter : org/partiql/plan/Opera
 	public synthetic fun visitProject (Lorg/partiql/plan/rel/RelProject;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitProject (Lorg/partiql/plan/rel/RelProject;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public fun visitProjection (Lorg/partiql/plan/rex/Rex;Ljava/lang/Object;)Lorg/partiql/plan/rex/Rex;
+	public synthetic fun visitRecursiveUnion (Lorg/partiql/plan/rel/RelRecursiveUnion;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRecursiveUnion (Lorg/partiql/plan/rel/RelRecursiveUnion;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public final fun visitRel (Lorg/partiql/plan/rel/Rel;Ljava/lang/Object;)Lorg/partiql/plan/rel/Rel;
 	public final fun visitRex (Lorg/partiql/plan/rex/Rex;Ljava/lang/Object;)Lorg/partiql/plan/rex/Rex;
 	public synthetic fun visitScan (Lorg/partiql/plan/rel/RelScan;Ljava/lang/Object;)Ljava/lang/Object;
@@ -254,6 +256,8 @@ public abstract class org/partiql/plan/OperatorRewriter : org/partiql/plan/Opera
 	public synthetic fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public fun visitWithListElement (Lorg/partiql/plan/WithListElement;Ljava/lang/Object;)Lorg/partiql/plan/WithListElement;
+	public synthetic fun visitWorkingTable (Lorg/partiql/plan/rex/RexWorkingTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWorkingTable (Lorg/partiql/plan/rex/RexWorkingTable;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 }
 
 public abstract interface class org/partiql/plan/OperatorRewriter$Mapper {
@@ -292,6 +296,7 @@ public abstract interface class org/partiql/plan/OperatorVisitor {
 	public fun visitPathSymbol (Lorg/partiql/plan/rex/RexPathSymbol;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPivot (Lorg/partiql/plan/rex/RexPivot;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitProject (Lorg/partiql/plan/rel/RelProject;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRecursiveUnion (Lorg/partiql/plan/rel/RelRecursiveUnion;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitScan (Lorg/partiql/plan/rel/RelScan;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelect (Lorg/partiql/plan/rex/RexSelect;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSort (Lorg/partiql/plan/rel/RelSort;Ljava/lang/Object;)Ljava/lang/Object;
@@ -308,6 +313,7 @@ public abstract interface class org/partiql/plan/OperatorVisitor {
 	public fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWindow (Lorg/partiql/plan/rel/RelWindow;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWorkingTable (Lorg/partiql/plan/rex/RexWorkingTable;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract interface class org/partiql/plan/Operators {
@@ -342,6 +348,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun pathSymbol (Lorg/partiql/plan/rex/Rex;Ljava/lang/String;)Lorg/partiql/plan/rex/RexPathSymbol;
 	public abstract fun pivot (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPivot;
 	public abstract fun project (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelProject;
+	public abstract fun recursiveUnion (ILjava/lang/String;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelRecursiveUnion;
 	public abstract fun scan (Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelScan;
 	public abstract fun select (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexSelect;
 	public abstract fun sort (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelSort;
@@ -358,6 +365,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun variable (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
 	public abstract fun window (Ljava/lang/String;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
 	public abstract fun with (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelWith;
+	public abstract fun workingTable (ILjava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexWorkingTable;
 }
 
 public final class org/partiql/plan/Operators$Companion {
@@ -393,6 +401,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun pathSymbol (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;Ljava/lang/String;)Lorg/partiql/plan/rex/RexPathSymbol;
 	public static fun pivot (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPivot;
 	public static fun project (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelProject;
+	public static fun recursiveUnion (Lorg/partiql/plan/Operators;ILjava/lang/String;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelRecursiveUnion;
 	public static fun scan (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelScan;
 	public static fun select (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexSelect;
 	public static fun sort (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelSort;
@@ -409,6 +418,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun variable (Lorg/partiql/plan/Operators;IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
 	public static fun window (Lorg/partiql/plan/Operators;Ljava/lang/String;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
 	public static fun with (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelWith;
+	public static fun workingTable (Lorg/partiql/plan/Operators;ILjava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexWorkingTable;
 }
 
 public abstract interface class org/partiql/plan/Plan {
@@ -638,6 +648,20 @@ public abstract class org/partiql/plan/rel/RelProject : org/partiql/plan/rel/Rel
 	public static fun create (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelProject;
 	public abstract fun getInput ()Lorg/partiql/plan/rel/Rel;
 	public abstract fun getProjections ()Ljava/util/List;
+	protected final fun operands ()Ljava/util/List;
+	protected final fun type ()Lorg/partiql/plan/rel/RelType;
+}
+
+public abstract class org/partiql/plan/rel/RelRecursiveUnion : org/partiql/plan/rel/RelBase {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun copy (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rel/RelRecursiveUnion;
+	public static fun create (ILjava/lang/String;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelRecursiveUnion;
+	public abstract fun getId ()I
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getRecursive ()Lorg/partiql/plan/rel/Rel;
+	public abstract fun getSeed ()Lorg/partiql/plan/rel/Rel;
+	public abstract fun isAll ()Z
 	protected final fun operands ()Ljava/util/List;
 	protected final fun type ()Lorg/partiql/plan/rel/RelType;
 }
@@ -1057,6 +1081,15 @@ public abstract class org/partiql/plan/rex/RexVar : org/partiql/plan/rex/RexBase
 	public static fun create (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
 	public abstract fun getOffset ()I
 	public abstract fun getScope ()I
+	protected final fun operands ()Ljava/util/List;
+}
+
+public abstract class org/partiql/plan/rex/RexWorkingTable : org/partiql/plan/rex/RexBase {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun create (ILjava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexWorkingTable;
+	public abstract fun getId ()I
+	public abstract fun getName ()Ljava/lang/String;
 	protected final fun operands ()Ljava/util/List;
 }
 

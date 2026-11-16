@@ -46,6 +46,7 @@ class PErrorCodeTests {
             "MAP_DUPLICATE_KEY" to 27,
             "FUNCTION_AMBIGUOUS" to 28,
             "INVALID_WINDOW_FUNCTION" to 29,
+            "INVALID_RECURSIVE_QUERY" to 30,
         )
 
         // Preparation

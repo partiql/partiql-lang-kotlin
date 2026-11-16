@@ -216,6 +216,8 @@ public final class PError extends Enum {
                 return "FUNCTION_TYPE_MISMATCH";
             case FUNCTION_AMBIGUOUS:
                 return "FUNCTION_AMBIGUOUS";
+            case INVALID_RECURSIVE_QUERY:
+                return "INVALID_RECURSIVE_QUERY";
             case VAR_REF_NOT_FOUND:
                 return "VAR_REF_NOT_FOUND";
             case VAR_REF_AMBIGUOUS:
@@ -738,4 +740,24 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int INVALID_WINDOW_FUNCTION = 29;
+
+    /**
+     * <p>
+     * This is a semantic error, where a recursive WITH list element (recursive common table expression) does not
+     * satisfy the restrictions on recursive queries. For example, the element is missing its column list, it is not of
+     * the form {@code seed UNION [ALL] recursive}, or it references itself more than once or from a disallowed
+     * position (e.g. a subquery, an aggregation, or the null-producing side of an outer join).
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>NAME</b> ({@link String}): The name of the WITH list element.</li>
+     * <li><b>MESSAGE</b> ({@link String}): A description of the violated restriction.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Invalid recursive query [name]: [message].</code>
+     * </p>
+     */
+    public static final int INVALID_RECURSIVE_QUERY = 30;
 }
