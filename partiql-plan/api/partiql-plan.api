@@ -475,6 +475,8 @@ public final class org/partiql/plan/WindowFunctionSignature {
 
 public class org/partiql/plan/WithListElement {
 	public fun <init> (Ljava/lang/String;Lorg/partiql/plan/rex/Rex;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/plan/rex/Rex;Ljava/util/List;)V
+	public fun getColumns ()Ljava/util/List;
 	public fun getName ()Ljava/lang/String;
 	public fun getRepresentation ()Lorg/partiql/plan/rex/Rex;
 }

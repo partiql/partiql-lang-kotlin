@@ -319,7 +319,8 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
         override fun visitRelOpWithWithListElement(node: Rel.Op.With.WithListElement, ctx: PType): WithListElement {
             return WithListElement(
                 node.name,
-                visitRex(node.representation, ctx)
+                visitRex(node.representation, ctx),
+                node.columns,
             )
         }
 

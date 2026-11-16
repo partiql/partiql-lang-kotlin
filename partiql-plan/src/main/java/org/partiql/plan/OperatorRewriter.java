@@ -431,7 +431,7 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex representation = element.getRepresentation();
         Rex representation_new = visit(representation, ctx, Rex.class);
         if (representation != representation_new) {
-            return new WithListElement(element.getName(), representation_new);
+            return new WithListElement(element.getName(), representation_new, element.getColumns());
         }
         return element;
     }

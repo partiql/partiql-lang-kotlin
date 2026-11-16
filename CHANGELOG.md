@@ -27,7 +27,7 @@ Thank you to all who have contributed!
 
 ### Added
 - Added support for recursive common table expressions (`WITH RECURSIVE`) of the form `<non-recursive query> UNION [ALL] <recursive query>`. Each element of a `WITH RECURSIVE` clause requires a column list, and any element may reference any other (non-mutually recursive) element of the list. Queries violating the SQL:2023 restrictions on recursive queries (e.g. non-linear recursion, or a recursive reference within a subquery, an aggregation, or the null-producing side of an outer join) are reported as `INVALID_RECURSIVE_QUERY`. Valid forms that are not yet supported (e.g. mutual recursion, `SEARCH` and `CYCLE` clauses, `ORDER BY`/`OFFSET`, or a recursive reference within a derived table) are reported as `FEATURE_NOT_SUPPORTED`.
-- Added the experimental `RelRecursiveUnion` and `RexWorkingTable` plan operators, and the `PError.INVALID_RECURSIVE_QUERY` error code.
+- Added the experimental `RelRecursiveUnion` and `RexWorkingTable` plan operators, `WithListElement.getColumns()` (the WITH column list), and the `PError.INVALID_RECURSIVE_QUERY` error code.
 
 ### Changed
 

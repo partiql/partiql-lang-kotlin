@@ -93,6 +93,8 @@ class RecursiveWithTest {
         assertTrue(errors.problems.isEmpty(), "Unexpected problems: ${errors.problems}")
         val union = plan.collect<RelRecursiveUnion>().single()
         assertTrue(!union.isAll)
+        // The column list is available to consumers that reproduce the WITH clause.
+        assertEquals(listOf("n"), plan.collect<RelWith>().single().elements.single().columns)
         assertEquals(union.id, union.recursive.collect<RexWorkingTable>().single().id)
     }
 
