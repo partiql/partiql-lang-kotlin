@@ -26,6 +26,23 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [1.7.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.7.0) - 2026-11-16
+
+### Added
 - **EXPERIMENTAL**: Added support for the `PERCENT_RANK` and `CUME_DIST` window functions.
 - Added the `PError.INVALID_WINDOW_FUNCTION` error code, with the `FN_NAME`, `WINDOW_NAME`, and `REASON` properties. It is reported as a warning for a missing window `ORDER BY`, and as an error for `DISTINCT` with a window `ORDER BY` or for an outer reference or a subquery in a window function or `WINDOW` clause definition (SQL:2023 Subclause 9.23, Syntax Rule 3).
 - `RexError.create(PError)` and `RexError.getError()` in `partiql-plan`, and `Operators.error(PType, PError)`, so an error node keeps the problem the planner reported. `getError()` returns a copy, and is `null` for a node made with `RexError.create()`.
@@ -66,6 +83,8 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @xd1313113
+- @XuechunHHH
 
 ## [1.6.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.6.1) - 2026-09-03
 
