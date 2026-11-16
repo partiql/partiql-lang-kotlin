@@ -29,6 +29,7 @@ import org.partiql.planner.internal.ir.builder.RelOpJoinBuilder
 import org.partiql.planner.internal.ir.builder.RelOpLimitBuilder
 import org.partiql.planner.internal.ir.builder.RelOpOffsetBuilder
 import org.partiql.planner.internal.ir.builder.RelOpProjectBuilder
+import org.partiql.planner.internal.ir.builder.RelOpRecursiveUnionBuilder
 import org.partiql.planner.internal.ir.builder.RelOpScanBuilder
 import org.partiql.planner.internal.ir.builder.RelOpScanIndexedBuilder
 import org.partiql.planner.internal.ir.builder.RelOpSortBuilder
@@ -66,6 +67,7 @@ import org.partiql.planner.internal.ir.builder.RexOpTupleUnionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarLocalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
+import org.partiql.planner.internal.ir.builder.RexOpWorkingTableBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.planner.internal.typer.CompilerType
@@ -233,6 +235,7 @@ internal data class Rex(
             is Subquery -> visitor.visitRexOpSubquery(this, ctx)
             is Select -> visitor.visitRexOpSelect(this, ctx)
             is TupleUnion -> visitor.visitRexOpTupleUnion(this, ctx)
+            is WorkingTable -> visitor.visitRexOpWorkingTable(this, ctx)
             is Err -> visitor.visitRexOpErr(this, ctx)
         }
 
@@ -753,6 +756,20 @@ internal data class Rex(
             }
         }
 
+        internal data class WorkingTable(
+            @JvmField internal val id: Int,
+            @JvmField internal val name: String,
+        ) : Op() {
+            public override val children: List<PlanNode> = emptyList()
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpWorkingTable(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpWorkingTableBuilder = RexOpWorkingTableBuilder()
+            }
+        }
+
         internal data class Err(
             @JvmField internal val error: PError,
         ) : Op() {
@@ -824,6 +841,7 @@ internal data class Rel(
             is Except -> visitor.visitRelOpExcept(this, ctx)
             is Limit -> visitor.visitRelOpLimit(this, ctx)
             is With -> visitor.visitRelOpWith(this, ctx)
+            is RecursiveUnion -> visitor.visitRelOpRecursiveUnion(this, ctx)
             is Offset -> visitor.visitRelOpOffset(this, ctx)
             is Project -> visitor.visitRelOpProject(this, ctx)
             is Join -> visitor.visitRelOpJoin(this, ctx)
@@ -1113,6 +1131,7 @@ internal data class Rel(
             internal data class WithListElement(
                 @JvmField internal val name: String,
                 @JvmField internal val representation: Rex,
+                @JvmField internal val columns: List<String>? = null,
             ) : PlanNode() {
                 public override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
@@ -1126,6 +1145,28 @@ internal data class Rel(
                     @JvmStatic
                     internal fun builder(): RelOpWithWithListElementBuilder = RelOpWithWithListElementBuilder()
                 }
+            }
+        }
+
+        internal data class RecursiveUnion(
+            @JvmField internal val id: Int,
+            @JvmField internal val name: String,
+            @JvmField internal val setq: SetQuantifier,
+            @JvmField internal val seed: Rel,
+            @JvmField internal val recursive: Rel,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(seed)
+                kids.add(recursive)
+                kids.filterNotNull()
+            }
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpRecursiveUnion(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RelOpRecursiveUnionBuilder = RelOpRecursiveUnionBuilder()
             }
         }
 

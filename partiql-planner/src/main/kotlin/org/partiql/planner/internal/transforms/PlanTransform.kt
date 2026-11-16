@@ -251,6 +251,10 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
             return operators.variable(depth, offset, ctx)
         }
 
+        override fun visitRexOpWorkingTable(node: IRex.Op.WorkingTable, ctx: PType): Any {
+            return operators.workingTable(node.id, node.name, ctx)
+        }
+
         override fun visitRexOpLit(node: IRex.Op.Lit, ctx: PType): Any {
             return operators.lit(node.value)
         }
@@ -315,7 +319,8 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
         override fun visitRelOpWithWithListElement(node: Rel.Op.With.WithListElement, ctx: PType): WithListElement {
             return WithListElement(
                 node.name,
-                visitRex(node.representation, ctx)
+                visitRex(node.representation, ctx),
+                node.columns,
             )
         }
 
@@ -410,6 +415,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>, private val us
             val rhs = visitRel(node.rhs, ctx)
             val isAll = node.setq == SetQuantifier.ALL
             return operators.union(lhs, rhs, isAll)
+        }
+
+        override fun visitRelOpRecursiveUnion(node: IRel.Op.RecursiveUnion, ctx: PType): Any {
+            val seed = visitRel(node.seed, ctx)
+            val recursive = visitRel(node.recursive, ctx)
+            val isAll = node.setq == SetQuantifier.ALL
+            return operators.recursiveUnion(node.id, node.name, seed, recursive, isAll)
         }
 
         override fun visitRelOpExcept(node: IRel.Op.Except, ctx: PType): Any {

@@ -22,6 +22,7 @@ internal sealed class PRel {
     data class Offset(val input: PRel, val offset: PExpr, override val type: RelType? = null) : PRel()
     data class Aggregate(val input: PRel, val measures: List<PMeasure>, val groups: List<PExpr>, override val type: RelType? = null) : PRel()
     data class Union(val lhs: PRel, val rhs: PRel, val all: Boolean, override val type: RelType? = null) : PRel()
+    data class RecursiveUnion(val id: Int, val seed: PRel, val recursive: PRel, val all: Boolean, val incremental: Boolean, override val type: RelType? = null) : PRel()
     data class Intersect(val lhs: PRel, val rhs: PRel, val all: Boolean, override val type: RelType? = null) : PRel()
     data class Except(val lhs: PRel, val rhs: PRel, val all: Boolean, override val type: RelType? = null) : PRel()
     data class Exclude(val input: PRel, val exclusions: List<Exclusion>, override val type: RelType? = null) : PRel()

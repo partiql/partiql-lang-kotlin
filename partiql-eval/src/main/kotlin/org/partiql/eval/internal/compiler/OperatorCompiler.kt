@@ -25,6 +25,7 @@ import org.partiql.eval.internal.operator.rel.RelOpJoinOuterRight
 import org.partiql.eval.internal.operator.rel.RelOpLimit
 import org.partiql.eval.internal.operator.rel.RelOpOffset
 import org.partiql.eval.internal.operator.rel.RelOpProject
+import org.partiql.eval.internal.operator.rel.RelOpRecursiveUnion
 import org.partiql.eval.internal.operator.rel.RelOpScan
 import org.partiql.eval.internal.operator.rel.RelOpScanPermissive
 import org.partiql.eval.internal.operator.rel.RelOpSort
@@ -32,6 +33,7 @@ import org.partiql.eval.internal.operator.rel.RelOpUnionAll
 import org.partiql.eval.internal.operator.rel.RelOpUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelOpUnpivot
 import org.partiql.eval.internal.operator.rel.RelOpWindow
+import org.partiql.eval.internal.operator.rel.WorkingTable
 import org.partiql.eval.internal.operator.rex.ExprArray
 import org.partiql.eval.internal.operator.rex.ExprBag
 import org.partiql.eval.internal.operator.rex.ExprCall
@@ -63,6 +65,7 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.eval.internal.operator.rex.ExprWorkingTable
 import org.partiql.eval.internal.plan.ExecutionPlanImpl
 import org.partiql.eval.internal.plan.PCollation
 import org.partiql.eval.internal.plan.PExpr
@@ -83,6 +86,11 @@ internal class OperatorCompiler(
 ) {
     private val MODE = mode.code()
 
+    /**
+     * The working tables of the enclosing recursive WITH list elements, by recursion id.
+     */
+    private val workingTables = mutableMapOf<Int, WorkingTable>()
+
     fun compile(plan: ExecutionPlanImpl): ExprValue = compile(plan.root).catch()
 
     fun compile(expr: PExpr): ExprValue {
@@ -90,6 +98,10 @@ internal class OperatorCompiler(
         return when (expr) {
             is PExpr.Lit -> ExprLit(expr.value)
             is PExpr.Var -> ExprVar(expr.depth, expr.offset)
+            is PExpr.WorkingTable -> {
+                val workingTable = workingTables[expr.id] ?: error("Working table ${expr.id} is not in scope")
+                ExprWorkingTable(workingTable)
+            }
             is PExpr.TableRef -> {
                 val table = catalogs[expr.catalogId].getTable(expr.tableId)
                 ExprTable(table)
@@ -243,6 +255,18 @@ internal class OperatorCompiler(
                 val lhs = compileRel(rel.lhs)
                 val rhs = compileRel(rel.rhs)
                 if (rel.all) RelOpUnionAll(lhs, rhs) else RelOpUnionDistinct(lhs, rhs)
+            }
+            is PRel.RecursiveUnion -> {
+                val seed = compileRel(rel.seed)
+                // Each recursive union instance has its own working table, visible only to its recursive operand.
+                val workingTable = WorkingTable()
+                val previous = workingTables.put(rel.id, workingTable)
+                val recursive = try {
+                    compileRel(rel.recursive)
+                } finally {
+                    if (previous == null) workingTables.remove(rel.id) else workingTables[rel.id] = previous
+                }
+                RelOpRecursiveUnion(seed, recursive, workingTable, distinct = !rel.all, incremental = rel.incremental)
             }
             is PRel.Intersect -> {
                 val lhs = compileRel(rel.lhs)

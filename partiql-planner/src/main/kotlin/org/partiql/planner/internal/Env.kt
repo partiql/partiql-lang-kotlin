@@ -89,6 +89,16 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
         defaultSystemCatalogName.takeIf { catalogs.getCatalog(it) is RoutineCatalog }
     }
 
+    /**
+     * Counter for the identifiers of recursive WITH list elements (see [Rel.Op.RecursiveUnion]).
+     */
+    private var recursionId = 0
+
+    /**
+     * Returns a new identifier, unique within this planning environment, for a recursive WITH list element.
+     */
+    internal fun nextRecursionId(): Int = recursionId++
+
     fun resolveWindowFn(name: String, args: List<Rex>, isIgnoreNulls: Boolean = false): Rel.Op.Window.WindowFunction? {
         val sig = WindowFunctionSignatureProvider.get(name, args, isIgnoreNulls) ?: return null
         val paramTypes = sig.parameterTypes.map { it.toCType() }

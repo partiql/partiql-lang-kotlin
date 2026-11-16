@@ -375,6 +375,20 @@ internal object PErrors {
         )
     }
 
+    internal fun invalidRecursiveQuery(
+        name: String,
+        message: String,
+        location: SourceLocation? = null
+    ): PError {
+        return PError(
+            PError.INVALID_RECURSIVE_QUERY,
+            Severity.ERROR(),
+            PErrorKind.SEMANTIC(),
+            location,
+            mapOf("NAME" to name, "MESSAGE" to message)
+        )
+    }
+
     internal fun notImplemented(
         feature: String,
         location: SourceLocation? = null

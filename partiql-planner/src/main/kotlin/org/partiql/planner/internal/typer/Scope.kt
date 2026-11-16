@@ -25,7 +25,32 @@ internal data class Scope(
      * True if this scope binds the common table expressions of a WITH clause, rather than the columns of a row.
      */
     val isWith: Boolean = false,
+    /**
+     * Non-null if this is the scope of an inlined WITH list element; see [Boundary].
+     */
+    val boundary: Boundary? = null,
 ) {
+
+    /**
+     * Records whether the definition of an inlined WITH list element references a variable of an enclosing scope (an
+     * outer reference). An inlined definition is re-typed where the element is referenced, where such a variable may
+     * not be in the same scope; therefore, this is not supported. References to enclosing WITH list elements are
+     * themselves inlined, and are not outer references.
+     */
+    internal class Boundary {
+        var outerReference: Boolean = false
+    }
+
+    /**
+     * Resolves using the enclosing scope, and records a resolved variable of the enclosing scope in [boundary].
+     */
+    private inline fun resolveOuter(resolve: (Scope) -> Rex?): Rex? {
+        val r = resolve(outer.last())
+        if (r != null && boundary != null && r.op is Rex.Op.Var.Local) {
+            boundary.outerReference = true
+        }
+        return r
+    }
 
     internal fun getScope(depth: Int): Scope {
         return when (depth) {
@@ -89,7 +114,7 @@ internal data class Scope(
             ) continue
             return rex(type, rexOpVarLocal(depth, i))
         }
-        return outer.takeIf { it.isNotEmpty() }?.last()?.matchQualified(identifier, depth + 1)
+        return if (outer.isNotEmpty()) resolveOuter { it.matchQualified(identifier, depth + 1) } else null
     }
 
     /**
@@ -118,7 +143,7 @@ internal data class Scope(
             }
         }
         if (r == null && outer.isNotEmpty()) {
-            return outer.last().matchRoot(name, depth + 1)
+            return resolveOuter { it.matchRoot(name, depth + 1) }
         }
         return r
     }
@@ -160,7 +185,7 @@ internal data class Scope(
             }
         }
         if (c == null && outer.isNotEmpty()) {
-            return outer.last().matchStruct(name, depth + 1)
+            return resolveOuter { it.matchStruct(name, depth + 1) }
         }
         return c
     }

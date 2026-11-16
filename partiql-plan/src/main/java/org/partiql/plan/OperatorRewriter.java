@@ -394,6 +394,23 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
     }
 
     @Override
+    public Operator visitRecursiveUnion(@NotNull RelRecursiveUnion rel, C ctx) {
+        // rewrite seed
+        Rel seed = rel.getSeed();
+        Rel seed_new = visit(seed, ctx, Rel.class);
+        // rewrite recursive
+        Rel recursive = rel.getRecursive();
+        Rel recursive_new = visit(recursive, ctx, Rel.class);
+        // rewrite recursive union
+        if (seed != seed_new || recursive != recursive_new) {
+            RelRecursiveUnion newOp = operators.recursiveUnion(rel.getId(), rel.getName(), seed_new, recursive_new, rel.isAll());
+            newOp.setType(rel.getType());
+            return newOp;
+        }
+        return rel;
+    }
+
+    @Override
     public Operator visitWith(@NotNull RelWith rel, C ctx) {
         // rewrite input
         Rel input = rel.getInput();
@@ -414,7 +431,7 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
         Rex representation = element.getRepresentation();
         Rex representation_new = visit(representation, ctx, Rex.class);
         if (representation != representation_new) {
-            return new WithListElement(element.getName(), representation_new);
+            return new WithListElement(element.getName(), representation_new, element.getColumns());
         }
         return element;
     }
@@ -920,6 +937,11 @@ public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C
 
     @Override
     public Operator visitVar(@NotNull RexVar rex, C ctx) {
+        return rex;
+    }
+
+    @Override
+    public Operator visitWorkingTable(@NotNull RexWorkingTable rex, C ctx) {
         return rex;
     }
 

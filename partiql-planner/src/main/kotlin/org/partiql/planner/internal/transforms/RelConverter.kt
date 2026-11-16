@@ -46,6 +46,7 @@ import org.partiql.ast.WindowFunctionType.Lag
 import org.partiql.ast.WindowFunctionType.Lead
 import org.partiql.ast.WindowSpecification
 import org.partiql.ast.With
+import org.partiql.ast.WithListElement
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
@@ -86,6 +87,7 @@ import org.partiql.planner.internal.ir.relOpWith
 import org.partiql.planner.internal.ir.relOpWithWithListElement
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
@@ -99,6 +101,7 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.BinderUtils.toBinder
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Identifier.Simple
+import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -903,7 +906,7 @@ internal object RelConverter {
                 return input
             }
             if (with.isRecursive) {
-                env.listener.report(PErrors.featureNotSupported("WITH RECURSIVE"))
+                return convertWithRecursive(input, with)
             }
             val type = input.type
             val elements = with.elements.map { element ->
@@ -911,11 +914,136 @@ internal object RelConverter {
                     env.listener.report(PErrors.featureNotSupported("WITH clause column list"))
                 }
                 val query = RexConverter.apply(element.asQuery, env)
-                relOpWithWithListElement(element.queryName.text, query)
+                relOpWithWithListElement(element.queryName.text, query, null)
             }
             val op = relOpWith(input, elements)
             return rel(type, op)
         }
+
+        /**
+         * Append [Rel.Op.With] for a WITH RECURSIVE clause.
+         *
+         * Each element may reference any element of the list (SQL:2023 Part 2, Subclause 7.17, Syntax Rule 3.i), so the
+         * elements are emitted in dependency order. An element referencing itself is recursive, and its body is
+         * converted to a [Rel.Op.RecursiveUnion]. Mutually recursive elements are not yet supported.
+         */
+        private fun convertWithRecursive(input: Rel, with: With): Rel {
+            val elements = with.elements
+            // Elements containing a nested WITH RECURSIVE clause (Syntax Rule 3.h) are reported, and not converted.
+            val nestedRecursive = mutableMapOf<Int, PError>()
+            elements.forEachIndexed { i, element ->
+                val name = element.queryName
+                if (elements.subList(0, i).any { RecursiveWith.equivalent(it.queryName, name) }) {
+                    env.listener.report(PErrors.invalidRecursiveQuery(name.text, "the query name is defined more than once in the WITH RECURSIVE clause"))
+                }
+                if (RecursiveWith.containsRecursiveWith(element.asQuery)) {
+                    val problem = PErrors.invalidRecursiveQuery(name.text, "an element of a WITH RECURSIVE clause must not contain another WITH RECURSIVE clause")
+                    env.listener.report(problem)
+                    nestedRecursive[i] = problem
+                }
+            }
+            val dependencies = elements.map { RecursiveWith.dependencies(it.asQuery, elements) }
+            val converted = orderByDependencies(dependencies).map { i ->
+                val element = elements[i]
+                val name = element.queryName.text
+                val columns = element.columnList?.map { it.text }
+                if (columns == null) {
+                    env.listener.report(PErrors.invalidRecursiveQuery(name, "a column list is required for each element of a WITH RECURSIVE clause"))
+                }
+                val representation = when {
+                    i in nestedRecursive -> rex(ANY, rexOpErr(nestedRecursive.getValue(i)))
+                    dependencies[i].contains(i) -> convertRecursiveElement(element)
+                    else -> RexConverter.apply(element.asQuery, env)
+                }
+                relOpWithWithListElement(name, representation, columns)
+            }
+            val op = relOpWith(input, converted)
+            return rel(input.type, op)
+        }
+
+        /**
+         * Returns the element indices in an order where each element follows the elements it depends on (excluding
+         * itself). Ties keep the original order. Reports elements on a dependency cycle (mutual recursion).
+         */
+        private fun orderByDependencies(dependencies: List<Set<Int>>): List<Int> {
+            val ordered = mutableListOf<Int>()
+            val remaining = dependencies.indices.toMutableList()
+            while (remaining.isNotEmpty()) {
+                val next = remaining.firstOrNull { i -> dependencies[i].all { it == i || it in ordered } }
+                if (next == null) {
+                    env.listener.report(PErrors.featureNotSupported("mutually recursive WITH list elements"))
+                    ordered.addAll(remaining)
+                    break
+                }
+                ordered.add(next)
+                remaining.remove(next)
+            }
+            return ordered
+        }
+
+        /**
+         * Converts the query of a recursive WITH list element, `seed UNION [ALL] recursive`, to
+         * `SELECT VALUE _0 FROM RECURSIVE_UNION(seed, recursive)`.
+         */
+        private fun convertRecursiveElement(element: WithListElement): Rex {
+            val name = element.queryName.text
+            val operands = try {
+                RecursiveWith.split(element)
+            } catch (violation: RecursiveWith.Violation) {
+                val problem = when (violation.unsupported) {
+                    true -> PErrors.featureNotSupported(violation.message)
+                    else -> PErrors.invalidRecursiveQuery(name, violation.message)
+                }
+                return errorRex(problem)
+            }
+            val seeds = operands.seeds.map { visitIfQuerySet(it) }
+            val recursives = operands.recursives.map { visitIfQuerySet(it) }
+            // Syntax Rule 3.j.ix.5.C: no aggregate (set function) or window function over the recursive reference.
+            val aggregates = recursives.any { rel ->
+                rel.containsOp { (it is Rel.Op.Aggregate && it.calls.isNotEmpty()) || it is Rel.Op.Window }
+            }
+            if (aggregates) {
+                return errorRex(PErrors.invalidRecursiveQuery(name, "a recursive operand must not contain aggregate or window functions"))
+            }
+            // Otherwise, e.g. GROUP BY without aggregate functions, the query is valid, but not supported.
+            val grouped = operands.recursives.any { operand ->
+                val sfw = (operand as ExprQuerySet).body as QueryBody.SFW
+                sfw.groupBy != null || sfw.having != null || sfw.window != null
+            }
+            if (grouped) {
+                return errorRex(PErrors.featureNotSupported("GROUP BY, HAVING, or WINDOW clause in a recursive operand"))
+            }
+            val setq = when (operands.setq?.code()) {
+                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                else -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+            }
+            val type = Rel.Type(listOf(Rel.Binding("_0", ANY, null)), props = emptySet())
+            val seed = seeds.reduce { lhs, rhs -> unionAll(lhs, rhs) }
+            val recursive = recursives.reduce { lhs, rhs -> unionAll(lhs, rhs) }
+            val op = Rel.Op.RecursiveUnion(env.nextRecursionId(), name, setq, seed, recursive)
+            val constructor = rex(ANY, rexOpVarLocal(0, 0))
+            return rex(BAG, rexOpSelect(constructor, rel(type, op)))
+        }
+
+        /**
+         * Reports [problem], and returns an error node for the representation of an invalid WITH list element.
+         */
+        private fun errorRex(problem: PError): Rex {
+            env.listener.report(problem)
+            return rex(ANY, rexOpErr(problem))
+        }
+
+        private fun unionAll(lhs: Rel, rhs: Rel): Rel {
+            val type = Rel.Type(listOf(Rel.Binding("_0", ANY, null)), props = emptySet())
+            val op = Rel.Op.Union(org.partiql.planner.internal.ir.SetQuantifier.ALL, false, lhs, rhs)
+            return rel(type, op)
+        }
+
+        /**
+         * Returns true if this relation, excluding any nested query expressions, contains an operator matching [predicate].
+         */
+        private fun Rel.containsOp(predicate: (Rel.Op) -> Boolean): Boolean =
+            predicate(op) || op.children.filterIsInstance<Rel>().any { it.containsOp(predicate) }
 
         private fun convertExclude(input: Rel, exclude: Exclude?): Rel {
             if (exclude == null) {

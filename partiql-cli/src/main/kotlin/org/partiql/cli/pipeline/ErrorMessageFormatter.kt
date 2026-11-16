@@ -45,6 +45,7 @@ object ErrorMessageFormatter {
             ErrorCodeString.MAP_KEY_TYPE_MISMATCH -> mapKeyTypeMismatch(error)
             ErrorCodeString.MAP_DUPLICATE_KEY -> mapDuplicateKey(error)
             ErrorCodeString.INVALID_WINDOW_FUNCTION -> invalidWindowFunction(error)
+            ErrorCodeString.INVALID_RECURSIVE_QUERY -> invalidRecursiveQuery(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -179,6 +180,17 @@ object ErrorMessageFormatter {
         }
         val fnNameStr = prepare(fnName, " ", "")
         return "Window function$fnNameStr $reason."
+    }
+
+    /**
+     * @see PError.INVALID_RECURSIVE_QUERY
+     */
+    private fun invalidRecursiveQuery(error: PError): String {
+        val name = error.getOrNull("NAME", String::class.java)
+        val message = error.getOrNull("MESSAGE", String::class.java)
+        val nameStr = prepare(name, " ")
+        val messageStr = prepare(message, ": ")
+        return "Invalid recursive query$nameStr$messageStr."
     }
 
     /**
