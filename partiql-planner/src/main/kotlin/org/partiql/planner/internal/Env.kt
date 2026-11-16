@@ -21,6 +21,7 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Catalogs
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.RoutineCatalog
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.function.Agg
@@ -72,10 +73,26 @@ internal class Env(private val session: Session, internal val listener: PErrorLi
 
     private val routines = RoutineResolver(session)
 
+    /**
+     * The name of the default system catalog, which provides the built-in routines. Keep in sync with `System.NAME` in
+     * partiql-spi (`org.partiql.spi.catalog.System`, which is package-private).
+     */
+    private val defaultSystemCatalogName = "\$system"
+
+    /**
+     * The name of the catalog that provides the built-in routines, or null if the session does not include the default
+     * system catalog (e.g. a host replaced it via `Session.Builder.system` with a differently named catalog). Aggregate
+     * window functions resolve to the built-ins in this catalog when it is present, and through the session path
+     * otherwise.
+     */
+    internal val builtinCatalogName: String? by lazy(LazyThreadSafetyMode.NONE) {
+        defaultSystemCatalogName.takeIf { catalogs.getCatalog(it) is RoutineCatalog }
+    }
+
     fun resolveWindowFn(name: String, args: List<Rex>, isIgnoreNulls: Boolean = false): Rel.Op.Window.WindowFunction? {
         val sig = WindowFunctionSignatureProvider.get(name, args, isIgnoreNulls) ?: return null
         val paramTypes = sig.parameterTypes.map { it.toCType() }
-        return relOpWindowWindowFunction(sig.name, args, sig.isIgnoreNulls, paramTypes, sig.returnType.toCType())
+        return relOpWindowWindowFunction(sig.name, args, sig.isIgnoreNulls, paramTypes, sig.returnType.toCType(), null)
     }
 
     fun classifyRoutine(identifier: Identifier, shape: RoutineCallShape): RoutineClassification =

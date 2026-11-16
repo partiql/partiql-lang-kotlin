@@ -9,6 +9,7 @@ import org.partiql.ast.expr.ExprWindowFunction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a window function type.
@@ -336,4 +337,88 @@ public abstract class WindowFunctionType extends AstNode {
             return visitor.visitWindowFunctionTypeLag(this, ctx);
         }
     }
+
+    /**
+     * Represents an aggregate function used as a window function, e.g. {@code SUM(x) OVER (...)}. The aggregate is
+     * identified by name, as for {@link org.partiql.ast.expr.ExprCall}; the parser currently only produces COUNT, SUM,
+     * AVG, MIN, and MAX. {@code COUNT(*)} is represented by the name {@code count} with no arguments (and no set
+     * quantifier).
+     * @see ExprWindowFunction#getFunctionType()
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
+    @Deprecated
+    public static final class Aggregate extends WindowFunctionType {
+        @NotNull
+        private final Identifier function;
+
+        @NotNull
+        private final List<Expr> args;
+
+        @Nullable
+        private final SetQuantifier setq;
+
+        /**
+         * Constructs a new aggregate window function type.
+         * @param function the name of the aggregate function
+         * @param args the arguments of the aggregate; empty for {@code COUNT(*)}
+         * @param setq the set quantifier (ALL/DISTINCT) of the aggregate, if specified
+         * @throws NullPointerException if {@code function} or {@code args} is null
+         * @throws IllegalArgumentException if {@code args} is empty and {@code setq} is not null
+         * @deprecated This feature is experimental and is subject to change.
+         */
+        @Deprecated
+        public Aggregate(@NotNull Identifier function, @NotNull List<Expr> args, @Nullable SetQuantifier setq) {
+            super();
+            this.function = Objects.requireNonNull(function, "function");
+            this.args = Objects.requireNonNull(args, "args");
+            if (args.isEmpty() && setq != null) {
+                throw new IllegalArgumentException("An aggregate without arguments (e.g. COUNT(*)) may not have a set quantifier");
+            }
+            this.setq = setq;
+        }
+
+        /**
+         * Returns the name of the aggregate function.
+         * @return the name of the aggregate function
+         */
+        @NotNull
+        public Identifier getFunction() {
+            return this.function;
+        }
+
+        /**
+         * Returns the arguments of the aggregate; empty for {@code COUNT(*)}.
+         * @return the arguments of the aggregate
+         */
+        @NotNull
+        public List<Expr> getArgs() {
+            return this.args;
+        }
+
+        /**
+         * Returns the set quantifier of the aggregate, if specified.
+         * @return the set quantifier of the aggregate, if specified
+         */
+        @Nullable
+        public SetQuantifier getSetq() {
+            return this.setq;
+        }
+
+        @NotNull
+        @Override
+        public List<AstNode> getChildren() {
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(function);
+            kids.addAll(args);
+            return kids;
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitWindowFunctionTypeAggregate(this, ctx);
+        }
+    }
+
 }

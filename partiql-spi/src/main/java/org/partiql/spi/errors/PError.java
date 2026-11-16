@@ -179,6 +179,16 @@ public final class PError extends Enum {
         }
     }
 
+    /**
+     * Returns a new error with the same code, severity, kind, location and properties. The properties are copied into a
+     * new map (the values themselves are shared), so changing the copy's fields or properties does not change this error.
+     * @return a copy of this error.
+     */
+    @NotNull
+    public PError copy() {
+        return new PError(code(), severity, kind, location, new HashMap<>(properties));
+    }
+
     @NotNull
     @Override
     public String name() throws UnsupportedCodeException {
@@ -240,6 +250,8 @@ public final class PError extends Enum {
                 return "MAP_KEY_TYPE_MISMATCH";
             case MAP_DUPLICATE_KEY:
                 return "MAP_DUPLICATE_KEY";
+            case INVALID_WINDOW_FUNCTION:
+                return "INVALID_WINDOW_FUNCTION";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -700,4 +712,30 @@ public final class PError extends Enum {
      * Example error message: <code>[location]: Function reference [fn_id] is ambiguous: [candidates].</code>
      */
     public static final int FUNCTION_AMBIGUOUS = 28;
+
+    /**
+     * <p>
+     * This is a semantic error or warning where a window function violates a syntax rule of SQL:2023
+     * (ISO/IEC 9075-2) Subclause 9.23, "Evaluation and transformation of &lt;window function&gt;". For example,
+     * RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST, LEAD, and LAG require a window ordering clause (Syntax Rule 5a);
+     * for backward compatibility, a missing window ordering clause is reported as a warning. It is also reported for a
+     * WINDOW clause definition that no window function uses and that violates a syntax rule of Subclause 7.15,
+     * "&lt;window clause&gt;"; such an error has the WINDOW_NAME property instead of FN_NAME.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>FN_NAME</b> ({@link String}): The name of the window function.</li>
+     * <li><b>WINDOW_NAME</b> ({@link String}): The name of the window, for a WINDOW clause definition.</li>
+     * <li><b>REASON</b> ({@link String}): A description of the violated rule.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Window function [fn_name] [reason].</code>, or
+     * <code>[location]: Window [window_name] [reason].</code> for a WINDOW clause definition, e.g.
+     * <code>Window function RANK requires an ORDER BY clause in its OVER specification. Without one, its result is the same for
+     * every row or depends on the order in which rows are read. Add an ORDER BY to the window.</code>
+     * </p>
+     */
+    public static final int INVALID_WINDOW_FUNCTION = 29;
 }

@@ -71,4 +71,37 @@ class ErrorMessageFormatterTest {
             )
         }
     }
+
+    @Test
+    fun `formats invalid window function warning`() {
+        val error = PError(
+            PError.INVALID_WINDOW_FUNCTION,
+            Severity.WARNING(),
+            PErrorKind.SEMANTIC(),
+            null,
+            mapOf("FN_NAME" to "PERCENT_RANK", "REASON" to "requires an ORDER BY clause in its OVER specification. Without one, its result is the same for every row or depends on the order in which rows are read. Add an ORDER BY to the window"),
+        )
+
+        assertEquals(
+            "w: [semantic] Window function PERCENT_RANK requires an ORDER BY clause in its OVER specification. Without one, its result is the same for every row or depends on the order in which rows are read. Add an ORDER BY to the window.",
+            ErrorMessageFormatter.message(error),
+        )
+    }
+
+    @Test
+    fun `formats invalid window function without reason or name`() {
+        listOf(
+            mapOf("FN_NAME" to "RANK") to "w: [semantic] Window function RANK is invalid.",
+            emptyMap<String, Any>() to "w: [semantic] Window function is invalid.",
+        ).forEach { (properties, expected) ->
+            val error = PError(
+                PError.INVALID_WINDOW_FUNCTION,
+                Severity.WARNING(),
+                PErrorKind.SEMANTIC(),
+                null,
+                properties,
+            )
+            assertEquals(expected, ErrorMessageFormatter.message(error))
+        }
+    }
 }

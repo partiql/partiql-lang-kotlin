@@ -11,12 +11,14 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * @property value is a serialized Ion value.
@@ -124,6 +126,7 @@ public class FailureTestCase(
     val input: String,
     val mode: Mode = Mode.STRICT(), // default to run in STRICT mode
     val globals: List<Global> = emptyList(),
+    val expectedCode: Int? = null, // when set, the thrown error must be a PRuntimeException with this PError code
 ) : PTestCase {
 
     constructor(
@@ -175,6 +178,7 @@ public class FailureTestCase(
             }
             error(message)
         }
+        assertCode(thrown, "OLD PATH")
         // New VM path — also expect failure
         var vmThrown: Throwable? = null
         try {
@@ -188,6 +192,12 @@ public class FailureTestCase(
         if (vmThrown == null) {
             error("[VM PATH] Expected error to be thrown but none was thrown for: $input")
         }
+        assertCode(vmThrown, "VM PATH")
+    }
+
+    private fun assertCode(thrown: Throwable, path: String) {
+        val code = expectedCode ?: return
+        assertTrue(thrown is PRuntimeException && thrown.error.code() == code, "[$path] Expected PError code $code but got: $thrown")
     }
 
     override fun toString(): String {

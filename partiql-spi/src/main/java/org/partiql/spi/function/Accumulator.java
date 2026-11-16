@@ -18,6 +18,11 @@ public interface Accumulator {
 
     /**
      * Computes the final value of the accumulator.
+     * <p>
+     * Implementations must not modify the accumulator's state, as this may be called more than once, interleaved with
+     * calls to {@link #next(Datum[])}. For example, when an aggregate is used as a window function
+     * (e.g. {@code SUM(x) OVER (ORDER BY y)}), the running value is computed after each group of rows is received.
+     * </p>
      * @return the computed final value of the accumulator.
      */
     @NotNull

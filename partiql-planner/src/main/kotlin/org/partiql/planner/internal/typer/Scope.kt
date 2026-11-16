@@ -20,7 +20,11 @@ import org.partiql.spi.value.Datum
 internal data class Scope(
     val schema: List<Rel.Binding>,
     val outer: List<Scope>,
-    val withElements: List<Rel.Op.With.WithListElement> = emptyList()
+    val withElements: List<Rel.Op.With.WithListElement> = emptyList(),
+    /**
+     * True if this scope binds the common table expressions of a WITH clause, rather than the columns of a row.
+     */
+    val isWith: Boolean = false,
 ) {
 
     internal fun getScope(depth: Int): Scope {

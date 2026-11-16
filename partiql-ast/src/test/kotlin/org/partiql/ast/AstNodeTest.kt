@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.partiql.ast.ddl.AttributeConstraint
 import org.partiql.ast.ddl.TableConstraint
 import org.partiql.ast.expr.Expr
@@ -127,6 +128,33 @@ class AstNodeTest {
         @Suppress("DEPRECATION")
         WindowFunctionType.Lag(lit(), null, null, null),
     ) // defaultValue null
+
+    @Test
+    fun windowFunctionTypeAggregateCountStar() = assertNullSafe(
+        @Suppress("DEPRECATION")
+        WindowFunctionType.Aggregate(Identifier.regular("COUNT"), emptyList(), null),
+    ) // setq null, no args
+
+    @Test
+    fun windowFunctionTypeAggregate() = assertNullSafe(
+        @Suppress("DEPRECATION")
+        WindowFunctionType.Aggregate(Identifier.regular("SUM"), listOf(lit()), null),
+    ) // setq null
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun windowFunctionTypeAggregateRejectsNullFunctionOrArgs() {
+        assertThrows<NullPointerException> { WindowFunctionType.Aggregate.builder().args(listOf(lit())).build() }
+        assertThrows<NullPointerException> { WindowFunctionType.Aggregate.builder().function(Identifier.regular("SUM")).build() }
+    }
+
+    @Test
+    fun windowFunctionTypeAggregateWithoutArgsRejectsSetQuantifier() {
+        assertThrows<IllegalArgumentException> {
+            @Suppress("DEPRECATION")
+            WindowFunctionType.Aggregate(Identifier.regular("COUNT"), emptyList(), SetQuantifier.DISTINCT())
+        }
+    }
 
     @Test
     fun attributeConstraintNull() = assertNullSafe(Ast.columnConstraintNullable(name = null, isNullable = false))
@@ -303,6 +331,7 @@ class AstNodeTest {
             "org.partiql.ast.WindowClause",
             "org.partiql.ast.WindowClause.Definition",
             "org.partiql.ast.WindowFunctionNullTreatment",
+            "org.partiql.ast.WindowFunctionType.Aggregate",
             "org.partiql.ast.WindowFunctionType.CumeDist",
             "org.partiql.ast.WindowFunctionType.DenseRank",
             "org.partiql.ast.WindowFunctionType.Lag",

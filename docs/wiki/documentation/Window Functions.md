@@ -11,6 +11,10 @@ The `PARTITION BY` sub-clause acts similar to `GROUP BY`, which splits the input
 
 The `ORDER BY` sub-clause uses the same logic as a normal `ORDER BY` clause, but it determine only the ordering of binding tuples within each partition, and may not necessarily has effects on the final order of the results.
 
+A window function, including its `OVER` specification, must not contain a subquery or an outer reference, i.e. a reference to a column of an enclosing query (SQL:2023 Subclause 9.23, Syntax Rule 3). The same applies to the `PARTITION BY` and `ORDER BY` of a `WINDOW` clause definition (Subclause 7.15, Syntax Rule 4). A query that contains a window function may still be a correlated subquery, as long as the outer reference is outside the window function. For example, in a subquery over `t` correlated with `o`:
+* Rewrite `LAG(t.x + o.k) OVER (ORDER BY t.x)` as `LAG(t.x) OVER (ORDER BY t.x) + o.k`.
+* Rewrite `SUM(t.x) OVER (PARTITION BY o.g)` by moving the correlation into the subquery's `WHERE` clause, e.g. `WHERE t.g = o.g`.
+
 ## Supported Window Functions:
 - [Lag](#lag-function)
 - [Lead](#lead-function)
@@ -28,7 +32,7 @@ Returns the value from a binding tuple at a given offset *prior to* the current 
 Arguments:
 * expr: 
   * The expression to be evaluated based on specific offset. `expr` can be an expression of any type but another window function expression.
-  * For example, `expr` can be in form of literal, attribute name, path expression, or subquery, but `LAG(LAG(...) OVER ... ) OVER ...)` is not allowed. 
+  * For example, `expr` can be in form of literal, attribute name, or path expression, but `LAG(LAG(...) OVER ... ) OVER ...)` is not allowed. `expr`, `offset`, and `default` must not contain a subquery or an outer reference (see above).
 * offset: 
   * The number of “rows” back from the current binding tuple from which the `expr` should be evaluated upon. If `offset` is not specified, the default value is 1. `offset` can be an expression of any type but window function. If `offset` is not a constant value, it should be evaluated upon the current binding tuple instead of the offset binding tuple. `offset` should be evaluated to a non-negative integer.
 * default: 
@@ -190,7 +194,7 @@ Note that `Lag` and `Lead` perform similar operation and have similar semantics,
 
 Arguments:
 * expr:
-    * The expression to be evaluated based on specific offset. `expr` can be an expression of any type but another window function expression.
+    * The expression to be evaluated based on specific offset. `expr` can be an expression of any type but another window function expression. `expr`, `offset`, and `default` must not contain a subquery or an outer reference (see above).
 * offset:
     * The number of “rows” after the current binding tuple from which the `expr` should be evaluated upon. If `offset` is not specified, the default value is 1. `offset` can be an expression of any type but window function. If `offset` is not a constant value, it should be evaluated upon the current binding tuple instead of the offset binding tuple. `offset` should be evaluated to a non-negative integer.
 * default:

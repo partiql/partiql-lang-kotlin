@@ -49,7 +49,7 @@ internal class RelOpWindow(
         _partitionPeekingNumber = -1L
         _partition = LocalPartition()
         leftoverRow = null
-        functions.map { it.reset(_partition) }
+        functions.forEach { it.reset(_partition) }
     }
 
     override fun peek(): Row? {

@@ -68,6 +68,7 @@ import org.partiql.eval.internal.plan.PCollation
 import org.partiql.eval.internal.plan.PExpr
 import org.partiql.eval.internal.plan.PJoinType
 import org.partiql.eval.internal.plan.PRel
+import org.partiql.eval.internal.window.AggregateWindowFunction
 import org.partiql.eval.internal.window.WindowBuiltIns
 import org.partiql.spi.catalog.ExecutionCatalog
 import org.partiql.spi.types.PType
@@ -162,11 +163,11 @@ internal class OperatorCompiler(
                 }
             }
             is PExpr.PathKey -> ExprPathKey(compile(expr.root), compile(expr.key)).catch()
-            is PExpr.PathIndex -> ExprPathIndex(compile(expr.root), compile(expr.index))
+            is PExpr.PathIndex -> ExprPathIndex(compile(expr.root), compile(expr.index)).catch()
             is PExpr.PathSymbol -> ExprPathSymbol(compile(expr.root), expr.symbol).catch()
             is PExpr.Error -> when (MODE) {
                 Mode.PERMISSIVE -> ExprMissing(PType.unknown())
-                Mode.STRICT -> ExprError()
+                Mode.STRICT -> ExprError(expr.error)
                 else -> error("Unsupported mode: $MODE")
             }
             is PExpr.Custom -> expr.factory()
@@ -259,7 +260,10 @@ internal class OperatorCompiler(
                 val input = compileRel(rel.input)
                 val functions = rel.functions.map { wf ->
                     val args = wf.args.map { compile(it).catch() }
-                    WindowBuiltIns.get(wf.signature, args)
+                    when (val agg = wf.agg) {
+                        null -> WindowBuiltIns.get(wf.signature, args)
+                        else -> AggregateWindowFunction(Aggregate(agg, args, wf.distinct))
+                    }
                 }
                 val partitionBy = rel.partitions.map { compile(it) }
                 val sortBy = rel.sorts.map { toCollation(it) }
@@ -270,8 +274,9 @@ internal class OperatorCompiler(
         }
     }
 
+    // Sort keys are not inside another permissive wrapper, so an error in one must become MISSING here.
     private fun toCollation(c: PCollation): Collation =
-        Collation(compile(c.expr), c.desc, c.nullsLast)
+        Collation(compile(c.expr).catch(), c.desc, c.nullsLast)
 
     private fun ExprValue.catch(): ExprValue = when (MODE) {
         Mode.PERMISSIVE -> ExprPermissive(this)
