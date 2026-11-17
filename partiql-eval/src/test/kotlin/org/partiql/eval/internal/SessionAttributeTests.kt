@@ -13,10 +13,11 @@ import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.spi.value.Field
 import java.time.LocalDate
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Runtime evaluation of SQL session attributes.
@@ -48,6 +49,31 @@ class SessionAttributeTests {
         assertEquals(LocalDate.of(2020, 1, 2), dateField(second, "a"))
         assertEquals(LocalDate.of(2020, 1, 2), dateField(second, "b"))
         assertEquals(2, ticks)
+    }
+
+    @Test
+    fun currentUserAndCurrentDateProjection() {
+        val before = LocalDate.now()
+        val query = "SELECT CURRENT_USER AS u, CURRENT_DATE AS d FROM << 0 >>"
+        val parseResult = PartiQLParser.standard().parse(query)
+        val statement = parseResult.statements.single()
+        val catalog = Catalog.builder().name("memory").build()
+        val session = Session.builder()
+            .catalog("memory")
+            .catalogs(catalog)
+            .identity("alice")
+            .build()
+        val plan = PartiQLPlanner.standard().plan(statement, session).plan
+        val after = LocalDate.now()
+
+        val result = DatumMaterialize.materialize(
+            PartiQLCompiler.standard().prepare(plan, Mode.PERMISSIVE()).execute()
+        )
+        val row = result.iterator().next()
+        assertEquals("alice", row.fields.asSequence().first { it.name == "u" }.value.string)
+        val d = row.fields.asSequence().first { it.name == "d" }.value
+        assertEquals(PType.date(), d.type)
+        assertTrue(!d.localDate.isBefore(before) && !d.localDate.isAfter(after))
     }
 
     @Test
@@ -91,60 +117,46 @@ class SessionAttributeTests {
         private fun plan(query: String): Plan = planner.plan(parse(query), session()).plan
 
         @JvmStatic
-        fun sessionAttributeCases(): List<SuccessTestCase> {
-            val today = LocalDate.now()
-            return listOf(
-                SuccessTestCase(
-                    name = "CURRENT_USER default identity",
-                    input = "CURRENT_USER",
-                    expected = Datum.string("unknown"),
-                ),
-                SuccessTestCase(
-                    name = "CURRENT_USER session identity",
-                    input = "CURRENT_USER",
-                    expected = Datum.string("alice"),
-                    identity = "alice",
-                ),
-                SuccessTestCase(
-                    name = "CURRENT_USER concatenation",
-                    input = "CURRENT_USER || '!'",
-                    expected = Datum.string("alice!"),
-                    identity = "alice",
-                ),
-                SuccessTestCase(
-                    name = "CURRENT_USER filter",
-                    input = "SELECT VALUE x FROM << 'a', 'b' >> AS x WHERE CURRENT_USER = 'alice'",
-                    expected = Datum.bagVararg(Datum.string("a"), Datum.string("b")),
-                    identity = "alice",
-                ),
-                SuccessTestCase(
-                    name = "CURRENT_USER filter misses",
-                    input = "SELECT VALUE x FROM << 'a', 'b' >> AS x WHERE CURRENT_USER = 'alice'",
-                    expected = Datum.bagVararg(),
-                    identity = "bob",
-                ),
-                SuccessTestCase(
-                    name = "CURRENT_DATE",
-                    input = "CURRENT_DATE",
-                    expected = Datum.date(today),
-                ),
-                SuccessTestCase(
-                    name = "CURRENT_DATE is the same on every row",
-                    input = "SELECT VALUE CURRENT_DATE FROM << 1, 2, 3 >>",
-                    expected = Datum.bagVararg(Datum.date(today), Datum.date(today), Datum.date(today)),
-                ),
-                SuccessTestCase(
-                    name = "CURRENT_USER and CURRENT_DATE projection",
-                    input = "SELECT CURRENT_USER AS u, CURRENT_DATE AS d FROM << 0 >>",
-                    expected = Datum.bagVararg(
-                        Datum.struct(
-                            Field.of("u", Datum.string("alice")),
-                            Field.of("d", Datum.date(today)),
-                        )
-                    ),
-                    identity = "alice",
-                ),
-            )
-        }
+        fun sessionAttributeCases(): List<SuccessTestCase> = listOf(
+            SuccessTestCase(
+                name = "CURRENT_USER default identity",
+                input = "CURRENT_USER",
+                expected = Datum.string("unknown"),
+            ),
+            SuccessTestCase(
+                name = "CURRENT_USER session identity",
+                input = "CURRENT_USER",
+                expected = Datum.string("alice"),
+                identity = "alice",
+            ),
+            SuccessTestCase(
+                name = "CURRENT_USER concatenation",
+                input = "CURRENT_USER || '!'",
+                expected = Datum.string("alice!"),
+                identity = "alice",
+            ),
+            SuccessTestCase(
+                name = "CURRENT_USER filter",
+                input = "SELECT VALUE x FROM << 'a', 'b' >> AS x WHERE CURRENT_USER = 'alice'",
+                expected = Datum.bagVararg(Datum.string("a"), Datum.string("b")),
+                identity = "alice",
+            ),
+            SuccessTestCase(
+                name = "CURRENT_USER filter misses",
+                input = "SELECT VALUE x FROM << 'a', 'b' >> AS x WHERE CURRENT_USER = 'alice'",
+                expected = Datum.bagVararg(),
+                identity = "bob",
+            ),
+            SuccessTestCase(
+                name = "CURRENT_DATE",
+                input = "CURRENT_DATE = CURRENT_DATE",
+                expected = Datum.bool(true),
+            ),
+            SuccessTestCase(
+                name = "CURRENT_DATE is the same on every row",
+                input = "SELECT VALUE CURRENT_DATE = CURRENT_DATE FROM << 1, 2, 3 >>",
+                expected = Datum.bagVararg(Datum.bool(true), Datum.bool(true), Datum.bool(true)),
+            ),
+        )
     }
 }

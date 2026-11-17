@@ -23,6 +23,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
     private val strategies: List<Strategy> = strategies
 
+    // TODO: LocalDate.now() uses the JVM default time zone; use a session time zone once Session has one (SQL:2023 6.43 GR 2).
     private var clock: () -> LocalDate = { LocalDate.now() }
 
     internal constructor() : this(emptyList())

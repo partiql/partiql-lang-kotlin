@@ -12,8 +12,8 @@ import java.time.LocalDate
  * Direct calls return the JVM's current local date.
  *
  * SQL `CURRENT_DATE` does not invoke this body once per reference. The evaluator records one
- * [LocalDate] when a query starts and reuses it for every `CURRENT_DATE` in that execution,
- * including values read from a lazy result after execution returns.
+ * [LocalDate] when an execution starts and reuses it for every `CURRENT_DATE` in that
+ * `execute()` until the next execution on the same prepared statement.
  */
 internal val Fn_CURRENT_DATE____DATE = FunctionUtils.hidden(
 
