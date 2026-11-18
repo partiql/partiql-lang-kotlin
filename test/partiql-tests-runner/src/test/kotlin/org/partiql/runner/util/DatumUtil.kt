@@ -14,6 +14,7 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.JsonKind
 import kotlin.math.abs
 
 const val SecondPerMinute = 60
@@ -132,6 +133,10 @@ internal fun Datum.toIonElement(): IonElement {
                     val lowered = this.lower()
                     lowered.toIonElement().withAnnotations("\$ion")
                 }
+                PType.JSON -> {
+                    val item = jsonToIonElement(this)
+                    item.withoutAnnotations().withAnnotations(listOf("\$json") + item.annotations)
+                }
                 else -> ionString(this.toString())
             }
         }
@@ -141,3 +146,15 @@ internal fun Datum.toIonElement(): IonElement {
 // Helper function
 private fun computeTotalSeconds(second: Int, nano: Int) =
     Decimal.valueOf(second.toBigDecimal() + nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal()))
+
+/**
+ * An SQL/JSON item as Ion, without the outer $json annotation. A datetime scalar keeps its $date, $time or
+ * $timestamp annotation.
+ */
+@Suppress("DEPRECATION")
+private fun jsonToIonElement(datum: Datum): IonElement = when (datum.jsonKind) {
+    JsonKind.NULL -> ionNull()
+    JsonKind.SCALAR -> datum.jsonScalar.toIonElement()
+    JsonKind.ARRAY -> ionListOf(datum.map { jsonToIonElement(it) })
+    else -> ionStructOf(datum.fields.asSequence().map { field(it.name, jsonToIonElement(it.value)) }.toList())
+}
