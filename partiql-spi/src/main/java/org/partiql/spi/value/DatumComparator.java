@@ -355,13 +355,11 @@ abstract class DatumComparator implements Comparator<Datum> {
                 case PType.MAP:
                     fillMapComparator(row);
                     break;
-                case PType.JSON:
-                    fillJsonComparator(row);
-                    break;
                 default:
                     break;
             }
         }
+        fillJsonComparator(table);
         // Register
         return table;
     }
@@ -760,29 +758,19 @@ abstract class DatumComparator implements Comparator<Datum> {
     }
 
     /**
-     * Orders two values of type JSON. SQL:2023 fixes part of the order (§4.8.2): SQL/JSON null, then scalars, then
-     * arrays, then objects. Scalars compare as their SQL values, arrays in order, and objects as a multiset of members.
-     * Queries do not compare JSON values yet; this order keeps sorting code from failing on one.
+     * How a value of type JSON compares, with another JSON value or with a value of another type, is not specified
+     * yet, so the comparison throws. SQL NULL and MISSING of type JSON are handled before this table, as for any type.
      */
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
-    private static DatumComparison[] fillJsonComparator(DatumComparison[] comps) {
-        comps[PType.JSON] = (self, other, comp) -> {
-            int kinds = Integer.compare(self.getJsonKind(), other.getJsonKind());
-            if (kinds != 0) {
-                return kinds;
-            }
-            switch (self.getJsonKind()) {
-                case JsonKind.SCALAR:
-                    return comp.compare(self.getJsonScalar(), other.getJsonScalar());
-                case JsonKind.ARRAY:
-                    return compareOrdered(self.iterator(), other.iterator(), comp);
-                case JsonKind.OBJECT:
-                    return compareUnordered(new DatumFieldIterable(self), new DatumFieldIterable(other), new FieldComparator(comp));
-                default:
-                    return EQUAL;
-            }
+    @SuppressWarnings("UnusedReturnValue")
+    private static DatumComparison[][] fillJsonComparator(DatumComparison[][] table) {
+        DatumComparison unspecified = (self, other, comp) -> {
+            throw new UnsupportedOperationException("Comparing a value of type JSON is not supported yet");
         };
-        return comps;
+        for (int i = 0; i < TYPE_KINDS_LENGTH; i++) {
+            table[PType.JSON][i] = unspecified;
+            table[i][PType.JSON] = unspecified;
+        }
+        return table;
     }
 
     private static class DatumEntryIterable implements Iterable<Entry> {

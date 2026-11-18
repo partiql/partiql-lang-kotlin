@@ -47,16 +47,10 @@ class DatumJson implements Datum {
             throw new IllegalArgumentException("An SQL/JSON scalar cannot be NULL or MISSING; use Datum.jsonNull() for SQL/JSON null");
         }
         switch (value.getType().code()) {
-            case PType.CHAR:
-            case PType.VARCHAR:
             case PType.STRING:
-            case PType.TINYINT:
-            case PType.SMALLINT:
             case PType.INTEGER:
             case PType.BIGINT:
-            case PType.NUMERIC:
             case PType.DECIMAL:
-            case PType.REAL:
             case PType.DOUBLE:
             case PType.BOOL:
             case PType.DATE:
@@ -66,7 +60,7 @@ class DatumJson implements Datum {
             case PType.TIMESTAMPZ:
                 return new DatumJson(JsonKind.SCALAR, value, Collections.emptyList(), Collections.emptyList());
             default:
-                throw new IllegalArgumentException("An SQL/JSON scalar must be a string, number, boolean or datetime, not " + value.getType());
+                throw new IllegalArgumentException("An SQL/JSON scalar must be a STRING, INTEGER, BIGINT, DECIMAL, DOUBLE, BOOL or datetime, not " + value.getType());
         }
     }
 

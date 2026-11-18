@@ -974,7 +974,8 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * Creates an SQL/JSON scalar.
-     * @param value a string, number, boolean or datetime value that is not null or missing
+     * @param value a value of type STRING, INTEGER, BIGINT, DECIMAL, DOUBLE, BOOL, DATE, TIME, TIMEZ, TIMESTAMP or
+     *              TIMESTAMPZ that is not null or missing
      * @return a value of type {@link PType#JSON}
      * @throws IllegalArgumentException if {@code value} is null, missing, or of another type
      * @deprecated This feature is experimental and is subject to change.

@@ -57,6 +57,17 @@ class DatumJsonTest {
     }
 
     @Test
+    fun scalarAcceptsOnlyTheTypesJsonNeedsForNow() {
+        listOf(
+            Datum.string("x"), Datum.integer(1), Datum.bigint(1L), Datum.decimal(java.math.BigDecimal("10.5"), 3, 1),
+            Datum.doublePrecision(1e3), Datum.bool(true), Datum.date(java.time.LocalDate.of(2024, 1, 1)),
+        ).forEach { assertEquals(JsonKind.SCALAR, scalar(it).jsonKind) }
+        assertThrows<IllegalArgumentException> { scalar(Datum.smallint(1)) }
+        assertThrows<IllegalArgumentException> { scalar(Datum.real(1f)) }
+        assertThrows<IllegalArgumentException> { scalar(Datum.varchar("x", 5)) }
+    }
+
+    @Test
     fun objectKeepsOrderAndRepeatedKeys() {
         val o = obj("a" to scalar(Datum.integer(1)), "b" to Datum.jsonNull(), "a" to scalar(Datum.integer(2)))
         assertEquals(JsonKind.OBJECT, o.jsonKind)
@@ -91,25 +102,16 @@ class DatumJsonTest {
     }
 
     @Test
-    fun comparatorOrdersNullScalarsArraysThenObjects() {
-        val values = listOf(obj(), arr(), scalar(Datum.integer(1)), Datum.jsonNull())
-        val sorted = values.sortedWith(comparator).map { it.jsonKind }
-        assertEquals(listOf(JsonKind.NULL, JsonKind.SCALAR, JsonKind.ARRAY, JsonKind.OBJECT), sorted)
+    fun comparingJsonIsNotSupportedYet() {
+        assertThrows<UnsupportedOperationException> { comparator.compare(scalar(Datum.integer(1)), scalar(Datum.integer(1))) }
+        assertThrows<UnsupportedOperationException> { comparator.compare(Datum.jsonNull(), obj()) }
+        assertThrows<UnsupportedOperationException> { comparator.compare(Datum.integer(1), Datum.jsonNull()) }
+        assertThrows<UnsupportedOperationException> { comparator.compare(arr(), Datum.struct()) }
     }
 
     @Test
-    fun comparatorComparesContents() {
-        assertEquals(0, comparator.compare(scalar(Datum.integer(1)), scalar(Datum.integer(1))))
-        assertTrue(comparator.compare(scalar(Datum.integer(1)), scalar(Datum.integer(2))) < 0)
-        assertTrue(comparator.compare(arr(scalar(Datum.integer(1))), arr(scalar(Datum.integer(2)))) < 0)
-        val ab = obj("a" to scalar(Datum.integer(1)), "b" to scalar(Datum.integer(2)))
-        val ba = obj("b" to scalar(Datum.integer(2)), "a" to scalar(Datum.integer(1)))
-        assertEquals(0, comparator.compare(ab, ba))
-    }
-
-    @Test
-    fun comparatorPlacesJsonAfterOtherTypes() {
-        assertTrue(comparator.compare(Datum.integer(1), Datum.jsonNull()) < 0)
-        assertTrue(comparator.compare(Datum.struct(), scalar(Datum.integer(1))) < 0)
+    fun sqlNullOfTypeJsonStillComparesAsNull() {
+        assertEquals(0, comparator.compare(Datum.nullValue(PType.json()), Datum.nullValue()))
+        assertTrue(comparator.compare(Datum.nullValue(PType.json()), Datum.integer(1)) != 0)
     }
 }
