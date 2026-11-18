@@ -28,6 +28,7 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
+- Enforced the SQL well-formedness constraint 0 <= scale <= precision on the DECIMAL and NUMERIC types in the type system itself.
 
 ### Deprecated
 
@@ -39,6 +40,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @AugustineFu
 
 ## [1.7.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.7.0) - 2026-11-16
 

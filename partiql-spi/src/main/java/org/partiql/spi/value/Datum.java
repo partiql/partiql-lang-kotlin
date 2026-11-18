@@ -626,26 +626,36 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * Creates a {@link PType#DECIMAL} value whose precision/scale are derived from {@code value} itself.
+     * <p>
+     * {@link java.math.BigDecimal} can report a precision less than its scale (e.g. {@code 0.001} has precision 1
+     * and scale 3) or a negative scale (e.g. {@code 1E+3} has scale -3), neither of which is a well-formed
+     * DECIMAL(p, s). This derives the smallest valid {@code (precision, scale)} that exactly represents the value:
+     * {@code scale = max(value.scale(), 0)} and {@code precision} covers the integer digits plus that scale.
+     *
      * @param value the backing value
-     * @return a value of type {@link PType#DECIMAL} with the default precision/scale
-     * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
+     * @return a value of type {@link PType#DECIMAL} sized to the value
+     * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the derived precision/scale
      */
     @NotNull
     static Datum decimal(@NotNull BigDecimal value) throws PRuntimeException {
-        return new DatumDecimal(value, PType.decimal(38, 0));
+        int scale = Math.max(value.scale(), 0);
+        int precision = Math.max(Math.max(value.precision() - value.scale(), 0) + scale, 1);
+        return decimal(value, precision, scale);
     }
 
     /**
      * @param value the backing value
-     * @param precision the precision to coerce the value to
-     * @param scale the scale to coerce the value to
+     * @param precision the precision of the DECIMAL type; must satisfy {@code 0 <= scale <= precision}
+     * @param scale the scale of the DECIMAL type; must satisfy {@code 0 <= scale <= precision}
      * @return a value of type {@link PType#DECIMAL} with the requested precision/scale
+     * @throws IllegalArgumentException if the requested precision/scale is not a well-formed DECIMAL type
      * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
      */
     @NotNull
     static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws PRuntimeException {
-        BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
         PType type = PType.decimal(precision, scale);
+        BigDecimal d = value.round(new MathContext(Math.max(precision, 1))).setScale(scale, RoundingMode.HALF_UP);
         if (d.precision() > precision) {
             throw PErrors.numericValueOutOfRangeException(value.toString(), type);
         }
@@ -653,26 +663,35 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * Creates a {@link PType#NUMERIC} value whose precision/scale are derived from {@code value} itself.
+     * <p>
+     * See {@link #decimal(BigDecimal)}: {@link java.math.BigDecimal} can report a precision less than its scale or a
+     * negative scale, so this derives the smallest well-formed {@code (precision, scale)} that exactly represents the
+     * value.
+     *
      * @param value the backing value
-     * @return a value of type {@link PType#NUMERIC} with the default precision/scale
-     * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the default precision/scale
+     * @return a value of type {@link PType#NUMERIC} sized to the value
+     * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the derived precision/scale
      */
     @NotNull
     static Datum numeric(@NotNull BigDecimal value) throws PRuntimeException {
-        return new DatumDecimal(value, PType.numeric());
+        int scale = Math.max(value.scale(), 0);
+        int precision = Math.max(Math.max(value.precision() - value.scale(), 0) + scale, 1);
+        return numeric(value, precision, scale);
     }
 
     /**
      * @param value the backing value
-     * @param precision the precision to coerce the value to
-     * @param scale the scale to coerce the value to
+     * @param precision the precision of the NUMERIC type; must satisfy {@code 0 <= scale <= precision}
+     * @param scale the scale of the NUMERIC type; must satisfy {@code 0 <= scale <= precision}
      * @return a value of type {@link PType#NUMERIC} with the requested precision/scale
+     * @throws IllegalArgumentException if the requested precision/scale is not a well-formed NUMERIC type
      * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
      */
     @NotNull
     static Datum numeric(@NotNull BigDecimal value, int precision, int scale) throws PRuntimeException {
-        BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
         PType type = PType.numeric(precision, scale);
+        BigDecimal d = value.round(new MathContext(Math.max(precision, 1))).setScale(scale, RoundingMode.HALF_UP);
         if (d.precision() > precision) {
             throw PErrors.numericValueOutOfRangeException(value.toString(), type);
         }

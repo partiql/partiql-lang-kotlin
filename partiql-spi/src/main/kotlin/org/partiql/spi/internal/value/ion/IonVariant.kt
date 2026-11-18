@@ -92,7 +92,7 @@ internal class IonVariant(private var value: AnyElement) : Datum {
             FLOAT -> Datum.doublePrecision(value.doubleValue)
             DECIMAL -> {
                 val decimal = value.decimalValue.bigDecimalValue()
-                Datum.decimal(decimal, decimal.precision(), decimal.scale())
+                Datum.decimal(decimal)
             }
             LIST -> Datum.array(value.listValues.map { IonVariant(it) })
             SEXP -> Datum.array(value.sexpValues.map { IonVariant(it) })

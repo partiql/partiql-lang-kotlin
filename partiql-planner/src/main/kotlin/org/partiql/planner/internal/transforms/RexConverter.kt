@@ -195,7 +195,7 @@ internal object RexConverter {
                 Literal.BOOL -> Datum.bool(lit.booleanValue())
                 Literal.EXACT_NUM -> {
                     val dec = lit.bigDecimalValue().round(MathContext(38, RoundingMode.HALF_EVEN))
-                    Datum.decimal(dec, dec.precision(), dec.scale())
+                    Datum.decimal(dec)
                 }
                 Literal.INT_NUM -> {
                     val n = lit.numberValue()
@@ -219,7 +219,7 @@ internal object RexConverter {
                     try {
                         val v = BigInteger(n)
                         val vDecimal = BigDecimal(v)
-                        return Datum.decimal(vDecimal, vDecimal.precision(), vDecimal.scale())
+                        return Datum.decimal(vDecimal)
                     } catch (ex: NumberFormatException) {
                         throw ex
                     }
