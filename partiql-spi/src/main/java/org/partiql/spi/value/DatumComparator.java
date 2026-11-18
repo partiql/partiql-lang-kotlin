@@ -256,7 +256,8 @@ abstract class DatumComparator implements Comparator<Datum> {
         precedence.put(BAG, 10);
         // Map Type
         precedence.put(PType.MAP, 11);
-        // JSON Type
+        // JSON Type: never used to order, because fillJsonComparator replaces every JSON entry. It only keeps
+        // initializeComparatorArray from failing on a type with no precedence.
         precedence.put(PType.JSON, 12);
         // OTHER
         precedence.put(DYNAMIC, 100);
@@ -758,13 +759,15 @@ abstract class DatumComparator implements Comparator<Datum> {
     }
 
     /**
-     * How a value of type JSON compares, with another JSON value or with a value of another type, is not specified
-     * yet, so the comparison throws. SQL NULL and MISSING of type JSON are handled before this table, as for any type.
+     * How a value of type JSON compares with another JSON value is not specified yet, and the comparator is a total
+     * order, so it has no answer for JSON with another type either. Every such comparison throws a
+     * {@link org.partiql.spi.errors.PRuntimeException} with {@link org.partiql.spi.errors.PError#FEATURE_NOT_SUPPORTED}.
+     * SQL NULL and MISSING of type JSON are handled before this table, as for any type.
      */
     @SuppressWarnings("UnusedReturnValue")
     private static DatumComparison[][] fillJsonComparator(DatumComparison[][] table) {
         DatumComparison unspecified = (self, other, comp) -> {
-            throw new UnsupportedOperationException("Comparing a value of type JSON is not supported yet");
+            throw PErrors.featureNotSupportedException("comparing a value of type JSON");
         };
         for (int i = 0; i < TYPE_KINDS_LENGTH; i++) {
             table[PType.JSON][i] = unspecified;

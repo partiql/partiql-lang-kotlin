@@ -406,10 +406,12 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return the elements of either bags/lists; returns the fields' values if the type is a struct.
+     * @return the elements of either bags/lists; returns the fields' values if the type is a struct. For a value of
+     * type {@link PType#JSON} that holds an SQL/JSON array, returns its elements, each a value of type JSON.
      * @throws InvalidOperationException if this operation is invoked on a value that is not of the following
      *                                       types: {@link PType#BAG}, {@link PType#ARRAY}, and
-     *                                       {@link PType#STRUCT}.
+     *                                       {@link PType#STRUCT}, or on a value of type {@link PType#JSON} that does
+     *                                       not hold an SQL/JSON array.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
@@ -420,10 +422,13 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return the underlying values applicable to the type {@link PType#STRUCT}.
+     * @return the underlying values applicable to the type {@link PType#STRUCT}. For a value of type
+     * {@link PType#JSON} that holds an SQL/JSON object, returns its members in order, including repeated keys; each
+     * member's value has type JSON.
      * @throws InvalidOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
+     *                                       will throw this exception upon invocation. For a value of type
+     *                                       {@link PType#JSON}, this is thrown unless it holds an SQL/JSON object.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
@@ -973,11 +978,13 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * Creates an SQL/JSON scalar.
+     * Creates an SQL/JSON scalar. A JSON number from JSON text has the type of the same PartiQL literal: INTEGER or
+     * BIGINT for an integer, DECIMAL for a number with a fraction, and DOUBLE, the type of an approximate literal
+     * such as {@code 1e3}, for a number with an exponent.
      * @param value a value of type STRING, INTEGER, BIGINT, DECIMAL, DOUBLE, BOOL, DATE, TIME, TIMEZ, TIMESTAMP or
-     *              TIMESTAMPZ that is not null or missing
+     *              TIMESTAMPZ. More types may be accepted later.
      * @return a value of type {@link PType#JSON}
-     * @throws IllegalArgumentException if {@code value} is null, missing, or of another type
+     * @throws IllegalArgumentException if {@code value} is NULL or MISSING, or has another type
      * @deprecated This feature is experimental and is subject to change.
      */
     @Deprecated
@@ -988,9 +995,10 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * Creates an SQL/JSON array.
-     * @param elements the elements, each a value of type {@link PType#JSON} that is not SQL NULL
+     * @param elements the elements, each built with these factories, and not SQL NULL or MISSING
      * @return a value of type {@link PType#JSON}
-     * @throws IllegalArgumentException if an element does not have type JSON, or is SQL NULL
+     * @throws IllegalArgumentException if an element is null, SQL NULL or MISSING, or was not built with these
+     *                                  factories
      * @deprecated This feature is experimental and is subject to change.
      */
     @Deprecated
@@ -1001,9 +1009,11 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * Creates an SQL/JSON object. Members keep their order, and members with the same key are all kept.
-     * @param members the members, each with a value of type {@link PType#JSON} that is not SQL NULL
+     * @param members the members, each with a non-null key and a value built with these factories that is not SQL
+     *                NULL or MISSING. The keys and values are read once, when the object is built.
      * @return a value of type {@link PType#JSON}
-     * @throws IllegalArgumentException if a member value does not have type JSON, or is SQL NULL
+     * @throws IllegalArgumentException if a member or its key is null, or its value is null, SQL NULL or MISSING, or
+     *                                  was not built with these factories
      * @deprecated This feature is experimental and is subject to change.
      */
     @Deprecated
@@ -1314,6 +1324,8 @@ public interface Datum extends Iterable<Datum> {
      * @see Datum
      * @see java.util.TreeSet
      * @see java.util.TreeMap
+     * @throws org.partiql.spi.errors.PRuntimeException with {@link org.partiql.spi.errors.PError#FEATURE_NOT_SUPPORTED}
+     *                   when it compares a value of type {@link PType#JSON}, because how JSON compares is not specified yet.
      */
     @NotNull
     static Comparator<Datum> comparator() {
@@ -1335,6 +1347,8 @@ public interface Datum extends Iterable<Datum> {
      * @see Datum
      * @see java.util.TreeSet
      * @see java.util.TreeMap
+     * @throws org.partiql.spi.errors.PRuntimeException with {@link org.partiql.spi.errors.PError#FEATURE_NOT_SUPPORTED}
+     *                   when it compares a value of type {@link PType#JSON}, because how JSON compares is not specified yet.
      */
     @NotNull
     static Comparator<Datum> comparator(boolean nullsFirst) {
@@ -1357,6 +1371,8 @@ public interface Datum extends Iterable<Datum> {
      * @see Datum
      * @see java.util.TreeSet
      * @see java.util.TreeMap
+     * @throws org.partiql.spi.errors.PRuntimeException with {@link org.partiql.spi.errors.PError#FEATURE_NOT_SUPPORTED}
+     *                   when it compares a value of type {@link PType#JSON}, because how JSON compares is not specified yet.
      */
     @NotNull
     static Comparator<Datum> comparator(boolean nullsFirst, boolean distinguishNullMissing) {

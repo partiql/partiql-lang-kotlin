@@ -1,12 +1,17 @@
 package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.partiql.spi.types.PType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * A value of type JSON: one SQL/JSON item. Every part of an item, such as an object's member value or an array's
@@ -15,7 +20,26 @@ import java.util.List;
  * This shall always be package-private (internal). Build one with the {@code Datum.json*} factories, which check
  * the item's rules.
  */
+@SuppressWarnings("deprecation")
 class DatumJson implements Datum {
+
+    /**
+     * The types an SQL/JSON scalar can hold. The list starts narrow on purpose: adding a type later is compatible,
+     * and removing one is not.
+     */
+    private static final Set<Integer> SCALAR_TYPES = new HashSet<>(Arrays.asList(
+            PType.STRING,
+            PType.INTEGER,
+            PType.BIGINT,
+            PType.DECIMAL,
+            PType.DOUBLE,
+            PType.BOOL,
+            PType.DATE,
+            PType.TIME,
+            PType.TIMEZ,
+            PType.TIMESTAMP,
+            PType.TIMESTAMPZ
+    ));
 
     private static final PType TYPE = PType.json();
 
@@ -23,6 +47,7 @@ class DatumJson implements Datum {
 
     private final int _kind;
 
+    @Nullable
     private final Datum _scalar;
 
     @NotNull
@@ -31,7 +56,7 @@ class DatumJson implements Datum {
     @NotNull
     private final List<Field> _members;
 
-    private DatumJson(int kind, Datum scalar, @NotNull List<Datum> elements, @NotNull List<Field> members) {
+    private DatumJson(int kind, @Nullable Datum scalar, @NotNull List<Datum> elements, @NotNull List<Field> members) {
         _kind = kind;
         _scalar = scalar;
         _elements = elements;
@@ -46,29 +71,16 @@ class DatumJson implements Datum {
         if (value.isNull() || value.isMissing()) {
             throw new IllegalArgumentException("An SQL/JSON scalar cannot be NULL or MISSING; use Datum.jsonNull() for SQL/JSON null");
         }
-        switch (value.getType().code()) {
-            case PType.STRING:
-            case PType.INTEGER:
-            case PType.BIGINT:
-            case PType.DECIMAL:
-            case PType.DOUBLE:
-            case PType.BOOL:
-            case PType.DATE:
-            case PType.TIME:
-            case PType.TIMEZ:
-            case PType.TIMESTAMP:
-            case PType.TIMESTAMPZ:
-                return new DatumJson(JsonKind.SCALAR, value, Collections.emptyList(), Collections.emptyList());
-            default:
-                throw new IllegalArgumentException("An SQL/JSON scalar must be a STRING, INTEGER, BIGINT, DECIMAL, DOUBLE, BOOL or datetime, not " + value.getType());
+        if (!SCALAR_TYPES.contains(value.getType().code())) {
+            throw new IllegalArgumentException("An SQL/JSON scalar cannot have type " + value.getType());
         }
+        return new DatumJson(JsonKind.SCALAR, value, Collections.emptyList(), Collections.emptyList());
     }
 
     static DatumJson array(@NotNull Iterable<Datum> elements) {
         List<Datum> list = new ArrayList<>();
         for (Datum element : elements) {
-            requireItem(element, "element");
-            list.add(element);
+            list.add(requireItem(element, "element"));
         }
         return new DatumJson(JsonKind.ARRAY, null, Collections.unmodifiableList(list), Collections.emptyList());
     }
@@ -76,22 +88,33 @@ class DatumJson implements Datum {
     static DatumJson object(@NotNull Iterable<Field> members) {
         List<Field> list = new ArrayList<>();
         for (Field member : members) {
-            requireItem(member.getValue(), "member value");
-            list.add(member);
+            if (member == null || member.getName() == null) {
+                throw new IllegalArgumentException("An SQL/JSON object member and its key cannot be null");
+            }
+            // Read the key and value once, and keep our own copy: Field is a public interface.
+            String name = member.getName();
+            Datum value = requireItem(member.getValue(), "member value");
+            list.add(Field.of(name, value));
         }
         return new DatumJson(JsonKind.OBJECT, null, Collections.emptyList(), Collections.unmodifiableList(list));
     }
 
     /**
-     * Each part of an SQL/JSON item is itself an SQL/JSON item: a value of type JSON that is not SQL NULL or MISSING.
+     * Each part of an SQL/JSON item is itself an SQL/JSON item. Only items built by these factories are accepted, so
+     * every part has been checked, and an item can't contain itself.
      */
-    private static void requireItem(@NotNull Datum value, @NotNull String what) {
-        if (value.getType().code() != PType.JSON) {
-            throw new IllegalArgumentException("An SQL/JSON " + what + " must have type JSON, not " + value.getType());
+    @NotNull
+    private static Datum requireItem(@Nullable Datum value, @NotNull String what) {
+        if (value == null) {
+            throw new IllegalArgumentException("An SQL/JSON " + what + " cannot be null");
         }
         if (value.isNull() || value.isMissing()) {
             throw new IllegalArgumentException("An SQL/JSON " + what + " cannot be NULL or MISSING; use Datum.jsonNull() for SQL/JSON null");
         }
+        if (!(value instanceof DatumJson)) {
+            throw new IllegalArgumentException("An SQL/JSON " + what + " must be built with the Datum.json* factories, not " + value.getType());
+        }
+        return value;
     }
 
     @NotNull
@@ -108,7 +131,7 @@ class DatumJson implements Datum {
     @NotNull
     @Override
     public Datum getJsonScalar() {
-        if (_kind != JsonKind.SCALAR) {
+        if (_kind != JsonKind.SCALAR || _scalar == null) {
             throw new InvalidOperationException(TYPE, "getJsonScalar");
         }
         return _scalar;
@@ -134,15 +157,25 @@ class DatumJson implements Datum {
 
     @Override
     public String toString() {
+        String value;
         switch (_kind) {
             case JsonKind.NULL:
-                return "DatumJson{null}";
+                value = "null";
+                break;
             case JsonKind.SCALAR:
-                return "DatumJson{" + _scalar + "}";
+                value = String.valueOf(_scalar);
+                break;
             case JsonKind.ARRAY:
-                return "DatumJson{array, " + _elements.size() + " elements}";
+                value = DatumUtils.formatListToString(_elements);
+                break;
             default:
-                return "DatumJson{object, " + _members.size() + " members}";
+                StringJoiner joiner = new StringJoiner(", ", "{", "}");
+                _members.forEach(f -> joiner.add(f.getName() + "=" + f.getValue()));
+                value = joiner.toString();
         }
+        return "DatumJson{" +
+                "_type=" + TYPE +
+                ", _value=" + value +
+                '}';
     }
 }
