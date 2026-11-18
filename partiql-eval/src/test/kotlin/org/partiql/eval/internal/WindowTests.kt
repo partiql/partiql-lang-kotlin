@@ -1,6 +1,7 @@
 package org.partiql.eval.internal
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
@@ -8,16 +9,26 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.Mode
+import org.partiql.eval.PErrorCollector
 import org.partiql.eval.Row
 import org.partiql.eval.WindowFunction
 import org.partiql.eval.WindowPartition
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.eval.internal.operator.rel.Collation
 import org.partiql.eval.internal.operator.rel.RelOpWindow
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.eval.internal.window.RowNumberFunction
+import org.partiql.parser.PartiQLParser
+import org.partiql.planner.PartiQLPlanner
+import org.partiql.spi.Context
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
+import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.test.assertEquals
 
@@ -35,6 +46,129 @@ class WindowTests {
     @MethodSource("failureTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun failureTests(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("aggregateTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun aggregateTests(tc: SuccessTestCase) = tc.run()
+
+    /**
+     * SQL:2023 Subclause 9.23, Syntax Rule 5a: the rank functions, NTILE, LEAD, and LAG require a window ordering
+     * clause. For backward compatibility, the planner reports an [PError.INVALID_WINDOW_FUNCTION] warning for each
+     * offending function, and planning still succeeds.
+     */
+    @ParameterizedTest
+    @MethodSource("windowOrderRequiredTestCases")
+    fun windowOrderRequired(tc: Pair<String, List<String>>) {
+        val (query, expectedFns) = tc
+        val problems = planningProblems(query)
+        assertEquals(emptyList(), problems.errors, "Errors: ${problems.errors}")
+        val warnings = problems.warnings.filter { it.code() == PError.INVALID_WINDOW_FUNCTION }
+        // Each in-line window is planned separately, so the report order across windows is not meaningful.
+        assertEquals(expectedFns.sorted(), warnings.map { it.get("FN_NAME", String::class.java) as String }.sorted())
+    }
+
+    @ParameterizedTest
+    @MethodSource("windowOrderPresentOrNotRequiredTestCases")
+    fun windowOrderPresentOrNotRequired(query: String) {
+        val problems = planningProblems(query)
+        assertEquals(emptyList(), problems.errors, "Errors: ${problems.errors}")
+        assertEquals(emptyList(), problems.warnings.filter { it.code() == PError.INVALID_WINDOW_FUNCTION })
+    }
+
+    /**
+     * A window that refines or inherits another window, `OVER (w ORDER BY ...)` or `WINDOW w2 AS (w1)`, is reported
+     * only as an unsupported window reference, not as a missing ORDER BY.
+     */
+    @ParameterizedTest
+    @MethodSource("windowReferencingOtherWindowTestCases")
+    fun windowOrderRequiredNotReportedForWindowReferencingOtherWindow(query: String) {
+        val problems = planningProblems(query)
+        assertEquals(listOf(PError.FEATURE_NOT_SUPPORTED), problems.errors.map { it.code() }, "Errors: ${problems.errors}")
+        assertEquals(emptyList(), problems.warnings.filter { it.code() == PError.INVALID_WINDOW_FUNCTION })
+    }
+
+    /**
+     * SQL:2023 Subclause 9.23, Syntax Rule 3: a window function (including its OVER specification) shall not contain an
+     * outer reference or a query expression. For a WINDOW clause definition that no window function uses, Subclause
+     * 7.15, Syntax Rule 4 applies.
+     *
+     * Each test case lists the offending window functions, or `WINDOW w` for an unused window definition `w`.
+     */
+    @ParameterizedTest
+    @MethodSource("invalidWindowFunctionSyntaxRule3TestCases")
+    fun windowFunctionWithOuterReferenceOrSubqueryIsInvalid(tc: Pair<String, List<String>>) {
+        val (query, expected) = tc
+        // With and without inlining the WITH clause, which otherwise keeps CTE references as variables.
+        listOf(true, false).forEach { inlineWith ->
+            val errors = planningProblems(query, inlineWith).errors
+            assertEquals(listOf(PError.INVALID_WINDOW_FUNCTION), errors.map { it.code() }.distinct(), "Errors (inlineWith=$inlineWith): $errors")
+            val reported = errors.map { error ->
+                val fnName = error.getOrNull("FN_NAME", String::class.java)
+                when (fnName) {
+                    null -> {
+                        assertEquals(DEFINITION_OUTER_REFERENCE_OR_SUBQUERY, error.get("REASON", String::class.java))
+                        "WINDOW ${error.get("WINDOW_NAME", String::class.java)}"
+                    }
+                    else -> {
+                        assertEquals(OUTER_REFERENCE_OR_SUBQUERY, error.get("REASON", String::class.java))
+                        fnName
+                    }
+                }
+            }
+            // One error per offending window function; each in-line window is planned separately, so the report order
+            // across windows is not meaningful.
+            assertEquals(expected.sorted(), reported.sorted(), "Errors (inlineWith=$inlineWith): $errors")
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("validWindowFunctionInNestedQueryTestCases")
+    fun windowFunctionInNestedQueryIsValid(query: String) {
+        listOf(true, false).forEach { inlineWith ->
+            val problems = planningProblems(query, inlineWith)
+            assertEquals(emptyList(), problems.errors, "Errors (inlineWith=$inlineWith): ${problems.errors}")
+        }
+    }
+
+    /**
+     * A host may evaluate a plan despite planning errors. A window function that violates SQL:2023 Subclause 9.23, Syntax
+     * Rule 3 then raises the planner's error in strict mode, and is MISSING in permissive mode, while the rest of the row
+     * is still evaluated.
+     */
+    @Test
+    fun invalidWindowFunctionRaisesPlanningErrorAtRuntime() {
+        val query = "SELECT o.g AS g, (SELECT SUM(t.x + o.k) OVER () AS s FROM $INNER AS t LIMIT 1) AS s FROM $OUTER AS o"
+        val statement = PartiQLParser.standard().parse(query).statements.single()
+        val session = Session.builder()
+            .catalog("default")
+            .catalogs(Catalog.builder().name("default").build())
+            .build()
+        val plan = PartiQLPlanner.standard().plan(statement, session, Context.of(PErrorCollector())).plan
+        val compiler = PartiQLCompiler.standard()
+
+        val strict = assertThrows<PRuntimeException> {
+            compiler.prepare(plan, Mode.STRICT(), Context.of(PErrorCollector())).execute().toList()
+        }
+        assertEquals(PError.INVALID_WINDOW_FUNCTION, strict.error.code())
+        assertEquals("SUM", strict.error.get("FN_NAME", String::class.java))
+
+        val permissive = compiler.prepare(plan, Mode.PERMISSIVE(), Context.of(PErrorCollector())).execute()
+        val expected = Datum.bag(listOf(Datum.struct(Field.of("g", Datum.string("a")))))
+        assertEquals(0, Datum.comparator(true, true).compare(expected, permissive), "Actual: $permissive")
+    }
+
+    private fun planningProblems(query: String, inlineWith: Boolean = true): PErrorCollector {
+        val statement = PartiQLParser.standard().parse(query).statements.single()
+        val session = Session.builder()
+            .catalog("default")
+            .catalogs(Catalog.builder().name("default").build())
+            .build()
+        val collector = PErrorCollector()
+        val planner = PartiQLPlanner.builder().forceInlineWithClause(replaceWith = inlineWith).build()
+        planner.plan(statement, session, Context.of(collector))
+        return collector
+    }
 
     /**
      * This is used just for debugging purposes.
@@ -243,6 +377,17 @@ class WindowTests {
             Triple(8, "b", null),
         )
 
+        /**
+         * Rows (g, k, x). Partition 'a' has a tie on k = 2.
+         */
+        private val nums = listOf(
+            Triple("a", 1, 2),
+            Triple("a", 2, 4),
+            Triple("a", 2, 6),
+            Triple("a", 3, 8),
+            Triple("b", 1, 10),
+        )
+
         private fun intOrNull(v: Int?): Datum = v?.let { Datum.integer(it) } ?: Datum.nullValue(PType.integer())
 
         private val globals = listOf(
@@ -265,7 +410,25 @@ class WindowTests {
             Global(
                 name = "stock_prices",
                 value = Datum.bag(stock_prices.map { it.toDatum() })
-            )
+            ),
+            Global(
+                name = "nums",
+                value = Datum.bag(
+                    nums.map { (g, k, x) ->
+                        Datum.struct(Field.of("g", Datum.string(g)), Field.of("k", Datum.integer(k)), Field.of("x", Datum.integer(x)))
+                    }
+                )
+            ),
+            Global(
+                name = "sparse",
+                value = Datum.bagVararg(
+                    // `v` is MISSING for id 2 and NULL for id 3
+                    Datum.struct(Field.of("id", Datum.integer(1)), Field.of("v", Datum.integer(1))),
+                    Datum.struct(Field.of("id", Datum.integer(2))),
+                    Datum.struct(Field.of("id", Datum.integer(3)), Field.of("v", Datum.nullValue())),
+                    Datum.struct(Field.of("id", Datum.integer(4)), Field.of("v", Datum.integer(4))),
+                )
+            ),
         )
 
         private const val FALLBACK: String = "UNKNOWN"
@@ -483,28 +646,6 @@ class WindowTests {
                 ),
             ),
             SuccessTestCase(
-                name = "With subquery",
-                mode = Mode.PERMISSIVE(),
-                globals = globals,
-                input = """
-                    SELECT
-                        LAG(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp._date) AS previous_price,
-                        (
-                            SELECT
-                                LAG(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp._date) AS inner_lag
-                            FROM <<1>>
-                       ) AS nested
-                    FROM stock_prices AS sp
-                """.trimIndent(),
-                expected = Datum.bagVararg(
-                    rowOfStockPrice(null),
-                    rowOfStockPrice(113.0),
-                    rowOfStockPrice(null),
-                    rowOfStockPrice(96.15),
-                    rowOfStockPrice(99.30),
-                ),
-            ),
-            SuccessTestCase(
                 name = "With order by",
                 mode = Mode.PERMISSIVE(),
                 globals = globals,
@@ -524,6 +665,208 @@ class WindowTests {
                         rowOfStockPrice(2025, 9, 30, "AMZN", 113.0, null),
                         rowOfStockPrice(2025, 9, 30, "GOOG", 96.15, null),
                     )
+                ),
+            ),
+
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with ties and multiple partitions",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER _w AS _rank,
+                        PERCENT_RANK() OVER _w AS _percent_rank,
+                        CUME_DIST() OVER _w AS _cume_dist
+                    FROM employee AS t
+                    WINDOW _w AS (PARTITION BY t.department ORDER BY t.age);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    // Marketing (n = 2)
+                    rowOfDistribution(6, 1, 0.0, 1.0 / 2.0),
+                    rowOfDistribution(0, 2, 1.0, 1.0),
+                    // Research (n = 5)
+                    rowOfDistribution(5, 1, 0.0, 1.0 / 5.0),
+                    rowOfDistribution(3, 2, 1.0 / 4.0, 3.0 / 5.0),
+                    rowOfDistribution(9, 2, 1.0 / 4.0, 3.0 / 5.0),
+                    rowOfDistribution(7, 4, 3.0 / 4.0, 4.0 / 5.0),
+                    rowOfDistribution(2, 5, 1.0, 1.0),
+                    // Sales (n = 3)
+                    rowOfDistribution(1, 1, 0.0, 2.0 / 3.0),
+                    rowOfDistribution(4, 1, 0.0, 2.0 / 3.0),
+                    rowOfDistribution(8, 3, 1.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with DESC ordering",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER _w AS _rank,
+                        PERCENT_RANK() OVER _w AS _percent_rank,
+                        CUME_DIST() OVER _w AS _cume_dist
+                    FROM employee AS t
+                    WINDOW _w AS (PARTITION BY t.department ORDER BY t.age DESC);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    // Marketing (n = 2)
+                    rowOfDistribution(0, 1, 0.0, 1.0 / 2.0),
+                    rowOfDistribution(6, 2, 1.0, 1.0),
+                    // Research (n = 5)
+                    rowOfDistribution(2, 1, 0.0, 1.0 / 5.0),
+                    rowOfDistribution(7, 2, 1.0 / 4.0, 2.0 / 5.0),
+                    rowOfDistribution(3, 3, 2.0 / 4.0, 4.0 / 5.0),
+                    rowOfDistribution(9, 3, 2.0 / 4.0, 4.0 / 5.0),
+                    rowOfDistribution(5, 5, 1.0, 1.0),
+                    // Sales (n = 3)
+                    rowOfDistribution(8, 1, 0.0, 1.0 / 3.0),
+                    rowOfDistribution(1, 2, 1.0 / 2.0, 1.0),
+                    rowOfDistribution(4, 2, 1.0 / 2.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST without PARTITION BY",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER (ORDER BY t.age) AS _rank,
+                        PERCENT_RANK() OVER (ORDER BY t.age) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.age) AS _cume_dist
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfDistribution(5, 1, 0.0, 1.0 / 10.0),
+                    rowOfDistribution(1, 2, 1.0 / 9.0, 3.0 / 10.0),
+                    rowOfDistribution(4, 2, 1.0 / 9.0, 3.0 / 10.0),
+                    rowOfDistribution(8, 4, 3.0 / 9.0, 4.0 / 10.0),
+                    rowOfDistribution(3, 5, 4.0 / 9.0, 6.0 / 10.0),
+                    rowOfDistribution(9, 5, 4.0 / 9.0, 6.0 / 10.0),
+                    rowOfDistribution(6, 7, 6.0 / 9.0, 8.0 / 10.0),
+                    rowOfDistribution(7, 7, 6.0 / 9.0, 8.0 / 10.0),
+                    rowOfDistribution(2, 9, 8.0 / 9.0, 9.0 / 10.0),
+                    rowOfDistribution(0, 10, 1.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with single-row partitions",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER _w AS _rank,
+                        PERCENT_RANK() OVER _w AS _percent_rank,
+                        CUME_DIST() OVER _w AS _cume_dist
+                    FROM employee AS t
+                    WINDOW _w AS (PARTITION BY t.id ORDER BY t.age);
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST over empty input",
+                mode = Mode.STRICT(),
+                input = """
+                    SELECT
+                        PERCENT_RANK() OVER (ORDER BY t.v) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.v) AS _cume_dist
+                    FROM <<>> AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(),
+            ),
+            // SQL:2023 9.23 SR 5a requires a window ORDER BY; the planner warns but still plans the query.
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST without ORDER BY (all rows are peers)",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER (PARTITION BY t.department) AS _rank,
+                        PERCENT_RANK() OVER (PARTITION BY t.department) AS _percent_rank,
+                        CUME_DIST() OVER (PARTITION BY t.department) AS _cume_dist
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with empty OVER clause (all rows are peers)",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS _id,
+                        t.name AS _name,
+                        RANK() OVER () AS _rank,
+                        PERCENT_RANK() OVER () AS _percent_rank,
+                        CUME_DIST() OVER () AS _cume_dist
+                    FROM employee AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    *employees.map { rowOfDistribution(it.id, 1, 0.0, 1.0) }.toTypedArray()
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with NULL sort keys (NULLS FIRST)",
+                mode = Mode.STRICT(),
+                input = """
+                    SELECT
+                        t.k AS k,
+                        PERCENT_RANK() OVER (ORDER BY t.v ASC NULLS FIRST) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.v ASC NULLS FIRST) AS _cume_dist
+                    FROM << { 'k': 1, 'v': NULL }, { 'k': 2, 'v': 10 }, { 'k': 3, 'v': NULL }, { 'k': 4, 'v': 20 } >> AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfKeyedDistribution(1, 0.0, 2.0 / 4.0),
+                    rowOfKeyedDistribution(3, 0.0, 2.0 / 4.0),
+                    rowOfKeyedDistribution(2, 2.0 / 3.0, 3.0 / 4.0),
+                    rowOfKeyedDistribution(4, 1.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST with NULL sort keys (NULLS LAST)",
+                mode = Mode.STRICT(),
+                input = """
+                    SELECT
+                        t.k AS k,
+                        PERCENT_RANK() OVER (ORDER BY t.v ASC NULLS LAST) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.v ASC NULLS LAST) AS _cume_dist
+                    FROM << { 'k': 1, 'v': NULL }, { 'k': 2, 'v': 10 }, { 'k': 3, 'v': NULL }, { 'k': 4, 'v': 20 } >> AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfKeyedDistribution(2, 0.0, 1.0 / 4.0),
+                    rowOfKeyedDistribution(4, 1.0 / 3.0, 2.0 / 4.0),
+                    rowOfKeyedDistribution(1, 2.0 / 3.0, 1.0),
+                    rowOfKeyedDistribution(3, 2.0 / 3.0, 1.0),
+                ),
+            ),
+            SuccessTestCase(
+                name = "PERCENT_RANK and CUME_DIST treat NULL and MISSING sort keys as peers",
+                // PERMISSIVE so that the absent attribute t.v evaluates to MISSING rather than raising an error.
+                mode = Mode.PERMISSIVE(),
+                input = """
+                    SELECT
+                        t.k AS k,
+                        PERCENT_RANK() OVER (ORDER BY t.v ASC NULLS FIRST) AS _percent_rank,
+                        CUME_DIST() OVER (ORDER BY t.v ASC NULLS FIRST) AS _cume_dist
+                    FROM << { 'k': 1, 'v': NULL }, { 'k': 2 }, { 'k': 3, 'v': 10 } >> AS t;
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    rowOfKeyedDistribution(1, 0.0, 2.0 / 3.0),
+                    rowOfKeyedDistribution(2, 0.0, 2.0 / 3.0),
+                    rowOfKeyedDistribution(3, 1.0, 1.0),
                 ),
             ),
             SuccessTestCase(
@@ -712,6 +1055,30 @@ class WindowTests {
             return Datum.struct(fields)
         }
 
+        /**
+         * @param id The employee's id
+         * @param rank The employee's rank within the window
+         * @param percentRank The employee's percent rank within the window
+         * @param cumeDist The employee's cumulative distribution within the window
+         */
+        private fun rowOfDistribution(id: Int, rank: Long, percentRank: Double, cumeDist: Double): Datum {
+            return Datum.struct(
+                Field.of("_id", Datum.integer(id)),
+                Field.of("_name", Datum.string(employees[id].name)),
+                Field.of("_rank", Datum.bigint(rank)),
+                Field.of("_percent_rank", Datum.doublePrecision(percentRank)),
+                Field.of("_cume_dist", Datum.doublePrecision(cumeDist)),
+            )
+        }
+
+        private fun rowOfKeyedDistribution(k: Int, percentRank: Double, cumeDist: Double): Datum {
+            return Datum.struct(
+                Field.of("k", Datum.integer(k)),
+                Field.of("_percent_rank", Datum.doublePrecision(percentRank)),
+                Field.of("_cume_dist", Datum.doublePrecision(cumeDist)),
+            )
+        }
+
         private fun rowOfStockPrice(month: Int, ticker: String, avg: Double, prevAvg: Double?): Datum {
             val fields = mutableListOf(
                 Field.of("current_month", Datum.integer(month)),
@@ -758,8 +1125,511 @@ class WindowTests {
             return Datum.struct(fields)
         }
 
+        private const val ORDER_DATA = "<< { 'g': 1, 'v': 10 }, { 'g': 1, 'v': 20 } >>"
+
+        @JvmStatic
+        fun windowOrderRequiredTestCases() = listOf(
+            "SELECT RANK() OVER () AS r FROM $ORDER_DATA AS t" to listOf("RANK"),
+            "SELECT DENSE_RANK() OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("DENSE_RANK"),
+            "SELECT PERCENT_RANK() OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("PERCENT_RANK"),
+            "SELECT CUME_DIST() OVER () AS r FROM $ORDER_DATA AS t" to listOf("CUME_DIST"),
+            "SELECT LEAD(t.v) OVER (PARTITION BY t.g) AS r FROM $ORDER_DATA AS t" to listOf("LEAD"),
+            "SELECT LAG(t.v, 1, 0) OVER () AS r FROM $ORDER_DATA AS t" to listOf("LAG"),
+            // Named window without an ORDER BY, referenced as `OVER w` and `OVER (w)`.
+            "SELECT RANK() OVER w AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)" to listOf("RANK"),
+            "SELECT RANK() OVER (w) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)" to listOf("RANK"),
+            // Every offending function is reported; ROW_NUMBER is exempt.
+            "SELECT ROW_NUMBER() OVER () AS n, RANK() OVER () AS r, CUME_DIST() OVER () AS c FROM $ORDER_DATA AS t" to
+                listOf("RANK", "CUME_DIST"),
+        )
+
+        private const val OUTER = "<< { 'g': 'a', 'k': 100 } >>"
+        private const val INNER = "<< { 'g': 'a', 'x': 1 }, { 'g': 'a', 'x': 2 }, { 'g': 'b', 'x': 3 } >>"
+        private const val OUTER_ITEMS = "<< { 'g': 'a', 'k': 100, 'items': [{ 'x': 1 }, { 'x': 2 }] } >>"
+        private const val OUTER_REFERENCE_OR_SUBQUERY =
+            "must not contain an outer reference or a subquery in its arguments or OVER specification. " +
+                "Move it out of the window function, e.g. into the select list or the WHERE clause"
+        private const val DEFINITION_OUTER_REFERENCE_OR_SUBQUERY =
+            "must not contain an outer reference or a subquery in its PARTITION BY or ORDER BY clause. " +
+                "Move it out of the window, e.g. into the select list or the WHERE clause"
+
+        @JvmStatic
+        fun invalidWindowFunctionSyntaxRule3TestCases() = listOf(
+            // An outer reference in the arguments, PARTITION BY, or ORDER BY.
+            "SELECT o.g AS g, (SELECT SUM(t.x + o.k) OVER () AS s FROM $INNER AS t LIMIT 1) AS s FROM $OUTER AS o" to listOf("SUM"),
+            "SELECT o.g AS g, (SELECT LAG(t.x + o.k) OVER (ORDER BY t.x) AS l FROM $INNER AS t WHERE t.g = o.g LIMIT 1) AS l FROM $OUTER AS o" to listOf("LAG"),
+            "SELECT o.g AS g, (SELECT RANK() OVER (PARTITION BY o.g ORDER BY t.x) AS r FROM $INNER AS t LIMIT 1) AS r FROM $OUTER AS o" to listOf("RANK"),
+            "SELECT o.g AS g, (SELECT ROW_NUMBER() OVER (ORDER BY t.x + o.k) AS n FROM $INNER AS t LIMIT 1) AS n FROM $OUTER AS o" to listOf("ROW_NUMBER"),
+            // ... inside a CASE, or in LAG's default.
+            "SELECT o.g AS g, (SELECT SUM(CASE WHEN t.x < o.k THEN 1 ELSE 0 END) OVER () AS s FROM $INNER AS t LIMIT 1) AS s FROM $OUTER AS o" to listOf("SUM"),
+            "SELECT o.g AS g, (SELECT LAG(t.x, 1, o.k) OVER (ORDER BY t.x) AS l FROM $INNER AS t LIMIT 1) AS l FROM $OUTER AS o" to listOf("LAG"),
+            // ... in an expression that fails to type (`o.g` is a string).
+            "SELECT o.g AS g, (SELECT RANK() OVER (ORDER BY t.x + o.g) AS r FROM $INNER AS t LIMIT 1) AS r FROM $OUTER AS o" to listOf("RANK"),
+            "SELECT o.g AS g, (SELECT LAG(o.g + 1) OVER (ORDER BY t.x) AS l FROM $INNER AS t LIMIT 1) AS l FROM $OUTER AS o" to listOf("LAG"),
+            // ... in a group aggregate that the window function contains.
+            "SELECT o.g AS g, (SELECT SUM(MAX(t.x + o.k)) OVER () AS s FROM $INNER AS t GROUP BY t.g LIMIT 1) AS s FROM $OUTER AS o" to listOf("SUM"),
+            "SELECT o.g AS g, (SELECT RANK() OVER (ORDER BY MAX(t.x + o.k)) AS r FROM $INNER AS t GROUP BY t.g LIMIT 1) AS r FROM $OUTER AS o" to listOf("RANK"),
+            // ... in a lateral derived table, where `o` is an enclosing query's table (SQL:2023 Subclause 6.7, Syntax Rule 4).
+            "SELECT d.r AS r FROM $OUTER_ITEMS AS o, (SELECT RANK() OVER (PARTITION BY o.g ORDER BY i.x) AS r FROM o.items AS i) AS d" to listOf("RANK"),
+            // A named window: only the offending function, or every function over an offending window.
+            "SELECT o.g AS g, (SELECT MAX(t.x) OVER w AS m FROM $INNER AS t WINDOW w AS (PARTITION BY o.g) LIMIT 1) AS m FROM $OUTER AS o" to listOf("MAX"),
+            "SELECT o.g AS g, (SELECT SUM(t.x) OVER w + LAG(t.x + o.k) OVER w AS s FROM $INNER AS t WINDOW w AS (ORDER BY t.x) LIMIT 1) AS s FROM $OUTER AS o" to listOf("LAG"),
+            "SELECT o.g AS g, (SELECT RANK() OVER w + ROW_NUMBER() OVER w AS r FROM $INNER AS t WINDOW w AS (ORDER BY o.k) LIMIT 1) AS r FROM $OUTER AS o" to listOf("RANK", "ROW_NUMBER"),
+            // A WINDOW clause definition that no window function uses (SQL:2023 Subclause 7.15, Syntax Rule 4).
+            "SELECT o.g AS g, (SELECT RANK() OVER (ORDER BY t.x) AS r FROM $INNER AS t WINDOW w AS (PARTITION BY o.g) LIMIT 1) AS r FROM $OUTER AS o" to listOf("WINDOW w"),
+            "SELECT o.g AS g, (SELECT t.x AS x FROM $INNER AS t WINDOW w AS (PARTITION BY o.g) LIMIT 1) AS x FROM $OUTER AS o" to listOf("WINDOW w"),
+            "SELECT t.x AS x FROM $INNER AS t WINDOW w AS (ORDER BY (SELECT MAX(u.x) AS m FROM $INNER AS u))" to listOf("WINDOW w"),
+            // A subquery in the arguments or ORDER BY, correlated or not.
+            "SELECT t.x AS x, SUM((SELECT MAX(u.x) AS m FROM $INNER AS u)) OVER () AS s FROM $INNER AS t" to listOf("SUM"),
+            "SELECT o.g AS g, RANK() OVER (ORDER BY (SELECT MAX(t.x) AS m FROM $INNER AS t WHERE t.g = o.g)) AS r FROM $OUTER AS o" to listOf("RANK"),
+        )
+
+        @JvmStatic
+        fun validWindowFunctionInNestedQueryTestCases() = listOf(
+            // A correlation reference outside the window function.
+            "SELECT o.g AS g, (SELECT SUM(t.x) OVER () AS s FROM $INNER AS t WHERE t.g = o.g LIMIT 1) AS s FROM $OUTER AS o",
+            "SELECT o.g AS g, (SELECT o.k + ROW_NUMBER() OVER (ORDER BY t.x) AS n FROM $INNER AS t LIMIT 1) AS n FROM $OUTER AS o",
+            "SELECT o.g AS g FROM $OUTER AS o WHERE EXISTS (SELECT MAX(t.x) OVER () FROM $INNER AS t WHERE t.g = o.g)",
+            "SELECT o.g AS g, (SELECT d.s AS s FROM (SELECT SUM(t.x) OVER () AS s FROM $INNER AS t WHERE t.g = o.g) AS d LIMIT 1) AS s FROM $OUTER AS o",
+            // ... or in a group aggregate that the window function does not contain.
+            "SELECT o.g AS g, (SELECT MAX(t.x + o.k) + SUM(MAX(t.x)) OVER () AS s FROM $INNER AS t GROUP BY t.g LIMIT 1) AS s FROM $OUTER AS o",
+            // A lateral derived table whose window function only references its own table.
+            "SELECT d.r AS r FROM $OUTER_ITEMS AS o, (SELECT RANK() OVER (ORDER BY i.x) AS r FROM o.items AS i) AS d",
+            // An alias that shadows the enclosing query's alias is not an outer reference.
+            "SELECT o.g AS g, (SELECT SUM(o.x) OVER () AS s FROM $INNER AS o LIMIT 1) AS s FROM $OUTER AS o",
+            // An uncorrelated subquery, or a window function over a subquery's result.
+            "SELECT o.g AS g, (SELECT SUM(t.x) OVER () AS s FROM $INNER AS t LIMIT 1) AS s FROM $OUTER AS o",
+            "SELECT d.m AS m, RANK() OVER (ORDER BY d.m) AS r FROM (SELECT MAX(t.x) AS m FROM $INNER AS t) AS d",
+            // A common table expression referenced outside the window function.
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT SUM(c.x) OVER () AS s FROM c LIMIT 1) AS s FROM $OUTER AS o",
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT SUM(c.x) OVER () AS s FROM c WHERE c.x < o.k LIMIT 1) AS s FROM $OUTER AS o",
+            // A common table expression used as a value is a query name, not a query expression, like a table name.
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT d.x AS x, COUNT(c) OVER () AS n FROM c AS d",
+            "WITH c AS (SELECT t.x AS x FROM $INNER AS t) SELECT o.g AS g, (SELECT COUNT(c) OVER () AS n FROM $INNER AS t LIMIT 1) AS n FROM $OUTER AS o",
+        )
+
+        @JvmStatic
+        fun windowReferencingOtherWindowTestCases() = listOf(
+            "SELECT RANK() OVER (w ORDER BY t.v) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g)",
+            "SELECT RANK() OVER w2 AS r FROM $ORDER_DATA AS t WINDOW w1 AS (ORDER BY t.v), w2 AS (w1)",
+        )
+
+        @JvmStatic
+        fun windowOrderPresentOrNotRequiredTestCases() = listOf(
+            "SELECT RANK() OVER (ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
+            "SELECT PERCENT_RANK() OVER (PARTITION BY t.g ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
+            "SELECT CUME_DIST() OVER w AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g ORDER BY t.v)",
+            "SELECT CUME_DIST() OVER (w) AS r FROM $ORDER_DATA AS t WINDOW w AS (PARTITION BY t.g ORDER BY t.v)",
+            "SELECT LAG(t.v) OVER (ORDER BY t.v) AS r FROM $ORDER_DATA AS t",
+            // ROW_NUMBER does not require a window ordering clause.
+            "SELECT ROW_NUMBER() OVER () AS n FROM $ORDER_DATA AS t",
+            "SELECT ROW_NUMBER() OVER (PARTITION BY t.g) AS n FROM $ORDER_DATA AS t",
+        )
+
+        /**
+         * Creates a struct from (name, value) pairs. Long -> BIGINT, Int -> INT, BigDecimal -> DECIMAL, String -> STRING,
+         * null -> NULL.
+         */
+        private fun row(vararg fields: Pair<String, Any?>): Datum = Datum.struct(
+            fields.map { (k, v) ->
+                val value = when (v) {
+                    null -> Datum.nullValue()
+                    is Long -> Datum.bigint(v)
+                    is Int -> Datum.integer(v)
+                    is BigDecimal -> Datum.decimal(v)
+                    is String -> Datum.string(v)
+                    is Datum -> v
+                    else -> error("Unsupported value $v")
+                }
+                Field.of(k, value)
+            }
+        )
+
+        private fun dec(v: Long): BigDecimal = BigDecimal.valueOf(v)
+
+        @JvmStatic
+        fun aggregateTestCases() = listOf(Mode.STRICT(), Mode.PERMISSIVE()).flatMap { mode ->
+            listOf(
+                SuccessTestCase(
+                    name = "Running aggregates with ORDER BY; peers share the value ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            t.id AS id,
+                            SUM(t.age) OVER (PARTITION BY t.department ORDER BY t.age) AS s,
+                            COUNT(*) OVER (PARTITION BY t.department ORDER BY t.age) AS c,
+                            MIN(t.age) OVER (PARTITION BY t.department ORDER BY t.age) AS mn,
+                            MAX(t.age) OVER (PARTITION BY t.department ORDER BY t.age) AS mx
+                        FROM employee AS t
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        // Research: 25(5), 30(3), 30(9), 32(7), 35(2)
+                        row("id" to 5, "s" to 25L, "c" to 1L, "mn" to 25, "mx" to 25),
+                        row("id" to 3, "s" to 85L, "c" to 3L, "mn" to 25, "mx" to 30),
+                        row("id" to 9, "s" to 85L, "c" to 3L, "mn" to 25, "mx" to 30),
+                        row("id" to 7, "s" to 117L, "c" to 4L, "mn" to 25, "mx" to 32),
+                        row("id" to 2, "s" to 152L, "c" to 5L, "mn" to 25, "mx" to 35),
+                        // Sales: 28(1), 28(4), 29(8)
+                        row("id" to 1, "s" to 56L, "c" to 2L, "mn" to 28, "mx" to 28),
+                        row("id" to 4, "s" to 56L, "c" to 2L, "mn" to 28, "mx" to 28),
+                        row("id" to 8, "s" to 85L, "c" to 3L, "mn" to 28, "mx" to 29),
+                        // Marketing: 32(6), 40(0)
+                        row("id" to 6, "s" to 32L, "c" to 1L, "mn" to 32, "mx" to 32),
+                        row("id" to 0, "s" to 72L, "c" to 2L, "mn" to 32, "mx" to 40),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Running aggregates with ORDER BY DESC ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            t.id AS id,
+                            SUM(t.age) OVER (PARTITION BY t.department ORDER BY t.age DESC) AS s,
+                            MIN(t.age) OVER (PARTITION BY t.department ORDER BY t.age DESC) AS mn
+                        FROM employee AS t
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("id" to 2, "s" to 35L, "mn" to 35),
+                        row("id" to 7, "s" to 67L, "mn" to 32),
+                        row("id" to 3, "s" to 127L, "mn" to 30),
+                        row("id" to 9, "s" to 127L, "mn" to 30),
+                        row("id" to 5, "s" to 152L, "mn" to 25),
+                        row("id" to 8, "s" to 29L, "mn" to 29),
+                        row("id" to 1, "s" to 85L, "mn" to 28),
+                        row("id" to 4, "s" to 85L, "mn" to 28),
+                        row("id" to 0, "s" to 40L, "mn" to 40),
+                        row("id" to 6, "s" to 72L, "mn" to 32),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Aggregates without ORDER BY are over the whole partition ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            t.id AS id,
+                            SUM(t.age) OVER (PARTITION BY t.department) AS s,
+                            COUNT(t.age) OVER (PARTITION BY t.department) AS c,
+                            MAX(t.name) OVER (PARTITION BY t.department) AS mx,
+                            COUNT(*) OVER () AS total
+                        FROM employee AS t
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("id" to 2, "s" to 152L, "c" to 5L, "mx" to "Yi", "total" to 10L),
+                        row("id" to 3, "s" to 152L, "c" to 5L, "mx" to "Yi", "total" to 10L),
+                        row("id" to 5, "s" to 152L, "c" to 5L, "mx" to "Yi", "total" to 10L),
+                        row("id" to 7, "s" to 152L, "c" to 5L, "mx" to "Yi", "total" to 10L),
+                        row("id" to 9, "s" to 152L, "c" to 5L, "mx" to "Yi", "total" to 10L),
+                        row("id" to 1, "s" to 85L, "c" to 3L, "mx" to "Samantha", "total" to 10L),
+                        row("id" to 4, "s" to 85L, "c" to 3L, "mx" to "Samantha", "total" to 10L),
+                        row("id" to 8, "s" to 85L, "c" to 3L, "mx" to "Samantha", "total" to 10L),
+                        row("id" to 0, "s" to 72L, "c" to 2L, "mx" to "Megan", "total" to 10L),
+                        row("id" to 6, "s" to 72L, "c" to 2L, "mx" to "Megan", "total" to 10L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "AVG/SUM/MIN/MAX/COUNT with ties and multiple partitions ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            t.g AS g,
+                            t.x AS x,
+                            SUM(t.x) OVER w AS s,
+                            AVG(t.x) OVER w AS a,
+                            MIN(t.x) OVER w AS mn,
+                            MAX(t.x) OVER w AS mx,
+                            COUNT(t.x) OVER w AS c
+                        FROM nums AS t
+                        WINDOW w AS (PARTITION BY t.g ORDER BY t.k)
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "x" to 2, "s" to 2L, "a" to dec(2), "mn" to 2, "mx" to 2, "c" to 1L),
+                        row("g" to "a", "x" to 4, "s" to 12L, "a" to dec(4), "mn" to 2, "mx" to 6, "c" to 3L),
+                        row("g" to "a", "x" to 6, "s" to 12L, "a" to dec(4), "mn" to 2, "mx" to 6, "c" to 3L),
+                        row("g" to "a", "x" to 8, "s" to 20L, "a" to dec(5), "mn" to 2, "mx" to 8, "c" to 4L),
+                        row("g" to "b", "x" to 10, "s" to 10L, "a" to dec(10), "mn" to 10, "mx" to 10, "c" to 1L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Running AVG with a fractional result ($mode)",
+                    mode = mode,
+                    input = """
+                        SELECT t.k AS k, AVG(t.x) OVER (ORDER BY t.k) AS a
+                        FROM << { 'k': 1, 'x': 1 }, { 'k': 2, 'x': 2 } >> AS t
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("k" to 1, "a" to BigDecimal("1")),
+                        row("k" to 2, "a" to BigDecimal("1.5")),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Aggregates skip NULL arguments; all-NULL partition ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            r.id AS id,
+                            SUM(r.v) OVER w AS s,
+                            COUNT(r.v) OVER w AS cv,
+                            COUNT(*) OVER w AS cs,
+                            MIN(r.v) OVER w AS mn,
+                            MAX(r.v) OVER w AS mx
+                        FROM readings AS r
+                        WINDOW w AS (PARTITION BY r.grp ORDER BY r.id)
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        // grp a: 10, null, null, 40, 50, null
+                        row("id" to 1, "s" to 10L, "cv" to 1L, "cs" to 1L, "mn" to 10, "mx" to 10),
+                        row("id" to 2, "s" to 10L, "cv" to 1L, "cs" to 2L, "mn" to 10, "mx" to 10),
+                        row("id" to 3, "s" to 10L, "cv" to 1L, "cs" to 3L, "mn" to 10, "mx" to 10),
+                        row("id" to 4, "s" to 50L, "cv" to 2L, "cs" to 4L, "mn" to 10, "mx" to 40),
+                        row("id" to 5, "s" to 100L, "cv" to 3L, "cs" to 5L, "mn" to 10, "mx" to 50),
+                        row("id" to 6, "s" to 100L, "cv" to 3L, "cs" to 6L, "mn" to 10, "mx" to 50),
+                        // grp b: null, null
+                        row("id" to 7, "s" to null, "cv" to 0L, "cs" to 1L, "mn" to null, "mx" to null),
+                        row("id" to 8, "s" to null, "cv" to 0L, "cs" to 2L, "mn" to null, "mx" to null),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "DISTINCT aggregates over the whole partition ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            t.id AS id,
+                            COUNT(DISTINCT t.age) OVER (PARTITION BY t.department) AS cd,
+                            SUM(DISTINCT t.age) OVER (PARTITION BY t.department) AS sd,
+                            SUM(ALL t.age) OVER (PARTITION BY t.department) AS sa
+                        FROM employee AS t
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("id" to 2, "cd" to 4L, "sd" to 122L, "sa" to 152L),
+                        row("id" to 3, "cd" to 4L, "sd" to 122L, "sa" to 152L),
+                        row("id" to 5, "cd" to 4L, "sd" to 122L, "sa" to 152L),
+                        row("id" to 7, "cd" to 4L, "sd" to 122L, "sa" to 152L),
+                        row("id" to 9, "cd" to 4L, "sd" to 122L, "sa" to 152L),
+                        row("id" to 1, "cd" to 2L, "sd" to 57L, "sa" to 85L),
+                        row("id" to 4, "cd" to 2L, "sd" to 57L, "sa" to 85L),
+                        row("id" to 8, "cd" to 2L, "sd" to 57L, "sa" to 85L),
+                        row("id" to 0, "cd" to 2L, "sd" to 72L, "sa" to 72L),
+                        row("id" to 6, "cd" to 2L, "sd" to 72L, "sa" to 72L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Aggregates mixed with ranking and navigation functions ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            t.id AS id,
+                            ROW_NUMBER() OVER w AS rn,
+                            RANK() OVER w AS rk,
+                            COUNT(*) OVER w AS c,
+                            LAG(t.age, 1, 0) OVER w AS prev,
+                            SUM(t.age) OVER w AS s,
+                            SUM(t.age) OVER (PARTITION BY t.department) AS total
+                        FROM employee AS t
+                        WINDOW w AS (PARTITION BY t.department ORDER BY t.age)
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("id" to 5, "rn" to 1L, "rk" to 1L, "c" to 1L, "prev" to 0, "s" to 25L, "total" to 152L),
+                        row("id" to 3, "rn" to 2L, "rk" to 2L, "c" to 3L, "prev" to 25, "s" to 85L, "total" to 152L),
+                        row("id" to 9, "rn" to 3L, "rk" to 2L, "c" to 3L, "prev" to 30, "s" to 85L, "total" to 152L),
+                        row("id" to 7, "rn" to 4L, "rk" to 4L, "c" to 4L, "prev" to 30, "s" to 117L, "total" to 152L),
+                        row("id" to 2, "rn" to 5L, "rk" to 5L, "c" to 5L, "prev" to 32, "s" to 152L, "total" to 152L),
+                        row("id" to 1, "rn" to 1L, "rk" to 1L, "c" to 2L, "prev" to 0, "s" to 56L, "total" to 85L),
+                        row("id" to 4, "rn" to 2L, "rk" to 1L, "c" to 2L, "prev" to 28, "s" to 56L, "total" to 85L),
+                        row("id" to 8, "rn" to 3L, "rk" to 3L, "c" to 3L, "prev" to 28, "s" to 85L, "total" to 85L),
+                        row("id" to 6, "rn" to 1L, "rk" to 1L, "c" to 1L, "prev" to 0, "s" to 32L, "total" to 72L),
+                        row("id" to 0, "rn" to 2L, "rk" to 2L, "c" to 2L, "prev" to 32, "s" to 72L, "total" to 72L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Window aggregate over group aggregates ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            g AS g,
+                            SUM(t.x) AS s,
+                            SUM(SUM(t.x)) OVER (ORDER BY g) AS running,
+                            COUNT(*) OVER () AS groups,
+                            MAX(COUNT(*)) OVER () AS max_count
+                        FROM nums AS t
+                        GROUP BY t.g AS g
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "s" to 20L, "running" to 20L, "groups" to 2L, "max_count" to 4L),
+                        row("g" to "b", "s" to 10L, "running" to 30L, "groups" to 2L, "max_count" to 4L),
+                    ),
+                ),
+                // Groups: (a,1) s=2, (a,2) s=10, (a,3) s=8, (b,1) s=10. HAVING removes (a,1) before the window runs.
+                SuccessTestCase(
+                    name = "Window aggregates over a multi-key GROUP BY with HAVING ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            g AS g,
+                            k AS k,
+                            SUM(SUM(t.x)) OVER (PARTITION BY g ORDER BY k) AS running,
+                            MAX(COUNT(*)) OVER (PARTITION BY g) AS max_rows,
+                            COUNT(*) OVER (PARTITION BY g) AS groups_in_g
+                        FROM nums AS t
+                        GROUP BY t.g AS g, t.k AS k
+                        HAVING SUM(t.x) > 2
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "k" to 2, "running" to 10L, "max_rows" to 2L, "groups_in_g" to 2L),
+                        row("g" to "a", "k" to 3, "running" to 18L, "max_rows" to 2L, "groups_in_g" to 2L),
+                        row("g" to "b", "k" to 1, "running" to 10L, "max_rows" to 1L, "groups_in_g" to 1L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Group aggregates in the window ORDER BY ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            g AS g,
+                            COUNT(*) OVER (ORDER BY SUM(t.x) DESC) AS rank_by_sum,
+                            MAX(COUNT(*)) OVER (ORDER BY SUM(t.x) DESC) AS running_max_count
+                        FROM nums AS t
+                        GROUP BY t.g AS g
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "rank_by_sum" to 1L, "running_max_count" to 4L),
+                        row("g" to "b", "rank_by_sum" to 2L, "running_max_count" to 4L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Expressions around and inside window aggregates ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            t.x AS x,
+                            t.x * 100 / SUM(t.x) OVER (PARTITION BY t.g) AS pct,
+                            SUM(t.x * 2 + 1) OVER (PARTITION BY t.g) AS s2,
+                            SUM(CASE WHEN t.x > 4 THEN 1 ELSE 0 END) OVER (PARTITION BY t.g) AS big
+                        FROM nums AS t
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("x" to 2, "pct" to 10L, "s2" to 44L, "big" to 2L),
+                        row("x" to 4, "pct" to 20L, "s2" to 44L, "big" to 2L),
+                        row("x" to 6, "pct" to 30L, "s2" to 44L, "big" to 2L),
+                        row("x" to 8, "pct" to 40L, "s2" to 44L, "big" to 2L),
+                        row("x" to 10, "pct" to 100L, "s2" to 21L, "big" to 1L),
+                    ),
+                ),
+                SuccessTestCase(
+                    name = "Window and group aggregates combined in expressions ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            g AS g,
+                            SUM(t.x) - MIN(SUM(t.x)) OVER () AS above_min,
+                            MAX(SUM(t.x) * 2) OVER () AS max_double,
+                            MAX(COUNT(DISTINCT t.k)) OVER () AS max_distinct_keys,
+                            COUNT(DISTINCT g) OVER () AS distinct_groups
+                        FROM nums AS t
+                        GROUP BY t.g AS g
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "above_min" to 10L, "max_double" to 40L, "max_distinct_keys" to 3L, "distinct_groups" to 2L),
+                        row("g" to "b", "above_min" to 0L, "max_double" to 40L, "max_distinct_keys" to 3L, "distinct_groups" to 2L),
+                    ),
+                ),
+                // Running sum ordered by x: 2, 6, 12, 20, 30.
+                SuccessTestCase(
+                    name = "Filtering on a window aggregate in an outer query ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT v.x AS x, v.running AS running
+                        FROM (
+                            SELECT t.x AS x, SUM(t.x) OVER (ORDER BY t.x) AS running FROM nums AS t
+                        ) AS v
+                        WHERE v.running > 10
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("x" to 6, "running" to 12L),
+                        row("x" to 8, "running" to 20L),
+                        row("x" to 10, "running" to 30L),
+                    ),
+                ),
+                // A correlation reference outside the window function (allowed by SQL:2023 9.23 SR 3). The window is
+                // reopened for each outer row: partition 'a' x ordered is 2, 4, 6, 8; partition 'b' is 10.
+                SuccessTestCase(
+                    name = "Window functions in a subquery correlated in WHERE, over multiple outer rows ($mode)",
+                    mode = mode,
+                    globals = globals,
+                    input = """
+                        SELECT
+                            o.g AS g,
+                            (SELECT SUM(t.x) OVER () AS s FROM nums AS t WHERE t.g = o.g LIMIT 1) AS s,
+                            (SELECT LAG(t.x) OVER (ORDER BY t.x) AS l FROM nums AS t WHERE t.g = o.g ORDER BY t.x DESC LIMIT 1) AS l
+                        FROM << { 'g': 'a' }, { 'g': 'b' } >> AS o
+                    """.trimIndent(),
+                    expected = Datum.bagVararg(
+                        row("g" to "a", "s" to 20L, "l" to 6),
+                        row("g" to "b", "s" to 10L, "l" to null),
+                    ),
+                ),
+            )
+        } + listOf(
+            SuccessTestCase(
+                name = "Aggregates skip MISSING arguments",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = """
+                    SELECT
+                        t.id AS id,
+                        SUM(t.v) OVER (ORDER BY t.id) AS s,
+                        COUNT(t.v) OVER (ORDER BY t.id) AS c,
+                        COUNT(*) OVER (ORDER BY t.id) AS cs
+                    FROM sparse AS t
+                """.trimIndent(),
+                expected = Datum.bagVararg(
+                    row("id" to 1, "s" to 1L, "c" to 1L, "cs" to 1L),
+                    row("id" to 2, "s" to 1L, "c" to 1L, "cs" to 2L),
+                    row("id" to 3, "s" to 1L, "c" to 1L, "cs" to 3L),
+                    row("id" to 4, "s" to 5L, "c" to 2L, "cs" to 4L),
+                ),
+            ),
+        )
+
         @JvmStatic
         fun failureTestCases() = listOf(
+            // SUM of a non-numeric argument fails at evaluation, as it does for the group aggregate (asserted below too).
+            FailureTestCase(
+                name = "SUM window over STRING (STRICT)",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = "SELECT SUM(t.name) OVER (PARTITION BY t.department) AS s FROM employee AS t",
+            ),
+            FailureTestCase(
+                name = "SUM window over STRING (PERMISSIVE)",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = "SELECT SUM(t.name) OVER (PARTITION BY t.department) AS s FROM employee AS t",
+            ),
+            FailureTestCase(
+                name = "SUM group aggregate over STRING (STRICT)",
+                mode = Mode.STRICT(),
+                globals = globals,
+                input = "SELECT SUM(t.name) AS s FROM employee AS t GROUP BY t.department",
+            ),
+            FailureTestCase(
+                name = "SUM group aggregate over STRING (PERMISSIVE)",
+                mode = Mode.PERMISSIVE(),
+                globals = globals,
+                input = "SELECT SUM(t.name) AS s FROM employee AS t GROUP BY t.department",
+            ),
             FailureTestCase(
                 name = "Lag and lead referencing sometimes missing attr (partner)",
                 mode = Mode.STRICT(),

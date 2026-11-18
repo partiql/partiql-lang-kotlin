@@ -114,28 +114,4 @@ internal object ValueUtility {
             }
         }
     }
-
-    /**
-     * Takes in a [Datum] that is any integer type (TINYINT, SMALLINT,
-     * INTEGER, BIGINT) and returns the [Int] (potentially
-     * coerced) that represents the integer.
-     *
-     * INTERNAL NOTE: This should NOT exist. The PLANNER should be in charge of making sure that the appropriate type is
-     * present.
-     *
-     * @throws NullPointerException if the value is null
-     * @throws org.partiql.spi.errors.PRuntimeException if type is not an integer type
-     */
-    fun Datum.getInt32Coerced(): Int {
-        return when (this.type.code()) {
-            PType.VARIANT -> this.lower().getInt32Coerced()
-            PType.TINYINT -> this.byte.toInt()
-            PType.SMALLINT -> this.short.toInt()
-            PType.INTEGER -> this.int
-            PType.BIGINT -> this.long.toInt()
-            else -> {
-                throw PErrors.unexpectedTypeException(this.type, listOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint()))
-            }
-        }
-    }
 }

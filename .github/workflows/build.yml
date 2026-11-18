@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
     strategy:
       matrix:
         java: [11, 17]
@@ -70,7 +70,7 @@ jobs:
           flags: EXAMPLES
 
   randomized-test:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
     strategy:
       matrix:
         java: [ 11, 17 ]

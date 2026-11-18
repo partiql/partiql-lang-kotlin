@@ -31,6 +31,14 @@ internal sealed class PRel {
 
 internal data class PCollation(val expr: PExpr, val desc: Boolean, val nullsLast: Boolean)
 internal data class PMeasure(val agg: Agg, val args: List<PExpr>, val distinct: Boolean)
-internal data class PWindowFn(val signature: WindowFunctionSignature, val args: List<PExpr>)
+/**
+ * @property agg the resolved aggregate for aggregate window functions (e.g. `SUM(x) OVER (...)`); otherwise, null.
+ */
+internal data class PWindowFn(
+    val signature: WindowFunctionSignature,
+    val args: List<PExpr>,
+    val agg: Agg? = null,
+    val distinct: Boolean = false,
+)
 
 internal enum class PJoinType { INNER, LEFT, RIGHT, FULL }

@@ -12,7 +12,8 @@ internal object WindowFunctionSignatureProvider {
 
     /**
      * Returns the [WindowFunctionSignature] for the given window function name and arguments.
-     * For now, we only support RANK (0 args), DENSE_RANK (0 args), ROW_NUMBER (0 args), LAG (3 args), and LEAD (3 args).
+     * For now, we only support RANK (0 args), DENSE_RANK (0 args), ROW_NUMBER (0 args), PERCENT_RANK (0 args),
+     * CUME_DIST (0 args), LAG (3 args), and LEAD (3 args).
      * @param name the name of the window function.
      * @param args the arguments to the window function.
      * @return null if unable to create a signature.
@@ -23,6 +24,8 @@ internal object WindowFunctionSignatureProvider {
                 "rank" -> RANK
                 "dense_rank" -> DENSE_RANK
                 "row_number" -> ROW_NUMBER
+                "percent_rank" -> PERCENT_RANK
+                "cume_dist" -> CUME_DIST
                 else -> null
             }
             3 -> when (val n = name.lowercase()) {
@@ -36,6 +39,10 @@ internal object WindowFunctionSignatureProvider {
     private val RANK = WindowFunctionSignature("rank", emptyList(), PType.bigint(), false)
     private val DENSE_RANK = WindowFunctionSignature("dense_rank", emptyList(), PType.bigint(), false)
     private val ROW_NUMBER = WindowFunctionSignature("row_number", emptyList(), PType.bigint(), false)
+    // SQL:2023 Subclause 9.23, Syntax Rules 5g and 5h leave the precision of the approximate numeric result of
+    // PERCENT_RANK and CUME_DIST implementation-defined (IV082, IV083); PartiQL uses DOUBLE PRECISION for both.
+    private val PERCENT_RANK = WindowFunctionSignature("percent_rank", emptyList(), PType.doublePrecision(), false)
+    private val CUME_DIST = WindowFunctionSignature("cume_dist", emptyList(), PType.doublePrecision(), false)
 
     /**
      * Creates the LAG window function signature. We use the [DynamicTyper] since the output of lag/lead is the "common supertype" (as

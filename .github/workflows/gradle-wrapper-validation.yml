@@ -11,7 +11,7 @@ permissions:
 jobs:
   validation:
     name: "Gradle wrapper validation"
-    runs-on: ubuntu-latest
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/wrapper-validation@v4

@@ -11,6 +11,7 @@ imports::{
     agg_signature::'org.partiql.spi.function.Agg',
     routine_ref::'org.partiql.plan.RoutineRef',
     table::'org.partiql.spi.catalog.Table',
+    p_error::'org.partiql.spi.errors.PError',
   ],
 }
 
@@ -228,7 +229,10 @@ rex::{
     },
 
     // Internal error node. This corresponds with [org.partiql.plan.rex.RexError]. See that documentation.
-    err::{},
+    // [error] is the problem reported to the listener; strict mode raises it at runtime.
+    err::{
+      error: p_error,
+    },
   ],
 }
 
@@ -264,12 +268,16 @@ rel::{
       partitions: list::[rex],
       sorts: list::['.rel.op.sort.spec'],
       _: [
+        // For aggregate window functions (COUNT/SUM/AVG/MIN/MAX), [aggregate] holds the aggregate call (unresolved
+        // before typing, resolved after), which is the only place its arguments and set quantifier are held; [args]
+        // is always empty.
         window_function::{
           name: string,
           args: list::[rex],
           is_ignore_nulls: bool,
           parameter_types: optional::list::[static_type],
-          return_type: optional::static_type
+          return_type: optional::static_type,
+          aggregate: optional::'.rel.op.aggregate.call',
         }
       ]
     },

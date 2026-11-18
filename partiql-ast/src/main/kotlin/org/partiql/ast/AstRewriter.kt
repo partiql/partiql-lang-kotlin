@@ -871,6 +871,16 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
+    override fun visitWindowFunctionTypeAggregate(node: WindowFunctionType.Aggregate, ctx: C): AstNode {
+        val function = visitIdentifier(node.function, ctx) as Identifier
+        val args = _visitList(node.args, ctx, ::visitExpr)
+        return if (function !== node.function || args !== node.args) {
+            WindowFunctionType.Aggregate(function, args, node.setq)
+        } else {
+            node
+        }
+    }
+
     override fun visitWindowFunctionTypeRank(node: WindowFunctionType.Rank, ctx: C): AstNode {
         return node
     }

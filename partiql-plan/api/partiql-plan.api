@@ -198,6 +198,11 @@ public abstract class org/partiql/plan/OperatorRewriter : org/partiql/plan/Opera
 	public fun visitLimit (Lorg/partiql/plan/rel/RelLimit;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public synthetic fun visitLit (Lorg/partiql/plan/rex/RexLit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLit (Lorg/partiql/plan/rex/RexLit;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public synthetic fun visitMap (Lorg/partiql/plan/rex/RexMap;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitMap (Lorg/partiql/plan/rex/RexMap;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public synthetic fun visitMapDynamic (Lorg/partiql/plan/rex/RexMapDynamic;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitMapDynamic (Lorg/partiql/plan/rex/RexMapDynamic;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public fun visitMapEntry (Lorg/partiql/plan/rex/RexMap$Entry;Ljava/lang/Object;)Lorg/partiql/plan/rex/RexMap$Entry;
 	public synthetic fun visitNullIf (Lorg/partiql/plan/rex/RexNullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitNullIf (Lorg/partiql/plan/rex/RexNullIf;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public synthetic fun visitOffset (Lorg/partiql/plan/rel/RelOffset;Ljava/lang/Object;)Ljava/lang/Object;
@@ -242,6 +247,10 @@ public abstract class org/partiql/plan/OperatorRewriter : org/partiql/plan/Opera
 	public fun visitUnpivot (Lorg/partiql/plan/rel/RelUnpivot;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public synthetic fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public synthetic fun visitWindow (Lorg/partiql/plan/rel/RelWindow;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitWindow (Lorg/partiql/plan/rel/RelWindow;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
+	public fun visitWindowFunction (Lorg/partiql/plan/WindowFunctionNode;Ljava/lang/Object;)Lorg/partiql/plan/WindowFunctionNode;
+	public fun visitWindowPartition (Lorg/partiql/plan/rex/Rex;Ljava/lang/Object;)Lorg/partiql/plan/rex/Rex;
 	public synthetic fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitWith (Lorg/partiql/plan/rel/RelWith;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public fun visitWithListElement (Lorg/partiql/plan/WithListElement;Ljava/lang/Object;)Lorg/partiql/plan/WithListElement;
@@ -315,6 +324,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun dispatch (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatch;
 	public abstract fun distinct (Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rel/RelDistinct;
 	public abstract fun error (Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexError;
+	public abstract fun error (Lorg/partiql/spi/types/PType;Lorg/partiql/spi/errors/PError;)Lorg/partiql/plan/rex/RexError;
 	public abstract fun except (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelExcept;
 	public abstract fun exclude (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelExclude;
 	public abstract fun filter (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelFilter;
@@ -346,6 +356,7 @@ public abstract interface class org/partiql/plan/Operators {
 	public abstract fun union (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public abstract fun unpivot (Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public abstract fun variable (IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
+	public abstract fun window (Ljava/lang/String;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
 	public abstract fun with (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelWith;
 }
 
@@ -364,6 +375,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun dispatch (Lorg/partiql/plan/Operators;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexDispatch;
 	public static fun distinct (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rel/RelDistinct;
 	public static fun error (Lorg/partiql/plan/Operators;Lorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexError;
+	public static fun error (Lorg/partiql/plan/Operators;Lorg/partiql/spi/types/PType;Lorg/partiql/spi/errors/PError;)Lorg/partiql/plan/rex/RexError;
 	public static fun except (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelExcept;
 	public static fun exclude (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelExclude;
 	public static fun filter (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelFilter;
@@ -395,6 +407,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 	public static fun union (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public static fun unpivot (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public static fun variable (Lorg/partiql/plan/Operators;IILorg/partiql/spi/types/PType;)Lorg/partiql/plan/rex/RexVar;
+	public static fun window (Lorg/partiql/plan/Operators;Ljava/lang/String;Lorg/partiql/plan/rel/Rel;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rel/RelWindow;
 	public static fun with (Lorg/partiql/plan/Operators;Lorg/partiql/plan/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/rel/RelWith;
 }
 
@@ -434,8 +447,12 @@ public class org/partiql/plan/Version : org/partiql/spi/Enum {
 
 public final class org/partiql/plan/WindowFunctionNode {
 	public fun <init> (Lorg/partiql/plan/WindowFunctionSignature;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/plan/WindowFunctionSignature;Ljava/util/List;Lorg/partiql/spi/function/Agg;ZLorg/partiql/plan/RoutineRef;)V
+	public fun getAggregate ()Lorg/partiql/spi/function/Agg;
 	public fun getArguments ()Ljava/util/List;
+	public fun getRoutineRef ()Lorg/partiql/plan/RoutineRef;
 	public fun getSignature ()Lorg/partiql/plan/WindowFunctionSignature;
+	public fun isDistinct ()Z
 }
 
 public final class org/partiql/plan/WindowFunctionSignature {
@@ -805,6 +822,8 @@ public abstract class org/partiql/plan/rex/RexError : org/partiql/plan/rex/RexBa
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun create ()Lorg/partiql/plan/rex/RexError;
+	public static fun create (Lorg/partiql/spi/errors/PError;)Lorg/partiql/plan/rex/RexError;
+	public fun getError ()Lorg/partiql/spi/errors/PError;
 	protected fun operands ()Ljava/util/List;
 	protected fun type ()Lorg/partiql/plan/rex/RexType;
 }

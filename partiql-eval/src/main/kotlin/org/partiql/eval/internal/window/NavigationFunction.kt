@@ -34,6 +34,8 @@ internal abstract class NavigationFunction : WindowFunction {
     /**
      * Evaluates [expr] against the row that is [offset] rows away from the current row (negative is preceding, positive
      * is following). With [ignoreNulls], rows whose [expr] evaluates to NULL/MISSING are skipped and not counted.
+     * The planner rejects an outer reference or a subquery in a window function (SQL:2023 Subclause 9.23, Syntax Rule 3), so
+     * [expr] only references the window's input row (depth 0) and may be evaluated against another row pushed onto [env].
      * @return the evaluated [expr], or the evaluated [default] if no such row exists within the partition.
      */
     internal fun navigate(env: Environment, expr: ExprValue, offset: Long, default: ExprValue, ignoreNulls: Boolean): Datum {
