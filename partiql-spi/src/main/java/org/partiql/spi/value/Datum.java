@@ -500,6 +500,33 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * @return the kind of SQL/JSON item this value holds: one of {@link JsonKind#NULL}, {@link JsonKind#SCALAR},
+     * {@link JsonKind#ARRAY} or {@link JsonKind#OBJECT}.
+     * @throws InvalidOperationException if the type returned from {@link #getType()} is not {@link PType#JSON}.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    default int getJsonKind() {
+        throw new InvalidOperationException(getType(), "getJsonKind");
+    }
+
+    /**
+     * @return the SQL value of an SQL/JSON scalar, such as an {@link PType#INTEGER} or a {@link PType#DATE}.
+     * @throws InvalidOperationException if the type returned from {@link #getType()} is not {@link PType#JSON}, or
+     *                                       if {@link #getJsonKind()} is not {@link JsonKind#SCALAR}.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    default Datum getJsonScalar() {
+        throw new InvalidOperationException(getType(), "getJsonScalar");
+    }
+
+    /**
      * Pack a VARIANT into a byte array with the given charset.
      *
      * @param charset optional charset.
@@ -931,6 +958,57 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum map(@NotNull PType keyType, @NotNull PType valueType, @NotNull Iterable<Entry> entries) {
         return new DatumMap(keyType, valueType, entries);
+    }
+
+    /**
+     * Creates SQL/JSON null. It is a value of type {@link PType#JSON}, and {@link #isNull()} is false for it. An SQL
+     * NULL of type JSON is {@code Datum.nullValue(PType.json())}.
+     * @return SQL/JSON null
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    static Datum jsonNull() {
+        return DatumJson.nullItem();
+    }
+
+    /**
+     * Creates an SQL/JSON scalar.
+     * @param value a string, number, boolean or datetime value that is not null or missing
+     * @return a value of type {@link PType#JSON}
+     * @throws IllegalArgumentException if {@code value} is null, missing, or of another type
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    static Datum jsonScalar(@NotNull Datum value) {
+        return DatumJson.scalar(value);
+    }
+
+    /**
+     * Creates an SQL/JSON array.
+     * @param elements the elements, each a value of type {@link PType#JSON} that is not SQL NULL
+     * @return a value of type {@link PType#JSON}
+     * @throws IllegalArgumentException if an element does not have type JSON, or is SQL NULL
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    static Datum jsonArray(@NotNull Iterable<Datum> elements) {
+        return DatumJson.array(elements);
+    }
+
+    /**
+     * Creates an SQL/JSON object. Members keep their order, and members with the same key are all kept.
+     * @param members the members, each with a value of type {@link PType#JSON} that is not SQL NULL
+     * @return a value of type {@link PType#JSON}
+     * @throws IllegalArgumentException if a member value does not have type JSON, or is SQL NULL
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    static Datum jsonObject(@NotNull Iterable<Field> members) {
+        return DatumJson.object(members);
     }
 
     /**

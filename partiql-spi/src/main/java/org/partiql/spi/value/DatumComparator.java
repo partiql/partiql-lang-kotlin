@@ -256,6 +256,8 @@ abstract class DatumComparator implements Comparator<Datum> {
         precedence.put(BAG, 10);
         // Map Type
         precedence.put(PType.MAP, 11);
+        // JSON Type
+        precedence.put(PType.JSON, 12);
         // OTHER
         precedence.put(DYNAMIC, 100);
         precedence.put(UNKNOWN, 100);
@@ -352,6 +354,9 @@ abstract class DatumComparator implements Comparator<Datum> {
                     break;
                 case PType.MAP:
                     fillMapComparator(row);
+                    break;
+                case PType.JSON:
+                    fillJsonComparator(row);
                     break;
                 default:
                     break;
@@ -751,6 +756,32 @@ abstract class DatumComparator implements Comparator<Datum> {
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillMapComparator(DatumComparison[] comps) {
         comps[PType.MAP] = (self, other, comp) -> compareUnordered(new DatumEntryIterable(self), new DatumEntryIterable(other), new MapEntryComparator(comp));
+        return comps;
+    }
+
+    /**
+     * Orders two values of type JSON. SQL:2023 fixes part of the order (§4.8.2): SQL/JSON null, then scalars, then
+     * arrays, then objects. Scalars compare as their SQL values, arrays in order, and objects as a multiset of members.
+     * Queries do not compare JSON values yet; this order keeps sorting code from failing on one.
+     */
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    private static DatumComparison[] fillJsonComparator(DatumComparison[] comps) {
+        comps[PType.JSON] = (self, other, comp) -> {
+            int kinds = Integer.compare(self.getJsonKind(), other.getJsonKind());
+            if (kinds != 0) {
+                return kinds;
+            }
+            switch (self.getJsonKind()) {
+                case JsonKind.SCALAR:
+                    return comp.compare(self.getJsonScalar(), other.getJsonScalar());
+                case JsonKind.ARRAY:
+                    return compareOrdered(self.iterator(), other.iterator(), comp);
+                case JsonKind.OBJECT:
+                    return compareUnordered(new DatumFieldIterable(self), new DatumFieldIterable(other), new FieldComparator(comp));
+                default:
+                    return EQUAL;
+            }
+        };
         return comps;
     }
 

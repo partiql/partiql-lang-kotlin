@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- **EXPERIMENTAL** Add the `JSON` type and value interfaces: `PType.JSON`, and `Datum.jsonObject`, `jsonArray`, `jsonScalar` and `jsonNull`
 
 ### Changed
 
@@ -39,6 +40,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @XuechunHHH
 
 ## [1.7.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.7.0) - 2026-11-16
 
