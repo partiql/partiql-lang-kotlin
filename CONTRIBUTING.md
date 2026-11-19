@@ -35,10 +35,16 @@ To send us a pull request, please:
 3. Ensure local tests pass.
 4. Commit to your fork using clear commit messages.
 5. Send us a pull request, answering any default questions in the pull request interface.
-   1. Ensure you add the details on the change to the [CHANGELOG.md](CHANGELOG.md) file under `Unreleased` section.
-      If your change is a breaking change, label your change with `[breaking-change]` as prefix in `CHANGELOG.md`.
-   2. Feel free to add your GitHub username to the [CHANGELOG.md](CHANGELOG.md) under the `Contributors` section. This
-   will add your name to the
+   1. Add a changelog entry with [changie](https://changie.dev/guide/installation/) instead of editing
+      [CHANGELOG.md](CHANGELOG.md), which is generated at release time:
+      ```shell
+      changie new                     # interactive: pick a kind, write the entry, enter your GitHub username
+      changie new -k Fixed -b "Fixed ..." -m Author=<github-username>   # non-interactive
+      ```
+      This adds a file under `.changes/unreleased/`; commit it with your change. If your change is a breaking
+      change, start the entry with `**BREAKING**:`. Changes that don't affect users (tests, CI, refactoring)
+      don't need an entry.
+   2. Your GitHub username from the entry is added to the `Contributors` section and to the
       [contributor list](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
       in the next GitHub release.
 6. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
