@@ -5,7 +5,7 @@
 - < Explain >
 
 ## Other Information
-- Added a changelog entry with `changie new`: **[YES/NO]**: <Explain if NO>
+- Added a changelog entry under `.changes/unreleased/` with `changie new`: **[YES/NO]**: <Explain if NO>
 - Any backward-incompatible changes? **[YES/NO]**: <Explain if YES>
 - Any new external dependencies? **[YES/NO]**: <Explain if YES>
 - Do your changes comply with the [contributing][cg] and [code style][csg] guidelines? **[YES/NO]**
