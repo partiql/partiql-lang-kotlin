@@ -12,10 +12,11 @@ import org.partiql.spi.value.JsonKind
  * result compares with [comparator], as before. Otherwise it is matched with the rules for `$json` in
  * docs/partiql-tests-schema-proposal.md in partiql-tests, because [comparator] does not compare JSON.
  *
- * Only [expect] is searched for JSON: [actual] can be a lazy result, and iterating it runs the query again.
+ * [actual] can be a lazy result, and iterating it runs the query again, so it is read into memory once, first.
+ * An error the query raises then surfaces as an error, not as a mismatch.
  */
 internal fun resultMatches(actual: Datum, expect: Datum, comparator: Comparator<Datum>): Boolean {
-    val a = actual.lowerVariant()
+    val a = actual.lowerVariant().inMemory()
     val e = expect.lowerVariant()
     if (!e.holdsJson()) {
         return compares(a, e, comparator)
@@ -34,6 +35,16 @@ private fun compares(a: Datum, e: Datum, comparator: Comparator<Datum>): Boolean
 }
 
 private fun Datum.lowerVariant(): Datum = if (type.code() == PType.VARIANT && !isNull) lower() else this
+
+/**
+ * A query's result collection, read once.
+ */
+private fun Datum.inMemory(): Datum = when {
+    isNull || isMissing -> this
+    type.code() == PType.BAG -> Datum.bag(toList())
+    type.code() == PType.ARRAY -> Datum.array(toList())
+    else -> this
+}
 
 private fun Datum.holdsJson(): Boolean {
     if (isNull || isMissing) return false
@@ -70,8 +81,8 @@ private fun deepMatches(actual: Datum, expect: Datum, comparator: Comparator<Dat
 }
 
 /**
- * A bag's elements. Those without JSON compare as one bag with [comparator], as they did before; the greedy match
- * is used only for elements that hold JSON, where matching is an equivalence.
+ * A bag's elements. Those without JSON compare as one bag with [comparator], as they did before. Those with JSON
+ * are matched as a multiset with [unorderedMatches].
  */
 private fun elementsMatch(a: List<Datum>, e: List<Datum>, comparator: Comparator<Datum>): Boolean {
     val (eJson, eRest) = e.partition { it.holdsJson() }
@@ -135,15 +146,24 @@ private fun <T> orderedMatches(a: List<T>, e: List<T>, matches: (T, T) -> Boolea
     a.size == e.size && a.indices.all { matches(a[it], e[it]) }
 
 /**
- * Matches two lists as multisets, taking the first unused match. That is enough only when [matches] is an
- * equivalence, as it is for JSON parts.
+ * Matches two lists as multisets: a maximum bipartite matching (Kuhn's algorithm), so the result is right whatever
+ * [matches] is. It need not be an equivalence: an element that holds JSON can also hold numbers that the comparator
+ * finds equal across types, such as BIGINT and DOUBLE near 2^53.
  */
 private fun <T> unorderedMatches(a: List<T>, e: List<T>, matches: (T, T) -> Boolean): Boolean {
     if (a.size != e.size) return false
-    val used = BooleanArray(a.size)
-    for (x in e) {
-        val i = a.indices.firstOrNull { !used[it] && matches(a[it], x) } ?: return false
-        used[i] = true
+    val candidates = e.map { x -> a.indices.filter { matches(a[it], x) } }
+    val matchedTo = IntArray(a.size) { -1 }
+    fun assign(j: Int, visited: BooleanArray): Boolean {
+        for (i in candidates[j]) {
+            if (visited[i]) continue
+            visited[i] = true
+            if (matchedTo[i] == -1 || assign(matchedTo[i], visited)) {
+                matchedTo[i] = j
+                return true
+            }
+        }
+        return false
     }
-    return true
+    return e.indices.all { assign(it, BooleanArray(a.size)) }
 }

@@ -111,4 +111,23 @@ class ResultMatchTest {
         assertTrue(matches(m.format("1"), m.format("1")))
         assertFalse(matches(m.format("1"), m.format("2")))
     }
+
+    @Test
+    fun aMultisetMatchIsFoundEvenWhenTheFirstCandidateIsWrong() {
+        // n compares with the comparator, which can find a DOUBLE equal to two different BIGINTs near 2^53.
+        val expect = "\$bag::[{ j: \$json::1, n: 9007199254740992e0 }, { j: \$json::1, n: 9007199254740993 }]"
+        assertTrue(matches("\$bag::[{ j: \$json::1, n: 9007199254740993 }, { j: \$json::1, n: 9007199254740992 }]", expect))
+        assertTrue(matches("\$bag::[{ j: \$json::1, n: 9007199254740992 }, { j: \$json::1, n: 9007199254740993 }]", expect))
+    }
+
+    @Test
+    fun aQueryErrorIsAnErrorNotAMismatch() {
+        val failingResult = object : Datum {
+            override fun getType(): PType = PType.bag()
+            override fun iterator(): MutableIterator<Datum> =
+                throw PRuntimeException(PError(PError.FEATURE_NOT_SUPPORTED, Severity.ERROR(), PErrorKind.EXECUTION(), null, null))
+        }
+        assertThrows<PRuntimeException> { resultMatches(failingResult, read("\$bag::[\$json::1]"), comparator) }
+        assertThrows<PRuntimeException> { resultMatches(failingResult, read("\$bag::[1]"), comparator) }
+    }
 }

@@ -18,6 +18,11 @@ import org.partiql.spi.value.JsonKind
 import kotlin.math.abs
 
 const val SecondPerMinute = 60
+
+/**
+ * The partiql-tests annotation for a value of type JSON.
+ */
+internal const val JSON_ANNOTATION = "\$json"
 const val nanoPerSecond = 1000000000L
 
 // For error display only
@@ -135,7 +140,7 @@ internal fun Datum.toIonElement(): IonElement {
                 }
                 PType.JSON -> {
                     val item = jsonToIonElement(this)
-                    item.withoutAnnotations().withAnnotations(listOf("\$json") + item.annotations)
+                    item.withoutAnnotations().withAnnotations(listOf(JSON_ANNOTATION) + item.annotations)
                 }
                 else -> ionString(this.toString())
             }
@@ -193,5 +198,7 @@ private fun jsonScalarToIonElement(scalar: Datum): IonElement = when (scalar.typ
             field("offset", if (zoned) ionInt((scalar.offsetDateTime.offset.totalSeconds / SecondPerMinute).toLong()) else ionNull()),
         ).withAnnotations("\$timestamp")
     }
+    // The reader rejects a negative scale, so write such a value with scale 0. Its scale then differs on reading.
+    PType.DECIMAL -> ionDecimal(Decimal.valueOf(scalar.bigDecimal.let { if (it.scale() < 0) it.setScale(0) else it }))
     else -> scalar.toIonElement()
 }
