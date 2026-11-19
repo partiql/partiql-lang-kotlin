@@ -113,6 +113,11 @@ private fun jsonMatches(a: Datum, e: Datum): Boolean {
  * Scalars match when they have the same type and the same value. A DECIMAL must also have the same scale, and a
  * datetime must match in every field, including its offset. PLK stores no negative zero (DatumDouble), so -0e0
  * and 0e0 match, although the schema doc says they differ.
+ *
+ * This is the scalar rule for `$json` in docs/partiql-tests-schema-proposal.md in partiql-tests (from
+ * partiql/partiql-tests#173). If that rule changes, for example to match numbers by kind and value so that a runner
+ * with a single integer type can pass, this function is the one place to change. See also "PLK runner deviations
+ * from the `$json` rules" in this module's README.
  */
 private fun scalarMatches(a: Datum, e: Datum): Boolean {
     if (a.type.code() != e.type.code()) return false
