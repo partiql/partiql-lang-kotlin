@@ -50,8 +50,7 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 - @XuechunHHH
 
@@ -63,8 +62,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 
 ## [1.6.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.6.0) - 2026-09-01
@@ -77,8 +75,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @XuechunHHH
 
 ## [1.5.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.5.1) - 2026-08-18
@@ -108,8 +105,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 - @XuechunHHH
 
@@ -131,8 +127,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 - @yliuuuu
 
@@ -161,8 +156,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @XuechunHHH
 - @xd1313113
 
@@ -174,8 +168,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @AugustineFu
 
 ## [1.3.13](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.13) - 2026-05-07
@@ -186,8 +179,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 
 ## [1.3.12](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.12) - 2026-05-05
@@ -203,8 +195,7 @@ this change enables SLL parsing, allowing us to see significant performance impr
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @yliuuuu
 - @AugustineFu
 
@@ -224,8 +215,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @austnwil
 - @AugustineFu
 - @xd1313113
@@ -245,8 +235,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 
 ## [1.3.8](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.8) - 2026-03-19
@@ -262,8 +251,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 
 ## [1.3.7](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.7) - 2026-03-09
@@ -277,8 +265,7 @@ g
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @jobarr-amzn
 - @johnedquinn
 
@@ -290,8 +277,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @XuechunHHH
 
 ## [1.3.5](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.5) - 2026-03-04
@@ -303,8 +289,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @XuechunHHH
 
 ## [1.3.4](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.4) - 2026-02-16
@@ -315,8 +300,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @XuechunHHH
 
 ## [1.3.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.3) - 2026-01-16
@@ -327,8 +311,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @XuechunHHH
 
 ## [1.3.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.2) - 2025-11-19
@@ -341,8 +324,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 
 ## [1.3.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.1) - 2025-11-06
@@ -355,8 +337,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @xd1313113
 
 ## [1.3.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.0) - 2025-10-13
@@ -382,8 +363,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @johnedquinn
 - @XuechunHHH
 
@@ -429,8 +409,7 @@ rewritten to their query representation
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @zyfy29
 - @alancai98
 - @XuechunHHH
@@ -457,8 +436,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @alancai98
 
 ## [1.2.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.1) - 2025-05-07
@@ -480,8 +458,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @alancai98
 
 ## [1.2.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.0) - 2025-03-12
@@ -494,8 +471,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @johnedquinn
 - @lucaxchen
 - @mrugeshgharat
@@ -515,8 +491,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @johnedquinn
 - @jpschorr
 
@@ -530,8 +505,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 
-Thank you to all who have contributed!
-
+- Thank you to all who have contributed!
 - @alancai98
 - @am357
 - @johnedquinn

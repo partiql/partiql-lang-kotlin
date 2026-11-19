@@ -15,8 +15,8 @@ footerFormat: |
   {{- with (customs .Changes "Author" | uniq) }}
   ### Contributors
 
-  Thank you to all who have contributed!
-  {{ range . }}
+  - Thank you to all who have contributed!
+  {{- range . }}
   - @{{ . }}
   {{- end }}
   {{- end }}
