@@ -12,11 +12,11 @@ import org.partiql.spi.value.JsonKind
  * result compares with [comparator], as before. Otherwise it is matched with the rules for `$json` in
  * docs/partiql-tests-schema-proposal.md in partiql-tests, because [comparator] does not compare JSON.
  *
- * [actual] can be a lazy result, and iterating it runs the query again, so it is read into memory once, first.
- * An error the query raises then surfaces as an error, not as a mismatch.
+ * [actual] must already be in memory, as VMEvalExecutor.execute leaves it (see [inMemory]): matching iterates it
+ * more than once.
  */
 internal fun resultMatches(actual: Datum, expect: Datum, comparator: Comparator<Datum>): Boolean {
-    val a = actual.lowerVariant().inMemory()
+    val a = actual.lowerVariant()
     val e = expect.lowerVariant()
     if (!e.holdsJson()) {
         return compares(a, e, comparator)
@@ -35,16 +35,6 @@ private fun compares(a: Datum, e: Datum, comparator: Comparator<Datum>): Boolean
 }
 
 private fun Datum.lowerVariant(): Datum = if (type.code() == PType.VARIANT && !isNull) lower() else this
-
-/**
- * A query's result collection, read once.
- */
-private fun Datum.inMemory(): Datum = when {
-    isNull || isMissing -> this
-    type.code() == PType.BAG -> Datum.bag(toList())
-    type.code() == PType.ARRAY -> Datum.array(toList())
-    else -> this
-}
 
 private fun Datum.holdsJson(): Boolean {
     if (isNull || isMissing) return false
@@ -154,6 +144,7 @@ private fun <T> unorderedMatches(a: List<T>, e: List<T>, matches: (T, T) -> Bool
     if (a.size != e.size) return false
     val candidates = e.map { x -> a.indices.filter { matches(a[it], x) } }
     val matchedTo = IntArray(a.size) { -1 }
+    // The recursion is at most as deep as the list is long, which is fine for test fixtures.
     fun assign(j: Int, visited: BooleanArray): Boolean {
         for (i in candidates[j]) {
             if (visited[i]) continue

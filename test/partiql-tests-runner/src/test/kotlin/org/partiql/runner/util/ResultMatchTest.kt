@@ -11,6 +11,7 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.value.io.DatumIonReaderBuilder
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -121,13 +122,27 @@ class ResultMatchTest {
     }
 
     @Test
-    fun aQueryErrorIsAnErrorNotAMismatch() {
+    fun aQueryErrorIsRaisedOnceWhenTheResultIsCopied() {
         val failingResult = object : Datum {
             override fun getType(): PType = PType.bag()
             override fun iterator(): MutableIterator<Datum> =
                 throw PRuntimeException(PError(PError.FEATURE_NOT_SUPPORTED, Severity.ERROR(), PErrorKind.EXECUTION(), null, null))
         }
-        assertThrows<PRuntimeException> { resultMatches(failingResult, read("\$bag::[\$json::1]"), comparator) }
-        assertThrows<PRuntimeException> { resultMatches(failingResult, read("\$bag::[1]"), comparator) }
+        assertThrows<PRuntimeException> { failingResult.inMemory() }
+    }
+
+    @Test
+    fun aNestedLazyValueIsReadOnce() {
+        var runs = 0
+        val subquery = object : Datum {
+            override fun getType(): PType = PType.bag()
+            override fun iterator(): MutableIterator<Datum> {
+                runs++
+                return mutableListOf(Datum.jsonScalar(Datum.integer(1))).iterator()
+            }
+        }
+        val result = Datum.bag(listOf(Datum.struct(Field.of("s", subquery)))).inMemory()
+        assertTrue(resultMatches(result, read("\$bag::[{ s: \$bag::[\$json::1] }]"), comparator))
+        assertEquals(1, runs)
     }
 }

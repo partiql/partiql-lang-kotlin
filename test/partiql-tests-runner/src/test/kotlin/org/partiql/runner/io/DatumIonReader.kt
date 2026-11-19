@@ -6,6 +6,7 @@ import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.IonElement
 import org.partiql.runner.util.JSON_ANNOTATION
+import org.partiql.runner.util.SecondPerMinute
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
@@ -40,7 +41,7 @@ class DatumIonReader(
     private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
     private val TIME_MAX_PRECISION = 9
     private val JSON_MAX_DECIMAL_DIGITS = 38
-    private val JSON_MAX_SECOND_SCALE = 9
+    private val JSON_MAX_OFFSET_MINUTES = 18 * 60 // the largest offset ZoneOffset allows
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
@@ -513,7 +514,7 @@ class DatumIonReader(
         while (reader.next() != null) {
             val name = reader.fieldName
             when {
-                name !in names -> throw invalidJson("$annotation has no field $name")
+                name !in names -> throw invalidJson("$annotation has an unexpected field $name")
                 !seen.add(name) -> throw invalidJson("$annotation repeats the field $name")
                 reader.typeAnnotations.isNotEmpty() -> throw invalidJson("the field $name of $annotation can't have annotations")
             }
@@ -524,14 +525,20 @@ class DatumIonReader(
                         throw invalidJson("the field second of $annotation must be an Ion decimal, such as 59. or 59.5")
                     }
                     val s = reader.bigDecimalValue()
-                    if (s.scale() > JSON_MAX_SECOND_SCALE || s.signum() < 0 || s >= BigDecimal(60)) {
-                        throw invalidJson("the field second of $annotation must be at least 0 and less than 60, with at most $JSON_MAX_SECOND_SCALE digits after the point")
+                    if (s.scale() > TIME_MAX_PRECISION || s.signum() < 0 || s >= BigDecimal(SecondPerMinute)) {
+                        throw invalidJson("this runner reads the field second of $annotation from 0 to less than $SecondPerMinute, with at most $TIME_MAX_PRECISION digits after the point")
                     }
                     second = s
                 }
                 "offset" -> offset = when {
                     type == IonType.NULL && reader.isNullValue -> null
-                    type == IonType.INT && !reader.isNullValue -> jsonDatetimeInt(reader, annotation, name)
+                    type == IonType.INT && !reader.isNullValue -> {
+                        val minutes = jsonDatetimeInt(reader, annotation, name)
+                        if (minutes !in -JSON_MAX_OFFSET_MINUTES..JSON_MAX_OFFSET_MINUTES) {
+                            throw invalidJson("this runner reads the field offset of $annotation from -$JSON_MAX_OFFSET_MINUTES to $JSON_MAX_OFFSET_MINUTES minutes")
+                        }
+                        minutes
+                    }
                     else -> throw invalidJson("the field offset of $annotation must be an Ion int or null, in minutes from UTC")
                 }
                 else -> {
@@ -544,14 +551,16 @@ class DatumIonReader(
         }
         reader.stepOut()
         names.firstOrNull { it !in seen }?.let { throw invalidJson("$annotation has no field $it") }
+        ints["year"]?.let { year ->
+            if (year !in 1..9999) {
+                throw invalidJson("the field year of $annotation must be from 1 to 9999 (SQL:2023 Part 2, Table 13)")
+            }
+        }
         try {
             val date = if ("year" in ints) LocalDate.of(ints["year"]!!, ints["month"]!!, ints["day"]!!) else null
-            val zone = offset?.let { ZoneOffset.ofTotalSeconds(Math.multiplyExact(it, 60)) }
-            if (second == null) {
-                return Datum.date(date!!)
-            }
-            val s = second!!
-            val time = LocalTime.of(ints["hour"]!!, ints["minute"]!!, s.toInt(), s.remainder(BigDecimal.ONE).movePointRight(9).toInt())
+            val zone = offset?.let { ZoneOffset.ofTotalSeconds(it * SecondPerMinute) }
+            val s = second ?: return Datum.date(date!!)
+            val time = LocalTime.of(ints["hour"]!!, ints["minute"]!!, s.toInt(), s.remainder(BigDecimal.ONE).movePointRight(TIME_MAX_PRECISION).toInt())
             return when {
                 date == null && zone == null -> Datum.time(time, TIME_MAX_PRECISION)
                 date == null -> Datum.timez(OffsetTime.of(time, zone), TIME_MAX_PRECISION)
@@ -559,8 +568,6 @@ class DatumIonReader(
                 else -> Datum.timestampz(OffsetDateTime.of(date, time, zone), TIME_MAX_PRECISION)
             }
         } catch (e: DateTimeException) {
-            throw invalidJson("$annotation is not a valid ${annotation.removePrefix("$")}: ${e.message}", e)
-        } catch (e: ArithmeticException) {
             throw invalidJson("$annotation is not a valid ${annotation.removePrefix("$")}: ${e.message}", e)
         }
     }

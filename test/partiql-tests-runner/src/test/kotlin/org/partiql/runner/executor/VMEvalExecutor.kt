@@ -17,6 +17,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.runner.CompileType
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
+import org.partiql.runner.util.inMemory
 import org.partiql.runner.util.resultMatches
 import org.partiql.runner.util.toIonElement
 import org.partiql.spi.catalog.Catalog
@@ -55,7 +56,7 @@ class VMEvalExecutor(
 
     override fun execute(input: VMPreparedPlan): Datum {
         val catalogs = buildCatalogs(input.symbols, session)
-        return vm.execute(input.execPlan, catalogs)
+        return vm.execute(input.execPlan, catalogs).inMemory()
     }
 
     override fun fromIon(value: IonValue): Datum {

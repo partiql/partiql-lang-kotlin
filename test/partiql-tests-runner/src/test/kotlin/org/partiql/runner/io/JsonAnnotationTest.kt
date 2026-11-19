@@ -116,7 +116,7 @@ class JsonAnnotationTest {
         ~json::~date::{ year: a::2024, month: 1, day: 1 }             | can't have annotations
         ~json::~date::{ year: ~json::2024, month: 1, day: 1 }         | can't have annotations
         ~json::~date::{ year: 2024, month: 1 }                        | ~date has no field day
-        ~json::~date::{ year: 2024, month: 1, day: 1, hour: 1 }       | ~date has no field hour
+        ~json::~date::{ year: 2024, month: 1, day: 1, hour: 1 }       | ~date has an unexpected field hour
         ~json::~date::{ year: 2024, month: 1, day: 1, day: 2 }        | repeats the field day
         ~json::~date::{ year: 2024, month: 13, day: 1 }               | ~date is not a valid date
         ~json::~date::{ year: 2024, month: 1.0, day: 1 }              | must be an Ion int
@@ -127,9 +127,14 @@ class JsonAnnotationTest {
         ~json::~time::{ hour: 2, minute: 30, second: 1., offset: "0" }  | must be an Ion int or null
         ~json::~time::{ hour: 2, minute: 30, second: 1. }             | ~time has no field offset
         ~json::~time::{ hour: 25, minute: 30, second: 1., offset: 0 } | ~time is not a valid time
-        ~json::~time::{ hour: 2, minute: 30, second: 1., offset: 5000 } | ~time is not a valid time"""
+        ~json::~time::{ hour: 2, minute: 30, second: 1., offset: 5000 } | this runner reads the field offset
+        ~json::~time::{ hour: 2, minute: 30, second: 1., offset: 35791395 } | this runner reads the field offset
+        ~json::~time::{ hour: 2, minute: 30, second: -0.5, offset: 0 } | this runner reads the field second
+        ~json::~date::{ year: 0, month: 1, day: 1 }                   | from 1 to 9999
+        ~json::~date::{ year: 10000, month: 1, day: 1 }               | from 1 to 9999
+        ~json::~date::{ year: 2023, month: 2, day: 29 }               | ~date is not a valid date"""
     )
-    fun contentTheDocForbidsFailsToLoad(ionWithTildes: String, reasonWithTildes: String) {
+    fun invalidJsonFailsToLoad(ionWithTildes: String, reasonWithTildes: String) {
         // The table writes $ as ~, so Kotlin doesn't read $json as a string template.
         val ion = ionWithTildes.replace('~', '$')
         val reason = reasonWithTildes.replace('~', '$')
@@ -150,6 +155,29 @@ class JsonAnnotationTest {
     )
     fun decimalsAtTheLimitsLoad(ion: String) {
         assertEquals(PType.DECIMAL, read(ion).jsonScalar.type.code())
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "\$json::\$date::{ year: 2024, month: 2, day: 29 }",
+            "\$json::\$date::{ year: 1, month: 1, day: 1 }",
+            "\$json::\$date::{ year: 9999, month: 12, day: 31 }",
+            "\$json::\$time::{ hour: 23, minute: 59, second: 59.999999999, offset: 1080 }",
+            "\$json::\$time::{ hour: 0, minute: 0, second: 0., offset: -1080 }",
+            "\$json::\$time::{ hour: 0, minute: 0, second: 5d1, offset: null }",
+        ]
+    )
+    fun datetimesAtTheLimitsLoad(ion: String) {
+        assertEquals(JsonKind.SCALAR, read(ion).jsonKind)
+    }
+
+    @Test
+    fun aDecimalWithANegativeScaleIsWrittenSoItReadsBack() {
+        val hundred = Datum.jsonScalar(Datum.decimal(java.math.BigDecimal("1E+2"), 1, -2))
+        val reread = DatumIonReaderBuilder.standard().build(hundred.toIonElement()).read()
+        assertEquals(0, reread.jsonScalar.bigDecimal.compareTo(java.math.BigDecimal(100)))
+        assertEquals(0, reread.jsonScalar.bigDecimal.scale())
     }
 
     @Test

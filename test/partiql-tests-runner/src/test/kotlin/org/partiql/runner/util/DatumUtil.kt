@@ -14,6 +14,7 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
 import org.partiql.spi.value.JsonKind
 import kotlin.math.abs
 
@@ -24,6 +25,22 @@ const val SecondPerMinute = 60
  */
 internal const val JSON_ANNOTATION = "\$json"
 const val nanoPerSecond = 1000000000L
+
+/**
+ * A copy of a result with every collection and tuple read into memory, all the way down. A query result can be
+ * lazy, so iterating it runs the query again; with one copy, matching and the failure report see the same value,
+ * and an error from the query is raised here, once.
+ */
+internal fun Datum.inMemory(): Datum = when {
+    isNull || isMissing -> this
+    else -> when (type.code()) {
+        PType.BAG -> Datum.bag(map { it.inMemory() })
+        PType.ARRAY -> Datum.array(map { it.inMemory() })
+        PType.STRUCT -> Datum.struct(fields.asSequence().map { Field.of(it.name, it.value.inMemory()) }.toList())
+        PType.ROW -> Datum.row(fields.asSequence().map { Field.of(it.name, it.value.inMemory()) }.toList())
+        else -> this
+    }
+}
 
 // For error display only
 internal fun Datum.toIonElement(): IonElement {
