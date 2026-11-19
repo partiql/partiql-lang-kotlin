@@ -148,13 +148,50 @@ private fun computeTotalSeconds(second: Int, nano: Int) =
     Decimal.valueOf(second.toBigDecimal() + nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal()))
 
 /**
- * An SQL/JSON item as Ion, without the outer $json annotation. A datetime scalar keeps its $date, $time or
- * $timestamp annotation.
+ * An SQL/JSON item as Ion, without the outer $json annotation, in the form the $json reader accepts, so a reported
+ * value can be pasted back as an expected value. A datetime scalar is a $date, $time or $timestamp struct, with an
+ * offset of null when it has no time zone.
  */
 @Suppress("DEPRECATION")
-private fun jsonToIonElement(datum: Datum): IonElement = when (datum.jsonKind) {
+private fun jsonToIonElement(datum: Datum): IonElement = when (val kind = datum.jsonKind) {
     JsonKind.NULL -> ionNull()
-    JsonKind.SCALAR -> datum.jsonScalar.toIonElement()
+    JsonKind.SCALAR -> jsonScalarToIonElement(datum.jsonScalar)
     JsonKind.ARRAY -> ionListOf(datum.map { jsonToIonElement(it) })
-    else -> ionStructOf(datum.fields.asSequence().map { field(it.name, jsonToIonElement(it.value)) }.toList())
+    JsonKind.OBJECT -> ionStructOf(datum.fields.asSequence().map { field(it.name, jsonToIonElement(it.value)) }.toList())
+    else -> error("Unknown SQL/JSON item kind: $kind")
+}
+
+private fun jsonScalarToIonElement(scalar: Datum): IonElement = when (scalar.type.code()) {
+    PType.DATE -> {
+        val d = scalar.localDate
+        ionStructOf(
+            field("year", ionInt(d.year.toLong())),
+            field("month", ionInt(d.monthValue.toLong())),
+            field("day", ionInt(d.dayOfMonth.toLong())),
+        ).withAnnotations("\$date")
+    }
+    PType.TIME, PType.TIMEZ -> {
+        val zoned = scalar.type.code() == PType.TIMEZ
+        val t = if (zoned) scalar.offsetTime.toLocalTime() else scalar.localTime
+        ionStructOf(
+            field("hour", ionInt(t.hour.toLong())),
+            field("minute", ionInt(t.minute.toLong())),
+            field("second", ionDecimal(computeTotalSeconds(t.second, t.nano))),
+            field("offset", if (zoned) ionInt((scalar.offsetTime.offset.totalSeconds / SecondPerMinute).toLong()) else ionNull()),
+        ).withAnnotations("\$time")
+    }
+    PType.TIMESTAMP, PType.TIMESTAMPZ -> {
+        val zoned = scalar.type.code() == PType.TIMESTAMPZ
+        val t = if (zoned) scalar.offsetDateTime.toLocalDateTime() else scalar.localDateTime
+        ionStructOf(
+            field("year", ionInt(t.year.toLong())),
+            field("month", ionInt(t.monthValue.toLong())),
+            field("day", ionInt(t.dayOfMonth.toLong())),
+            field("hour", ionInt(t.hour.toLong())),
+            field("minute", ionInt(t.minute.toLong())),
+            field("second", ionDecimal(computeTotalSeconds(t.second, t.nano))),
+            field("offset", if (zoned) ionInt((scalar.offsetDateTime.offset.totalSeconds / SecondPerMinute).toLong()) else ionNull()),
+        ).withAnnotations("\$timestamp")
+    }
+    else -> scalar.toIonElement()
 }

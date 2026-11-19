@@ -116,6 +116,10 @@ class VMEvalExecutor(
 
         private fun inferEnv(env: AnyElement): PType {
             val annotations = env.annotations
+            if (annotations.firstOrNull() == "\$json") {
+                @Suppress("DEPRECATION")
+                return PType.json()
+            }
             if (annotations.size >= 3 && annotations[annotations.size - 3] == "\$map") {
                 val keyType = pTypeFromName(annotations[annotations.size - 2])
                 val valueType = pTypeFromName(annotations[annotations.size - 1])

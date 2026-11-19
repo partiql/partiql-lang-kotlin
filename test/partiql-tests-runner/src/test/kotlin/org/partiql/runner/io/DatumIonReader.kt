@@ -9,12 +9,14 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
 import org.partiql.spi.value.Field
+import org.partiql.spi.value.InvalidOperationException
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.OffsetTime
@@ -37,7 +39,11 @@ class DatumIonReader(
     private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
     private val TIME_MAX_PRECISION = 9
     private val JSON_ANNOTATION = "\$json"
-    private val JSON_DATETIME_ANNOTATIONS = setOf("\$date", "\$time", "\$timestamp")
+    private val JSON_MAX_DECIMAL_DIGITS = 38
+    private val JSON_DATETIME_ANNOTATIONS: Set<String> by lazy {
+        setOf(PARTIQL_ANNOTATION.DATE_ANNOTATION, PARTIQL_ANNOTATION.TIME_ANNOTATION, PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION)
+            .map { it.annotation }.toSet()
+    }
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
@@ -356,29 +362,26 @@ class DatumIonReader(
      */
     @Suppress("DEPRECATION")
     private fun readJson(reader: IonReader, annotations: List<String>): Datum {
+        if (JSON_ANNOTATION in annotations) {
+            throw invalidJson("a nested \$json is not allowed")
+        }
         val datetime = when {
             annotations.isEmpty() -> null
             annotations.size == 1 && annotations[0] in JSON_DATETIME_ANNOTATIONS -> annotations[0]
-            else -> throw invalidJson("annotations $annotations are not allowed here")
+            else -> throw invalidJson("the annotations $annotations are not allowed inside \$json")
         }
         val type = reader.type!!
+        if (datetime != null) {
+            if (type != IonType.STRUCT || reader.isNullValue) {
+                throw invalidJson("$datetime must annotate a struct, got ${if (reader.isNullValue) "null" else type.name.lowercase()}")
+            }
+            return Datum.jsonScalar(readJsonDatetime(reader, datetime))
+        }
         if (reader.isNullValue) {
-            if (type != IonType.NULL || datetime != null) {
-                throw invalidJson("only an untyped null is allowed, got ${annotations.joinToString("") { "$it::" }}null.${type.name.lowercase()}")
+            if (type != IonType.NULL) {
+                throw invalidJson("only an untyped null is allowed, got null.${type.name.lowercase()}")
             }
             return Datum.jsonNull()
-        }
-        if (datetime != null) {
-            if (type != IonType.STRUCT) {
-                throw invalidJson("$datetime must annotate a struct, got $type")
-            }
-            return Datum.jsonScalar(
-                when (datetime) {
-                    PARTIQL_ANNOTATION.DATE_ANNOTATION.annotation -> readDate(reader)
-                    PARTIQL_ANNOTATION.TIME_ANNOTATION.annotation -> readTime(reader)
-                    else -> readTimestamp(reader)
-                }
-            )
         }
         return when (type) {
             IonType.BOOL -> Datum.jsonScalar(Datum.bool(reader.booleanValue()))
@@ -387,17 +390,11 @@ class DatumIonReader(
                 val n = when {
                     v.bitLength() < Int.SIZE_BITS -> Datum.integer(v.toInt())
                     v.bitLength() < Long.SIZE_BITS -> Datum.bigint(v.toLong())
-                    else -> throw invalidJson("the integer $v is too large for BIGINT; write it as an Ion decimal, such as $v.")
+                    else -> throw invalidJson("an integer of ${v.abs().toString().length} digits is too large for BIGINT; write it as an Ion decimal, with a trailing period")
                 }
                 Datum.jsonScalar(n)
             }
-            IonType.DECIMAL -> {
-                var d = reader.bigDecimalValue()
-                if (d.scale() < 0) {
-                    d = d.setScale(0)
-                }
-                Datum.jsonScalar(Datum.decimal(d, maxOf(d.precision(), d.scale()), d.scale()))
-            }
+            IonType.DECIMAL -> Datum.jsonScalar(readJsonDecimal(reader))
             IonType.FLOAT -> {
                 val v = reader.doubleValue()
                 if (v.isNaN() || v.isInfinite()) {
@@ -409,27 +406,52 @@ class DatumIonReader(
             IonType.LIST -> {
                 reader.stepIn()
                 val elements = mutableListOf<Datum>()
-                reader.loadEachValue { elements.add(readJsonChild(reader)) }
+                reader.loadEachValue { elements.add(readJson(reader, reader.typeAnnotations.toList())) }
                 reader.stepOut()
                 Datum.jsonArray(elements)
             }
             IonType.STRUCT -> {
                 reader.stepIn()
                 val members = mutableListOf<Field>()
-                reader.loadEachValue { members.add(Field.of(reader.fieldName, readJsonChild(reader))) }
+                reader.loadEachValue { members.add(Field.of(reader.fieldName, readJson(reader, reader.typeAnnotations.toList()))) }
                 reader.stepOut()
                 Datum.jsonObject(members)
             }
-            else -> throw invalidJson("an Ion ${type.name.lowercase()} is not allowed")
+            IonType.NULL, IonType.SYMBOL, IonType.TIMESTAMP, IonType.CLOB, IonType.BLOB, IonType.SEXP, IonType.DATAGRAM ->
+                throw invalidJson("an Ion ${type.name.lowercase()} is not allowed")
         }
     }
 
-    private fun readJsonChild(reader: IonReader): Datum {
-        val annotations = reader.typeAnnotations.toList()
-        if (JSON_ANNOTATION in annotations) {
-            throw invalidJson("a nested \$json is not allowed")
+    /**
+     * A JSON number written as an Ion decimal: at most 38 digits, and no exponent. The checks run before the
+     * value is rescaled, so a value such as 1d50000000 never expands.
+     */
+    private fun readJsonDecimal(reader: IonReader): Datum {
+        val d = reader.bigDecimalValue()
+        if (d.scale() < 0) {
+            throw invalidJson("a decimal with an exponent, such as 1d3, is not allowed; JSON text can't write one")
         }
-        return readJson(reader, annotations)
+        if (d.precision() > JSON_MAX_DECIMAL_DIGITS || d.scale() > JSON_MAX_DECIMAL_DIGITS) {
+            throw invalidJson("a decimal can have at most $JSON_MAX_DECIMAL_DIGITS digits")
+        }
+        return Datum.decimal(d, maxOf(d.precision(), d.scale()), d.scale())
+    }
+
+    /**
+     * A datetime scalar. Unlike a plain $time or $timestamp, an offset of null gives a TIME or TIMESTAMP without a
+     * time zone, so that it never matches an offset of 0.
+     */
+    private fun readJsonDatetime(reader: IonReader, annotation: String): Datum {
+        try {
+            return when (annotation) {
+                PARTIQL_ANNOTATION.DATE_ANNOTATION.annotation -> readDate(reader)
+                PARTIQL_ANNOTATION.TIME_ANNOTATION.annotation -> readTime(reader, keepNullOffset = true)
+                PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION.annotation -> readTimestamp(reader, keepNullOffset = true)
+                else -> error("Not a datetime annotation: $annotation")
+            }
+        } catch (e: InvalidOperationException) {
+            throw invalidJson("the fields of $annotation must be plain Ion values")
+        }
     }
 
     private fun invalidJson(message: String) = IllegalArgumentException("Invalid \$json value: $message")
@@ -446,7 +468,7 @@ class DatumIonReader(
         return Datum.date(LocalDate.of(year.int, month.int, day.int))
     }
 
-    private fun readTime(reader: IonReader): Datum {
+    private fun readTime(reader: IonReader, keepNullOffset: Boolean = false): Datum {
         reader.stepIn()
         val hour = getRequiredFieldName(reader, "hour")
         val minute = getRequiredFieldName(reader, "minute")
@@ -465,11 +487,13 @@ class DatumIonReader(
         val ds = second.bigDecimal
         val seconds: Int = ds.toInt()
         val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(TIME_MAX_PRECISION).toInt()
-
+        if (keepNullOffset && (offset == null || offset.isNull)) {
+            return Datum.time(LocalTime.of(hour.int, minute.int, seconds, nanoOfSecond), TIME_MAX_PRECISION)
+        }
         return Datum.timez(OffsetTime.of(hour.int, minute.int, seconds, nanoOfSecond, offsetTz), TIME_MAX_PRECISION)
     }
 
-    private fun readTimestamp(reader: IonReader): Datum {
+    private fun readTimestamp(reader: IonReader, keepNullOffset: Boolean = false): Datum {
         reader.stepIn()
         // check fields
         val year = getRequiredFieldName(reader, "year")
@@ -495,6 +519,9 @@ class DatumIonReader(
         // date/time
         val date = LocalDate.of(year.int, month.int, day.int)
         val time = LocalTime.of(hour.int, minute.int, seconds, nanoOfSecond)
+        if (keepNullOffset && (offset == null || offset.isNull)) {
+            return Datum.timestamp(LocalDateTime.of(date, time), TIME_MAX_PRECISION)
+        }
         return Datum.timestampz(OffsetDateTime.of(date, time, offsetTz), TIME_MAX_PRECISION)
     }
 

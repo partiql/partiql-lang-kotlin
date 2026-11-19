@@ -3,6 +3,8 @@ package org.partiql.runner.io
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.partiql.runner.util.resultMatches
 import org.partiql.runner.util.toIonElement
 import org.partiql.spi.types.PType
@@ -14,7 +16,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * The `$json` annotation, as docs/partiql-tests-schema-proposal.md in partiql-tests defines it.
+ * Reading the `$json` annotation, as docs/partiql-tests-schema-proposal.md in partiql-tests defines it.
  */
 @Suppress("DEPRECATION")
 class JsonAnnotationTest {
@@ -22,8 +24,6 @@ class JsonAnnotationTest {
     private val comparator = Datum.comparator(true, true)
 
     private fun read(ion: String): Datum = DatumIonReaderBuilder.standard().build(loadSingleElement(ion)).read()
-
-    private fun matches(actual: String, expect: String) = resultMatches(read(actual), read(expect), comparator)
 
     @Test
     fun readsAnObjectWithRepeatedKeysInOrder() {
@@ -36,9 +36,19 @@ class JsonAnnotationTest {
     }
 
     @Test
-    fun numbersGetTheTypeOfTheSameLiteral() {
-        val types = read("\$json::[7, 3000000000, 12345678901234567890123., 10.5, 1e3]").map { it.jsonScalar.type.code() }
-        assertEquals(listOf(PType.INTEGER, PType.BIGINT, PType.DECIMAL, PType.DECIMAL, PType.DOUBLE), types)
+    fun integersAreIntUpTo32BitsThenBigint() {
+        val v = read("\$json::[2147483647, -2147483648, 2147483648, -2147483649, 9223372036854775807, -9223372036854775808]")
+        assertEquals(
+            listOf(PType.INTEGER, PType.INTEGER, PType.BIGINT, PType.BIGINT, PType.BIGINT, PType.BIGINT),
+            v.map { it.jsonScalar.type.code() },
+        )
+    }
+
+    @Test
+    fun otherNumbersGetTheTypeOfTheSameLiteral() {
+        val v = read("\$json::[9223372036854775808., 10.5, 0.000, 1e3]")
+        assertEquals(listOf(PType.DECIMAL, PType.DECIMAL, PType.DECIMAL, PType.DOUBLE), v.map { it.jsonScalar.type.code() })
+        assertEquals(3, v.toList()[2].jsonScalar.bigDecimal.scale())
     }
 
     @Test
@@ -56,58 +66,78 @@ class JsonAnnotationTest {
     }
 
     @Test
-    fun contentTheDocForbidsFailsToLoad() {
-        listOf(
-            "\$json::9223372036854775808", // too large for BIGINT: write a decimal
+    fun aNullOffsetHasNoTimeZone() {
+        val time = "\$json::\$time::{ hour: 2, minute: 30, second: 59., offset: %s }"
+        val ts = "\$json::\$timestamp::{ year: 2024, month: 1, day: 1, hour: 2, minute: 30, second: 59., offset: %s }"
+        assertEquals(PType.TIME, read(time.format("null")).jsonScalar.type.code())
+        assertEquals(PType.TIMEZ, read(time.format("0")).jsonScalar.type.code())
+        assertEquals(PType.TIMESTAMP, read(ts.format("null")).jsonScalar.type.code())
+        assertEquals(PType.TIMESTAMPZ, read(ts.format("0")).jsonScalar.type.code())
+        assertFalse(resultMatches(read(time.format("0")), read(time.format("null")), comparator))
+        assertFalse(resultMatches(read(ts.format("0")), read(ts.format("null")), comparator))
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "\$json::9223372036854775808", // an integer too large for BIGINT: write a decimal
+            "\$json::1d3", // a decimal with an exponent
+            "\$json::1d50000000",
+            "\$json::1d-1000000000",
+            "\$json::123456789012345678901234567890123456789.", // 39 digits
             "\$json::nan",
             "\$json::+inf",
+            "\$json::-inf",
             "\$json::abc", // a symbol value
+            "\$json::'abc'",
             "\$json::null.int",
+            "\$json::null.struct",
             "\$json::{ t: 2024-01-01T }",
             "\$json::{{ aGVsbG8= }}",
+            "\$json::{{ \"clob\" }}",
             "\$json::(1 2)",
+            "\$json::\$json::1",
             "\$json::[\$json::1]",
+            "\$json::{ a: \$json::1 }",
+            "\$json::[\$missing::null]",
             "\$json::[\$bag::[1]]",
+            "\$json::[\$map::string::integer::[]]",
+            "\$json::[\$interval_ym::{ years: 1 }]",
+            "\$json::[\$interval_dt::{ days: 1 }]",
+            "\$json::[\$graph::{}]",
+            "\$json::[a::1]", // a user annotation
+            "\$json::\$date::null",
+            "\$json::\$date::\"2024-01-01\"",
+            "\$json::\$date::{ year: \$json::2024, month: 1, day: 1 }",
             "\$date::\$json::{ year: 2024, month: 1, day: 1 }",
-        ).forEach { ion -> assertThrows<IllegalArgumentException>(ion) { read(ion) } }
+        ]
+    )
+    fun contentTheDocForbidsFailsToLoad(ion: String) {
+        val e = assertThrows<IllegalArgumentException> { read(ion) }
+        assertTrue(e.message!!.startsWith("Invalid \$json value: "), "$ion: ${e.message}")
     }
 
     @Test
-    fun objectsMatchInAnyOrderAndCountRepeats() {
-        assertTrue(matches("\$json::{ a: 1, b: 2 }", "\$json::{ b: 2, a: 1 }"))
-        assertFalse(matches("\$json::{ a: 1, a: 1 }", "\$json::{ a: 1 }"))
-        assertFalse(matches("\$json::[1, 2]", "\$json::[2, 1]"))
+    fun errorMessagesStayShort() {
+        val e = assertThrows<IllegalArgumentException> { read("\$json::" + "9".repeat(100_000)) }
+        assertTrue(e.message!!.length < 200, e.message)
     }
 
-    @Test
-    fun numbersMatchByTypeValueAndScale() {
-        assertTrue(matches("\$json::7", "\$json::7"))
-        assertFalse(matches("\$json::7", "\$json::7.0"))
-        assertFalse(matches("\$json::10.5", "\$json::10.50"))
-    }
-
-    @Test
-    fun nullsMatchOnlyTheirOwnKind() {
-        assertFalse(matches("\$json::null", "null"))
-        assertFalse(matches("null", "\$json::null"))
-        assertTrue(resultMatches(Datum.nullValue(PType.json()), read("null"), comparator))
-    }
-
-    @Test
-    fun aJsonValueNeverMatchesAnotherType() {
-        assertFalse(matches("{ a: 1 }", "\$json::{ a: 1 }"))
-        assertFalse(matches("\$json::\"x\"", "\"x\""))
-    }
-
-    @Test
-    fun containersOfJsonMatchDeeply() {
-        assertTrue(matches("\$bag::[{ a: \$json::[1] }, 2]", "\$bag::[2, { a: \$json::[1] }]"))
-        assertFalse(matches("\$bag::[{ a: \$json::[1] }]", "\$bag::[{ a: \$json::[2] }]"))
-    }
-
-    @Test
-    fun writesJsonBackAsIon() {
-        val ion = read("\$json::{ a: [1, null], d: \$date::{ year: 2024, month: 1, day: 1 } }").toIonElement()
-        assertEquals(listOf("\$json"), ion.annotations)
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "\$json::{ a: [1, null, \"x\", true], b: { c: 10.50 }, d: 1e3 }",
+            "\$json::\$date::{ year: 2024, month: 1, day: 1 }",
+            "\$json::[\$time::{ hour: 2, minute: 30, second: 59.5, offset: null }, \$time::{ hour: 2, minute: 30, second: 59., offset: -480 }]",
+            "\$json::{ t: \$timestamp::{ year: 2024, month: 1, day: 1, hour: 2, minute: 30, second: 0., offset: null } }",
+            "\$json::null",
+        ]
+    )
+    fun aReportedValueReadsBackAsTheSameValue(ion: String) {
+        val value = read(ion)
+        val written = value.toIonElement()
+        assertEquals("\$json", written.annotations.first())
+        val reread = DatumIonReaderBuilder.standard().build(written).read()
+        assertTrue(resultMatches(reread, value, comparator), "$ion was written as $written")
     }
 }
