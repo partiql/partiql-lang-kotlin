@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHANGELOG-0.x.md](./archive/CHANGELOG-0.x.md).
 
-## 1.7.0 - 2026-11-16
+## [1.7.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.7.0) - 2026-11-16
 
 ### Added
 
@@ -52,7 +52,7 @@ Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHAN
 - @xd1313113
 - @XuechunHHH
 
-## 1.6.1 - 2026-09-03
+## [1.6.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.6.1) - 2026-09-03
 
 ### Added
 
@@ -62,7 +62,7 @@ Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHAN
 
 - @xd1313113
 
-## 1.6.0 - 2026-09-01
+## [1.6.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.6.0) - 2026-09-01
 
 ### Added
 
@@ -74,7 +74,7 @@ Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHAN
 
 - @XuechunHHH
 
-## 1.5.1 - 2026-08-18
+## [1.5.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.5.1) - 2026-08-18
 
 ### Added
 
@@ -104,7 +104,7 @@ Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHAN
 - @xd1313113
 - @XuechunHHH
 
-## 1.5.0 - 2026-07-01
+## [1.5.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.5.0) - 2026-07-01
 
 ### Added
 
@@ -125,7 +125,7 @@ Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHAN
 - @xd1313113
 - @yliuuuu
 
-## 1.4.0 - 2026-06-05
+## [1.4.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.4.0) - 2026-06-05
 
 ### Added
 
@@ -153,7 +153,7 @@ Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHAN
 - @XuechunHHH
 - @xd1313113
 
-## 1.3.14 - 2026-05-26
+## [1.3.14](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.14) - 2026-05-26
 
 ### Added
 
@@ -163,7 +163,7 @@ Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHAN
 
 - @AugustineFu
 
-## 1.3.13 - 2026-05-07
+## [1.3.13](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.13) - 2026-05-07
 
 ### Changed
 
@@ -173,7 +173,7 @@ Changelog entries for `0.x` (alpha) releases have been archived to [archive/CHAN
 
 - @xd1313113
 
-## 1.3.12 - 2026-05-05
+## [1.3.12](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.12) - 2026-05-05
 
 ### Added
 
@@ -189,7 +189,7 @@ this change enables SLL parsing, allowing us to see significant performance impr
 - @yliuuuu
 - @AugustineFu
 
-## 1.3.11 - 2026-04-21
+## [1.3.11](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.11) - 2026-04-21
 
 ### Added
 
@@ -210,13 +210,13 @@ this change enables SLL parsing, allowing us to see significant performance impr
 - @xd1313113
 - @johnedquinn
 
-## 1.3.10 - 2026-04-01
+## [1.3.10](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.10) - 2026-04-01
 
 ### Changed
 
 - Reverted: Redefine DATE_ADD and DATE_DIFF to be special syntax for the standard SQL datetime arithmetic operators. See [#1819](https://github.com/partiql/partiql-lang-kotlin/pull/1819).
 
-## 1.3.9 - 2026-03-20
+## [1.3.9](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.9) - 2026-03-20
 
 ### Fixed
 
@@ -226,7 +226,7 @@ this change enables SLL parsing, allowing us to see significant performance impr
 
 - @xd1313113
 
-## 1.3.8 - 2026-03-19
+## [1.3.8](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.8) - 2026-03-19
 
 ### Changed
 
@@ -241,7 +241,7 @@ this change enables SLL parsing, allowing us to see significant performance impr
 
 - @xd1313113
 
-## 1.3.7 - 2026-03-09
+## [1.3.7](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.7) - 2026-03-09
 
 ### Fixed
 
@@ -255,7 +255,7 @@ g
 - @jobarr-amzn
 - @johnedquinn
 
-## 1.3.6 - 2026-03-05
+## [1.3.6](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.6) - 2026-03-05
 
 ### Fixed
 
@@ -265,7 +265,7 @@ g
 
 - @XuechunHHH
 
-## 1.3.5 - 2026-03-04
+## [1.3.5](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.5) - 2026-03-04
 
 ### Fixed
 
@@ -276,7 +276,7 @@ g
 
 - @XuechunHHH
 
-## 1.3.4 - 2026-02-16
+## [1.3.4](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.4) - 2026-02-16
 
 ### Fixed
 
@@ -286,7 +286,7 @@ g
 
 - @XuechunHHH
 
-## 1.3.3 - 2026-01-16
+## [1.3.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.3) - 2026-01-16
 
 ### Added
 
@@ -296,7 +296,7 @@ g
 
 - @XuechunHHH
 
-## 1.3.2 - 2025-11-19
+## [1.3.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.2) - 2025-11-19
 
 ### Added
 
@@ -308,7 +308,7 @@ g
 
 - @xd1313113
 
-## 1.3.1 - 2025-11-06
+## [1.3.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.1) - 2025-11-06
 
 ### Added
 
@@ -320,7 +320,7 @@ g
 
 - @xd1313113
 
-## 1.3.0 - 2025-10-13
+## [1.3.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.0) - 2025-10-13
 
 ### Added
 
@@ -346,7 +346,7 @@ g
 - @johnedquinn
 - @XuechunHHH
 
-## 1.2.3 - 2025-09-29
+## [1.2.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.3) - 2025-09-29
 
 ### Added
 
@@ -393,7 +393,7 @@ rewritten to their query representation
 - @XuechunHHH
 - @xd1313113
 
-## 1.2.2 - 2025-06-26
+## [1.2.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.2) - 2025-06-26
 
 ### Added
 
@@ -416,7 +416,7 @@ rewritten to their query representation
 
 - @alancai98
 
-## 1.2.1 - 2025-05-07
+## [1.2.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.1) - 2025-05-07
 
 ### Added
 
@@ -437,7 +437,7 @@ rewritten to their query representation
 
 - @alancai98
 
-## 1.2.0 - 2025-03-12
+## [1.2.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.0) - 2025-03-12
 
 ### Added
 
@@ -451,7 +451,7 @@ rewritten to their query representation
 - @lucaxchen
 - @mrugeshgharat
 
-## 1.1.0 - 2025-02-14
+## [1.1.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.1.0) - 2025-02-14
 
 ### Added
 
@@ -471,7 +471,7 @@ rewritten to their query representation
 
 **Full Changelog**: [v1.0.0...v1.1.0](https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0...v1.1.0)
 
-## 1.0.0 - 2025-01-23
+## [1.0.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.0.0) - 2025-01-23
 
 ### Added
 
@@ -487,9 +487,9 @@ rewritten to their query representation
 
 **Full Changelog**: [v0.14.9...v1.0.0](https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.9...v1.0.0)
 
-## 1.0.0-rc.3 - 2024-12-10
+## [1.0.0-rc.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.0.0-rc.3) - 2024-12-10
 
-## 1.0.0-rc.2 - 2024-11-04
+## [1.0.0-rc.2](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.0.0-rc.2) - 2024-11-04
 
-## 1.0.0-rc.1 - 2024-10-02
+## [1.0.0-rc.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.0.0-rc.1) - 2024-10-02
 
