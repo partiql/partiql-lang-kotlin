@@ -981,6 +981,10 @@ public interface Datum extends Iterable<Datum> {
      * Creates an SQL/JSON scalar. A JSON number from JSON text has the type of the same PartiQL literal: INTEGER or
      * BIGINT for an integer, DECIMAL for a number with a fraction, and DOUBLE, the type of an approximate literal
      * such as {@code 1e3}, for a number with an exponent.
+     * <p>
+     * SQL:2023 §6.41 accepts any character string, numeric, Boolean or datetime type. A {@code JSON_SCALAR} on
+     * {@code CHAR}, {@code VARCHAR}, {@code SMALLINT} or {@code REAL} will need this list widened, or a conversion
+     * to {@code STRING} or {@code DOUBLE}.
      * @param value a value of type STRING, INTEGER, BIGINT, DECIMAL, DOUBLE, BOOL, DATE, TIME, TIMEZ, TIMESTAMP or
      *              TIMESTAMPZ. More types may be accepted later.
      * @return a value of type {@link PType#JSON}

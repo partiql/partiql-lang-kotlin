@@ -688,6 +688,10 @@ public abstract class PType extends org.partiql.spi.Enum {
      * boolean or datetime), SQL/JSON null, an array of items, or an object whose members pair a string key with an
      * item. SQL/JSON null is a value, not SQL NULL.
      * <br>
+     * A value of type JSON answers {@code Datum.iterator()} for an array and {@code Datum.getFields()} for an object,
+     * as a PartiQL array and a struct do. Check the type, or {@code Datum.getJsonKind()}, before calling them, so a
+     * JSON object isn't read as a struct.
+     * <br>
      * <br>
      * <b>Type Syntax</b>: <code>JSON</code>
      * <br>
