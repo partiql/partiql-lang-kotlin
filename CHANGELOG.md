@@ -50,6 +50,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @xd1313113
 - @XuechunHHH
 
@@ -60,6 +62,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 - Added support for a (non-recursive) `WITH` list element (CTE) referencing sibling elements defined earlier. See [#1868](https://github.com/partiql/partiql-lang-kotlin/issues/1868).
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @xd1313113
 
@@ -72,6 +76,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 - Added namespace-aware scalar and aggregate routine resolution with configurable session paths, qualified catalog names, ambiguity diagnostics, and canonical `RoutineRef` plan identity.
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @XuechunHHH
 
@@ -102,6 +108,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @xd1313113
 - @XuechunHHH
 
@@ -122,6 +130,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 - Fixed SELECT * with UNPIVOT to use named aliases instead of positional names
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @xd1313113
 - @yliuuuu
@@ -151,6 +161,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @XuechunHHH
 - @xd1313113
 
@@ -162,6 +174,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @AugustineFu
 
 ## [1.3.13](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.13) - 2026-05-07
@@ -171,6 +185,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 - Reverted [Add interruption check for V1](https://github.com/partiql/partiql-lang-kotlin/pull/1908) due to wrong exception handling
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @xd1313113
 
@@ -186,6 +202,8 @@ For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHAN
 this change enables SLL parsing, allowing us to see significant performance improvement when parsing complicated `NULLIF`/`COALESCE` call.
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @yliuuuu
 - @AugustineFu
@@ -206,6 +224,8 @@ this change enables SLL parsing, allowing us to see significant performance impr
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @austnwil
 - @AugustineFu
 - @xd1313113
@@ -225,6 +245,8 @@ this change enables SLL parsing, allowing us to see significant performance impr
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @xd1313113
 
 ## [1.3.8](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.8) - 2026-03-19
@@ -240,6 +262,8 @@ this change enables SLL parsing, allowing us to see significant performance impr
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @xd1313113
 
 ## [1.3.7](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.7) - 2026-03-09
@@ -253,6 +277,8 @@ g
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @jobarr-amzn
 - @johnedquinn
 
@@ -263,6 +289,8 @@ g
 - Fixed comparison operators returning wrong type when one argument is NULL/MISSING, breaking boolean expressions.
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @XuechunHHH
 
@@ -275,6 +303,8 @@ g
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @XuechunHHH
 
 ## [1.3.4](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.4) - 2026-02-16
@@ -285,6 +315,8 @@ g
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @XuechunHHH
 
 ## [1.3.3](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.3) - 2026-01-16
@@ -294,6 +326,8 @@ g
 - Added ExprError AST node and error handling for datetime field keywords (YEAR, MONTH, DAY, HOUR, MINUTE, SECOND) used in expression contexts
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @XuechunHHH
 
@@ -307,6 +341,8 @@ g
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @xd1313113
 
 ## [1.3.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.3.1) - 2025-11-06
@@ -318,6 +354,8 @@ g
 - Add planner support to compare DATE and TIMESTAMP(Z)
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @xd1313113
 
@@ -343,6 +381,8 @@ g
 - Datum return type for `LOWER` on a CLOB value
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @johnedquinn
 - @XuechunHHH
@@ -389,6 +429,8 @@ rewritten to their query representation
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @zyfy29
 - @alancai98
 - @XuechunHHH
@@ -415,6 +457,8 @@ rewritten to their query representation
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @alancai98
 
 ## [1.2.1](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.1) - 2025-05-07
@@ -436,6 +480,8 @@ rewritten to their query representation
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @alancai98
 
 ## [1.2.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.2.0) - 2025-03-12
@@ -447,6 +493,8 @@ rewritten to their query representation
 - Added planning and evaluation of the LET clause
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @johnedquinn
 - @lucaxchen
@@ -467,6 +515,8 @@ rewritten to their query representation
 
 ### Contributors
 
+Thank you to all who have contributed!
+
 - @johnedquinn
 - @jpschorr
 
@@ -479,6 +529,8 @@ rewritten to their query representation
 - This is our biggest release yet, and we are incredibly excited to announce 1.0. Please refer to the [1.0 documentation](https://partiql.org/plk/1.0/) for more information.
 
 ### Contributors
+
+Thank you to all who have contributed!
 
 - @alancai98
 - @am357
