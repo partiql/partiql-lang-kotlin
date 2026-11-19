@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-For releases before 1.0.0 (`0.x`), see [archive/CHANGELOG-0.x.md](./archive/CHANGELOG-0.x.md).
+For release notes for `0.x`, see [archive/CHANGELOG-0.x.md](./archive/CHANGELOG-0.x.md).
 
 ## [1.7.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.7.0) - 2026-11-16
 
