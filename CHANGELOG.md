@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased](https://TODO.com) - YYYY-MM-DD
 
 ### Added
+- **EXPERIMENTAL**: Added the `JSON` type and its value API in `partiql-spi`, following the JSON type RFC ([partiql-lang#107](https://github.com/partiql/partiql-lang/pull/107)): `PType.JSON` and `PType.json()`; `Datum.jsonNull()`, `Datum.jsonScalar(Datum)`, `Datum.jsonArray(Iterable<Datum>)` and `Datum.jsonObject(Iterable<Field>)`; `Datum.getJsonKind()` and `Datum.getJsonScalar()`; and `JsonKind`. An SQL/JSON array's elements come from `iterator()`, and an object's members from `getFields()`. Comparing a value of type `JSON` with `Datum.comparator()` raises a `PRuntimeException` with `PError.FEATURE_NOT_SUPPORTED`, because how JSON compares is not specified yet. No built-in operator or function produces or reads a JSON value yet, and the CLI can't print one.
 
 ### Changed
 
@@ -39,6 +40,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @XuechunHHH
 
 ## [1.7.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.7.0) - 2026-11-16
 

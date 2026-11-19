@@ -19,6 +19,7 @@ internal enum class CoercionFamily {
     TIME,
     COLLECTION,
     MAP,
+    JSON,
     UNKNOWN,
     DYNAMIC,
     INTERVAL_YM,
@@ -52,6 +53,7 @@ internal enum class CoercionFamily {
                 PType.ARRAY -> COLLECTION
                 PType.BAG -> COLLECTION
                 PType.MAP -> MAP
+                PType.JSON -> JSON
                 PType.BLOB -> BINARY
                 PType.DYNAMIC -> DYNAMIC
                 PType.UNKNOWN -> UNKNOWN

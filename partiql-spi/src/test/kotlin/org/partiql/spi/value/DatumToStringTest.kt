@@ -332,4 +332,18 @@ class DatumToStringTest {
 
         expect.scenario("datum").toMatchSnapshot(datum)
     }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun testDatumJsonToString() {
+        val item = Datum.jsonObject(
+            listOf(
+                Field.of("a", Datum.jsonArray(listOf(Datum.jsonScalar(Datum.integer(1)), Datum.jsonNull()))),
+                Field.of("a", Datum.jsonScalar(Datum.string("x"))),
+            )
+        )
+        expect.scenario("jsonObject").toMatchSnapshot(item)
+        expect.scenario("jsonNull").toMatchSnapshot(Datum.jsonNull())
+        expect.scenario("sqlNullOfTypeJson").toMatchSnapshot(Datum.nullValue(PType.json()))
+    }
 }

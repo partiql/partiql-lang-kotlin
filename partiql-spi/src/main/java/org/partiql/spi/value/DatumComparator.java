@@ -256,6 +256,9 @@ abstract class DatumComparator implements Comparator<Datum> {
         precedence.put(BAG, 10);
         // Map Type
         precedence.put(PType.MAP, 11);
+        // JSON Type: never used to order, because fillJsonComparator replaces every JSON entry. It only keeps
+        // initializeComparatorArray from failing on a type with no precedence.
+        precedence.put(PType.JSON, 12);
         // OTHER
         precedence.put(DYNAMIC, 100);
         precedence.put(UNKNOWN, 100);
@@ -357,6 +360,7 @@ abstract class DatumComparator implements Comparator<Datum> {
                     break;
             }
         }
+        fillJsonComparator(table);
         // Register
         return table;
     }
@@ -752,6 +756,24 @@ abstract class DatumComparator implements Comparator<Datum> {
     private static DatumComparison[] fillMapComparator(DatumComparison[] comps) {
         comps[PType.MAP] = (self, other, comp) -> compareUnordered(new DatumEntryIterable(self), new DatumEntryIterable(other), new MapEntryComparator(comp));
         return comps;
+    }
+
+    /**
+     * How a value of type JSON compares with another JSON value is not specified yet, and the comparator is a total
+     * order, so it has no answer for JSON with another type either. Every such comparison throws a
+     * {@link org.partiql.spi.errors.PRuntimeException} with {@link org.partiql.spi.errors.PError#FEATURE_NOT_SUPPORTED}.
+     * SQL NULL and MISSING of type JSON are handled before this table, as for any type.
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    private static DatumComparison[][] fillJsonComparator(DatumComparison[][] table) {
+        DatumComparison unspecified = (self, other, comp) -> {
+            throw PErrors.featureNotSupportedException("comparing a value of type JSON");
+        };
+        for (int i = 0; i < TYPE_KINDS_LENGTH; i++) {
+            table[PType.JSON][i] = unspecified;
+            table[i][PType.JSON] = unspecified;
+        }
+        return table;
     }
 
     private static class DatumEntryIterable implements Iterable<Entry> {
