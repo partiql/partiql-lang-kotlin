@@ -33,6 +33,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed `ExprQuerySet.getChildren()` omitting the `WITH` clause, so default AST traversal skipped CTE bodies ([#1972](https://github.com/partiql/partiql-lang-kotlin/issues/1972)).
 
 ### Removed
 
