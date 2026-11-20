@@ -33,6 +33,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixed `AstVisitor` infinite recursion when visiting rank-style window function types (`RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `ROW_NUMBER`) without overrides ([#1971](https://github.com/partiql/partiql-lang-kotlin/issues/1971)).
 
 ### Removed
 
