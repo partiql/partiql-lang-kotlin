@@ -33,6 +33,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Implemented runtime evaluation of `CURRENT_DATE` and `CURRENT_USER`. `CURRENT_DATE` returns the `DATE` captured when an `execute()` starts, and every `CURRENT_DATE` in that execution observes the same value until the next `execute()` on the same prepared statement. `CURRENT_USER` returns `Session.getIdentity()`. The session builder defaults that identity to `"unknown"` when it is not set; the evaluator has no separate user field.
 
 ### Removed
 

@@ -14,6 +14,7 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.Datum
+import java.time.LocalDate
 
 /**
  * This class is responsible for producing an executable statement from logical operators.
@@ -22,7 +23,14 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
     private val strategies: List<Strategy> = strategies
 
+    // TODO: LocalDate.now() uses the JVM default time zone; use a session time zone once Session has one (SQL:2023 6.43 GR 2).
+    private var clock: () -> LocalDate = { LocalDate.now() }
+
     internal constructor() : this(emptyList())
+
+    internal constructor(clock: () -> LocalDate) : this(emptyList()) {
+        this.clock = clock
+    }
 
     override fun compile(plan: Plan, mode: Mode): ExecutionPlan {
         try {
@@ -42,11 +50,13 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         try {
             val transform = PlanToExecTransform(strategies, mode)
             val impl = transform.transform(plan)
-            val compiler = OperatorCompiler(emptyArray(), mode)
+            val queryDate = QueryDate(clock)
+            val compiler = OperatorCompiler(emptyArray(), mode, queryDate)
             val root = compiler.compile(impl)
             return object : Statement {
                 override fun execute(): Datum {
                     return try {
+                        queryDate.begin()
                         root.eval(Environment())
                     } catch (e: PRuntimeException) {
                         throw e
@@ -72,7 +82,9 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             return object : Statement {
                 override fun execute(): Datum {
                     return try {
-                        val compiler = OperatorCompiler(catalogs, mode)
+                        val queryDate = QueryDate(clock)
+                        queryDate.begin()
+                        val compiler = OperatorCompiler(catalogs, mode, queryDate)
                         compiler.compile(impl).eval(Environment())
                     } catch (e: PRuntimeException) {
                         throw e
