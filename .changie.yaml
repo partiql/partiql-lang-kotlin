@@ -32,7 +32,7 @@ kinds:
   - label: Fixed
     auto: patch
   - label: Removed
-    auto: minor
+    auto: major
   - label: Security
     auto: patch
 custom:

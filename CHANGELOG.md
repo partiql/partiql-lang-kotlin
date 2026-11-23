@@ -24,6 +24,7 @@ For release notes for `0.x`, see [archive/CHANGELOG-0.x.md](./archive/CHANGELOG-
 - Java classes that implement `Operators` directly must implement the new `error(PType, PError)` and `window(...)` methods; Kotlin implementations inherit the defaults.
 - Aggregate window functions resolve to the built-in aggregate when the session has the default system catalog, even if a catalog on the session path defines an aggregate with the same name.
 - The planner now reports an `INVALID_WINDOW_FUNCTION` warning for `RANK`, `DENSE_RANK`, `PERCENT_RANK`, `CUME_DIST`, `LEAD`, and `LAG` over a window without an `ORDER BY` clause (SQL:2023 Subclause 9.23, Syntax Rule 5a). Such queries still plan and run.
+- **BREAKING**: For the _experimental_ window functions, removed support for an outer reference or a subquery in a window function, including its `OVER` specification and `WINDOW` clause definition (SQL:2023 Subclause 9.23, Syntax Rule 3). Such queries now fail to plan with `INVALID_WINDOW_FUNCTION`.
 
 ### Fixed
 
@@ -43,10 +44,6 @@ For release notes for `0.x`, see [archive/CHANGELOG-0.x.md](./archive/CHANGELOG-
 - Fixed strict mode raising `INTERNAL_ERROR` for an expression the planner proved will fail ([#1988](https://github.com/partiql/partiql-lang-kotlin/issues/1988)). It now raises the planner's error code, such as `PATH_SYMBOL_NEVER_SUCCEEDS`, `PATH_KEY_NEVER_SUCCEEDS`, `PATH_INDEX_NEVER_SUCCEEDS`, `FUNCTION_TYPE_MISMATCH` or `TYPE_UNEXPECTED`, with the planner's location and properties. The error has severity `ERROR` and kind `EXECUTION`, like errors from checks that run only at runtime. Permissive mode is unchanged.
   - Hosts that match on `INTERNAL_ERROR` for these queries now see the specific code.
 - Fixed a non-numeric `OFFSET` being planned as a second `LIMIT`.
-
-### Removed
-
-- **BREAKING**: For the _experimental_ window functions, removed support for an outer reference or a subquery in a window function, including its `OVER` specification and `WINDOW` clause definition (SQL:2023 Subclause 9.23, Syntax Rule 3). Such queries now fail to plan with `INVALID_WINDOW_FUNCTION`.
 
 ### Contributors
 
@@ -451,10 +448,7 @@ rewritten to their query representation
 - fixed pretty-printing of `TRIM` and binary operator parens
 - fixed the AST to plan conversion of `PathStep.Field` case-sensitivity
 - fixed the AST to plan resolving of `IS <type>` functions for `<type>`s with parameters
-
-### Removed
-
-- redundant `CAST`s added for `CASE WHEN` branches
+- fixed redundant `CAST`s being added for `CASE WHEN` branches
 
 ### Contributors
 

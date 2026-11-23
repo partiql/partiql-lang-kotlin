@@ -84,3 +84,31 @@ partiql-lang (umbrella — depends on all below)
 ### Copyright Header
 
 Every source file must include the Apache 2.0 copyright header (see CODE_STYLE.md).
+
+## Changelog
+
+The changelog is managed with [changie](https://changie.dev). `CHANGELOG.md` and the release files `.changes/<version>.md` are generated at release time; never edit them by hand.
+
+### Adding an entry for a new change
+
+1. Decide whether the change needs an entry. Add one for any user-facing change: new or changed public API, behavior, error codes, query results, or a bug fix. Changes to tests, CI, build scripts, or internal refactoring with no visible effect don't need one.
+2. Pick the kind, matching the case exactly: `Added`, `Changed`, `Deprecated`, `Fixed`, `Removed`, or `Security`. Use `Removed` only to remove stable public API. It marks the release as a major version, so changes to behavior or to experimental features go under `Changed`.
+3. Add one file under `.changes/unreleased/` for each change. A PR with several changes adds several files. Either run:
+   ```bash
+   changie new -k Fixed -b "Fixed ..." -m Author=<github-username>
+   ```
+   or write the file directly, with any name ending in `.yaml`:
+   ```yaml
+   kind: Fixed
+   body: Fixed `SUM` failing on statically typed `BIGINT` arguments.
+   time: 2026-11-23T10:00:00Z
+   custom:
+     Author: <github-username>
+   ```
+4. Write the `body` in the style of the existing entries in `CHANGELOG.md`: past tense for fixes ("Fixed …"), name the affected API or SQL in backticks, and link issues as `([#1234](https://github.com/partiql/partiql-lang-kotlin/issues/1234))`. Start the entry with `**BREAKING**:` for a backward-incompatible change and `**EXPERIMENTAL**:` for an experimental feature.
+5. Check the output with `changie batch auto --dry-run`, which prints the next release notes without changing any files.
+
+changie doesn't validate these rules when it reads a hand-written file, so follow them exactly:
+- Put exactly one change in each file. Don't use `---` to put several YAML documents in one file; changie silently drops every document after the first.
+- Use a non-empty `body` and a non-empty `custom.Author` (spelled exactly). A missing author shows up as a bare `- @` under Contributors.
+- Indent sub-bullets in a multi-line `body` by two spaces. A line starting with `- ` that isn't indented renders as a separate entry.
