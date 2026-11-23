@@ -1,0 +1,54 @@
+# Changelog configuration for changie (https://changie.dev).
+#
+# Each PR adds a change fragment under .changes/unreleased/ with `changie new`.
+# At release time, `changie batch <version>` collects the fragments into .changes/<version>.md,
+# and `changie merge` regenerates CHANGELOG.md. Do not edit CHANGELOG.md by hand.
+changesDir: .changes
+unreleasedDir: unreleased
+headerPath: header.tpl.md
+changelogPath: CHANGELOG.md
+versionExt: md
+versionFormat: '## [{{.Version}}](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v{{.Version}}) - {{.Time.Format "2006-01-02"}}'
+kindFormat: '### {{.Kind}}'
+changeFormat: '- {{.Body}}'
+footerFormat: |
+  {{- with (customs .Changes "Author" | uniq) }}
+  ### Contributors
+
+  - Thank you to all who have contributed!
+  {{- range . }}
+  - @{{ . }}
+  {{- end }}
+  {{- end }}
+body:
+  # Single-line prompt: entries should be one concise line.
+  block: false
+kinds:
+  - label: Added
+    auto: minor
+  - label: Changed
+    auto: minor
+  - label: Deprecated
+    auto: minor
+  - label: Fixed
+    auto: patch
+  - label: Removed
+    auto: major
+  - label: Security
+    auto: patch
+custom:
+  - key: Author
+    label: GitHub username (without @)
+    type: string
+    minLength: 1
+newlines:
+  afterChangelogHeader: 1
+  beforeChangelogVersion: 0
+  afterChangelogVersion: 1
+  afterVersion: 0
+  beforeKind: 1
+  afterKind: 1
+  beforeChange: 0
+  afterChange: 0
+  beforeFooterTemplate: 0
+  endOfVersion: 0
