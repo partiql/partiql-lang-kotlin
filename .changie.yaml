@@ -21,7 +21,8 @@ footerFormat: |
   {{- end }}
   {{- end }}
 body:
-  block: true
+  # Single-line prompt: entries should be one concise line.
+  block: false
 kinds:
   - label: Added
     auto: minor

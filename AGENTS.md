@@ -105,10 +105,12 @@ The changelog is managed with [changie](https://changie.dev). `CHANGELOG.md` and
    custom:
      Author: <github-username>
    ```
-4. Write the `body` in the style of the existing entries in `CHANGELOG.md`: past tense for fixes ("Fixed …"), name the affected API or SQL in backticks, and link issues as `([#1234](https://github.com/partiql/partiql-lang-kotlin/issues/1234))`. Start the entry with `**BREAKING**:` for a backward-incompatible change and `**EXPERIMENTAL**:` for an experimental feature.
+4. Keep the `body` concise, preferably one line: say what changed for users, not how it was implemented. Implementation details, examples, and edge cases belong in the PR description. Use past tense ("Added …", "Fixed …"), name the affected API or SQL in backticks, and link issues as `([#1234](https://github.com/partiql/partiql-lang-kotlin/issues/1234))`. Start the entry with `**BREAKING**:` for a backward-incompatible change and `**EXPERIMENTAL**:` for an experimental feature.
+   - Good: ``Fixed `SUM` failing on statically typed `BIGINT` arguments.``
+   - Too long: a paragraph listing every affected function, error code, and internal behavior.
 5. Check the output with `changie batch auto --dry-run`, which prints the next release notes without changing any files.
 
 changie doesn't validate these rules when it reads a hand-written file, so follow them exactly:
 - Put exactly one change in each file. Don't use `---` to put several YAML documents in one file; changie silently drops every document after the first.
 - Use a non-empty `body` and a non-empty `custom.Author` (spelled exactly). A missing author shows up as a bare `- @` under Contributors.
-- Indent sub-bullets in a multi-line `body` by two spaces. A line starting with `- ` that isn't indented renders as a separate entry.
+- Avoid multi-line bodies. If a migration note is really needed, add it as a sub-bullet indented by two spaces; a line starting with `- ` that isn't indented renders as a separate entry.

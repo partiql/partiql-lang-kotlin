@@ -41,7 +41,8 @@ To send us a pull request, please:
       changie new                     # interactive: pick a kind, write the entry, enter your GitHub username
       changie new -k Fixed -b "Fixed ..." -m Author=<github-username>   # non-interactive
       ```
-      This adds a file under `.changes/unreleased/`; commit it with your change. If your change is a breaking
+      This adds a file under `.changes/unreleased/`; commit it with your change. Keep the entry concise, preferably
+      one line that says what changed for users; put details in the PR description. If your change is a breaking
       change, start the entry with `**BREAKING**:`. Changes that don't affect users (tests, CI, refactoring)
       don't need an entry.
    2. Your GitHub username from the entry is added to the `Contributors` section and to the
