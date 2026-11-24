@@ -7,6 +7,7 @@ import org.partiql.spi.utils.FunctionUtils.unwrap
 import org.partiql.spi.utils.NumberUtils.AccumulatorType
 import org.partiql.spi.utils.NumberUtils.MATH_CONTEXT
 import org.partiql.spi.utils.NumberUtils.add
+import org.partiql.spi.utils.NumberUtils.addDecimalExact
 import org.partiql.spi.utils.NumberUtils.bigDecimalOf
 import org.partiql.spi.utils.NumberUtils.numberValue
 import org.partiql.spi.utils.NumberUtils.toTargetType
@@ -24,7 +25,7 @@ internal class AccumulatorAvgDecimal : Accumulator() {
             init = true
         }
         val arg1 = bigDecimalOf(value.numberValue(), MATH_CONTEXT)
-        sum = sum.add(arg1, MATH_CONTEXT)
+        sum = addDecimalExact(sum, arg1)
         count += 1L
     }
 

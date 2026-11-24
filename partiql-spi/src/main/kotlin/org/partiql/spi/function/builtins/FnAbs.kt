@@ -91,8 +91,10 @@ internal val Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.overload(
     returns = PType.decimal(39, 19), // TODO: Rewrite using new function modeling.
     parameters = arrayOf(Parameter("value", PType.decimal(38, 19))),
 ) { args ->
-    val value = args[0].bigDecimal
-    Datum.decimal(value.abs())
+    // The result has the type of the input (SQL:2023 §6.31 Syntax Rule 11), so a value past 38 digits keeps its
+    // precision and scale.
+    val type = args[0].type
+    Datum.decimal(args[0].bigDecimal.abs(), type.precision, type.scale)
 }
 
 internal val Fn_ABS__FLOAT32__FLOAT32 = Function.overload(
