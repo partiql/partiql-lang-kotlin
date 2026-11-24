@@ -1,5 +1,5 @@
 kind: Fixed
-body: 'An exact numeric literal with more than 38 digits, such as `1234567890123456789012345678901234567890.5`, now keeps every digit, as SQL:2023 §5.3 Syntax Rule 29 requires. It used to be rounded to 38 digits without an error. A literal of 38 digits or fewer gets the same type as before.'
+body: 'An exact numeric literal with more than 38 digits, such as `1234567890123456789012345678901234567890.5`, now keeps every digit, as SQL:2023 §5.3 Syntax Rule 29 requires. It used to be rounded to 38 digits without an error. A literal of 38 digits or fewer gets the same type as before. Arithmetic whose result needs more than 38 digits, such as `1234567890123456789012345678901234567890.5 * 2`, now raises NUMERIC_VALUE_OUT_OF_RANGE in STRICT mode and gives MISSING in PERMISSIVE mode, where it used to return a rounded value.'
 time: 2026-11-24T10:00:00.000000-08:00
 custom:
     Author: XuechunHHH

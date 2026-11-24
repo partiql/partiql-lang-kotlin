@@ -40,7 +40,7 @@ class DatumIonReader(
     private val INTERVAL_MAX_PRECISION = 9
     private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
     private val TIME_MAX_PRECISION = 9
-    // ponytail: a guard against pathological input such as 1d-1000000000, not a limit of DECIMAL. Raise it if a
+    // A guard against pathological input such as 1d-1000000000, not a limit of DECIMAL. Raise it if a
     // test needs more digits.
     private val JSON_MAX_DECIMAL_DIGITS = 1000
     private val JSON_MAX_OFFSET_MINUTES = 18 * 60 // the largest offset ZoneOffset allows
