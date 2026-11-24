@@ -1,0 +1,98 @@
+# Opens the release PR: batches the changie fragments into CHANGELOG.md and sets the release
+# version in gradle.properties. Merging that PR starts release.yml.
+#
+# Uses GITHUB_TOKEN only. PRs it opens do not trigger pull_request workflows, so this starts
+# build.yml on the PR branch with workflow_dispatch, which GITHUB_TOKEN is allowed to trigger.
+
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, e.g. 1.8.0. Leave empty to use `changie next auto`.
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 15
+    permissions:
+      contents: write # push the release branch
+      pull-requests: write # open the release PR
+      actions: write # start build.yml on the release branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Next version
+        id: next
+        if: inputs.version == ''
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3
+        with:
+          version: v1.26.0
+          args: next auto
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          NEXT_VERSION: ${{ steps.next.outputs.output }}
+        run: |
+          VERSION="${INPUT_VERSION:-$NEXT_VERSION}"
+          VERSION="${VERSION//[[:space:]]/}"
+          VERSION="${VERSION#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release version must be MAJOR.MINOR.PATCH, got '$VERSION'"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::Tag v$VERSION already exists"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Batch changelog
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3
+        with:
+          version: v1.26.0
+          args: batch ${{ steps.version.outputs.version }}
+
+      - name: Merge changelog
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3
+        with:
+          version: v1.26.0
+          args: merge
+
+      - name: Open release PR
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="release/v$VERSION"
+          sed -i "s/^version=.*/version=$VERSION/" gradle.properties
+          grep -qx "version=$VERSION" gradle.properties
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          gh auth setup-git # push with GH_TOKEN without storing it in .git/config
+          git switch -c "$BRANCH"
+          git add -A .changes CHANGELOG.md gradle.properties
+          git commit -m "chore: release v$VERSION"
+          git push origin "$BRANCH"
+          {
+            echo "Release v$VERSION. Merging this PR tags the commit, creates the GitHub release, and"
+            echo "publishes to Maven Central after the \`release\` Environment is approved."
+            echo
+            cat ".changes/$VERSION.md"
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --base main --head "$BRANCH" --title "chore: release v$VERSION" --body-file "$RUNNER_TEMP/body.md"
+          gh workflow run build.yml --ref "$BRANCH"
