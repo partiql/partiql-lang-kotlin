@@ -40,7 +40,9 @@ class DatumIonReader(
     private val INTERVAL_MAX_PRECISION = 9
     private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
     private val TIME_MAX_PRECISION = 9
-    private val JSON_MAX_DECIMAL_DIGITS = 38
+    // ponytail: a guard against pathological input such as 1d-1000000000, not a limit of DECIMAL. Raise it if a
+    // test needs more digits.
+    private val JSON_MAX_DECIMAL_DIGITS = 1000
     private val JSON_MAX_OFFSET_MINUTES = 18 * 60 // the largest offset ZoneOffset allows
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
@@ -479,9 +481,9 @@ class DatumIonReader(
     }
 
     /**
-     * A JSON number written as an Ion decimal. The limits are this runner's, not the schema doc's: a negative
-     * scale, as in 1d3, and more than 38 digits, PartiQL's largest DECIMAL precision, are rejected. Both are checked
-     * before the value is built, so a value such as 1d50000000 never expands.
+     * A JSON number written as an Ion decimal. It keeps every digit, as an exact JSON number does. The limits are
+     * this runner's, not the schema doc's: a negative scale, as in 1d3, and more than JSON_MAX_DECIMAL_DIGITS digits
+     * are rejected. Both are checked before the value is built, so a value such as 1d50000000 never expands.
      */
     private fun readJsonDecimal(reader: IonReader): Datum {
         val d = reader.bigDecimalValue()

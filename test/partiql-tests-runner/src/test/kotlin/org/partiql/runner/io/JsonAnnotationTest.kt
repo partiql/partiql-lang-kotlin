@@ -86,9 +86,7 @@ class JsonAnnotationTest {
         ~json::9223372036854775808                                    | too large for BIGINT
         ~json::1d3                                                    | negative scale
         ~json::1d50000000                                             | negative scale
-        ~json::1d-1000000000                                          | at most 38 digits
-        ~json::123456789012345678901234567890123456789.               | at most 38 digits
-        ~json::0.000000000000000000000000000000000000001              | at most 38 digits
+        ~json::1d-1000000000                                          | at most 1000 digits
         ~json::nan                                                    | NaN is not allowed
         ~json::+inf                                                   | Infinity is not allowed
         ~json::-inf                                                   | -Infinity is not allowed
@@ -148,6 +146,9 @@ class JsonAnnotationTest {
         strings = [
             "\$json::12345678901234567890123456789012345678.", // 38 digits
             "\$json::0.00000000000000000000000000000000000001", // scale 38
+            "\$json::123456789012345678901234567890123456789.", // 39 digits
+            "\$json::0.000000000000000000000000000000000000001", // scale 39
+            "\$json::1234567890123456789012345678901234567890.5", // 41 digits
             "\$json::1.5d0",
             "\$json::1.00d2",
             "\$json::1.5d1",

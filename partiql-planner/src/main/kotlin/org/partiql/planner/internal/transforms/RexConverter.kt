@@ -105,8 +105,6 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.MathContext
-import java.math.RoundingMode
 import org.partiql.ast.SetQuantifier as AstSetQuantifier
 
 /**
@@ -194,7 +192,9 @@ internal object RexConverter {
                 Literal.STRING -> Datum.string(lit.stringValue())
                 Literal.BOOL -> Datum.bool(lit.booleanValue())
                 Literal.EXACT_NUM -> {
-                    val dec = lit.bigDecimalValue().round(MathContext(38, RoundingMode.HALF_EVEN))
+                    // An exact literal keeps every digit, also past DECIMAL's default precision of 38: SQL:2023 §5.3
+                    // Syntax Rule 29 requires an exact numeric literal to be represented exactly.
+                    val dec = lit.bigDecimalValue()
                     Datum.decimal(dec, dec.precision(), dec.scale())
                 }
                 Literal.INT_NUM -> {
