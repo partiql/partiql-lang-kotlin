@@ -364,7 +364,7 @@ public abstract class AstVisitor<R, C> {
      */
     @Deprecated
     public R visitWindowFunctionTypeRank(WindowFunctionType.Rank node, C ctx) {
-        return node.accept(this, ctx);
+        return defaultVisit(node, ctx);
     }
 
     /**
@@ -376,7 +376,7 @@ public abstract class AstVisitor<R, C> {
      */
     @Deprecated
     public R visitWindowFunctionTypeDenseRank(WindowFunctionType.DenseRank node, C ctx) {
-        return node.accept(this, ctx);
+        return defaultVisit(node, ctx);
     }
 
     /**
@@ -388,7 +388,7 @@ public abstract class AstVisitor<R, C> {
      */
     @Deprecated
     public R visitWindowFunctionTypePercentRank(WindowFunctionType.PercentRank node, C ctx) {
-        return node.accept(this, ctx);
+        return defaultVisit(node, ctx);
     }
 
     /**
@@ -400,7 +400,7 @@ public abstract class AstVisitor<R, C> {
      */
     @Deprecated
     public R visitWindowFunctionTypeCumeDist(WindowFunctionType.CumeDist node, C ctx) {
-        return node.accept(this, ctx);
+        return defaultVisit(node, ctx);
     }
 
     /**
@@ -412,7 +412,7 @@ public abstract class AstVisitor<R, C> {
      */
     @Deprecated
     public R visitWindowFunctionTypeRowNumber(WindowFunctionType.RowNumber node, C ctx) {
-        return node.accept(this, ctx);
+        return defaultVisit(node, ctx);
     }
 
     /**
