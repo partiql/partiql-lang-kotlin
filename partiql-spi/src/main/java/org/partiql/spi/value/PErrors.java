@@ -30,6 +30,20 @@ class PErrors {
     }
 
     @NotNull
+    static PRuntimeException featureNotSupportedException(@NotNull String featureName) {
+        PError pError = new PError(
+                PError.FEATURE_NOT_SUPPORTED,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                new HashMap<String, Object>() {{
+                    put("FEATURE_NAME", featureName);
+                }}
+        );
+        return new PRuntimeException(pError);
+    }
+
+    @NotNull
     static PRuntimeException wrappedException(@NotNull Throwable t) {
         PError pError = new PError(
                 PError.INTERNAL_ERROR,

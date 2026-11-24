@@ -225,7 +225,8 @@ public abstract class PType extends org.partiql.spi.Enum {
                 PType.VARIANT,
                 PType.INTERVAL_YM,
                 PType.INTERVAL_DT,
-                PType.MAP
+                PType.MAP,
+                PType.JSON
         };
     }
 
@@ -291,6 +292,8 @@ public abstract class PType extends org.partiql.spi.Enum {
                 return "INTERVAL_DT";
             case PType.MAP:
                 return "MAP";
+            case PType.JSON:
+                return "JSON";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -679,6 +682,24 @@ public abstract class PType extends org.partiql.spi.Enum {
      */
     @Deprecated
     public static final int MAP = 28;
+
+    /**
+     * JSON is SQL:2023's JSON type (T801). A value of type JSON is an SQL/JSON item: a scalar (a string, number,
+     * boolean or datetime), SQL/JSON null, an array of items, or an object whose members pair a string key with an
+     * item. SQL/JSON null is a value, not SQL NULL.
+     * <br>
+     * A value of type JSON answers {@code Datum.iterator()} for an array and {@code Datum.getFields()} for an object,
+     * as a PartiQL array and a struct do. Check the type, or {@code Datum.getJsonKind()}, before calling them, so a
+     * JSON object isn't read as a struct.
+     * <br>
+     * <br>
+     * <b>Type Syntax</b>: <code>JSON</code>
+     * <br>
+     * <b>Applicable methods</b>: NONE
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    public static final int JSON = 29;
 
     private static final String UNSPECIFIED_LENGTH = "UNSPECIFIED_LENGTH";
     private static final String UNSPECIFIED_PRECISION = "UNSPECIFIED_PRECISION";
@@ -1195,6 +1216,16 @@ public abstract class PType extends org.partiql.spi.Enum {
     }
 
     /**
+     * @return the JSON type
+     * @deprecated This feature is experimental and is subject to change.
+     */
+    @Deprecated
+    @NotNull
+    public static PType json() {
+        return new PTypePrimitive(JSON);
+    }
+
+    /**
      * @return a PartiQL unknown type
      */
     @NotNull
@@ -1277,6 +1308,8 @@ public abstract class PType extends org.partiql.spi.Enum {
             case MAP:
                 // TODO: Update this to unparameterized map() when MAP support DYNAMIC as default
                 return map(PType.string(), PType.dynamic());
+            case JSON:
+                return json();
             default:
                 throw new IllegalArgumentException("Unknown type code: " + code);
         }

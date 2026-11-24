@@ -238,6 +238,21 @@ DatumIntervalYearMonth{_type=YEAR (2), _value=INTERVAL '15-0'}
 ]
 
 
+org.partiql.spi.value.DatumToStringTest.testDatumJsonToString[jsonNull]=[
+DatumJson{_type=JSON, _value=null}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumJsonToString[jsonObject]=[
+DatumJson{_type=JSON, _value={a=DatumJson{_type=JSON, _value=[DatumJson{_type=JSON, _value=DatumInt{_type=INTEGER, _value=1}}, DatumJson{_type=JSON, _value=null}]}, a=DatumJson{_type=JSON, _value=DatumString{_type=STRING, _value='x'}}}}
+]
+
+
+org.partiql.spi.value.DatumToStringTest.testDatumJsonToString[sqlNullOfTypeJson]=[
+DatumNull{_type=JSON}
+]
+
+
 org.partiql.spi.value.DatumToStringTest.testDatumLongToString[datum]=[
 DatumLong{_type=BIGINT, _value=123456789}
 ]

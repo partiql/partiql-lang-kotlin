@@ -125,7 +125,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Iterator<Datum> iterator() {
-        if (_type.code() == PType.BAG || _type.code() == PType.ARRAY) {
+        if (_type.code() == PType.BAG || _type.code() == PType.ARRAY || _type.code() == PType.JSON) {
             throw new NullPointerException();
         } else {
             throw new InvalidOperationException(getType(), "iterator");
@@ -135,10 +135,31 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Iterator<Field> getFields() {
-        if (_type.code() == PType.STRUCT || _type.code() == PType.ROW) {
+        if (_type.code() == PType.STRUCT || _type.code() == PType.ROW || _type.code() == PType.JSON) {
             throw new NullPointerException();
         } else {
             throw new InvalidOperationException(getType(), "getFields");
+        }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public int getJsonKind() {
+        if (_type.code() == PType.JSON) {
+            throw new NullPointerException();
+        } else {
+            throw new InvalidOperationException(getType(), "getJsonKind");
+        }
+    }
+
+    @NotNull
+    @Override
+    @SuppressWarnings("deprecation")
+    public Datum getJsonScalar() {
+        if (_type.code() == PType.JSON) {
+            throw new NullPointerException();
+        } else {
+            throw new InvalidOperationException(getType(), "getJsonScalar");
         }
     }
 

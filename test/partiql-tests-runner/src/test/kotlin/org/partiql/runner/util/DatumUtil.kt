@@ -14,10 +14,33 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
+import org.partiql.spi.value.JsonKind
 import kotlin.math.abs
 
 const val SecondPerMinute = 60
+
+/**
+ * The partiql-tests annotation for a value of type JSON.
+ */
+internal const val JSON_ANNOTATION = "\$json"
 const val nanoPerSecond = 1000000000L
+
+/**
+ * A copy of a result with every collection and tuple read into memory, all the way down. A query result can be
+ * lazy, so iterating it runs the query again; with one copy, matching and the failure report see the same value,
+ * and an error from the query is raised here, once.
+ */
+internal fun Datum.inMemory(): Datum = when {
+    isNull || isMissing -> this
+    else -> when (type.code()) {
+        PType.BAG -> Datum.bag(map { it.inMemory() })
+        PType.ARRAY -> Datum.array(map { it.inMemory() })
+        PType.STRUCT -> Datum.struct(fields.asSequence().map { Field.of(it.name, it.value.inMemory()) }.toList())
+        PType.ROW -> Datum.row(fields.asSequence().map { Field.of(it.name, it.value.inMemory()) }.toList())
+        else -> this
+    }
+}
 
 // For error display only
 internal fun Datum.toIonElement(): IonElement {
@@ -132,6 +155,10 @@ internal fun Datum.toIonElement(): IonElement {
                     val lowered = this.lower()
                     lowered.toIonElement().withAnnotations("\$ion")
                 }
+                PType.JSON -> {
+                    val item = jsonToIonElement(this)
+                    item.withoutAnnotations().withAnnotations(listOf(JSON_ANNOTATION) + item.annotations)
+                }
                 else -> ionString(this.toString())
             }
         }
@@ -141,3 +168,54 @@ internal fun Datum.toIonElement(): IonElement {
 // Helper function
 private fun computeTotalSeconds(second: Int, nano: Int) =
     Decimal.valueOf(second.toBigDecimal() + nano.toBigDecimal().divide(nanoPerSecond.toBigDecimal()))
+
+/**
+ * An SQL/JSON item as Ion, without the outer $json annotation, in the form the $json reader accepts, so a reported
+ * value can be pasted back as an expected value. A datetime scalar is a $date, $time or $timestamp struct, with an
+ * offset of null when it has no time zone.
+ */
+@Suppress("DEPRECATION")
+private fun jsonToIonElement(datum: Datum): IonElement = when (val kind = datum.jsonKind) {
+    JsonKind.NULL -> ionNull()
+    JsonKind.SCALAR -> jsonScalarToIonElement(datum.jsonScalar)
+    JsonKind.ARRAY -> ionListOf(datum.map { jsonToIonElement(it) })
+    JsonKind.OBJECT -> ionStructOf(datum.fields.asSequence().map { field(it.name, jsonToIonElement(it.value)) }.toList())
+    else -> error("Unknown SQL/JSON item kind: $kind")
+}
+
+private fun jsonScalarToIonElement(scalar: Datum): IonElement = when (scalar.type.code()) {
+    PType.DATE -> {
+        val d = scalar.localDate
+        ionStructOf(
+            field("year", ionInt(d.year.toLong())),
+            field("month", ionInt(d.monthValue.toLong())),
+            field("day", ionInt(d.dayOfMonth.toLong())),
+        ).withAnnotations("\$date")
+    }
+    PType.TIME, PType.TIMEZ -> {
+        val zoned = scalar.type.code() == PType.TIMEZ
+        val t = if (zoned) scalar.offsetTime.toLocalTime() else scalar.localTime
+        ionStructOf(
+            field("hour", ionInt(t.hour.toLong())),
+            field("minute", ionInt(t.minute.toLong())),
+            field("second", ionDecimal(computeTotalSeconds(t.second, t.nano))),
+            field("offset", if (zoned) ionInt((scalar.offsetTime.offset.totalSeconds / SecondPerMinute).toLong()) else ionNull()),
+        ).withAnnotations("\$time")
+    }
+    PType.TIMESTAMP, PType.TIMESTAMPZ -> {
+        val zoned = scalar.type.code() == PType.TIMESTAMPZ
+        val t = if (zoned) scalar.offsetDateTime.toLocalDateTime() else scalar.localDateTime
+        ionStructOf(
+            field("year", ionInt(t.year.toLong())),
+            field("month", ionInt(t.monthValue.toLong())),
+            field("day", ionInt(t.dayOfMonth.toLong())),
+            field("hour", ionInt(t.hour.toLong())),
+            field("minute", ionInt(t.minute.toLong())),
+            field("second", ionDecimal(computeTotalSeconds(t.second, t.nano))),
+            field("offset", if (zoned) ionInt((scalar.offsetDateTime.offset.totalSeconds / SecondPerMinute).toLong()) else ionNull()),
+        ).withAnnotations("\$timestamp")
+    }
+    // The reader rejects a negative scale, so write such a value with scale 0. Its scale then differs on reading.
+    PType.DECIMAL -> ionDecimal(Decimal.valueOf(scalar.bigDecimal.let { if (it.scale() < 0) it.setScale(0) else it }))
+    else -> scalar.toIonElement()
+}
