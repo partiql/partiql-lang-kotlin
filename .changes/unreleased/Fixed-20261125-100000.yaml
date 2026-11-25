@@ -1,0 +1,5 @@
+kind: Fixed
+body: 'The CLI checks that an environment file holds a struct before loading its fields as tables, and reports "The environment file must contain a struct with table definitions" for any other value, including a null struct, `MISSING` and a value of type `JSON`. Before, it read the fields of any value that answered `getFields()`, so a JSON object would have loaded as tables.'
+time: 2026-11-25T10:00:00.000000-08:00
+custom:
+    Author: XuechunHHH

@@ -338,9 +338,16 @@ internal class MainCommand : Runnable {
     }
 
     /**
-     * Build a catalog from an environment datum (expected to be a struct).
+     * Build a catalog from an environment datum, which must be a struct or a row.
+     *
+     * @throws InvalidOperationException if the datum is any other type, including `JSON`, whose objects also answer
+     * [Datum.getFields].
      */
-    private fun envCatalog(datum: Datum, inferredType: PType? = null): Catalog {
+    internal fun envCatalog(datum: Datum, inferredType: PType? = null): Catalog {
+        val code = datum.type.code()
+        if (datum.isNull || datum.isMissing || (code != PType.STRUCT && code != PType.ROW)) {
+            throw InvalidOperationException(datum.type, "getFields")
+        }
         val catalogName = "default"
         val schemas = if (inferredType != null && inferredType.code() == PType.ROW) {
             inferredType.fields.associate { it.name to it.type }
