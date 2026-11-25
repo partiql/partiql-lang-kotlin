@@ -1,0 +1,5 @@
+kind: Fixed
+body: '`ABS` on a `DECIMAL` now has the type of its input, as SQL:2023 §6.31 Syntax Rule 11 requires. It used to report `DECIMAL(38, 0)` whatever the value. `SUM` and `AVG` over `DECIMAL` values no longer round a sum past 38 digits: they raise NUMERIC_VALUE_OUT_OF_RANGE, as `+` does. Fixes #2023.'
+time: 2026-11-24T12:00:00.000000-08:00
+custom:
+    Author: XuechunHHH

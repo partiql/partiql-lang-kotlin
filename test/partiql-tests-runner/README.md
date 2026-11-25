@@ -45,7 +45,7 @@ The runner reads and matches `$json` values as `docs/partiql-tests-schema-propos
 ### PLK runner deviations from the `$json` rules
 
 - **Decimals.** The runner rejects a decimal with a negative scale, such as `1d3` (write `1000.`), and a decimal of
-  more than 38 digits, PartiQL's largest `DECIMAL` precision. The doc allows both.
+  more than 1000 digits, a guard against pathological input. The doc allows both.
 - **Datetimes inside `$json`.** The runner reads `second` only from 0 to under 60, and an offset only from -1080 to
   1080 minutes, the range `java.time.ZoneOffset` allows.
 - **Negative zero.** PLK stores no negative zero, so a FLOAT `-0e0` and `0e0` match. The doc says they differ.
