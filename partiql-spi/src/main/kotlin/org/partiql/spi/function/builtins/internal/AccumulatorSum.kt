@@ -6,8 +6,8 @@ import org.partiql.spi.utils.FunctionUtils.unwrap
 import org.partiql.spi.utils.NumberUtils.AccumulatorType
 import org.partiql.spi.utils.NumberUtils.MATH_CONTEXT
 import org.partiql.spi.utils.NumberUtils.add
-import org.partiql.spi.utils.NumberUtils.addDecimalExact
 import org.partiql.spi.utils.NumberUtils.bigDecimalOf
+import org.partiql.spi.utils.NumberUtils.checkDecimalResult
 import org.partiql.spi.utils.NumberUtils.doubleValue
 import org.partiql.spi.utils.NumberUtils.longValue
 import org.partiql.spi.utils.NumberUtils.numberValue
@@ -49,11 +49,11 @@ internal class AccumulatorSumDecimal(
             init = true
         }
         val arg1 = bigDecimalOf(value.numberValue(), MATH_CONTEXT)
-        sum = addDecimalExact(sum, arg1)
+        sum = sum.add(arg1) // exact, checked once in value()
     }
 
     override fun value(): Datum {
-        return if (init) sum.toTargetType(targetType) else Datum.nullValue(targetType)
+        return if (init) checkDecimalResult(sum, "SUM").toTargetType(targetType) else Datum.nullValue(targetType)
     }
 }
 
@@ -115,6 +115,7 @@ internal class AccumulatorSumDynamic : Accumulator() {
     }
 
     override fun value(): Datum {
-        return sum?.toTargetType(PType.dynamic()) ?: Datum.nullValue(PType.dynamic())
+        val sum = sum ?: return Datum.nullValue(PType.dynamic())
+        return (if (sum is BigDecimal) checkDecimalResult(sum, "SUM") else sum).toTargetType(PType.dynamic())
     }
 }

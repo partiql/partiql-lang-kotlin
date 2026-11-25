@@ -7,8 +7,8 @@ import org.partiql.spi.utils.FunctionUtils.unwrap
 import org.partiql.spi.utils.NumberUtils.AccumulatorType
 import org.partiql.spi.utils.NumberUtils.MATH_CONTEXT
 import org.partiql.spi.utils.NumberUtils.add
-import org.partiql.spi.utils.NumberUtils.addDecimalExact
 import org.partiql.spi.utils.NumberUtils.bigDecimalOf
+import org.partiql.spi.utils.NumberUtils.checkDecimalResult
 import org.partiql.spi.utils.NumberUtils.numberValue
 import org.partiql.spi.utils.NumberUtils.toTargetType
 import org.partiql.spi.value.Datum
@@ -25,13 +25,13 @@ internal class AccumulatorAvgDecimal : Accumulator() {
             init = true
         }
         val arg1 = bigDecimalOf(value.numberValue(), MATH_CONTEXT)
-        sum = addDecimalExact(sum, arg1)
+        sum = sum.add(arg1) // exact, checked once in value()
         count += 1L
     }
 
     override fun value(): Datum = when (count) {
         0L -> Datum.nullValue(DefaultDecimal.DECIMAL)
-        else -> Datum.decimal(bigDecimalOf(sum).divide(bigDecimalOf(count), MATH_CONTEXT))
+        else -> Datum.decimal(checkDecimalResult(bigDecimalOf(sum).divide(bigDecimalOf(count), MATH_CONTEXT), "AVG"))
     }
 }
 
@@ -89,7 +89,7 @@ internal class AccumulatorAvgDynamic : Accumulator() {
         else -> {
             when (sum) {
                 is BigDecimal -> {
-                    bigDecimalOf(sum!!).divide(bigDecimalOf(count), MATH_CONTEXT)
+                    checkDecimalResult(bigDecimalOf(sum!!).divide(bigDecimalOf(count), MATH_CONTEXT), "AVG")
                 }
                 is Double -> {
                     (sum!!.toDouble()) / count.toDouble()

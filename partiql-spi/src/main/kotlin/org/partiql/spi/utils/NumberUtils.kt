@@ -28,17 +28,17 @@ internal object NumberUtils {
     internal val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN)
 
     /**
-     * Adds two decimals exactly, for SUM and AVG. A sum that needs more than 38 digits raises the same
-     * NUMERIC_VALUE_OUT_OF_RANGE as `+` (SQL:2023 §10.9 General Rule 7.d.vi, data exception 22003), instead of
-     * being rounded to 38 digits.
+     * Checks the result of SUM or AVG over decimals, which add exactly. A result that needs more than 38 digits raises
+     * the same NUMERIC_VALUE_OUT_OF_RANGE as `+`, instead of being rounded to 38 digits. Only the result is checked, not
+     * each partial sum, so the order of the rows doesn't matter (SQL:2023 §10.9 General Rule 7.d.vi, data exception
+     * 22003).
      */
-    internal fun addDecimalExact(a: BigDecimal, b: BigDecimal): BigDecimal {
-        val sum = a.add(b)
-        val digits = maxOf(sum.precision(), sum.precision() - sum.scale()) // a negative scale adds integer digits
+    internal fun checkDecimalResult(result: BigDecimal, function: String): BigDecimal {
+        val digits = maxOf(result.precision(), result.precision() - result.scale()) // a negative scale adds integer digits
         if (digits > MATH_CONTEXT.precision) {
-            throw PErrors.numericValueOutOfRangeException("$a + $b", PType.decimal(MATH_CONTEXT.precision, sum.scale().coerceIn(0, MATH_CONTEXT.precision)))
+            throw PErrors.numericValueOutOfRangeException("$function = $result", PType.decimal(MATH_CONTEXT.precision, result.scale().coerceIn(0, MATH_CONTEXT.precision)))
         }
-        return sum
+        return result
     }
 
     /**
@@ -341,7 +341,7 @@ internal object NumberUtils {
             AccumulatorType.DECIMAL -> {
                 val arg0 = bigDecimalOf(curSum)
                 val arg1 = bigDecimalOf(value.numberValue())
-                addDecimalExact(arg0, arg1)
+                arg0.add(arg1) // exact, checked once in value()
             }
             AccumulatorType.APPROX -> {
                 val arg0 = curSum.toDouble()

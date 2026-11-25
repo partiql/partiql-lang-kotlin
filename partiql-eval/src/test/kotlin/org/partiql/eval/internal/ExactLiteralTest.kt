@@ -64,6 +64,31 @@ class ExactLiteralTest {
         ).run()
     }
 
+    // Only the result is checked, not each partial sum, so a sum that fits doesn't depend on the order of the rows.
+    private val max = "99999999999999999999999999999999999999" // 38 nines
+
+    @Test
+    fun sumThatFitsPassesInEitherOrder() {
+        for (rows in listOf("[$max, 1, -1]", "[$max, -1, 1]")) {
+            SuccessTestCase(
+                input = "SELECT VALUE SUM(v) FROM $rows AS v",
+                mode = Mode.STRICT(),
+                expected = Datum.bagVararg(Datum.decimal(BigDecimal(max), 38, 0)),
+            ).run()
+        }
+    }
+
+    @Test
+    fun avgThatFitsPassesInEitherOrder() {
+        for (rows in listOf("[$max, 1, -1]", "[$max, -1, 1]")) {
+            SuccessTestCase(
+                input = "SELECT VALUE AVG(v) FROM $rows AS v",
+                mode = Mode.STRICT(),
+                expected = Datum.bagVararg(Datum.decimal(BigDecimal("33333333333333333333333333333333333333"), 38, 0)),
+            ).run()
+        }
+    }
+
     @Test
     fun sumWithin38DigitsIsExact() {
         SuccessTestCase(
