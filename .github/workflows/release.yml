@@ -1,0 +1,217 @@
+# Releases to Maven Central when a release PR from prepare-release.yml is merged.
+#
+#   detect        continue only if gradle.properties has a non-SNAPSHOT version with a changelog
+#                 file and no existing tag (so ordinary merges and the post-release PR are skipped)
+#   tag           tag the merge commit and create a GitHub pre-release
+#   verify        build and test
+#   publish       wait for the `release` Environment approval, get AWS credentials through OIDC,
+#                 read the Maven secrets, sign and upload to Maven Central
+#   finalize      mark the GitHub release as the latest release
+#   post-release  open the PR that sets the next -SNAPSHOT version
+#
+# The workflow name must stay `Release`: the CodeBuild release runner only runs jobs from a workflow
+# with that name. Only `publish` uses the release runner, and only `publish` can read the Maven
+# secrets: the AWS role trusts only jobs in the `release` Environment of this repository. The jobs
+# that write to the repository have no AWS access.
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [gradle.properties]
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      release: ${{ steps.detect.outputs.release }}
+      version: ${{ steps.detect.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: detect
+        run: |
+          VERSION="$(sed -n 's/^version=//p' gradle.properties)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-SNAPSHOT ]]; then
+            echo "Version $VERSION is a SNAPSHOT; nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must be MAJOR.MINOR.PATCH, got '$VERSION'"
+            exit 1
+          fi
+          if [ ! -f ".changes/$VERSION.md" ]; then
+            echo "::error::.changes/$VERSION.md is missing; release PRs come from prepare-release.yml"
+            exit 1
+          fi
+          if [ -n "$(find .changes/unreleased -name '*.yaml' -print -quit)" ]; then
+            echo "::error::.changes/unreleased has fragments that are not in the $VERSION changelog"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY.git" "refs/tags/v$VERSION" >/dev/null; then
+            echo "Tag v$VERSION already exists; nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "release=true" >> "$GITHUB_OUTPUT"
+
+  tag:
+    needs: detect
+    if: needs.detect.outputs.release == 'true'
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the tag and the GitHub release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - env:
+          VERSION: ${{ needs.detect.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --prerelease \
+            --title "v$VERSION" --notes-file ".changes/$VERSION.md"
+
+  verify:
+    needs: tag
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: corretto
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-disabled: true
+      - name: Build and test
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-XX:MaxMetaspaceSize=1g"
+        run: ./gradlew build
+
+  publish:
+    needs: [detect, verify]
+    runs-on: codebuild-partiql-lang-kotlin-release-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 90
+    # Required reviewers approve here. The AWS role only trusts tokens whose subject is this
+    # Environment, so without the approval there are no AWS credentials.
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # request the GitHub OIDC token for AWS
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: corretto
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          # No cache: a cache written by PR builds must not feed the release build.
+          cache-disabled: true
+
+      # Everything that needs no secrets runs before they are fetched.
+      - name: Assemble
+        run: ./gradlew assemble
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_RELEASE_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 900
+          role-session-name: release-v${{ needs.detect.outputs.version }}
+
+      - uses: aws-actions/aws-secretsmanager-get-secrets@e952bd7125c27e5be0060e50955b90a7e5addd99 # v4.0.0
+        with:
+          parse-json-secrets: true
+          secret-ids: |
+            SIGNING_KEY, partiql/maven/signing-key
+            SIGNING_PASSWORD, partiql/maven/signing-password
+            CENTRAL_USERNAME, partiql/maven/central-portal-username
+            CENTRAL_PASSWORD, partiql/maven/central-portal-password
+
+      # Last step: nothing else runs with the secrets in the environment.
+      # MAVEN_CENTRAL_AUTO_RELEASE=true releases the deployment automatically; otherwise it is
+      # closed and waits in the Central Portal for a manual "Publish".
+      - name: Sign and publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_signingKey: ${{ env.SIGNING_KEY_SECRET }}
+          ORG_GRADLE_PROJECT_signingKeyId: ${{ env.SIGNING_PASSWORD_ID }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ env.SIGNING_PASSWORD_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_centralPortalUsername: ${{ env.CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_centralPortalPassword: ${{ env.CENTRAL_PASSWORD }}
+          AUTO_RELEASE: ${{ vars.MAVEN_CENTRAL_AUTO_RELEASE }}
+        run: |
+          if [ "$AUTO_RELEASE" = "true" ]; then
+            ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
+          else
+            ./gradlew publishToSonatype closeSonatypeStagingRepository
+          fi
+
+  finalize:
+    needs: [detect, publish]
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 10
+    permissions:
+      contents: write # edit the GitHub release
+    steps:
+      - env:
+          VERSION: ${{ needs.detect.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release edit "v$VERSION" --prerelease=false --latest
+
+  post-release:
+    needs: [detect, finalize]
+    runs-on: codebuild-partiql-lang-kotlin-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 15
+    permissions:
+      contents: write # push the post-release branch
+      pull-requests: write # open the post-release PR
+      actions: write # start build.yml on the post-release branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main # latest main, not the release commit
+          persist-credentials: false
+      - env:
+          VERSION: ${{ needs.detect.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
+          NEXT="$MAJOR.$MINOR.$((PATCH + 1))-SNAPSHOT"
+          BRANCH="post-release/v$VERSION"
+          sed -i "s/^version=.*/version=$NEXT/" gradle.properties
+          grep -qx "version=$NEXT" gradle.properties
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          gh auth setup-git # push with GH_TOKEN without storing it in .git/config
+          git switch -c "$BRANCH"
+          git commit -am "chore: bump version to $NEXT"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "chore: bump version to $NEXT" \
+            --body "Post-release version bump after v$VERSION."
+          gh workflow run build.yml --ref "$BRANCH"

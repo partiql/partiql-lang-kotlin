@@ -1,0 +1,4 @@
+# Every change to main needs approval from a PartiQL maintainer. Branch protection requires code
+# owner review, so automated PRs opened by GitHub Actions (release and version bump PRs) still need
+# a person to approve them.
+* @partiql/partiql
