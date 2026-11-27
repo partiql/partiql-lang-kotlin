@@ -18,6 +18,7 @@ For release notes for `0.x`, see [archive/CHANGELOG-0.x.md](./archive/CHANGELOG-
 - **EXPERIMENTAL**: Added support for the aggregates `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` as window functions.
 - **EXPERIMENTAL**: Added `OperatorRewriter.visitWindowFunction`, `visitWindowPartition`, and `visitMapEntry`, and `Operators.window`.
 - Added `date_trunc` and `to_char` to the `partiql-function-extensions` artifact.
+- Added `SqlDialect.formatIdentifier(Identifier.Simple)` and `SqlDialect.identifierDelimiter`, protected hooks that control how every identifier is printed. A dialect can override `identifierDelimiter` (e.g. to a backtick) or `formatIdentifier` (e.g. to delimit every identifier) instead of overriding each visitor that prints an identifier.
 
 ### Changed
 
@@ -44,6 +45,7 @@ For release notes for `0.x`, see [archive/CHANGELOG-0.x.md](./archive/CHANGELOG-
 - Fixed strict mode raising `INTERNAL_ERROR` for an expression the planner proved will fail ([#1988](https://github.com/partiql/partiql-lang-kotlin/issues/1988)). It now raises the planner's error code, such as `PATH_SYMBOL_NEVER_SUCCEEDS`, `PATH_KEY_NEVER_SUCCEEDS`, `PATH_INDEX_NEVER_SUCCEEDS`, `FUNCTION_TYPE_MISMATCH` or `TYPE_UNEXPECTED`, with the planner's location and properties. The error has severity `ERROR` and kind `EXECUTION`, like errors from checks that run only at runtime. Permissive mode is unchanged.
   - Hosts that match on `INTERNAL_ERROR` for these queries now see the specific code.
 - Fixed a non-numeric `OFFSET` being planned as a second `LIMIT`.
+- Fixed `SqlDialect` printing a delimited identifier that contains a double quote without escaping it, e.g. `"a""b"` printed as `"a"b"`. An embedded double quote is now doubled, so printed SQL parses back to the same identifier.
 
 ### Contributors
 
