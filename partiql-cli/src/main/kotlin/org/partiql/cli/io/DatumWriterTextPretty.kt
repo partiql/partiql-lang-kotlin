@@ -6,6 +6,7 @@ import org.partiql.spi.types.IntervalCode
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumWriter
+import org.partiql.spi.value.JsonKind
 import kotlin.math.absoluteValue
 
 class DatumWriterTextPretty(
@@ -17,6 +18,7 @@ class DatumWriterTextPretty(
 
     companion object {
         private const val INDENT = "  "
+        private val DATETIME_CODES = setOf(PType.DATE, PType.TIME, PType.TIMEZ, PType.TIMESTAMP, PType.TIMESTAMPZ)
     }
 
     override fun close() {}
@@ -86,6 +88,7 @@ class DatumWriterTextPretty(
             PType.UNKNOWN -> error("The unknown type should not be encountered here.")
             PType.VARIANT -> format(format) { writeVariant(datum) }
             PType.INTERVAL_YM, PType.INTERVAL_DT -> format(format) { writeInterval(datum) }
+            @Suppress("DEPRECATION") PType.JSON -> format(format) { writeJson(datum) }
             else -> error("Unknown type: $dTypeCode")
         }
     }
@@ -159,6 +162,116 @@ class DatumWriterTextPretty(
         this.out.print("'")
         this.out.print(value.replace("'", "''"))
         this.out.print("'")
+    }
+
+    /**
+     * Writes a value of type JSON as PartiQL that builds it again: `JSON('...')` with its JSON text. JSON text can't
+     * hold a datetime, so an item that holds one is written with JSON_SCALAR, JSON_ARRAY and JSON_OBJECT instead,
+     * which keep each datetime, null and repeated key.
+     */
+    @Suppress("DEPRECATION")
+    private fun writeJson(datum: Datum) {
+        if (!holdsDatetime(datum)) {
+            this.out.print("JSON(")
+            writeString(StringBuilder().also { appendJsonText(it, datum) }.toString())
+            this.out.print(")")
+            return
+        }
+        when (datum.jsonKind) {
+            JsonKind.SCALAR -> {
+                this.out.print("JSON_SCALAR(")
+                write(datum.jsonScalar, null)
+                this.out.print(")")
+            }
+            JsonKind.ARRAY -> {
+                this.out.print("JSON_ARRAY(")
+                datum.forEachIndexed { i, e ->
+                    if (i > 0) this.out.print(", ")
+                    writeJson(e)
+                }
+                this.out.print(" NULL ON NULL RETURNING JSON)") // NULL ON NULL keeps an SQL/JSON null element
+            }
+            JsonKind.OBJECT -> {
+                this.out.print("JSON_OBJECT(")
+                datum.fields.asSequence().forEachIndexed { i, f ->
+                    if (i > 0) this.out.print(", ")
+                    writeString(f.name)
+                    this.out.print(" : ")
+                    writeJson(f.value)
+                }
+                this.out.print(" RETURNING JSON)")
+            }
+            else -> error("An SQL/JSON null holds no datetime")
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun holdsDatetime(datum: Datum): Boolean = when (datum.jsonKind) {
+        JsonKind.SCALAR -> datum.jsonScalar.type.code() in DATETIME_CODES
+        JsonKind.ARRAY -> datum.any { holdsDatetime(it) }
+        JsonKind.OBJECT -> datum.fields.asSequence().any { holdsDatetime(it.value) }
+        else -> false
+    }
+
+    /**
+     * The JSON text of an item that holds no datetime. A number of type DOUBLE PRECISION gets an exponent, so it reads
+     * back as DOUBLE PRECISION and not as an exact number.
+     */
+    @Suppress("DEPRECATION")
+    private fun appendJsonText(sb: StringBuilder, datum: Datum) {
+        when (datum.jsonKind) {
+            JsonKind.NULL -> sb.append("null")
+            JsonKind.ARRAY -> {
+                sb.append('[')
+                datum.forEachIndexed { i, e ->
+                    if (i > 0) sb.append(", ")
+                    appendJsonText(sb, e)
+                }
+                sb.append(']')
+            }
+            JsonKind.OBJECT -> {
+                sb.append('{')
+                datum.fields.asSequence().forEachIndexed { i, f ->
+                    if (i > 0) sb.append(", ")
+                    appendJsonString(sb, f.name)
+                    sb.append(": ")
+                    appendJsonText(sb, f.value)
+                }
+                sb.append('}')
+            }
+            else -> {
+                val v = datum.jsonScalar
+                when (v.type.code()) {
+                    PType.BOOL -> sb.append(v.boolean)
+                    PType.TINYINT -> sb.append(v.byte)
+                    PType.SMALLINT -> sb.append(v.short)
+                    PType.INTEGER -> sb.append(v.int)
+                    PType.BIGINT -> sb.append(v.long)
+                    PType.NUMERIC, PType.DECIMAL -> sb.append(v.bigDecimal.toPlainString())
+                    PType.REAL, PType.DOUBLE -> {
+                        val d = v.double.toString()
+                        sb.append(if ('E' in d) d else d + "e0")
+                    }
+                    PType.CHAR, PType.VARCHAR, PType.STRING -> appendJsonString(sb, v.string)
+                    else -> error("Unexpected SQL/JSON scalar type: ${v.type}")
+                }
+            }
+        }
+    }
+
+    private fun appendJsonString(sb: StringBuilder, value: String) {
+        sb.append('"')
+        for (c in value) {
+            when (c) {
+                '"' -> sb.append("\\\"")
+                '\\' -> sb.append("\\\\")
+                '\n' -> sb.append("\\n")
+                '\r' -> sb.append("\\r")
+                '\t' -> sb.append("\\t")
+                else -> if (c < ' ') sb.append("\\u%04x".format(c.code)) else sb.append(c)
+            }
+        }
+        sb.append('"')
     }
 
     private fun writeCollection(datum: Datum, format: Format?, prefix: String, postfix: String) {
