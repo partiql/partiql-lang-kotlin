@@ -1,0 +1,5 @@
+kind: Added
+body: '**EXPERIMENTAL**: The CLI reads values of type `JSON` from Ion input annotated with `$json`, in environment files (`-e`) and data (`-f ion:partiql`), following the rules in partiql-tests'' `docs/partiql-tests-schema-proposal.md`. It prints a value of type `JSON` as PartiQL that builds it again, such as `JSON(''{"a": 1}'')`. An item that holds a datetime has no JSON text, so it is printed with `JSON_SCALAR`, `JSON_ARRAY` and `JSON_OBJECT` instead.'
+time: 2026-11-27T11:29:26.783177-08:00
+custom:
+    Author: XuechunHHH
