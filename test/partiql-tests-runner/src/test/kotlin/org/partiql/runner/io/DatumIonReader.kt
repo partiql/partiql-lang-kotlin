@@ -5,6 +5,8 @@ import com.amazon.ion.IonType
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.IonElement
+import org.partiql.runner.util.JSON_ANNOTATION
+import org.partiql.runner.util.SecondPerMinute
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Entry
@@ -14,7 +16,9 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.math.BigDecimal
+import java.time.DateTimeException
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.OffsetTime
@@ -36,6 +40,10 @@ class DatumIonReader(
     private val INTERVAL_MAX_PRECISION = 9
     private val INTERVAL_MAX_FRACTIONAL_PRECISION = 9
     private val TIME_MAX_PRECISION = 9
+    // A guard against pathological input such as 1d-1000000000, not a limit of DECIMAL. Raise it if a
+    // test needs more digits.
+    private val JSON_MAX_DECIMAL_DIGITS = 1000
+    private val JSON_MAX_OFFSET_MINUTES = 18 * 60 // the largest offset ZoneOffset allows
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
@@ -183,6 +191,12 @@ class DatumIonReader(
     // I made the deliberate decision to list out all branches so we don't accidentally forget one in the future...
     private fun fromIonForPartiQL(reader: IonReader): Datum {
         val annotations = reader.typeAnnotations.toList()
+        if (JSON_ANNOTATION in annotations) {
+            if (annotations.first() != JSON_ANNOTATION) {
+                throw invalidJson("$JSON_ANNOTATION must be the outermost annotation, got $annotations")
+            }
+            return readJson(reader, annotations.drop(1))
+        }
         val partiQLAnnotation = getPartiQLReservedAnnotation(annotations)
         val type = reader.type!!
         checkAnnotations(type, annotations)
@@ -399,6 +413,180 @@ class DatumIonReader(
             IonType.NULL -> error("This should not have been reached.")
         }
     }
+
+    /**
+     * Reads a value annotated with $json as an SQL/JSON item, following docs/partiql-tests-schema-proposal.md in
+     * partiql-tests. [annotations] are the annotations after $json: none, or one of $date, $time and $timestamp.
+     */
+    @Suppress("DEPRECATION")
+    private fun readJson(reader: IonReader, annotations: List<String>): Datum {
+        if (JSON_ANNOTATION in annotations) {
+            throw invalidJson("a nested $JSON_ANNOTATION is not allowed")
+        }
+        val datetime = when {
+            annotations.isEmpty() -> null
+            annotations.size == 1 && annotations[0] in JSON_DATETIME_ANNOTATIONS -> annotations[0]
+            else -> throw invalidJson("the annotations $annotations are not allowed inside $JSON_ANNOTATION")
+        }
+        val type = reader.type!!
+        if (datetime != null) {
+            if (type != IonType.STRUCT || reader.isNullValue) {
+                throw invalidJson("$datetime must annotate a struct, got ${if (reader.isNullValue) "null" else type.name.lowercase()}")
+            }
+            return Datum.jsonScalar(readJsonDatetime(reader, datetime))
+        }
+        if (reader.isNullValue) {
+            if (type != IonType.NULL) {
+                throw invalidJson("only an untyped null is allowed, got null.${type.name.lowercase()}")
+            }
+            return Datum.jsonNull()
+        }
+        return when (type) {
+            IonType.BOOL -> Datum.jsonScalar(Datum.bool(reader.booleanValue()))
+            IonType.INT -> {
+                val v = reader.bigIntegerValue()
+                val n = when {
+                    v.bitLength() < Int.SIZE_BITS -> Datum.integer(v.toInt())
+                    v.bitLength() < Long.SIZE_BITS -> Datum.bigint(v.toLong())
+                    else -> throw invalidJson("an integer too large for BIGINT; write it as an Ion decimal, with a trailing period")
+                }
+                Datum.jsonScalar(n)
+            }
+            IonType.DECIMAL -> Datum.jsonScalar(readJsonDecimal(reader))
+            IonType.FLOAT -> {
+                val v = reader.doubleValue()
+                if (v.isNaN() || v.isInfinite()) {
+                    throw invalidJson("$v is not allowed, because JSON text can't write it")
+                }
+                Datum.jsonScalar(Datum.doublePrecision(v))
+            }
+            IonType.STRING -> Datum.jsonScalar(Datum.string(reader.stringValue()))
+            IonType.LIST -> {
+                reader.stepIn()
+                val elements = mutableListOf<Datum>()
+                reader.loadEachValue { elements.add(readJson(reader, reader.typeAnnotations.toList())) }
+                reader.stepOut()
+                Datum.jsonArray(elements)
+            }
+            IonType.STRUCT -> {
+                reader.stepIn()
+                val members = mutableListOf<Field>()
+                reader.loadEachValue { members.add(Field.of(reader.fieldName, readJson(reader, reader.typeAnnotations.toList()))) }
+                reader.stepOut()
+                Datum.jsonObject(members)
+            }
+            IonType.NULL, IonType.SYMBOL, IonType.TIMESTAMP, IonType.CLOB, IonType.BLOB, IonType.SEXP, IonType.DATAGRAM ->
+                throw invalidJson("an Ion ${type.name.lowercase()} is not allowed")
+        }
+    }
+
+    /**
+     * A JSON number written as an Ion decimal. It keeps every digit, as an exact JSON number does. The limits are
+     * this runner's, not the schema doc's: a negative scale, as in 1d3, and more than JSON_MAX_DECIMAL_DIGITS digits
+     * are rejected. Both are checked before the value is built, so a value such as 1d50000000 never expands.
+     */
+    private fun readJsonDecimal(reader: IonReader): Datum {
+        val d = reader.bigDecimalValue()
+        if (d.scale() < 0) {
+            throw invalidJson("this runner does not read a decimal with a negative scale, such as 1d3 (write 1000.)")
+        }
+        if (d.precision() > JSON_MAX_DECIMAL_DIGITS || d.scale() > JSON_MAX_DECIMAL_DIGITS) {
+            throw invalidJson("this runner reads a decimal of at most $JSON_MAX_DECIMAL_DIGITS digits")
+        }
+        return Datum.decimal(d, maxOf(d.precision(), d.scale()), d.scale())
+    }
+
+    /**
+     * A datetime scalar inside $json, read strictly: every field the schema doc lists, with no annotations and no
+     * other fields. An offset of null gives a TIME or TIMESTAMP without a time zone, so it never matches an
+     * offset of 0. Plain $time and $timestamp outside $json still read a null offset as UTC, a known deviation
+     * from the doc that is kept so existing results don't move.
+     */
+    private fun readJsonDatetime(reader: IonReader, annotation: String): Datum {
+        val names = when (annotation) {
+            PARTIQL_ANNOTATION.DATE_ANNOTATION.annotation -> listOf("year", "month", "day")
+            PARTIQL_ANNOTATION.TIME_ANNOTATION.annotation -> listOf("hour", "minute", "second", "offset")
+            else -> listOf("year", "month", "day", "hour", "minute", "second", "offset")
+        }
+        val ints = mutableMapOf<String, Int>()
+        var second: BigDecimal? = null
+        var offset: Int? = null
+        val seen = mutableSetOf<String>()
+        reader.stepIn()
+        while (reader.next() != null) {
+            val name = reader.fieldName
+            when {
+                name !in names -> throw invalidJson("$annotation has an unexpected field $name")
+                !seen.add(name) -> throw invalidJson("$annotation repeats the field $name")
+                reader.typeAnnotations.isNotEmpty() -> throw invalidJson("the field $name of $annotation can't have annotations")
+            }
+            val type = reader.type!!
+            when (name) {
+                "second" -> {
+                    if (type != IonType.DECIMAL || reader.isNullValue) {
+                        throw invalidJson("the field second of $annotation must be an Ion decimal, such as 59. or 59.5")
+                    }
+                    val s = reader.bigDecimalValue()
+                    if (s.scale() > TIME_MAX_PRECISION || s.signum() < 0 || s >= BigDecimal(SecondPerMinute)) {
+                        throw invalidJson("this runner reads the field second of $annotation from 0 to less than $SecondPerMinute, with at most $TIME_MAX_PRECISION digits after the point")
+                    }
+                    second = s
+                }
+                "offset" -> offset = when {
+                    type == IonType.NULL && reader.isNullValue -> null
+                    type == IonType.INT && !reader.isNullValue -> {
+                        val minutes = jsonDatetimeInt(reader, annotation, name)
+                        if (minutes !in -JSON_MAX_OFFSET_MINUTES..JSON_MAX_OFFSET_MINUTES) {
+                            throw invalidJson("this runner reads the field offset of $annotation from -$JSON_MAX_OFFSET_MINUTES to $JSON_MAX_OFFSET_MINUTES minutes")
+                        }
+                        minutes
+                    }
+                    else -> throw invalidJson("the field offset of $annotation must be an Ion int or null, in minutes from UTC")
+                }
+                else -> {
+                    if (type != IonType.INT || reader.isNullValue) {
+                        throw invalidJson("the field $name of $annotation must be an Ion int")
+                    }
+                    ints[name] = jsonDatetimeInt(reader, annotation, name)
+                }
+            }
+        }
+        reader.stepOut()
+        names.firstOrNull { it !in seen }?.let { throw invalidJson("$annotation has no field $it") }
+        ints["year"]?.let { year ->
+            if (year !in 1..9999) {
+                throw invalidJson("the field year of $annotation must be from 1 to 9999 (SQL:2023 Part 2, Table 13)")
+            }
+        }
+        try {
+            val date = if ("year" in ints) LocalDate.of(ints["year"]!!, ints["month"]!!, ints["day"]!!) else null
+            val zone = offset?.let { ZoneOffset.ofTotalSeconds(it * SecondPerMinute) }
+            val s = second ?: return Datum.date(date!!)
+            val time = LocalTime.of(ints["hour"]!!, ints["minute"]!!, s.toInt(), s.remainder(BigDecimal.ONE).movePointRight(TIME_MAX_PRECISION).toInt())
+            return when {
+                date == null && zone == null -> Datum.time(time, TIME_MAX_PRECISION)
+                date == null -> Datum.timez(OffsetTime.of(time, zone), TIME_MAX_PRECISION)
+                zone == null -> Datum.timestamp(LocalDateTime.of(date, time), TIME_MAX_PRECISION)
+                else -> Datum.timestampz(OffsetDateTime.of(date, time, zone), TIME_MAX_PRECISION)
+            }
+        } catch (e: DateTimeException) {
+            throw invalidJson("$annotation is not a valid ${annotation.removePrefix("$")}: ${e.message}", e)
+        }
+    }
+
+    private fun jsonDatetimeInt(reader: IonReader, annotation: String, name: String): Int = try {
+        reader.bigIntegerValue().intValueExact()
+    } catch (e: ArithmeticException) {
+        throw invalidJson("the field $name of $annotation is out of range", e)
+    }
+
+    private fun invalidJson(message: String, cause: Throwable? = null) = IllegalArgumentException("Invalid $JSON_ANNOTATION value: $message", cause)
+
+    private val JSON_DATETIME_ANNOTATIONS = setOf(
+        PARTIQL_ANNOTATION.DATE_ANNOTATION.annotation,
+        PARTIQL_ANNOTATION.TIME_ANNOTATION.annotation,
+        PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION.annotation,
+    )
 
     private fun <T> IonReader.loadEachValue(block: () -> T) {
         while (this.next() != null) {

@@ -1,0 +1,5 @@
+kind: Fixed
+body: 'Implemented runtime evaluation of `CURRENT_DATE` and `CURRENT_USER`. `CURRENT_DATE` returns the date pinned when `execute()` starts; `CURRENT_USER` returns the planning session identity from `Session.getIdentity()` (default `"unknown"`). Fixes [#1974](https://github.com/partiql/partiql-lang-kotlin/issues/1974).'
+time: 2026-11-28T07:01:00.000000+00:00
+custom:
+    Author: cestercian

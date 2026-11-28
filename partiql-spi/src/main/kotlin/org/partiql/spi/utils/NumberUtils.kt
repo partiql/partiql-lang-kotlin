@@ -28,6 +28,20 @@ internal object NumberUtils {
     internal val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN)
 
     /**
+     * Checks the result of SUM or AVG over decimals, which add exactly. A result that needs more than 38 digits raises
+     * the same NUMERIC_VALUE_OUT_OF_RANGE as `+`, instead of being rounded to 38 digits. Only the result is checked, not
+     * each partial sum, so the order of the rows doesn't matter (SQL:2023 §10.9 General Rule 7.d.vi, data exception
+     * 22003).
+     */
+    internal fun checkDecimalResult(result: BigDecimal, function: String): BigDecimal {
+        val digits = maxOf(result.precision(), result.precision() - result.scale()) // a negative scale adds integer digits
+        if (digits > MATH_CONTEXT.precision) {
+            throw PErrors.numericValueOutOfRangeException("$function = $result", PType.decimal(MATH_CONTEXT.precision, result.scale().coerceIn(0, MATH_CONTEXT.precision)))
+        }
+        return result
+    }
+
+    /**
      * Factory function to create a [BigDecimal] using correct precision, use it in favor of native BigDecimal constructors
      * and factory methods
      */
@@ -327,7 +341,7 @@ internal object NumberUtils {
             AccumulatorType.DECIMAL -> {
                 val arg0 = bigDecimalOf(curSum)
                 val arg1 = bigDecimalOf(value.numberValue())
-                arg0.add(arg1, MATH_CONTEXT)
+                arg0.add(arg1) // exact, checked once in value()
             }
             AccumulatorType.APPROX -> {
                 val arg0 = curSum.toDouble()

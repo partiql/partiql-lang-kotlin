@@ -21,6 +21,7 @@ internal enum class CoercionFamily {
     TIMESTAMP,
     COLLECTION,
     MAP,
+    JSON,
     UNKNOWN,
     DYNAMIC,
     INTERVAL_YM,
@@ -57,6 +58,7 @@ internal enum class CoercionFamily {
                 PType.ARRAY -> COLLECTION
                 PType.BAG -> COLLECTION
                 PType.MAP -> MAP
+                PType.JSON -> JSON
                 PType.ROW -> STRUCTURE
                 PType.CHAR -> STRING
                 PType.VARCHAR -> STRING
